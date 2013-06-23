@@ -1,0 +1,10 @@
+#!/usr/bin/make -f
+
+include /usr/share/hardening-includes/hardening.make
+export CFLAGS=$(shell dpkg-buildflags --get CFLAGS)
+export LDFLAGS=$(shell dpkg-buildflags --get LDFLAGS)
+CFLAGS += $(HARDENING_CFLAGS)
+LDFLAGS += $(HARDENING_LDFLAGS)
+
+%:
+	dh $@ 

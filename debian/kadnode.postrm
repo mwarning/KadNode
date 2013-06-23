@@ -1,0 +1,11 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+	purge|remove)
+		cp -f /etc/nsswitch.conf /etc/nsswitch.conf.dpkg-old
+		sed -e 's/^hosts:\s*files kadnode /hosts:          files /' /etc/nsswitch.conf.dpkg-old > /etc/nsswitch.conf
+		;;
+esac
+
+#DEBHELPER#

@@ -1,0 +1,18 @@
+Source: kadnode
+Section: net
+Priority: extra
+Maintainer: Moritz Warning <moritzwarning@web.de>
+Homepage: https://github.com/mwarning/kadnode
+
+Package: kadnode
+Architecture: any
+Depends: base-files (>=3.1.10), ${shlibs:Depends}
+Description: A P2P based DNS service
+ This tool translates hostnames to IPv6/IPv4 addresses
+ using P2P technology. Every user can announce
+ various hostnames and can resolve these hostnames
+ on other computers running KadNode.
+ KadNode wraps the Kademlia DHT implementation
+ and offers support for the Name Service Switch (NSS)
+ facility. The package also includes a control program
+ called kadnode-ctl.

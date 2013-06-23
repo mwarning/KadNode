@@ -1,0 +1,159 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "KADNODE" "1" "June 2013" "" ""
+.
+.SH "NAME"
+\fBkadnode\fR \- P2P name resolution daemon
+.
+.SH "SYNOPSIS"
+\fBkadnode\fR [\-\-id hostname] [\-\-port port] [\-\-daemon] [\.\.\.]
+.
+.P
+\fBkadnode\-ctl\fR [\.\.\.]
+.
+.SH "DESCRIPTION"
+\fBKadNode\fR is a small P2P name resolution daemon for IPv4 and IPv6 based on the Kademlia implementation of a distributed hash table (DHT) for Posix systems (e\.g\. GNU/Linux)\. By default, KadNode tries to send pings to a multicast address on the local network to find nodes to bootstrap from\. This is done as long no other nodes are known\. An interactive remote shell called \fBkadnode\-ctl\fR let the user import and export nodes, issues queries for hash identifiers and send announcements\.
+.
+.P
+As an usage example one would call \fBkadnode \-\-id myname\.p2p\fR and call \fBkadnode\-ctl import some\-dht\-tracker\.com:4242\fR to help KadNode to bootstrap into the network\. These imported node can also be the ones being exported last time before KadNode has been shut down\. On another computer that runs KadNode and that is connected to any nodes of the same network, myname\.p2p can be entered in the browser and will now resolve to the ip address of the computer the first other KadNode instance is running\. The domain name query is passed from the browser to the operating system to the NSS interface of KadNode\.
+.
+.P
+Identifiers can be entered as a string like \fBmyname\.p2p\fR\. KadNode will ignore the top level domain (\.p2p in this case) and apply sha1 hashing to the rest\. As an alternative, the hash can be used directly as a 40 character hex string\. The domain \fBmyname\.p2p\fR is therefore eqivalent to \fBfd0bef09a735b3cef767fb2c62b6bd365346bee5\fR which is the result of sha1(\'myname\')\. This is true for every query using KadNode\.
+.
+.SH "INTERFACES"
+.
+.IP "\(bu" 4
+An interactive shell to issue queries and manage the DHT\. Useful for shell scripts: \fBkadnode\-ctl myname\.p2p\fR
+.
+.IP "\(bu" 4
+Name Service Switch (NSS) support through /etc/nsswitch\.conf\.
+.
+.IP "\(bu" 4
+A simple DNS server interface that can be used like a local upstream DNS server\.
+.
+.IP "\(bu" 4
+A simple web server interface to resolve queries: \fBhttp://localhost:8080/foo\.p2p\fR
+.
+.IP "" 0
+.
+.SH "OPTIONS"
+.
+.IP "\(bu" 4
+\fB\-\-id\fR \fIidentifier\fR: Set the node identifier\. Either a 20 Byte hexadecimal string or a different string whose sha1 hash will be used\. A random id will be computed if this option is not used\.
+.
+.IP "\(bu" 4
+\fB\-\-user\fR \fIname\fR Change the UUID after start\.
+.
+.IP "\(bu" 4
+\fB\-\-port\fR \fIport\fR: Bind the DHT to this port\. Default: 8337
+.
+.IP "\(bu" 4
+\fB\-\-ifce\fR \fIinterface\fR: Bind to this interface (Default: <all>)\.
+.
+.IP "\(bu" 4
+\fB\-\-mcast\-addr4\fR \fIaddress\fR: Send pings to this multicast address as long no nodes were found\. Default: 239\.0\.0\.1
+.
+.IP "\(bu" 4
+\fB\-\-mcast\-addr6\fR \fIaddress\fR: Send pings to this multicast address/port as long no nodes were found\. Default: ff0e::1
+.
+.IP "\(bu" 4
+\fB\-\-daemon\fR: Run in background\.
+.
+.IP "\(bu" 4
+\fB\-\-verbosity\fR: Verbosity level: quiet, verbose or debug (Default: verbose)\.
+.
+.IP "\(bu" 4
+\fB\-\-pidfile\fR \fIfile\-path\fR Write process pid to a file\.
+.
+.IP "\(bu" 4
+\fB\-\-cmd\-port\fR \fIport\fR: Bind the remote control interface to this local port (Default: 1704)\.
+.
+.IP "\(bu" 4
+\fB\-\-dns\-port\fR \fIport\fR: Bind the DNS server to this local port (Default: 3444)\.
+.
+.IP "\(bu" 4
+\fB\-\-nss\-port\fR \fIport\fR Bind the "Network Service Switch" to this local port (Default: 5555)\.
+.
+.IP "\(bu" 4
+\fB\-\-web\-port\fR \fIport\fR Bind the web server to this local port (Default: 8080)\.
+.
+.IP "\(bu" 4
+\fB\-\-ipv4\-only, \-\-ipv6\-only\fR: Support only IPv4 or IPv6 for the DHT\.
+.
+.IP "\(bu" 4
+\fB\-h, \-\-help\fR: Print this help\.
+.
+.IP "\(bu" 4
+\fB\-v, \-\-version\fR: Print program version\.
+.
+.IP "" 0
+.
+.SH "kadnode\-ctl"
+\fBkadnode\-ctl\fR allows to control a running KadNode instance from the console or scripts\.
+.
+.IP "\(bu" 4
+\fBstatus\fR Print the node id, the number of known nodes / searches / stored hashes and more\.
+.
+.IP "\(bu" 4
+\fBimport\fR \fIaddr\fR Send a ping to another KadNode instance to establish a connection\.
+.
+.IP "\(bu" 4
+\fBlookup_node\fR \fIid\fR Lookup the IP address of a node that has identifier id\. The lookup is performed on the current search results\.
+.
+.IP "\(bu" 4
+\fBlookup_values\fR \fIid\fR Lookup the IP addresses of all nodes that claim to satisfy the identifier\. The lookup is performed on the current search results\.
+.
+.IP "\(bu" 4
+\fBsearch\fR \fIid\fR Start a search for nodes closest to the given identifier id\.
+.
+.IP "\(bu" 4
+\fBannounce\fR \fIid\fR \fIport\fR Announce that this instance can satisfy the identifier id\.
+.
+.IP "\(bu" 4
+\fBblacklist\fR \fIaddr\fR Blacklist a specifc IP address\.
+.
+.IP "\(bu" 4
+\fBexport\fR [v4|v6] Print a few good nodes\. The argument allows to select only IPv6 or IPv4 addresses\.
+.
+.IP "\(bu" 4
+\fBshutdown\fR Shutdown the daemon\.
+.
+.IP "" 0
+.
+.SH "NOTES"
+.
+.IP "\(bu" 4
+Kademlia drops announcements after 30 minutes\. Those need to be refreshed\.
+.
+.IP "\(bu" 4
+Blacklisted addreses are stored in a LRU cache of maximal 10 entries\.
+.
+.IP "" 0
+.
+.SH "LIMITATIONS / BUGS"
+.
+.IP "\(bu" 4
+KadNode cannot resolve its own node id without other nodes present\.
+.
+.IP "\(bu" 4
+No NAT\-traversal was implemented yet\.
+.
+.IP "" 0
+.
+.SH "LICENSE"
+MIT/X11
+.
+.SH "AUTHORS"
+.
+.IP "\(bu" 4
+KadNode: Moritz Warning (http://github\.com/mwarning)
+.
+.IP "\(bu" 4
+Kademlia: Juliusz Chroboczek
+.
+.IP "\(bu" 4
+SHA1: Steve Reid
+.
+.IP "" 0
+

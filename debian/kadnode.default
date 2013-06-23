@@ -1,0 +1,16 @@
+# Set the hostname of your node you want to be able
+# to resolve in the network.
+#
+# For mycomputer.p2p to resolve to your computers
+# IP address,  e.g. in browsers on other computers running
+# KadNode, set hostname to "mycomputer"
+#
+# Using a hostname that is already in use will cause conflicts and
+# will cause problems for everyone using this name. Be warned!
+#
+# If not set or empty, a random hash will be choosen every start.
+
+hostname=""
+
+# Note: The hostname will be used to generate a node identifier.
+# unless you use a 40 digit hex string to set it without hashing. 
