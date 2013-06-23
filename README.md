@@ -128,8 +128,9 @@ which is the result of sha1('myname'). This is true for every query using KadNod
   * `shutdown`
     Shutdown the daemon.
 
-## NOTES
+## NOTES / LIMITATIONS
 
+  * No support for NAT traversal, yet.
   * Kademlia drops announcements after 30 minutes. Those need to be refreshed.
   * Blacklisted addreses are stored in a LRU cache of maximal 10 entries.
 
