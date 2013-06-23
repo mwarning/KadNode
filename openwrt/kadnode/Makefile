@@ -12,7 +12,7 @@ PKG_RELEASE:=1
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)/
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=git://github.com/mwarning/kadnode.git
+PKG_SOURCE_URL:=git://github.com/mwarning/KadNode.git
 PKG_SOURCE_VERSION:=master
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_BUILD_PARALLEL:=1
@@ -25,7 +25,7 @@ define Package/kadnode
 	TITLE:=P2P DNS Server
 	DEPENDS:=+libpthread
 	SUBMENU:=IP Addresses and Names
-	URL:=https://github.com/mwarning/kadnode
+	URL:=https://github.com/mwarning/KadNode
 endef
 
 define Package/kadnode/description
