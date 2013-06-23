@@ -1,4 +1,9 @@
 /*
+Kademlia dht-0.21 as used e.g. in Transmission 2.77
+Source: https://github.com/jech/dht
+*/
+
+/*
 Copyright (c) 2009-2011 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
