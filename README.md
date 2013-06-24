@@ -103,7 +103,7 @@ which is the result of sha1('myname'). This is true for every entered identifier
   * `-v, --version`:
     Print program version.
 
-## kadnode-ctl
+### kadnode-ctl
 
 **kadnode-ctl** allows to control KadNode from the command line.
 
