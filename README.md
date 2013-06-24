@@ -10,25 +10,33 @@ kadnode(1) -- P2P name resolution daemon
 ## DESCRIPTION
 
 **KadNode** is a small P2P name resolution daemon for IPv4 and IPv6 based on the Kademlia
-implementation of a distributed hash table (DHT) for Posix systems (e.g. GNU/Linux).
-By default, KadNode tries to send pings to a multicast address on the local network
-to find nodes to bootstrap from. This is done as long no other nodes are known.
-An interactive remote shell called `kadnode-ctl` let the user import and export nodes, issues queries for
+implementation of a distributed hash table (DHT).
+By default, KadNode tries to send a ping to a multicast address on the local network
+to find nodes to bootstrap from. This is done every five minutes when no other nodes are known.
+The interactive remote shell `kadnode-ctl` let the user import and export nodes, issues queries for
 hash identifiers and send announcements.
 
 As an usage example one would call `kadnode --id myname.p2p` and call `kadnode-ctl import some-dht-tracker.com:4242`
-to help KadNode to bootstrap into the network.
-These imported node can also be the ones being exported last time before KadNode has been shut down.
+to help KadNode to bootstrap into an existing network network of at least one other node.
 On another computer that runs KadNode and that is connected to any nodes of the same network,
 myname.p2p can be entered in the browser and will now resolve to the ip address of the computer the first
 other KadNode instance is running.
 The domain name query is passed from the browser to the operating system to the NSS interface of KadNode.
+This way a domain can be resolved in a browser or any program on the computer.
 
-Identifiers can be entered as a string like `myname.p2p`. KadNode will ignore the top level domain
-(.p2p in this case) and apply sha1 hashing to the rest.
+KadNode/Kademlia is about two types of (20 Byte long) identifiers, node ids and value ids.
+Every Kademlia instance has one node id and can be used to also announce/resolve
+multiple value ids. DNS requests will be only mapped to node ids.
+Value ids have to be announced to other nodes using the *kadnode-ctl announce <id> <port>* command
+and will tell other nodes that a resource identified by the given id can be satisfied by this node on the given port.
+This could refer to a file hash or any other type of resource. Every KadNode forgets received announcements
+after 32 minutes, so these have to be refreshed regulary. Multiple nodes can announce the same value id.
+
+Identifiers entered in domain name syntax like `myname.p2p` will have the top level domain ignored
+and the rest converted to an id using the sha1 hash.
 As an alternative, the hash can be used directly as a 40 character hex string.
-The domain `myname.p2p` is therefore eqivalent to `fd0bef09a735b3cef767fb2c62b6bd365346bee5`
-which is the result of sha1('myname'). This is true for every query using KadNode.
+The string `myname.p2p` is therefore eqivalent to `fd0bef09a735b3cef767fb2c62b6bd365346bee5`
+which is the result of sha1('myname'). This is true for every entered identifier involving KadNode.
 
 ## INTERFACES
 
@@ -97,7 +105,7 @@ which is the result of sha1('myname'). This is true for every query using KadNod
 
 ## kadnode-ctl
 
-**kadnode-ctl** allows to control a running KadNode instance from the console or scripts.
+**kadnode-ctl** allows to control KadNode from the console.
 
   * `status`
     Print the node id, the number of known nodes / searches / stored hashes and more.
@@ -128,16 +136,12 @@ which is the result of sha1('myname'). This is true for every query using KadNod
   * `shutdown`
     Shutdown the daemon.
 
-## NOTES / LIMITATIONS
-
-  * No support for NAT traversal, yet.
-  * Kademlia drops announcements after 30 minutes. Those need to be refreshed.
-  * Blacklisted addreses are stored in a LRU cache of maximal 10 entries.
-
-## LIMITATIONS / BUGS
+## LIMITATIONS
 
   * KadNode cannot resolve its own node id without other nodes present.
   * No NAT-traversal was implemented yet.
+  * Kademlia drops announcements after 30 minutes. Those need to be refreshed.
+  * Blacklisted addreses are stored in a LRU cache of maximal 10 entries.
 
 ## LICENSE
 
