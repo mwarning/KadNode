@@ -16,35 +16,28 @@
 
 #include "main.h"
 
+#define BUFSIZE 1500
 
-int main( int argc, char **argv ) {
-	int sockfd;
-	struct addrinfo hints, *servinfo, *p;
+
+int udp_send( char* buffer, int port ) {
 	struct timeval tv;
+	int sockfd;
+	int n;
 	IP6 sockaddr;
-	char buffer[1500];
-	int i, n;
 
+	memset( &sockaddr, '\0', sizeof(sockaddr) );
 	sockaddr.sin6_family = AF_INET6;
-	sockaddr.sin6_port = htons( atoi( CMD_PORT ) );
+	sockaddr.sin6_port = htons( port );
 	inet_pton( AF_INET6, "::1", &sockaddr.sin6_addr );
-
-	/* Construct request string from args */
-    buffer[0] = '\0';
-	for( i = 1; i < argc; ++i ) {
-		strcat( buffer, " " );
-		strcat( buffer, argv[i] );
-	}
-	strcat(buffer, "\n");
 
 	if( (sockfd = socket( sockaddr.sin6_family, SOCK_DGRAM, IPPROTO_UDP )) < 0 ) {
 		fprintf( stderr, "Failed to create socket: %s\n", strerror( errno ) );
 		return 1;
 	}
 
-	/* Set receive timeout */
+	/* Set receive timeout: 100ms */
 	tv.tv_sec = 0;
-	tv.tv_usec = 200;
+	tv.tv_usec = 100;
 	if( setsockopt( sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(tv) ) < 0 ) {
 		fprintf( stderr, "Failed to set socket option SO_RCVTIMEO: %s\n", strerror( errno ) );
 		return 1;
@@ -56,7 +49,7 @@ int main( int argc, char **argv ) {
 	}
 
 	/* Receive reply */
-	n = read( sockfd, buffer, sizeof(buffer) - 1);
+	n = read( sockfd, buffer, BUFSIZE - 1);
 
 	if( n <= 0 ) {
 		fprintf( stderr, "No response received.\n");
@@ -73,4 +66,49 @@ int main( int argc, char **argv ) {
 		fprintf( stderr, buffer+1 );
 		return 1;
 	}
+}
+
+int main( int argc, char **argv ) {
+	char buffer[BUFSIZE];
+	int i;
+	int port;
+
+	/* Use the default port */
+	port = atoi( CMD_PORT );
+
+	/* Skip binary name */
+	argc -= 1;
+	argv += 1;
+
+	if( argc >= 1 ) {
+		if( strcmp( argv[0], "-h") == 0 ) {
+			fprintf( stdout, "kadnode-ctl [-h|-p <port>] <commands>...\n\n" );
+			return 0;
+		} else if( strcmp( argv[0], "-p" ) == 0 ) {
+			if( argc >= 2 ) {
+				port = atoi( argv[1] );
+				/* Skip option and port */
+				argc -= 2;
+				argv += 2;
+			} else {
+				fprintf( stderr, "Port is missing!\n" );
+				return 1;
+			}
+		}
+	}
+
+	if( port < 1 || port > 65535 ) {
+		fprintf( stderr, "Port is invalid!\n" );
+		return 1;
+	}
+
+	/* Construct request string from args */
+	buffer[0] = '\0';
+	for( i = 1; i < argc; ++i ) {
+		strcat( buffer, " " );
+		strcat( buffer, argv[i] );
+	}
+	strcat(buffer, "\n");
+
+	return udp_send( buffer, port );
 }
