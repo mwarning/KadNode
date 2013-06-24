@@ -51,9 +51,9 @@ save_nodes() {
 	current_nodes_n=`count $current_nodes`
 
 	if [ $current_nodes_n -ge $stored_nodes_n ]; then
-		uci delete kadnode.@kadnode[0].node
+		uci delete kadnode.$s.node
 		for node in $current_nodes; do
-			uci add_list kadnode.@kadnode[0].node="$node"
+			uci add_list kadnode.$s.node="$node"
 		done
 		uci commit kadnode
 	fi
