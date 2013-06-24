@@ -105,7 +105,15 @@ which is the result of sha1('myname'). This is true for every entered identifier
 
 ## kadnode-ctl
 
-**kadnode-ctl** allows to control KadNode from the console.
+**kadnode-ctl** allows to control KadNode from the command line.
+
+  * `-p` *port*:
+    Connect to the local KadNode console on this interface (Default: 1704):
+
+  * `-h`:
+    Print this help.
+
+#### KadNode Console Commands
 
   * `status`
     Print the node id, the number of known nodes / searches / stored hashes and more.
