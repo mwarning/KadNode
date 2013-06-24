@@ -70,7 +70,7 @@ Modified 06/13
 By Moritz Warning <moritzwarning@web.de>
 Still 100% public domain
 - add compile time endianess detection that works for OpenWrt.
-- remov #include "os_types.h" -  is not on my system
+- remove #include "os_types.h" -  is not on my system
 */
 
 /*
