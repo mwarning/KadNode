@@ -104,7 +104,7 @@ int main( int argc, char **argv ) {
 
 	/* Construct request string from args */
 	buffer[0] = '\0';
-	for( i = 1; i < argc; ++i ) {
+	for( i = 0; i < argc; ++i ) {
 		strcat( buffer, " " );
 		strcat( buffer, argv[i] );
 	}
