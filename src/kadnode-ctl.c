@@ -19,6 +19,13 @@
 #define BUFSIZE 1500
 
 
+const char *usage = "KadNode Control - Send commands to a KadNode instance.\n\n"
+"Usage: kadnode-ctl [OPTIONS]* [COMMANDS]*\n"
+"\n"
+" -p <port>	Connect to this port (Default: "CMD_PORT")\n"
+" -h		Print this help.\n"
+"\n";
+
 int udp_send( char* buffer, int port ) {
 	struct timeval tv;
 	int sockfd;
@@ -82,7 +89,7 @@ int main( int argc, char **argv ) {
 
 	if( argc >= 1 ) {
 		if( strcmp( argv[0], "-h") == 0 ) {
-			fprintf( stdout, "kadnode-ctl [-h|-p <port>] <commands>...\n\n" );
+			fprintf( stdout, "%s", usage );
 			return 0;
 		} else if( strcmp( argv[0], "-p" ) == 0 ) {
 			if( argc >= 2 ) {
