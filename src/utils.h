@@ -17,6 +17,7 @@ void id_fromHex( UCHAR *id, const char *hex, size_t size );
 
 int str_isHex( const char *string, int size );
 int str_isValidHostname( const char *hostname, int size );
+int str_isZero( const char* str );
 
 char *str_id( const UCHAR *in, char *idbuf );
 char *str_addr( IP *addr, char *addrbuf );

@@ -512,6 +512,11 @@ void* dns_loop( void *_ ) {
 
 void dns_start( void ) {
 	pthread_attr_t attr;
+
+	if( str_isZero( gstate->dns_port ) ) {
+		return;
+	}
+
 	pthread_attr_init( &attr );
 	pthread_attr_setdetachstate( &attr, PTHREAD_CREATE_JOINABLE );
 
@@ -521,6 +526,11 @@ void dns_start( void ) {
 }
 
 void dns_stop( void ) {
+
+	if( str_isZero( gstate->dns_port ) ) {
+		return;
+	}
+
 	if( pthread_join( gstate->dns_thread, NULL ) != 0 ) {
 		log_err( "DNS: Failed to join thread." );
 	}

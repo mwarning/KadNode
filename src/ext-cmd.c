@@ -400,6 +400,11 @@ void cmd_console_loop() {
 
 void cmd_start( void ) {
 	pthread_attr_t attr;
+
+	if( str_isZero( gstate->cmd_port ) ) {
+		return;
+	}
+
 	pthread_attr_init( &attr );
 	pthread_attr_setdetachstate( &attr, PTHREAD_CREATE_JOINABLE );
 
@@ -409,6 +414,11 @@ void cmd_start( void ) {
 }
 
 void cmd_stop() {
+
+	if( str_isZero( gstate->cmd_port ) ) {
+		return;
+	}
+
 	if( pthread_join( gstate->cmd_thread, NULL ) != 0 ) {
 		log_err( "CMD: Failed to join thread." );
 	}

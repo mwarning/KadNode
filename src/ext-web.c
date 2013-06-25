@@ -146,6 +146,11 @@ void* web_loop( void* _ ) {
 
 void web_start( void ) {
 	pthread_attr_t attr;
+
+	if( str_isZero( gstate->web_port ) ) {
+		return;
+	}
+
 	pthread_attr_init( &attr );
 	pthread_attr_setdetachstate( &attr, PTHREAD_CREATE_JOINABLE );
 
@@ -155,6 +160,11 @@ void web_start( void ) {
 }
 
 void web_stop( void ) {
+
+	if( str_isZero( gstate->web_port ) ) {
+		return;
+	}
+
 	if( pthread_join( gstate->web_thread, NULL ) != 0 ) {
 		log_err( "WEB: Failed to join thread." );
 	}

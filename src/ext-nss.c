@@ -123,6 +123,11 @@ void* nss_loop( void* _ ) {
 
 void nss_start( void ) {
 	pthread_attr_t attr;
+
+	if( str_isZero( gstate->nss_port ) ) {
+		return;
+	}
+
 	pthread_attr_init( &attr );
 	pthread_attr_setdetachstate( &attr, PTHREAD_CREATE_JOINABLE );
 
@@ -132,6 +137,11 @@ void nss_start( void ) {
 }
 
 void nss_stop( void ) {
+
+	if( str_isZero( gstate->nss_port ) ) {
+		return;
+	}
+
 	if( pthread_join( gstate->nss_thread, NULL ) != 0 ) {
 		log_err( "NSS: Failed to join thread." );
 	}

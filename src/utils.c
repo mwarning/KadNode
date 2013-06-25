@@ -119,6 +119,11 @@ int str_isValidHostname( const char *hostname, int size ) {
 	return 1;
 }
 
+int str_isZero( const char* str ) {
+	return (str == NULL) || (strcmp( str, "0" ) == 0);
+}
+
+
 char* str_id( const UCHAR *in, char *buf ) {
 	int i = 0;
 	UCHAR *p0 = (UCHAR *)in;
