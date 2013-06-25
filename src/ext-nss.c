@@ -30,6 +30,7 @@ void nss_lookup( int sock, IP *clientaddr, UCHAR *id ) {
 	if( kad_lookup_node( AF_UNSPEC, id, &addr ) != 0 ) {
 		/* Start find process */
 		kad_search( AF_UNSPEC, id );
+		log_debug( "NSS: Node not found; starting search.");
 		return;
 	}
 
