@@ -48,7 +48,7 @@ which is the result of sha1('myname'). This is true for every entered identifier
 
 ## DOWNLOADS
 
-  * https://sourceforge.net/projects/kadnode/files/0.1/
+  * https://sourceforge.net/projects/kadnode/files/
 
 ## OPTIONS
   * `--id` *identifier*:

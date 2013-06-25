@@ -43,7 +43,7 @@ A simple web server interface to resolve queries: \fBhttp://localhost:8080/foo\.
 .SH "DOWNLOADS"
 .
 .IP "\(bu" 4
-https://sourceforge\.net/projects/kadnode/files/0\.1/
+https://sourceforge\.net/projects/kadnode/files/
 .
 .IP "" 0
 .
@@ -68,13 +68,16 @@ https://sourceforge\.net/projects/kadnode/files/0\.1/
 \fB\-\-mcast\-addr6\fR \fIaddress\fR: Send pings to this multicast address/port as long no nodes were found\. Default: ff0e::1
 .
 .IP "\(bu" 4
+\fB\-\-disable\-mcast\fR: Disable multicast\.
+.
+.IP "\(bu" 4
 \fB\-\-daemon\fR: Run in background\.
 .
 .IP "\(bu" 4
 \fB\-\-verbosity\fR: Verbosity level: quiet, verbose or debug (Default: verbose)\.
 .
 .IP "\(bu" 4
-\fB\-\-pidfile\fR \fIfile\-path\fR Write process pid to a file\.
+\fB\-\-pidfile\fR \fIfile\-path\fR: Write process pid to a file\.
 .
 .IP "\(bu" 4
 \fB\-\-cmd\-port\fR \fIport\fR: Bind the remote control interface to this local port (Default: 1704)\.
@@ -83,10 +86,10 @@ https://sourceforge\.net/projects/kadnode/files/0\.1/
 \fB\-\-dns\-port\fR \fIport\fR: Bind the DNS server to this local port (Default: 3444)\.
 .
 .IP "\(bu" 4
-\fB\-\-nss\-port\fR \fIport\fR Bind the "Network Service Switch" to this local port (Default: 5555)\.
+\fB\-\-nss\-port\fR \fIport\fR: Bind the "Network Service Switch" to this local port (Default: 5555)\.
 .
 .IP "\(bu" 4
-\fB\-\-web\-port\fR \fIport\fR Bind the web server to this local port (Default: 8080)\.
+\fB\-\-web\-port\fR \fIport\fR: Bind the web server to this local port (Default: 8080)\.
 .
 .IP "\(bu" 4
 \fB\-\-ipv4\-only, \-\-ipv6\-only\fR: Support only IPv4 or IPv6 for the DHT\.
