@@ -31,23 +31,34 @@ section_enabled() {
 	[ $enabled -gt 0 ]
 }
 
-load_node() {
-	local node="$1"
-	kadnode-ctl import "$node" &> /dev/null
+load_nodes() {
+	local s="$1"
+	local port="1704"
+
+	config_get port "$s" "cmd_port"
+
+	load_node() {
+		kadnode-ctl -p $port import "$1" &> /dev/null
+	}
+
+	config_list_foreach "$s" "node" load_node
 }
 
 save_nodes() {
 	local s="$1"
+	local port="1704"
 	local node
 	local stored_nodes
 	local stored_nodes_n
 	local current_nodes
 	local current_nodes_n
 
+	config_get port "$s" "cmd_port"
+
 	config_get stored_nodes "$s" "node"
 	stored_nodes_n=`count $stored_nodes`
 
-	current_nodes=`kadnode-ctl export 2> /dev/null`
+	current_nodes=`kadnode-ctl -p $port export 2> /dev/null`
 	current_nodes_n=`count $current_nodes`
 
 	if [ $current_nodes_n -ge $stored_nodes_n ]; then
@@ -75,14 +86,14 @@ start_instance() {
 	eval service_start "'$KADNODE_BIN'" --daemon --pidfile "'$SERVICE_PID_FILE'" $OPTS
 
 	#import nodes to bootstrap from
-	config_list_foreach "$s" node load_node
+	load_nodes "$s"
 }
 
 stop_instance() {
 	local s="$1"
 	local save_nodes_enabled
 
-	#save good nodes to bootstrap from on next startup
+	#save good nodes
 	config_get_bool save_nodes_enabled "$s" 'save_nodes' 0
 	if [ $save_nodes_enabled -gt 0 ]; then
 		save_nodes "$s"
