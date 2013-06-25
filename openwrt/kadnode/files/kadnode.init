@@ -70,7 +70,7 @@ start_instance() {
 	append_opts "$s" id user port ifce cmd_port\
 		mcast_addr6 mcast_addr4 dns_port verbosity
 
-	append_opts_boolean "$s" ipv4_only ipv6_only
+	append_opts_boolean "$s" ipv4_only ipv6_only disable_mcast
 
 	eval service_start "'$KADNODE_BIN'" --daemon --pidfile "'$SERVICE_PID_FILE'" $OPTS
 

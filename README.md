@@ -73,13 +73,16 @@ which is the result of sha1('myname'). This is true for every entered identifier
     Send pings to this multicast address/port as long no nodes were found.
     Default: ff0e::1
 
+  * `--disable-mcast`:
+    Disable multicast.
+
   * `--daemon`:
     Run in background.
 
   * `--verbosity`:
     Verbosity level: quiet, verbose or debug (Default: verbose).
 
-  * `--pidfile` *file-path*
+  * `--pidfile` *file-path*:
     Write process pid to a file.
 
   * `--cmd-port` *port*:
@@ -88,10 +91,10 @@ which is the result of sha1('myname'). This is true for every entered identifier
   * `--dns-port` *port*:
     Bind the DNS server to this local port (Default: 3444).
 
-  * `--nss-port` *port*
+  * `--nss-port` *port*:
     Bind the "Network Service Switch" to this local port (Default: 5555).
 
-  * `--web-port` *port*
+  * `--web-port` *port*:
     Bind the web server to this local port (Default: 8080).
 
   * `--ipv4-only, --ipv6-only`:

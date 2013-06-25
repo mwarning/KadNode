@@ -48,6 +48,7 @@ const char *usage = "KadNode - A P2P name resolution daemon (IPv4/IPv6)\n"
 "		Default: "DHT_ADDR4_MCAST"\n\n"
 " --mcast-addr6	Use IPv6 multicast address for bootstrapping.\n"
 "		Default: "DHT_ADDR6_MCAST"\n\n"
+" --disable-mcast Disable multicast.\n\n"
 " --ifce		Bind to this interface.\n"
 "		Default: <any>\n\n"
 " --daemon	Run the node in background.\n\n"
@@ -241,7 +242,7 @@ void conf_handle( char *var, char *val ) {
 		conf_str( var, &gstate->mcast_addr4, val );
 	} else if( match( var, "--mcast-addr6" ) ) {
 		conf_str( var, &gstate->mcast_addr6, val );
-	} else if( match( var, "--disable-multicast" ) ) {
+	} else if( match( var, "--disable-mcast" ) ) {
 		if( val != NULL ) {
 			conf_no_arg_expected( var );
 		} else {
