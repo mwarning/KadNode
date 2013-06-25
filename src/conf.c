@@ -88,7 +88,12 @@ void conf_init() {
 	gstate->sock6 = -1;
 
 	gstate->is_running = 1;
+
+#ifdef DEBUG
+	gstate->verbosity = VERBOSITY_DEBUG;
+#else
 	gstate->verbosity = VERBOSITY_VERBOSE;
+#endif
 
 	gstate->dht_port = strdup( DHT_PORT );
 	gstate->mcast_addr4 = strdup( DHT_ADDR4_MCAST );
