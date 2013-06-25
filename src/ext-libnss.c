@@ -194,8 +194,8 @@ int _nss_kadnode_lookup( const char *hostname, int size, IP *addr ) {
 	if( n == sizeof(IP) ) {
 		/* Got result. */
 		memcpy( addr, buffer, sizeof(IP) );
-		return 0;
+		return 1;
 	} else {
-		return -1;
+		return 0;
 	}
 }
