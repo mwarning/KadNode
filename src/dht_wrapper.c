@@ -398,6 +398,7 @@ void kad_debug_searches( int fd ) {
 
 	for( j = 0; s != NULL; ++j ) {
 		dprintf( fd, " Search: %s\n", str_id( s->id, hexbuf ) );
+		dprintf( fd, "  af %s\n", (s->af == AF_INET) ? "AF_INET" : "AF_INET6" );
 		dprintf( fd, "  port %d\n", s->port );
 		dprintf( fd, "  done %d\n", s->done );
 		for(i = 0; i < s->numnodes; ++i) {
