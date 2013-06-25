@@ -89,11 +89,13 @@ void cmd_to_args( char *str, int *argc, char **argv, int max_argv ) {
 }
 
 int cmd_import( REPLY *r, const char *addr_str) {
+	char addrbuf[FULL_ADDSTRLEN+1];
 	IP addr;
 
 	/* If the address contains no port - use the default port */
 	if( addr_parse_full( &addr, addr_str, DHT_PORT, AF_UNSPEC ) == 0 ) {
 		kad_ping( &addr );
+		r_printf( r, "Send ping to: %s\n", str_addr( &addr, addrbuf ) );
 		return 0;
 	} else {
 		r_printf( r, "Failed to parse address.\n" );
