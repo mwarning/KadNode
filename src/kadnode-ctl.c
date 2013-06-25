@@ -44,7 +44,7 @@ int udp_send( char* buffer, int port ) {
 
 	/* Set receive timeout: 200ms */
 	tv.tv_sec = 0;
-	tv.tv_usec = 200;
+	tv.tv_usec = 200000;
 	if( setsockopt( sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(tv) ) < 0 ) {
 		fprintf( stderr, "Failed to set socket option SO_RCVTIMEO: %s\n", strerror( errno ) );
 		return 1;
