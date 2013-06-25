@@ -1,3 +1,11 @@
+kadnode (0.2) unstable; urgency=high
+
+  * kadnode-nss: positive lookup result gets ignored
+  * kadnode-ctl: longer timeout
+  * kadnode: disable DNS/NSS/CMD/WEB interface when port is set to 0
+
+ -- mwarning <mwarning@wal.lan>  Wed, 26 Jun 2013 00:50:40 +0200
+
 kadnode (0.1) unstable; urgency=low
 
   * Initial release.
