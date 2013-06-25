@@ -19,13 +19,13 @@ int kad_search( int af, const UCHAR *id );
 
 /*
 * Lookup the address of the node whose node id matches id.
-* The Lookup will be performed on the search result.
+* The Lookup will be performed on the search results.
 */
 int kad_lookup_node( int af, const UCHAR* id, IP *addr_return );
 
 /*
-* Lookup the addresses of the nodes who have announced id.
-* The Lookup will be performed on the search result.
+* Lookup the addresses of the nodes who have announced value id.
+* The Lookup will be performed on the search results.
 */
 int kad_lookup_values( int af, const UCHAR* id, IP addr_array[], int *addr_num );
 

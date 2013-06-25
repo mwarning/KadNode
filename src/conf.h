@@ -40,12 +40,12 @@ struct obj_gstate {
 	/* Port number for the DHT and multicast */
 	char* dht_port;
 
+	/* Limit the DHT to this interface */
+	char *dht_ifce;
+
 	/* DHT multicast addresses for bootstrapping */
 	char *mcast_addr4;
 	char *mcast_addr6;
-
-	/* Limit the DHT to this interface */
-	char *dht_ifce;
 
 	/* Have the multicast addresses been registered yet? */
 	int mcast_registered4;

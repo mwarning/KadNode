@@ -52,7 +52,7 @@ int udp_send( char* buffer, int port ) {
 	n = read( sockfd, buffer, BUFSIZE - 1);
 
 	if( n <= 0 ) {
-		fprintf( stderr, "No response received.\n");
+		fprintf( stderr, "No response received.\n" );
 		return 1;
 	}
 
@@ -108,7 +108,7 @@ int main( int argc, char **argv ) {
 		strcat( buffer, " " );
 		strcat( buffer, argv[i] );
 	}
-	strcat(buffer, "\n");
+	strcat( buffer, "\n" );
 
 	return udp_send( buffer, port );
 }
