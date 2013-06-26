@@ -209,7 +209,7 @@ int cmd_exec( REPLY * r, int argc, char **argv ) {
 
 		/* Check searches for node */
 		if( kad_lookup_values( AF_UNSPEC, id, addrs, &addrs_n ) == 0 ) {
-			for( i = 0; i < N_ELEMS(addrs); ++i ) {
+			for( i = 0; i < addrs_n; ++i ) {
 				r_printf( r, "%s\n", str_addr( &addrs[i], addrbuf ) );
 			}
 			rc = 0;
