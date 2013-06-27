@@ -148,12 +148,12 @@ char* str_addr( IP *addr, char *addrbuf ) {
 		case AF_INET6:
 			port = ntohs( ((IP6 *)addr)->sin6_port );
 			inet_ntop( AF_INET6, &((IP6 *)addr)->sin6_addr, buf, sizeof(buf) );
-			sprintf( addrbuf, "[%s]:%d", buf, port );
+			sprintf( addrbuf, "[%s]:%hu", buf, port );
 			break;
 		case AF_INET:
 			port = ntohs( ((IP4 *)addr)->sin_port );
 			inet_ntop( AF_INET, &((IP4 *)addr)->sin_addr, buf, sizeof(buf) );
-			sprintf( addrbuf, "%s:%d", buf, port );
+			sprintf( addrbuf, "%s:%hu", buf, port );
 			break;
 		default:
 			sprintf( addrbuf, "<invalid address>" );
@@ -172,8 +172,8 @@ char* str_addr4( IP4 *addr, char *addrbuf ) {
 
 int addr_port( const IP *addr ) {
 	switch( addr->ss_family ) {
-		case AF_INET: return ((IP4 *)addr)->sin_port;
-		case AF_INET6: return ((IP6 *)addr)->sin6_port;
+		case AF_INET: return ntohs( ((IP4 *)addr)->sin_port );
+		case AF_INET6: return ntohs( ((IP6 *)addr)->sin6_port );
 		default: return 0;
 	}
 }

@@ -33,7 +33,7 @@ section_enabled() {
 
 load_nodes() {
 	local s="$1"
-	local port="1704"
+	local port="1700"
 
 	config_get port "$s" "cmd_port"
 
@@ -46,7 +46,7 @@ load_nodes() {
 
 save_nodes() {
 	local s="$1"
-	local port="1704"
+	local port="1700"
 	local node
 	local stored_nodes
 	local stored_nodes_n
@@ -79,9 +79,9 @@ start_instance() {
 	OPTS=""
 
 	append_opts "$s" id user port ifce cmd_port\
-		mcast_addr6 mcast_addr4 dns_port verbosity
+		mcast_addr mode dns_port verbosity
 
-	append_opts_boolean "$s" ipv4_only ipv6_only disable_mcast
+	append_opts_boolean "$s" disable_mcast
 
 	eval service_start "'$KADNODE_BIN'" --daemon --pidfile "'$SERVICE_PID_FILE'" $OPTS
 

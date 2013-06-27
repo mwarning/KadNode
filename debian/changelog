@@ -1,10 +1,20 @@
+kadnode (0.3) unstable; urgency=low
+
+  * Only support IPv4 or IPv6, not both at the same time
+  * Use announced resource identifiers instead of node identifiers
+  * Fix and rewrite search for values
+  * Change default multicast addresses to 239.192.202.7 / ff08:ca:07::
+  * Change default interface ports: cmd: 1700, dns: 5353, web: 8053, nss: 4053
+
+ -- mwarning <moritzwarning@web.de>  Thu, 27 Jun 2013 19:23:21 +0200
+
 kadnode (0.2) unstable; urgency=high
 
-  * kadnode-nss: positive lookup result gets ignored
-  * kadnode-ctl: longer timeout
+  * kadnode-nss: positive result with corrupted memory
+  * kadnode-ctl: timeout was too short
   * kadnode: disable DNS/NSS/CMD/WEB interface when port is set to 0
 
- -- mwarning <mwarning@wal.lan>  Wed, 26 Jun 2013 00:50:40 +0200
+ -- mwarning <moritzwarning@web.de>  Wed, 26 Jun 2013 00:50:40 +0200
 
 kadnode (0.1) unstable; urgency=low
 

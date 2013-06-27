@@ -11,40 +11,37 @@ kadnode(1) -- P2P name resolution daemon
 
 **KadNode** is a small P2P name resolution daemon for IPv4 and IPv6 based on the Kademlia
 implementation of a distributed hash table (DHT).
+
+KadNode let the user announce any kind of resource by an identifier and a port.
+This can be used e.g. to resolve a hostname to an ip address and port.
+
 By default, KadNode tries to send a ping to a multicast address on the local network
 to find nodes to bootstrap from. This is done every five minutes when no other nodes are known.
 The interactive remote shell `kadnode-ctl` let the user import and export nodes, issues queries for
-hash identifiers and send announcements.
+identifiers and send announcements.
 
-As an usage example one would call `kadnode --id myname.p2p` and call `kadnode-ctl import some-dht-tracker.com:4242`
+As an usage example one would start `kadnode` and call `kadnode-ctl import example.com:4242`
 to help KadNode to bootstrap into an existing network network of at least one other node.
-On another computer that runs KadNode and that is connected to any nodes of the same network,
-myname.p2p can be entered in the browser and will now resolve to the ip address of the computer the first
-other KadNode instance is running.
-The domain name query is passed from the browser to the operating system to the NSS interface of KadNode.
-This way a domain can be resolved in a browser or any program on the computer.
+`kadnode-ctl announce myname` will announce that the computer KadNode is running on
+can satisfy the resource identified by `myname`. An additional port can also be specified
+though, but most KadNode interfaces do not expose it.
+The announcement will be dropped by other KadNode instances after 32 minutes and
+therefore need to be refreshed around every 30 minutes.
 
-KadNode/Kademlia is about two types of (20 Byte long) identifiers, node ids and value ids.
-Every Kademlia instance has one node id and can be used to also announce/resolve
-multiple value ids. DNS requests will be only mapped to node ids.
-Value ids have to be announced to other nodes using the *kadnode-ctl announce <id> <port>* command
-and will tell other nodes that a resource identified by the given id can be satisfied by this node on the given port.
-This could refer to a file hash or any other type of resource. Every KadNode forgets received announcements
-after 32 minutes, so these have to be refreshed regulary. Multiple nodes can announce the same value id.
-
-Identifiers entered in domain name syntax like `myname.p2p` will have the top level domain ignored
-and the rest converted to an id using the sha1 hash.
-As an alternative, the hash can be used directly as a 40 character hex string.
-The string `myname.p2p` is therefore eqivalent to `fd0bef09a735b3cef767fb2c62b6bd365346bee5`
-which is the result of sha1('myname'). This is true for every entered identifier involving KadNode.
+Every entered identifier will have everything after the last dot ignored.
+This is intended to remove the top level domain from identifiers like `myname.p2p`.
+The rest of the string is converted to an 20 byte identifier using the sha1 hashing algorithm.
+As an alternative, the hash can be entered directly as a 40 character hexadecimal string.
+The string `myname.p2p` is therefore eqivalent to `d13b93ea42804188d277c20f7d6e5be2732148b8`
+which is the result of sha1('myname'). This is true for every entered identifier that involves KadNode.
 
 ## INTERFACES
 
   * An interactive shell to issue queries and manage the DHT. Useful for shell scripts:
-  `kadnode-ctl myname.p2p`
+  `kadnode-ctl search myname.p2p`
   * Name Service Switch (NSS) support through /etc/nsswitch.conf.
   * A simple DNS server interface that can be used like a local upstream DNS server.
-  * A simple web server interface to resolve queries: `http://localhost:8080/foo.p2p`
+  * A simple web server interface to resolve queries: `http://localhost:8053/foo.p2p`
 
 ## DOWNLOADS
 
@@ -65,13 +62,9 @@ which is the result of sha1('myname'). This is true for every entered identifier
   * `--ifce` *interface*:
 	Bind to this interface (Default: &lt;all&gt;).
 
-  * `--mcast-addr4` *address*:
+  * `--mcast-addr` *address*:
     Send pings to this multicast address as long no nodes were found.
-    Default: 239.0.0.1
-
-  * `--mcast-addr6` *address*:
-    Send pings to this multicast address/port as long no nodes were found.
-    Default: ff0e::1
+    Default: 239.192.202.7 / ff08:ca:07::
 
   * `--disable-mcast`:
     Disable multicast.
@@ -86,19 +79,19 @@ which is the result of sha1('myname'). This is true for every entered identifier
     Write process pid to a file.
 
   * `--cmd-port` *port*:
-    Bind the remote control interface to this local port (Default: 1704).
+    Bind the remote control interface to this local port (Default: 1700).
 
   * `--dns-port` *port*:
-    Bind the DNS server to this local port (Default: 3444).
+    Bind the DNS server to this local port (Default: 5353).
 
   * `--nss-port` *port*:
-    Bind the "Network Service Switch" to this local port (Default: 5555).
+    Bind the "Network Service Switch" to this local port (Default: 4053).
 
   * `--web-port` *port*:
-    Bind the web server to this local port (Default: 8080).
+    Bind the web server to this local port (Default: 8053).
 
-  * `--ipv4-only, --ipv6-only`:
-    Support only IPv4 or IPv6 for the DHT.
+  * `--mode` *protocol*:
+    Enable IPv4 or IPv6 mode for the DHT (Default: ipv4).
 
   * `-h, --help`:
     Print this help.
@@ -111,7 +104,7 @@ which is the result of sha1('myname'). This is true for every entered identifier
 **kadnode-ctl** allows to control KadNode from the command line.
 
   * `-p` *port*:
-    Connect to the local KadNode console on this interface (Default: 1704):
+    Connect to the local KadNode console on this interface (Default: 1700):
 
   * `-h`:
     Print this help.
@@ -121,28 +114,28 @@ which is the result of sha1('myname'). This is true for every entered identifier
   * `status`
     Print the node id, the number of known nodes / searches / stored hashes and more.
 
-  * `import` <addr>
-    Send a ping to another KadNode instance to establish a connection.
+  * `search` <id>
+    Start a search for nodes closest to the given identifier id.
+
+  * `lookup` <id>
+    Lookup the IP addresses of all nodes that claim to satisfy the identifier.
+	The lookup is performed on the current search results.
 
   * `lookup_node` <id>
     Lookup the IP address of a node that has identifier id.
 	The lookup is performed on the current search results.
 
-  * `lookup_values` <id>
-    Lookup the IP addresses of all nodes that claim to satisfy the identifier.
-	The lookup is performed on the current search results.
-
-  * `search` <id>
-    Start a search for nodes closest to the given identifier id.
-
-  * `announce` <id> <port>
+  * `announce` <id> [<port>]
     Announce that this instance can satisfy the identifier id.
+
+  * `import` <addr>
+    Send a ping to another KadNode instance to establish a connection.
+
+  * `export`
+    Print a few good nodes. The argument allows to select only IPv6 or IPv4 addresses.
 
   * `blacklist` <addr>
     Blacklist a specifc IP address.
-
-  * `export` [v4|v6]
-    Print a few good nodes. The argument allows to select only IPv6 or IPv4 addresses.
 
   * `shutdown`
     Shutdown the daemon.

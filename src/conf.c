@@ -44,10 +44,8 @@ const char *usage = "KadNode - A P2P name resolution daemon (IPv4/IPv6)\n"
 " --user		Change the UUID after start.\n\n"
 " --port		Bind to this port.\n"
 "		Default: "DHT_PORT"\n\n"
-" --mcast-addr4	Use IPv4 multicast address for bootstrapping.\n"
-"		Default: "DHT_ADDR4_MCAST"\n\n"
-" --mcast-addr6	Use IPv6 multicast address for bootstrapping.\n"
-"		Default: "DHT_ADDR6_MCAST"\n\n"
+" --mcast-addr	Use multicast address for bootstrapping.\n"
+"		Default: "DHT_ADDR4_MCAST" / "DHT_ADDR6_MCAST"\n\n"
 " --disable-mcast Disable multicast.\n\n"
 " --ifce		Bind to this interface.\n"
 "		Default: <any>\n\n"
@@ -71,9 +69,8 @@ const char *usage = "KadNode - A P2P name resolution daemon (IPv4/IPv6)\n"
 " --web-port	Bind the web server to this local port.\n"
 "		Default: "WEB_PORT"\n\n"
 #endif
-" --ipv4-only\n"
-" --ipv6-only\n"
-"		Use IPv4 or IPv6 only for the DHT.\n\n"
+" --mode	Enable IPv4 or IPv6 mode for the DHT.\n"
+"		Default: ipv4\n\n"
 " -h, --help	Print this help.\n\n"
 " -v, --version	Print program version.\n\n";
 
@@ -84,9 +81,6 @@ void conf_init() {
 
 	id_random( gstate->node_id, SHA_DIGEST_LENGTH );
 
-	gstate->sock4 = -1;
-	gstate->sock6 = -1;
-
 	gstate->is_running = 1;
 
 #ifdef DEBUG
@@ -95,9 +89,10 @@ void conf_init() {
 	gstate->verbosity = VERBOSITY_VERBOSE;
 #endif
 
+	gstate->af = AF_INET;
+	gstate->sock = -1;
 	gstate->dht_port = strdup( DHT_PORT );
-	gstate->mcast_addr4 = strdup( DHT_ADDR4_MCAST );
-	gstate->mcast_addr6 = strdup( DHT_ADDR6_MCAST );
+	gstate->mcast_addr = strdup( DHT_ADDR4_MCAST );
 
 #ifdef CMD
 	gstate->cmd_port = strdup( CMD_PORT );
@@ -119,8 +114,9 @@ void conf_init() {
 void conf_check() {
 	char hexbuf[HEX_LEN+1];
 
-	log_info( "Starting KadNode v"MAIN_VERSION"." );
+	log_info( "Starting KadNode v"MAIN_VERSION );
 	log_info( "Own ID: %s", str_id( gstate->node_id, hexbuf ) );
+	log_info( "Kademlia mode: %s", (gstate->af == AF_INET) ? "IPv4" : "IPv6");
 
 	if( gstate->is_daemon ) {
 		log_info( "Mode: Daemon" );
@@ -141,16 +137,6 @@ void conf_check() {
 		default:
 			log_err( "Invalid verbosity level." );
 	}
-
-	if( gstate->ipv4_only && gstate->ipv4_only ) {
-		log_err( "Cannot disable both IPv4 and IPv6 support." );
-	} else if( gstate->ipv4_only ) {
-		log_info( "IPv4 only mode." );
-	} else if( gstate->ipv6_only ){
-		log_info( "IPv6 only mode." );
-	} else {
-		log_info( "IPv6/IPv4 dual mode." );
-	}
 }
 
 void conf_free() {
@@ -159,8 +145,7 @@ void conf_free() {
 	free( gstate->pid_file );
 	free( gstate->dht_port );
 	free( gstate->dht_ifce );
-	free( gstate->mcast_addr4 );
-	free( gstate->mcast_addr6 );
+	free( gstate->mcast_addr );
 
 #ifdef CMD
 	free( gstate->cmd_port );
@@ -187,7 +172,7 @@ void conf_no_arg_expected( const char *var ) {
 }
 
 /* free the old string and set the new */
-void conf_str( char *var, char** dst, char *src ) {
+void conf_str( const char *var, char** dst, const char *src ) {
 	if( src == NULL ) {
 		conf_arg_expected( var );
 	}
@@ -229,30 +214,29 @@ void conf_handle( char *var, char *val ) {
 	} else if( match( var, "--web-port" ) ) {
 		conf_str( var, &gstate->web_port, val );
 #endif
-	} else if( match( var, "--ipv4-only" ) ) {
-		if( val != NULL ) {
-			conf_no_arg_expected( var );
+	} else if( match( var, "--mode" ) ) {
+		if( val && match( val, "ipv4" ) ) {
+			gstate->af = AF_INET;
+			if( strcmp( gstate->mcast_addr, DHT_ADDR4_MCAST ) == 0 ) {
+				conf_str( var, &gstate->mcast_addr, DHT_ADDR4_MCAST );
+			}
+		} else if( val && match( val, "ipv6" ) ) {
+			gstate->af = AF_INET6;
+			if( strcmp( gstate->mcast_addr, DHT_ADDR4_MCAST ) == 0 ) {
+				conf_str( var, &gstate->mcast_addr, DHT_ADDR6_MCAST );
+			}
 		} else {
-			gstate->ipv4_only = 1;
-		}
-	} else if( match( var, "--ipv6-only" ) ) {
-		if( val != NULL ) {
-			conf_no_arg_expected( var );
-		} else {
-			gstate->ipv6_only = 1;
+			log_err("CFG: Value 'ipv4' or 'ipv6' for parameter --mode expected.");
 		}
 	} else if( match( var, "--port" ) ) {
 		conf_str( var, &gstate->dht_port, val );
-	} else if( match( var, "--mcast-addr4" ) ) {
-		conf_str( var, &gstate->mcast_addr4, val );
-	} else if( match( var, "--mcast-addr6" ) ) {
-		conf_str( var, &gstate->mcast_addr6, val );
+	} else if( match( var, "--mcast-addr" ) ) {
+		conf_str( var, &gstate->mcast_addr, val );
 	} else if( match( var, "--disable-mcast" ) ) {
 		if( val != NULL ) {
 			conf_no_arg_expected( var );
 		} else {
-			memset( &gstate->time_mcast4, 0xFF, sizeof(time_t) );
-			memset( &gstate->time_mcast6, 0xFF, sizeof(time_t) );
+			memset( &gstate->time_mcast, 0xFF, sizeof(time_t) );
 		}
 	} else if( match( var, "--ifce" ) ) {
 		conf_str( var, &gstate->dht_ifce, val );

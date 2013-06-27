@@ -30,12 +30,12 @@ struct obj_gstate {
 	/* Quiet / Verbose / Debug */
 	int verbosity;
 
-	int ipv4_only;
-	int ipv6_only;
 
-	/* DHT sockets */
-	int sock4;
-	int sock6;
+	/* IPv4 or IPv6 mode */
+	int af;
+
+	/* DHT socket */
+	int sock;
 
 	/* Port number for the DHT and multicast */
 	char* dht_port;
@@ -43,17 +43,15 @@ struct obj_gstate {
 	/* Limit the DHT to this interface */
 	char *dht_ifce;
 
+
 	/* DHT multicast addresses for bootstrapping */
-	char *mcast_addr4;
-	char *mcast_addr6;
+	char *mcast_addr;
 
 	/* Have the multicast addresses been registered yet? */
-	int mcast_registered4;
-	int mcast_registered6;
+	int mcast_registered;
 
 	/* Last performed multicast */
-	time_t time_mcast4;
-	time_t time_mcast6;
+	time_t time_mcast;
 
 #ifdef CMD
 	char *cmd_port;

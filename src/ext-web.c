@@ -12,29 +12,31 @@
 #include "conf.h"
 #include "log.h"
 #include "utils.h"
-#include "dht_wrapper.h"
+#include "kad.h"
 #include "ext-web.h"
 
 
-const char *reply_fmt = "HTTP/1.1 200 OK\r\n"
+const char *reply_header = "HTTP/1.1 200 OK\r\n"
 "Connection: close\r\n"
 "Content-Length: %ul\r\n"
 "Content-Type: text/plain\r\n"
-"\r\n%s";
+"\r\n";
 
 void* web_loop( void* _ ) {
 
-	int val, n;
+	int val, n, i;
 	struct timeval tv;
 
 	UCHAR node_id[SHA_DIGEST_LENGTH];
 	char hexbuf[HEX_LEN+1];
 
 	int sock, clientfd;
-	IP clientaddr, sockaddr, node_addr;
+	IP clientaddr, sockaddr;
 	socklen_t addrlen_ret;
 	char request_buf[1500];
 	char reply_buf[512];
+	IP addrs[16];
+	int addrsnum;
 
 	char *hostname_start, *hostname_end;
 	char addrbuf[FULL_ADDSTRLEN+1];
@@ -122,14 +124,16 @@ void* web_loop( void* _ ) {
 		log_debug( "WEB: Lookup '%s' as '%s'.", hostname_start, str_id( node_id, hexbuf ) );
 
 		/* Check searches for node */
-		if( kad_lookup_node( AF_INET6, node_id, &node_addr ) != 0 ) {
+		addrsnum = N_ELEMS(addrs);
+		if( kad_lookup_value( node_id, addrs, &addrsnum ) != 0 ) {
 			/* Start find process */
-			kad_search( AF_INET6, node_id );
+			kad_search( node_id );
 		} else {
-			inet_ntop( AF_INET6, &node_addr, addrbuf, sizeof(addrbuf) );
-			sprintf( reply_buf, reply_fmt, strlen( addrbuf ), addrbuf );
-
-			log_debug( "WEB: Answer request for '%s':\n%s", str_id( node_id, hexbuf ), addrbuf );
+			sprintf( reply_buf, reply_header );
+			for( i = 0; i < addrsnum; i++ ) {
+				sprintf( reply_buf, "%s\n", str_addr( &addrs[i], addrbuf ) );
+			}
+			log_debug( "WEB: Answer request for '%s':\n%s", reply_buf );
 
 			sendto( clientfd, reply_buf, strlen( reply_buf ), 0, (struct sockaddr*) &clientaddr, sizeof(IP) );
 		}

@@ -17,7 +17,7 @@
 #include "conf.h"
 #include "log.h"
 #include "utils.h"
-#include "dht_wrapper.h"
+#include "kad.h"
 #include "ext-nss.h"
 
 
@@ -25,12 +25,14 @@ void nss_lookup( int sock, IP *clientaddr, UCHAR *id ) {
 	char addrbuf1[FULL_ADDSTRLEN+1];
 	char addrbuf2[FULL_ADDSTRLEN+1];
 	IP addr;
+	int n;
 
 	/* Check if we know that node already. */
-	if( kad_lookup_node( AF_UNSPEC, id, &addr ) != 0 ) {
+	n = 1;
+	if( kad_lookup_value( id, &addr, &n ) != 0 ) {
 		/* Start find process */
-		kad_search( AF_UNSPEC, id );
-		log_debug( "NSS: Node not found; starting search.");
+		kad_search( id );
+		log_debug( "NSS: Node not found; starting search." );
 		return;
 	}
 

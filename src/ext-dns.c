@@ -18,12 +18,12 @@
 #include "conf.h"
 #include "log.h"
 #include "utils.h"
-#include "dht_wrapper.h"
+#include "kad.h"
 #include "ext-dns.h"
 
 
 /*
-* DNS-Server interface for Masala.
+* DNS-Server interface for KadNode.
 */
 
 static const uint QR_MASK = 0x8000;
@@ -339,20 +339,22 @@ UCHAR *dns_code_response( struct message *msg, UCHAR *buffer ) {
 	return buffer;
 }
 
-int dns_lookup( int af, UCHAR *node_id, IP *node_addr ) {
+int dns_lookup( UCHAR *node_id, IP *node_addr ) {
+	int n;
 
 	/* Check if we know that node already. */
-	if( kad_lookup_node( af, node_id, node_addr ) == 0 ) {
+	n = 1;
+	if( kad_lookup_value( node_id, node_addr, &n ) == 0 ) {
 		return 0;
 	}
 
 	/* Start find process */
-	kad_search( af, node_id );
+	kad_search( node_id );
 
 	return 1;
 }
 
-void dns_reply_msg( struct message *msg, IP *node_addr ) {
+void dns_reply_msg( struct message *msg, IP *nodeaddr ) {
 	struct ResourceRecord *rr;
 	struct question *qu;
 
@@ -369,32 +371,31 @@ void dns_reply_msg( struct message *msg, IP *node_addr ) {
 	msg->arCount = 0;
 
 	/* Set A Resource Record */
-	if( node_addr->ss_family == AF_INET ) {
+	if( nodeaddr->ss_family == AF_INET ) {
 		rr->name = qu->qName;
 		rr->type = A_Resource_RecordType;
 		rr->class = qu->qClass;
 		rr->ttl = 0; /* no caching */
 		rr->rd_length = 4;
 
-		memcpy( rr->rd_data.a_record.addr, &((IP4 *)node_addr)->sin_addr, 4 );
+		memcpy( rr->rd_data.a_record.addr, &((IP4 *)nodeaddr)->sin_addr, 4 );
 	}
 
 	/* Set AAAA Resource Record */
-	if( node_addr->ss_family == AF_INET6 ) {
+	if( nodeaddr->ss_family == AF_INET6 ) {
 		rr->name = qu->qName;
 		rr->type = AAAA_Resource_RecordType;
 		rr->class = qu->qClass;
 		rr->ttl = 0; /* no caching */
 		rr->rd_length = 16;
 
-		memcpy( rr->rd_data.aaaa_record.addr, &((IP6 *)node_addr)->sin6_addr, 16 );
+		memcpy( rr->rd_data.aaaa_record.addr, &((IP6 *)nodeaddr)->sin6_addr, 16 );
 	}
 }
 
 void* dns_loop( void *_ ) {
 	int n;
 	int val;
-	int af;
 	struct timeval tv;
 
 	struct message msg;
@@ -472,19 +473,7 @@ void* dns_loop( void *_ ) {
 		id_compute( node_id, hostname );
 		log_debug( "DNS: Lookup '%s' as '%s'.", hostname, str_id( node_id, hexbuf ) );
 
-		switch(msg.question.qType) {
-			case AAAA_Resource_RecordType:
-				af = AF_INET6;
-				break;
-			case A_Resource_RecordType:
-				af = AF_INET;
-				break;
-			default:
-				/* This is more like an error case... */
-				af = AF_UNSPEC;
-		}
-
-		if( dns_lookup( af, node_id, &nodeaddr ) != 0 ) {
+		if( dns_lookup( node_id, &nodeaddr ) != 0 ) {
 			log_debug( "DNS: Hostname not found." );
 			continue;
 		}

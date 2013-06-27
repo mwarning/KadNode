@@ -14,20 +14,20 @@
 #include "conf.h"
 #include "utils.h"
 #include "log.h"
-#include "dht_wrapper.h"
+#include "kad.h"
 #include "ext-cmd.h"
 
 
 const char* cmd_usage_str = 
 "Usage:\n"
 "	status\n"
-"	import <addr>\n"
-"	lookup_node <id>\n"
-"	lookup_values <id>\n"
 "	search <id>\n"
-"	announce <id> <port>\n"
+"	lookup <id>\n"
+"	lookup_node <id>\n"
+"	announce <id> [<port>]\n"
+"	import <addr>\n"
+"	export\n"
 "	blacklist <addr>\n"
-"	export [v4|v6]\n"
 #ifdef DEBUG
 "	debug\n"
 #endif
@@ -93,7 +93,7 @@ int cmd_import( REPLY *r, const char *addr_str) {
 	IP addr;
 
 	/* If the address contains no port - use the default port */
-	if( addr_parse_full( &addr, addr_str, DHT_PORT, AF_UNSPEC ) == 0 ) {
+	if( addr_parse_full( &addr, addr_str, DHT_PORT, gstate->af ) == 0 ) {
 		kad_ping( &addr );
 		r_printf( r, "Send ping to: %s\n", str_addr( &addr, addrbuf ) );
 		return 0;
@@ -118,23 +118,23 @@ int cmd_blacklist( REPLY *r, const char *addr_str ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	IP addr;
 
-	if( addr_parse( &addr, addr_str, NULL, AF_INET6 ) != 0 ) {
+	if( addr_parse( &addr, addr_str, NULL, gstate->af ) != 0 ) {
 		r_printf( r, "Invalid address.\n" );
 		return 1;
 	} else {
 		kad_blacklist( &addr );
-		r_printf( r, "%s added to blacklist.\n", str_addr( &addr, addrbuf ) );
+		r_printf( r, "Added to blacklist: %s\n", str_addr( &addr, addrbuf ) );
 		return 0;
 	}
 }
 
-int print_export( REPLY *r, int af ) {
+int cmd_export( REPLY *r ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	IP addr_array[8];
 	int addr_num = N_ELEMS(addr_array);
 	int i;
 
-	if( kad_export_nodes( af, addr_array, &addr_num ) != 0 ) {
+	if( kad_export_nodes( addr_array, &addr_num ) != 0 ) {
 		return 1;
 	}
 
@@ -142,25 +142,7 @@ int print_export( REPLY *r, int af ) {
 		r_printf( r, "%s\n", str_addr( &addr_array[i], addrbuf ) );
 	}
 
-	return addr_num;
-}
-
-int cmd_export( REPLY *r, const char *af ) {
-	int count = 0;
-
-	if( af == NULL ) {
-		count += print_export( r, AF_INET );
-		count += print_export( r, AF_INET6 );
-	} else if( match( af, "v6" ) ) {
-		count += print_export( r, AF_INET6 );
-	} else if( match( af, "v4" ) ) {
-		count += print_export( r, AF_INET );
-	} else {
-		r_printf( r, "Invalid argument.\n" );
-		return 1;
-	}
-
-	if( count == 0 ) {
+	if( i == 0 ) {
 		r_printf( r, "No nodes found.\n" );
 		return 1;
 	}
@@ -192,14 +174,17 @@ int cmd_exec( REPLY * r, int argc, char **argv ) {
 		id_compute( id, argv[1] );
 
 		/* Check searches for node */
-		if( kad_lookup_node( AF_UNSPEC, id, &addrs[0] ) == 0 ) {
+		rc = kad_lookup_node( id, &addrs[0] );
+		if( rc == 0 ) {
 			r_printf( r, "%s\n", str_addr( &addrs[0], addrbuf ) );
-			rc = 0;
+		} else if( rc == 1 ) {
+			r_printf( r ,"No search found.\n" );
+			rc = 1;
 		} else {
 			r_printf( r ,"No node found.\n" );
 			rc = 1;
 		}
-	} else if( match( argv[0], "lookup_values" ) && argc == 2 ) {
+	} else if( match( argv[0], "lookup" ) && argc == 2 ) {
 
 		/* That is the value id to lookup */
 		id_compute( id, argv[1] );
@@ -208,13 +193,16 @@ int cmd_exec( REPLY * r, int argc, char **argv ) {
 		int i;
 
 		/* Check searches for node */
-		if( kad_lookup_values( AF_UNSPEC, id, addrs, &addrs_n ) == 0 ) {
+		rc = kad_lookup_value( id, addrs, &addrs_n );
+		if( rc == 0 ) {
 			for( i = 0; i < addrs_n; ++i ) {
 				r_printf( r, "%s\n", str_addr( &addrs[i], addrbuf ) );
 			}
-			rc = 0;
+		} else if( rc == 1 ) {
+			r_printf( r ,"No search found.\n" );
+			rc = 1;
 		} else {
-			r_printf( r ,"No node found.\n" );
+			r_printf( r ,"No nodes found.\n" );
 			rc = 1;
 		}
 	} else if( match( argv[0], "search" ) && argc == 2 ) {
@@ -223,27 +211,33 @@ int cmd_exec( REPLY * r, int argc, char **argv ) {
 		id_compute( id, argv[1] );
 
 		/* Start find process */
-		kad_search( AF_UNSPEC, id );
+		kad_search( id );
 
-		r_printf( r, "Search started for %s.\n", str_id( id, hexbuf ) );
+		r_printf( r, "Search started for: %s\n", str_id( id, hexbuf ) );
 
 	} else if( match( argv[0], "status" ) && argc == 1 ) {
 
 		/* Print node id and statistics */
 		cmd_print_status( r );
 
-	} else if( match( argv[0], "announce" ) && argc == 3 ) {
+	} else if( match( argv[0], "announce" ) && (argc == 2 || argc == 3) ) {
 
 		/* That is the id to announce using the IP address of this instance */
 		id_compute( id, argv[1] );
 
-		port = atoi( argv[2] );
-
-		if( port >= 1 && port <= 65535 ) {
-			kad_announce( AF_INET6, id, port );
+		if( argc == 3 ) {
+			port = atoi( argv[2] );
 		} else {
+			/* Kademlia doesn't accept port 0 */
+			port = 1;
+		}
+
+		if( port < 1 || port > 65535 ) {
 			r_printf( r ,"Invalid port.\n" );
 			rc = 1;
+		} else {
+			kad_announce( id, port );
+			r_printf( r ,"Announced resource: %s\n", str_id( id, hexbuf ) );
 		}
 #ifdef DEBUG
 	} else if( match( argv[0], "debug" ) && argc == 1 ) {
@@ -254,9 +248,9 @@ int cmd_exec( REPLY * r, int argc, char **argv ) {
 
 		rc = cmd_blacklist( r, argv[1] );
 
-	} else if( match( argv[0], "export" ) && (argc == 1 || argc == 2) ) {
+	} else if( match( argv[0], "export" ) && argc == 1 ) {
 
-		rc = cmd_export( r, (argc == 2 ) ? argv[1] : NULL );
+		rc = cmd_export( r );
 
 	} else if( match( argv[0], "shutdown" ) && argc == 1 ) {
 

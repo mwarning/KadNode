@@ -15,7 +15,7 @@
 #include "main.h"
 #include "conf.h"
 #include "log.h"
-#include "dht_wrapper.h"
+#include "kad.h"
 #include "utils.h"
 #include "unix.h"
 
