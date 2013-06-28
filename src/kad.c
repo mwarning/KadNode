@@ -239,7 +239,7 @@ void kad_debug_announces( int fd ) {
 
 	v = gstate->values;
 	while( v ) {
-		dprintf( fd, "id: %s, port: %hu\n", str_id( v->value_id, hexbuf ), v->port );
+		dprintf( fd, " id: %s, port: %hu\n", str_id( v->value_id, hexbuf ), v->port );
 		v = v->next;
 	}
 }
@@ -260,7 +260,7 @@ void kad_debug( int fd ) {
 
 	dht_lock();
 
-	dprintf( fd, "\nAnnounces:\n" );
+	dprintf( fd, "\nAnnouncements:\n" );
 	kad_debug_announces( fd );
 
 	dprintf( fd, "\nBuckets:\n" );

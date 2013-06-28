@@ -1,10 +1,10 @@
 
 CC ?= gcc
-CFLAGS = -O2 -Wall -Wwrite-strings -pedantic -std=gnu99
+CFLAGS = -O2 -Wall -Wwrite-strings -pedantic -std=gnu99 -DDEBUG
 POST_LINKING = -lpthread
 FEATURES ?= cmd dns nss web
 
-OBJS_ = main.o kad.o log.o conf.o sha1.o unix.o utils.o
+OBJS_ = main.o results.o kad.o log.o conf.o sha1.o unix.o utils.o
 OBJS = $(patsubst %,build/%,$(OBJS_))
 
 .PHONY: all clean strip install kadnode kadnode-ctl libnss_kadnode.so.2
