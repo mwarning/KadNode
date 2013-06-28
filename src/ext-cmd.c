@@ -130,7 +130,7 @@ int cmd_blacklist( REPLY *r, const char *addr_str ) {
 
 int cmd_export( REPLY *r ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
-	IP addr_array[8];
+	IP addr_array[16];
 	int addr_num = N_ELEMS(addr_array);
 	int i;
 
