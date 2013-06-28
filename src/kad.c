@@ -288,10 +288,12 @@ int kad_status( char *buf, int size ) {
 	char hexbuf[HEX_LEN+1];
 	struct storage *strg = storage;
 	struct search *srch = searches;
+	struct value *value = gstate->values;
 	int numsearches_active = 0;
 	int numsearches_done = 0;
 	int numstorage = 0;
 	int numstorage_peers = 0;
+	int numvalues = 0;
 	int written = 0;
 
 	/* count searches */
@@ -311,18 +313,28 @@ int kad_status( char *buf, int size ) {
 		strg = strg->next;
 	}
 
-	bprintf( "Own id: %s\n", str_id( myid, hexbuf ) );
+	while( value != NULL ) {
+		numvalues++;
+		value = value->next;
+	}
+
+	bprintf( "Node id: %s\n", str_id( myid, hexbuf ) );
+	bprintf( "Interface: %s\n", gstate->dht_ifce ? gstate->dht_ifce : "<any>" );
+	bprintf( "Port: %s\n", gstate->dht_port );
+
 	if( gstate->af == AF_INET ) {
 		bprintf( "Nodes: %d (IPv4)\n", count_nodes( buckets ) );
 	} else {
 		bprintf( "Nodes: %d (IPv6)\n", count_nodes( buckets6 ) );
 	}
+
 	bprintf( "Storage: %d (max %d), %d peers (max %d per storage)\n",
 		numstorage, DHT_MAX_HASHES, numstorage_peers, DHT_MAX_PEERS );
 	bprintf( "Searches: %d active, %d completed (max %d)\n",
 		numsearches_active, numsearches_done, DHT_MAX_SEARCHES );
 	bprintf( "Blacklist: %d (max %d)\n",
 		(next_blacklisted % DHT_MAX_BLACKLISTED), DHT_MAX_BLACKLISTED );
+	bprintf( "Values: %d\n", numvalues );
 
 	return written;
 }
