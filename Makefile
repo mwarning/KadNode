@@ -1,6 +1,6 @@
 
 CC ?= gcc
-CFLAGS = -O2 -Wall -Wwrite-strings -pedantic -std=gnu99 -DDEBUG
+CFLAGS = -O2 -Wall -Wwrite-strings -pedantic -std=gnu99
 POST_LINKING = -lpthread
 FEATURES ?= cmd dns nss web
 
