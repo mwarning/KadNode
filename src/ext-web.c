@@ -16,30 +16,53 @@
 #include "ext-web.h"
 
 
-const char *reply_header = "HTTP/1.1 200 OK\r\n"
-"Connection: close\r\n"
-"Content-Length: %ul\r\n"
-"Content-Type: text/plain\r\n"
-"\r\n";
+/* handle 'GET /search?foo.p2p' */
+void handle_search( char *reply_buf, char *params ) {
+	char addrbuf[FULL_ADDSTRLEN+1];
+	char hexbuf[HEX_LEN+1];
+	UCHAR id[SHA_DIGEST_LENGTH];
+	IP addrs[16];
+	int addrsnum;
+	int i, n;
+
+	/* That is the lookup key */
+	id_compute( id, params );
+	log_debug( "WEB: Lookup '%s' as '%s'.", params, str_id( id, hexbuf ) );
+
+	/* Check searches for node */
+	addrsnum = N_ELEMS(addrs);
+	if( kad_lookup_value( id, addrs, &addrsnum ) != 0 ) {
+		/* Start find process */
+		kad_search( id );
+	} else {
+		for( n = 0, i = 0; i < addrsnum; i++ ) {
+			n += sprintf( reply_buf + n, "%s\n", str_addr( &addrs[i], addrbuf ) );
+		}
+	}
+}
+
+/* handle 'GET /announce?foo.p2p' */
+void handle_announce( char *reply_buf, char *params ) {
+	UCHAR id[SHA_DIGEST_LENGTH];
+	id_compute( id, params );
+
+	kad_announce( id, 1 );
+
+	sprintf( reply_buf , "done\n" );
+}
 
 void* web_loop( void* _ ) {
-
-	int val, n, i;
+	char addrbuf[FULL_ADDSTRLEN+1];
+	int val;
 	struct timeval tv;
-
-	UCHAR node_id[SHA_DIGEST_LENGTH];
-	char hexbuf[HEX_LEN+1];
-
 	int sock, clientfd;
 	IP clientaddr, sockaddr;
 	socklen_t addrlen_ret;
-	char request_buf[1500];
-	char reply_buf[512];
-	IP addrs[16];
-	int addrsnum;
-
-	char *hostname_start, *hostname_end;
-	char addrbuf[FULL_ADDSTRLEN+1];
+	char request_buf[1024];
+	char reply_buf[1024];
+	char *cmd, *params;
+	char *space, *delim;
+	int n;
 
 	if( addr_parse( &sockaddr, "::1", gstate->web_port, AF_INET6 ) != 0 ) {
 		log_err( "WEB: Failed to parse address." );
@@ -96,47 +119,45 @@ void* web_loop( void* _ ) {
 		clientfd = accept( sock, (struct sockaddr*)&clientaddr, &addrlen_ret );
 		n = recv( clientfd, request_buf, sizeof(request_buf) - 1, 0 );
 
-		if( n < 0 ) {
-			goto done;
-		}
-
 		/* Only handle GET requests. */
 		if( n < 6 || strncmp( "GET /", request_buf, 5 ) != 0 ) {
 			goto done;
-		}
-
-		/* Jump after slash */
-		hostname_start = request_buf + 5;
-
-		request_buf[n] = ' ';
-		hostname_end = strchr( hostname_start, ' ' );
-		if( hostname_end == NULL ) {
-			goto done;
-		}
-
-		*hostname_end = '\0';
-		if( strlen( hostname_start ) == 0 || strcmp( hostname_start, "favicon.ico" ) == 0 ) {
-			goto done;
-		}
-
-		/* That is the lookup key */
-		id_compute( node_id, hostname_start );
-		log_debug( "WEB: Lookup '%s' as '%s'.", hostname_start, str_id( node_id, hexbuf ) );
-
-		/* Check searches for node */
-		addrsnum = N_ELEMS(addrs);
-		if( kad_lookup_value( node_id, addrs, &addrsnum ) != 0 ) {
-			/* Start find process */
-			kad_search( node_id );
 		} else {
-			sprintf( reply_buf, reply_header );
-			for( i = 0; i < addrsnum; i++ ) {
-				sprintf( reply_buf, "%s\n", str_addr( &addrs[i], addrbuf ) );
-			}
-			log_debug( "WEB: Answer request for '%s':\n%s", reply_buf );
-
-			sendto( clientfd, reply_buf, strlen( reply_buf ), 0, (struct sockaddr*) &clientaddr, sizeof(IP) );
+			cmd = request_buf + 5;
 		}
+
+		/* Safety first */
+		request_buf[n] = '\0';
+
+		space = strchr( cmd, ' ' );
+		if( space == NULL ) {
+			goto done;
+		} else {
+			*space = '\0';
+		}
+
+		delim = strchr( cmd, '?' );
+		if( delim == NULL ) {
+			goto done;
+		} else {
+			*delim = '\0';
+			params = delim + 1;
+		}
+
+		log_debug( "WEB: cmd: '%s', params: '%s'\n", cmd, params);
+
+		reply_buf[0] = '\n';
+		reply_buf[1] = '\0';
+
+		if( match( cmd, "search" ) ) {
+			handle_search( reply_buf, params );
+		} else if( match( cmd, "announce" ) ) {
+			handle_announce( reply_buf, params );
+		} else {
+			reply_buf[0] = '\0';
+		}
+
+		sendto( clientfd, reply_buf, strlen( reply_buf ), 0, (struct sockaddr*) &clientaddr, sizeof(IP) );
 
 		done:;
 
