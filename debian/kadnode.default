@@ -5,12 +5,14 @@
 # IP address,  e.g. in browsers on other computers running
 # KadNode, set hostname to "mycomputer"
 #
-# Using a hostname that is already in use will cause conflicts and
-# will cause problems for everyone using this name. Be warned!
+# Please be aware that other people might use the same identifier.
+# It is strongly advised to use additional measurements such as
+# authentification (e.g. certificates) to validate the resolved address.
+# Conflicts will also resolve to any of the announced addresses
+# associated with this identifier.
 #
-# If not set or empty, a random hash will be choosen every start.
 
 hostname=""
 
-# Note: The hostname will be used to generate a node identifier.
-# unless you use a 40 digit hex string to set it without hashing. 
+# Note: sha1 hashing will be applied to the given string
+# unless it is a 40 digit hex string.

@@ -1,7 +1,8 @@
 kadnode (0.3) unstable; urgency=low
 
   * Only support IPv4 or IPv6, not both at the same time
-  * Use announced resource identifiers instead of node identifiers
+  * Use value identifiers instead of node identifiers
+  * Add option --value-id to announce multiple value identifiers
   * Fix and rewrite search for values
   * Change default multicast addresses to 239.192.202.7 / ff08:ca:07::
   * Change default interface ports: cmd: 1700, dns: 5353, web: 8053, nss: 4053

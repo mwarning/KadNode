@@ -13,19 +13,22 @@
 \fBkadnode\-ctl\fR [\.\.\.]
 .
 .SH "DESCRIPTION"
-\fBKadNode\fR is a small P2P name resolution daemon for IPv4 and IPv6 based on the Kademlia implementation of a distributed hash table (DHT)\.
+\fBKadNode\fR is a small P2P name/resource resolution daemon for IPv4/IPv6 based on the Kademlia implementation of a distributed hash table (DHT)\.
 .
 .P
-KadNode let the user announce any kind of resource by an identifier and a port\. This can be used e\.g\. to resolve a hostname to an ip address and port\.
+KadNode enables the user to announce any kind of resource by an identifier\. This can be used e\.g\. to resolve a hostname to an IP address\.
 .
 .P
-By default, KadNode tries to send a ping to a multicast address on the local network to find nodes to bootstrap from\. This is done every five minutes when no other nodes are known\. The interactive remote shell \fBkadnode\-ctl\fR let the user import and export nodes, issues queries for identifiers and send announcements\.
+By default, KadNode tries to send a ping to a multicast address on the local network to find nodes to bootstrap from\. This is done every five minutes when no other nodes are known\. The interactive remote shell \fBkadnode\-ctl\fR let the user import and export nodes, issue queries for identifiers and send announcements\.
 .
 .P
-As an usage example one would start \fBkadnode\fR and call \fBkadnode\-ctl import example\.com:4242\fR to help KadNode to bootstrap into an existing network network of at least one other node\. \fBkadnode\-ctl announce myname\fR will announce that the computer KadNode is running on can satisfy the resource identified by \fBmyname\fR\. An additional port can also be specified though, but most KadNode interfaces do not expose it\. The announcement will be dropped by other KadNode instances after 32 minutes and therefore need to be refreshed around every 30 minutes\.
+As an usage example one would start \fBkadnode \-\-value\-id myname\.p2p\fR to let KadNode announce every 30 minutes, that the IP address of the running KadNode instance is associated with the identifier \'myname\.p2p\'\. A call like \fBkadnode\-ctl import example\.com\fR can be used to help KadNode to bootstrap into an existing network\. To announce an identifier just once, use \fBkadnode\-ctl announce myname\fR\. Any announcement will be dropped by other KadNode instances after 32 minutes and therefore need to be refreshed around every 30 minutes\.
 .
 .P
-Every entered identifier will have everything after the last dot ignored\. This is intended to remove the top level domain from identifiers like \fBmyname\.p2p\fR\. The rest of the string is converted to an 20 byte identifier using the sha1 hashing algorithm\. As an alternative, the hash can be entered directly as a 40 character hexadecimal string\. The string \fBmyname\.p2p\fR is therefore eqivalent to \fBd13b93ea42804188d277c20f7d6e5be2732148b8\fR which is the result of sha1(\'myname\')\. This is true for every entered identifier that involves KadNode\.
+Please be aware that other people might use the same identifier\. It is strongly advised to do additional identification/authentification when an address is used that has been resolved by KadNode\.
+.
+.P
+Every entered identifier (e\.g\. \fBmyname\.p2p\fR) will have everything after the last dot ignored as a top level domain like is often used only to redirect queries to KadNode\. The rest of the string is converted to an 20 byte identifier using the sha1 hashing algorithm\. As an alternative, the hash can be entered directly as a 40 character hexadecimal string\. The string \fBmyname\.p2p\fR is therefore eqivalent to \fBd13b93ea42804188d277c20f7d6e5be2732148b8\fR which is the result of sha1(\'myname\')\. This is true for every entered identifier that involves KadNode\.
 .
 .SH "INTERFACES"
 .
@@ -53,92 +56,203 @@ https://sourceforge\.net/projects/kadnode/files/
 .SH "OPTIONS"
 .
 .IP "\(bu" 4
-\fB\-\-id\fR \fIidentifier\fR: Set the node identifier\. Either a 20 Byte hexadecimal string or a different string whose sha1 hash will be used\. A random id will be computed if this option is not used\.
+\fB\-\-node\-id\fR \fIid\fR
+.
+.br
+Set the node identifier\. This option is rarely needed\.
+.
+.br
+By default the node id is random\.
 .
 .IP "\(bu" 4
-\fB\-\-user\fR \fIname\fR Change the UUID after start\.
+\fB\-\-value\-id\fR \fIid[:port]\fR
+.
+.br
+Add a value identifier and optional port to be announced every 30 minutes\.
+.
+.br
+The announcement will associate this nodes IP address with this identifier\.
+.
+.br
+This option can occur multiple times\.
 .
 .IP "\(bu" 4
-\fB\-\-port\fR \fIport\fR: Bind the DHT to this port\. Default: 8337
+\fB\-\-user\fR \fIname\fR
+.
+.br
+Change the UUID after start\.
 .
 .IP "\(bu" 4
-\fB\-\-ifce\fR \fIinterface\fR: Bind to this interface (Default: <all>)\.
+\fB\-\-port\fR \fIport\fR
+.
+.br
+Bind the DHT to this port\.
+.
+.br
+Default: 8337
 .
 .IP "\(bu" 4
-\fB\-\-mcast\-addr\fR \fIaddress\fR: Send pings to this multicast address as long no nodes were found\. Default: 239\.192\.202\.7 / ff08:ca:07::
+\fB\-\-ifce\fR \fIinterface\fR
+.
+.br
+Bind to this specific interface\.
 .
 .IP "\(bu" 4
-\fB\-\-disable\-mcast\fR: Disable multicast\.
+\fB\-\-mcast\-addr\fR \fIaddress\fR
+.
+.br
+Send pings to this multicast address as long no nodes were found\.
+.
+.br
+Default: 239\.192\.202\.7 / ff08:ca:07::
 .
 .IP "\(bu" 4
-\fB\-\-daemon\fR: Run in background\.
+\fB\-\-disable\-mcast\fR
+.
+.br
+Disable multicast\.
 .
 .IP "\(bu" 4
-\fB\-\-verbosity\fR: Verbosity level: quiet, verbose or debug (Default: verbose)\.
+\fB\-\-daemon\fR
+.
+.br
+Run in background\.
 .
 .IP "\(bu" 4
-\fB\-\-pidfile\fR \fIfile\-path\fR: Write process pid to a file\.
+\fB\-\-verbosity\fR
+.
+.br
+Verbosity level: quiet, verbose or debug (Default: verbose)\.
 .
 .IP "\(bu" 4
-\fB\-\-cmd\-port\fR \fIport\fR: Bind the remote control interface to this local port (Default: 1700)\.
+\fB\-\-pidfile\fR \fIfile\-path\fR
+.
+.br
+Write process pid to a file\.
 .
 .IP "\(bu" 4
-\fB\-\-dns\-port\fR \fIport\fR: Bind the DNS server to this local port (Default: 5353)\.
+\fB\-\-cmd\-port\fR \fIport\fR
+.
+.br
+Bind the remote control interface to this local port (Default: 1700)\.
 .
 .IP "\(bu" 4
-\fB\-\-nss\-port\fR \fIport\fR: Bind the "Network Service Switch" to this local port (Default: 4053)\.
+\fB\-\-dns\-port\fR \fIport\fR
+.
+.br
+Bind the DNS server to this local port (Default: 5353)\.
 .
 .IP "\(bu" 4
-\fB\-\-web\-port\fR \fIport\fR: Bind the web server to this local port (Default: 8053)\.
+\fB\-\-nss\-port\fR \fIport\fR
+.
+.br
+Bind the "Network Service Switch" to this local port (Default: 4053)\.
 .
 .IP "\(bu" 4
-\fB\-\-mode\fR \fIprotocol\fR: Enable IPv4 or IPv6 mode for the DHT (Default: ipv4)\.
+\fB\-\-web\-port\fR \fIport\fR
+.
+.br
+Bind the web server to this local port (Default: 8053)\.
 .
 .IP "\(bu" 4
-\fB\-h, \-\-help\fR: Print this help\.
+\fB\-\-mode\fR \fIprotocol\fR
+.
+.br
+Enable IPv4 or IPv6 mode for the DHT (Default: ipv4)\.
 .
 .IP "\(bu" 4
-\fB\-v, \-\-version\fR: Print program version\.
+\fB\-h\fR, \fB\-\-help\fR
+.
+.br
+Print this help\.
+.
+.IP "\(bu" 4
+\fB\-v\fR, \fB\-\-version\fR
+.
+.br
+Print program version\.
 .
 .IP "" 0
 .
 .SS "kadnode\-ctl"
 \fBkadnode\-ctl\fR allows to control KadNode from the command line\.
 .
-.TP
+.IP "\(bu" 4
 \fB\-p\fR \fIport\fR
+.
+.br
 Connect to the local KadNode console on this interface (Default: 1700):
 .
-.TP
+.IP "\(bu" 4
 \fB\-h\fR
+.
+.br
 Print this help\.
 .
-.IP "\(bu" 4
-\fBstatus\fR Print the node id, the number of known nodes / searches / stored hashes and more\.
+.IP "" 0
 .
 .IP "\(bu" 4
-\fBsearch\fR \fIid\fR Start a search for nodes closest to the given identifier id\.
+\fBstatus\fR
+.
+.br
+Print the node id, the number of known nodes / searches / stored hashes and more\.
 .
 .IP "\(bu" 4
-\fBlookup\fR \fIid\fR Lookup the IP addresses of all nodes that claim to satisfy the identifier\. The lookup is performed on the current search results\.
+\fBsearch\fR \fIid\fR
+.
+.br
+Start a search for nodes closest to the given identifier id\.
 .
 .IP "\(bu" 4
-\fBlookup_node\fR \fIid\fR Lookup the IP address of a node that has identifier id\. The lookup is performed on the current search results\.
+\fBlookup\fR \fIid\fR
+.
+.br
+Lookup the IP addresses of all nodes that claim to satisfy the identifier\.
+.
+.br
+The lookup is performed on the current search results\.
 .
 .IP "\(bu" 4
-\fBannounce\fR \fIid\fR [\fIport\fR] Announce that this instance can satisfy the identifier id\.
+\fBlookup_node\fR \fIid\fR
+.
+.br
+Lookup the IP address of a node that has identifier id\.
+.
+.br
+The lookup is performed on the current search results\.
 .
 .IP "\(bu" 4
-\fBimport\fR \fIaddr\fR Send a ping to another KadNode instance to establish a connection\.
+\fBannounce\fR \fIid\fR [\fIport\fR]
+.
+.br
+Announce that this instance is associated with identifier\.
+.
+.br
+The announcement will happen only once and instantly\.
 .
 .IP "\(bu" 4
-\fBexport\fR Print a few good nodes\. The argument allows to select only IPv6 or IPv4 addresses\.
+\fBimport\fR \fIaddr\fR
+.
+.br
+Send a ping to another KadNode instance to establish a connection\.
 .
 .IP "\(bu" 4
-\fBblacklist\fR \fIaddr\fR Blacklist a specifc IP address\.
+\fBexport\fR
+.
+.br
+Print a few good nodes\. The argument allows to select only IPv6 or IPv4 addresses\.
 .
 .IP "\(bu" 4
-\fBshutdown\fR Shutdown the daemon\.
+\fBblacklist\fR \fIaddr\fR
+.
+.br
+Blacklist a specifc IP address\.
+.
+.IP "\(bu" 4
+\fBshutdown\fR
+.
+.br
+Shutdown the daemon\.
 .
 .IP "" 0
 .

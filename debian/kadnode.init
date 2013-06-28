@@ -36,7 +36,7 @@ SCRIPTNAME=/etc/init.d/$NAME
 
 
 # Append the hostname if set in /etc/default/kadnode
-DAEMON_ARGS="$DAEMON_ARGS ${hostname:+--id $hostname}"
+DAEMON_ARGS="$DAEMON_ARGS ${hostname:+--value-id '$hostname'}"
 
 
 do_start()
