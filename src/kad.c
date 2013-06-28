@@ -179,11 +179,11 @@ void kad_debug_node_searches( int fd ) {
 		dprintf( fd, "  done: %d\n", s->done );
 		for(i = 0; i < s->numnodes; ++i) {
 			struct search_node *sn = &s->nodes[i];
-			dprintf( fd, "  Node: %s\n", str_id(sn->id, hexbuf ) );
-			dprintf( fd, "   addr: %s\n", str_addr( &sn->ss, addrbuf ) );
-			dprintf( fd, "   pinged: %d\n", sn->pinged );
-			dprintf( fd, "   replied: %d\n", sn->replied );
-			dprintf( fd, "   acked: %d\n", sn->acked );
+			dprintf( fd, "   Node: %s\n", str_id(sn->id, hexbuf ) );
+			dprintf( fd, "    addr: %s\n", str_addr( &sn->ss, addrbuf ) );
+			dprintf( fd, "    pinged: %d\n", sn->pinged );
+			dprintf( fd, "    replied: %d\n", sn->replied );
+			dprintf( fd, "    acked: %d\n", sn->acked );
 		}
 		dprintf( fd, "  Found %d nodes.\n", i );
 		s = s->next;
@@ -319,8 +319,11 @@ int kad_status( char *buf, int size ) {
 	}
 
 	bprintf( "Node id: %s\n", str_id( myid, hexbuf ) );
-	bprintf( "Interface: %s\n", gstate->dht_ifce ? gstate->dht_ifce : "<any>" );
-	bprintf( "Port: %s\n", gstate->dht_port );
+	bprintf( "Bound to: %s:%s / %s\n",
+		(gstate->af == AF_INET) ? "0.0.0.0" : "[::1]",
+		gstate->dht_port,
+		(gstate->dht_ifce == NULL) ? "<any>" : gstate->dht_ifce
+	);
 
 	if( gstate->af == AF_INET ) {
 		bprintf( "Nodes: %d (IPv4)\n", count_nodes( buckets ) );
@@ -334,7 +337,7 @@ int kad_status( char *buf, int size ) {
 		numsearches_active, numsearches_done, DHT_MAX_SEARCHES );
 	bprintf( "Blacklist: %d (max %d)\n",
 		(next_blacklisted % DHT_MAX_BLACKLISTED), DHT_MAX_BLACKLISTED );
-	bprintf( "Values: %d\n", numvalues );
+	bprintf( "Values to announce: %d\n", numvalues );
 
 	return written;
 }
