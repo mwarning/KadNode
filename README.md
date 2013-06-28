@@ -20,13 +20,18 @@ to find nodes to bootstrap from. This is done every five minutes when no other n
 The interactive remote shell `kadnode-ctl` let the user import and export nodes, issues queries for
 identifiers and send announcements.
 
-As an usage example one would start `kadnode` and call `kadnode-ctl import example.com:4242`
-to help KadNode to bootstrap into an existing network network of at least one other node.
-`kadnode-ctl announce myname` will announce that the computer KadNode is running on
-can satisfy the resource identified by `myname`. An additional port can also be specified
-though, but most KadNode interfaces do not expose it.
-The announcement will be dropped by other KadNode instances after 32 minutes and
+As an usage example one would start `kadnode --value-id myname.p2p` to let KadNode
+announce (every 30 minutes) that the ip address of the running KadNode instance
+is associated with the identifier myname.p2p.
+Call `kadnode-ctl import example.com` to help KadNode to bootstrap into an
+existing network of at least one other node.
+`kadnode-ctl announce myname` can be used to do an announcement just once.
+Any announcement will be dropped by other KadNode instances after 32 minutes and
 therefore need to be refreshed around every 30 minutes.
+
+Please be aware that other people might use the same identifier.
+It is strongly advised to do additional identification/authentification
+when an address is used that has been resolved by KadNode.
 
 Every entered identifier will have everything after the last dot ignored.
 This is intended to remove the top level domain from identifiers like `myname.p2p`.
@@ -48,9 +53,14 @@ which is the result of sha1('myname'). This is true for every entered identifier
   * https://sourceforge.net/projects/kadnode/files/
 
 ## OPTIONS
-  * `--id` *identifier*:
-    Set the node identifier. Either a 20 Byte hexadecimal string or a different string whose sha1 hash will be used. 
-	A random id will be computed if this option is not used.
+  * `--node-id` *identifier*:
+    Set the node identifier. This option is rarely needed.
+    By default the node id is random.
+
+  * `--value-id` *identifier[:port]*
+    Add a value identifier and optional port to be announced every 30 minutes.
+    The announcement will associate this nodes IP address with this identifier.
+    This option can occur multiple times.
 
   * `--user` *name*
     Change the UUID after start.
@@ -126,7 +136,8 @@ which is the result of sha1('myname'). This is true for every entered identifier
 	The lookup is performed on the current search results.
 
   * `announce` <id> [<port>]
-    Announce that this instance can satisfy the identifier id.
+    Announce that this instance is associated with identifier.
+    The announcement will happen only once and instantly.
 
   * `import` <addr>
     Send a ping to another KadNode instance to establish a connection.
