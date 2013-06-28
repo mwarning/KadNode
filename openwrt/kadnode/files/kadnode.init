@@ -83,6 +83,12 @@ start_instance() {
 
 	append_opts_boolean "$s" disable_mcast
 
+	add_value_id() {
+		OPTS="$OPTS --value-id '$1'"
+	}
+
+	config_list_foreach "$s" "value_id" add_value_id
+
 	eval service_start "'$KADNODE_BIN'" --daemon --pidfile "'$SERVICE_PID_FILE'" $OPTS
 
 	#import nodes to bootstrap from
