@@ -11,7 +11,10 @@
 #include "main.h"
 #include "utils.h"
 #include "conf.h"
+#include "utils.h"
+#include "results.h"
 #include "dht_wrapper.c"
+
 
 /*
 The interface that is used to interact with the DHT.
@@ -118,11 +121,11 @@ void kad_stop( void ) {
 void kad_debug_value_searches( int fd ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	char hexbuf[HEX_LEN+1];
-	struct value_search* vs;
+	struct result* vs;
 	int i, j;
 
 	j = 0;
-	vs = value_searches;
+	vs = results_list();
 	while( vs != NULL ) {
 
 		dprintf( fd, " Value Search: %s\n", str_id( vs->id, hexbuf ) );
@@ -230,6 +233,17 @@ void kad_debug_blacklist( int fd ) {
 	dprintf( fd, " Found %d blacklisted addresses.\n", i );
 }
 
+void kad_debug_announces( int fd ) {
+	char hexbuf[HEX_LEN+1];
+	struct value *v;
+
+	v = gstate->values;
+	while( v ) {
+		dprintf( fd, "id: %s, port: %hu\n", str_id( v->value_id, hexbuf ), v->port );
+		v = v->next;
+	}
+}
+
 void kad_debug( int fd ) {
 
 	dprintf( fd, "DHT_SEARCH_EXPIRE_TIME: %d\n", DHT_SEARCH_EXPIRE_TIME );
@@ -245,6 +259,9 @@ void kad_debug( int fd ) {
 	dprintf( fd, "DHT_MAX_BLACKLISTED: %d\n", DHT_MAX_BLACKLISTED );
 
 	dht_lock();
+
+	dprintf( fd, "\nAnnounces:\n" );
+	kad_debug_announces( fd );
 
 	dprintf( fd, "\nBuckets:\n" );
 	kad_debug_buckets( fd, (gstate->af == AF_INET) ? buckets : buckets6 );
@@ -340,7 +357,7 @@ int kad_announce( const UCHAR *id, int port ) {
 int kad_search( const UCHAR *id ) {
 
 	dht_lock();
-	vs_insert( id, gstate->af );
+	results_insert( id, gstate->af );
 	dht_search( id, 0, gstate->af, dht_callback_func, NULL );
 	dht_unlock();
 
@@ -351,14 +368,12 @@ int kad_search( const UCHAR *id ) {
 * Lookup known nodes that are nearest to the given id.
 */
 int kad_lookup_value( const UCHAR* id, IP addr_array[], int *addr_num ) {
-	//struct search *sr;
-	//int i, rc;
 	int rc;
-	struct value_search* vs;
+	struct result* vs;
 
 	dht_lock();
 
-	vs = vs_find( id, gstate->af );
+	vs = results_find( id, gstate->af );
 
 	if( vs == NULL ) {
 		rc = 1;
@@ -386,9 +401,9 @@ int kad_lookup_node( const UCHAR* id, IP *addr_return ) {
 	rc = 1;
 	sr = searches;
     while( sr ) {
-		if( sr->af == gstate->af && cmp_id( sr->id, id ) ) {
+		if( sr->af == gstate->af && id_equal( sr->id, id ) ) {
 			for( i = 0; i < sr->numnodes; ++i ) {
-				if( cmp_id( sr->nodes[i].id, id ) ) {
+				if( id_equal( sr->nodes[i].id, id ) ) {
 					memcpy( addr_return, &sr->nodes[i].ss, sizeof(IP) );
 					rc = 0;
 					goto done;

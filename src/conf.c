@@ -39,8 +39,10 @@ const char *usage = "KadNode - A P2P name resolution daemon (IPv4/IPv6)\n"
 "\n"
 "Usage: kadnode [OPTIONS]*\n"
 "\n"
-" --id		Set the node id.\n"
+" --node-id	Set the node id. Use --value-id to announce values.\n"
 "		Default: <random>\n\n"
+" --value-id	Add a '<id>[:<port>]' value to be announced every 30 minutes.\n"
+"		This option can occur multiple times.\n\n"
 " --user		Change the UUID after start.\n\n"
 " --port		Bind to this port.\n"
 "		Default: "DHT_PORT"\n\n"
@@ -181,11 +183,63 @@ void conf_str( const char *var, char** dst, const char *src ) {
 	*dst = strdup( src );
 }
 
+void conf_add_value( char *var, char *val ) {
+	struct value *v, *c;
+	unsigned short port;
+	char *delim;
+
+	if( val == NULL ) {
+		conf_arg_expected( var );
+	}
+
+	/* Split identifier and optional port */
+	delim = strchr( val, ':' );
+	if( delim ) {
+		*delim = '\0';
+		port = atoi( delim + 1 );
+	} else {
+		port = 1;
+	}
+
+	if( port < 1 || port > 65535 ) {
+		log_err( "CFG: Invalid port used for value: %s", val );
+	}
+
+	v = calloc( 1, sizeof(struct value) );
+
+	/* Add new value */
+	id_compute( v->value_id, val );
+	v->port = port;
+
+	c = gstate->values;
+	if( c == NULL ) {
+		gstate->values = v;
+		return;
+	}
+
+	while( c != NULL ) {
+		if( id_equal( c->value_id, v->value_id ) ) {
+			log_err( "CFG: Duplicate identifier for '%s': %s", var, val );
+		}
+
+		if( c->next == NULL ) {
+			c->next = v;
+			return;
+		}
+
+		c = c->next;
+	}
+
+	log_crit( "CFG: Found value list loop." );
+}
+
 void conf_handle( char *var, char *val ) {
 
-	if( match( var, "--id" ) ) {
+	if( match( var, "--node-id" ) ) {
 		/* Compute node id */
 		id_compute( gstate->node_id, val );
+	} else if( match( var, "--value-id" ) ) {
+		conf_add_value( var, val );
 	} else if( match( var, "--pidfile" ) ) {
 		conf_str( var, &gstate->pid_file, val );
 	} else if( match( var, "--verbosity" ) ) {

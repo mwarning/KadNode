@@ -7,6 +7,13 @@ void conf_load( int argc, char **argv );
 void conf_check( void );
 void conf_free( void );
 
+/* value to announce */
+struct value {
+	UCHAR value_id[SHA_DIGEST_LENGTH];
+	int port;
+	struct value *next;
+};
+
 struct obj_gstate {
 
 	/* Current time */
@@ -14,6 +21,9 @@ struct obj_gstate {
 
 	/* Identifier of this instance */
 	UCHAR node_id[SHA_DIGEST_LENGTH];
+
+	/* Values that will be announced regulary */
+	struct value *values;
 
 	/* Drop privileges to user */
 	char *user;
@@ -30,27 +40,25 @@ struct obj_gstate {
 	/* Quiet / Verbose / Debug */
 	int verbosity;
 
-
 	/* IPv4 or IPv6 mode */
 	int af;
 
 	/* DHT socket */
 	int sock;
 
-	/* Port number for the DHT and multicast */
+	/* DHT port number */
 	char* dht_port;
 
-	/* Limit the DHT to this interface */
+	/* DHT interface */
 	char *dht_ifce;
 
-
-	/* DHT multicast addresses for bootstrapping */
+	/* DHT multicast address for bootstrapping */
 	char *mcast_addr;
 
-	/* Have the multicast addresses been registered yet? */
+	/* Indicates if the multicast addresses has been registered */
 	int mcast_registered;
 
-	/* Last performed multicast */
+	/* Last performed multicast ping */
 	time_t time_mcast;
 
 #ifdef CMD

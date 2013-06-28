@@ -81,6 +81,10 @@ void id_fromHex( UCHAR *id, const char *hex, size_t size ) {
 	}
 }
 
+int id_equal( const UCHAR *id1, const UCHAR *id2 ) {
+	return (memcmp( id1, id2, SHA_DIGEST_LENGTH ) == 0);
+}
+
 /* Check if string consist of hexdecimal characters */
 int str_isHex( const char *string, int size ) {
 	int i = 0;
@@ -291,4 +295,17 @@ int addr_parse_full( IP *addr, const char *full_addr_str, const char* default_po
 	}
 
 	return addr_parse( addr, addr_str, port_str, af );
+}
+
+/* Compare two ip addresses, ignore port */
+int addr_equal( const IP *addr1, const IP *addr2 ) {
+	if( addr1->ss_family != addr2->ss_family ) {
+		return 0;
+	} else if( addr1->ss_family == AF_INET ) {
+		return memcmp( &((IP4 *)addr1)->sin_addr, &((IP4 *)addr2)->sin_addr, 4 ) == 0;
+	} else if( addr1->ss_family == AF_INET6 ) {
+		return memcmp( &((IP6 *)addr1)->sin6_addr, &((IP6 *)addr2)->sin6_addr, 16 ) == 0;
+	} else {
+		return 0;
+	}
 }

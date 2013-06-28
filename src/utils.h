@@ -14,6 +14,7 @@
 int id_random( void *buffer, size_t size );
 void id_compute( UCHAR *id, const char *str );
 void id_fromHex( UCHAR *id, const char *hex, size_t size );
+int id_equal( const UCHAR *id1, const UCHAR *id2 );
 
 int str_isHex( const char *string, int size );
 int str_isValidHostname( const char *hostname, int size );
@@ -28,6 +29,7 @@ int addr_parse( IP *addr, const char *addr_str, const char *port_str, int af );
 int addr_parse_full( IP *addr, const char *full_addr_str, const char* default_port, int af );
 int addr_port( const IP *addr );
 int addr_len( const IP *addr );
+int addr_equal( const IP *addr1, const IP *addr2 );
 
 
 #endif /* _UTILS_H_ */
