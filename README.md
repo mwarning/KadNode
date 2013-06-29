@@ -157,7 +157,6 @@ All these interfaces listen only for connections from localhost.
 
   * KadNode cannot resolve its own node id without other nodes present.
   * No NAT-traversal was implemented yet.
-  * Kademlia drops announcements after 30 minutes. Those need to be refreshed.
   * Blacklisted addreses are stored in a LRU cache of maximal 10 entries.
 
 ## LICENSE
