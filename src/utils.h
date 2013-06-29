@@ -19,6 +19,7 @@ int id_equal( const UCHAR *id1, const UCHAR *id2 );
 int str_isHex( const char *string, int size );
 int str_isValidHostname( const char *hostname, int size );
 int str_isZero( const char* str );
+void str_toLower( char* str, int size );
 
 char *str_id( const UCHAR *in, char *idbuf );
 char *str_addr( IP *addr, char *addrbuf );

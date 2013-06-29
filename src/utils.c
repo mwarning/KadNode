@@ -11,6 +11,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <ctype.h>
 
 #include "log.h"
 #include "sha1.h"
@@ -36,6 +37,7 @@ int id_random( void *buffer, size_t size ) {
 void id_compute( UCHAR *id, const char *str ) {
 	SHA1_CTX ctx;
 	size_t size;
+	char *cpy;
 	char *tld;
 
 	/* Remove the top level domain */
@@ -50,9 +52,14 @@ void id_compute( UCHAR *id, const char *str ) {
 		/* treat hostname as hex string and ignore any kind of suffix */
 		id_fromHex( id, str, HEX_LEN );
 	} else {
+		cpy = strdup( str );
+		str_toLower( cpy, size );
+
 		SHA1_Init( &ctx );
-		SHA1_Update( &ctx, (const UCHAR *) str, size );
+		SHA1_Update( &ctx, (const UCHAR *) cpy, size );
 		SHA1_Final( &ctx, id );
+
+		free( cpy );
 	}
 }
 
@@ -127,6 +134,13 @@ int str_isZero( const char* str ) {
 	return (str == NULL) || (strcmp( str, "0" ) == 0);
 }
 
+void str_toLower( char* str, int size ) {
+	int i;
+
+	for( i = 0; i < size; ++i ) {
+		str[i] = tolower( str[i] );
+	}
+}
 
 char* str_id( const UCHAR *in, char *buf ) {
 	int i = 0;
