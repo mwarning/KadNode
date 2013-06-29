@@ -48,6 +48,8 @@ which is the result of sha1('myname'). This is true for every entered identifier
   * A simple DNS server interface that can be used like a local upstream DNS server.
   * A simple web server interface to resolve queries: `http://localhost:8053/foo.p2p`
 
+All these interfaces listen only for connections from localhost.
+
 ## DOWNLOADS
 
   * https://sourceforge.net/projects/kadnode/files/
