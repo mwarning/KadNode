@@ -106,10 +106,10 @@ All these interfaces listen only for connections from localhost.
     Enable IPv4 or IPv6 mode for the DHT (Default: ipv4).
 
   * `-h`, `--help`  
-    Print this help.
+    Print the list of accepted options.
 
   * `-v`, `--version`  
-    Print program version.
+    Print program version and included features.
 
 ### kadnode-ctl
 
