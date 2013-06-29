@@ -145,7 +145,7 @@ All these interfaces listen only for connections from localhost.
     Send a ping to another KadNode instance to establish a connection.
 
   * `export`  
-    Print a few good nodes. The argument allows to select only IPv6 or IPv4 addresses.
+    Print a few good nodes.
 
   * `blacklist` *addr*  
     Blacklist a specifc IP address.
