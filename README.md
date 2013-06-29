@@ -46,7 +46,7 @@ which is the result of sha1('myname'). This is true for every entered identifier
   `kadnode-ctl search myname.p2p`
   * Name Service Switch (NSS) support through /etc/nsswitch.conf.
   * A simple DNS server interface that can be used like a local upstream DNS server.
-  * A simple web server interface to resolve queries: `http://localhost:8053/foo.p2p`
+  * A simple web server interface to resolve queries: `http://localhost:8053/search?foo.p2p`
 
 All these interfaces listen only for connections from localhost.
 
@@ -152,6 +152,18 @@ All these interfaces listen only for connections from localhost.
 
   * `shutdown`  
     Shutdown the daemon.
+
+## Web Interface
+
+The web interface allows queries of these forms:
+
+  * `http://localhost:8053/search?foo.p2p`
+  * `http://localhost:8053/announce?foobar`
+  * `http://localhost:8053/blacklist?1.2.3.4`
+
+If the interface cannot be reached then the interface might be disabled (port set to 0)
+or not compiled in (check `kadnode --version`).
+In case the IPv6 entry for localhost is not used or missing, try `[::1]` instead of `localhost`.
 
 ## LIMITATIONS
 
