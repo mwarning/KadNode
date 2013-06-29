@@ -51,6 +51,18 @@ void handle_announce( char *reply_buf, char *params ) {
 	sprintf( reply_buf , "done\n" );
 }
 
+/* handle 'GET /blacklist?1.2.3.4' */
+void handle_blacklist( char *reply_buf, char *params ) {
+	IP addr;
+
+	if( addr_parse( &addr, params, NULL, AF_UNSPEC ) == 0 ) {
+		kad_blacklist( &addr );
+		sprintf( reply_buf , "done\n" );
+	} else {
+		sprintf( reply_buf , "failed\n" );
+	}
+}
+
 void* web_loop( void* _ ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	int val;
@@ -153,6 +165,8 @@ void* web_loop( void* _ ) {
 			handle_search( reply_buf, params );
 		} else if( match( cmd, "announce" ) ) {
 			handle_announce( reply_buf, params );
+		} else if( match( cmd, "blacklist" ) ) {
+			handle_blacklist( reply_buf, params );
 		} else {
 			reply_buf[0] = '\0';
 		}
