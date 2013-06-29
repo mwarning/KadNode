@@ -150,14 +150,12 @@ void results_import( const UCHAR *id, void *data, int data_length, int af ) {
 		size_t data4_len = MIN(data_length / sizeof(ADDR4), MAX_RESULTS_PER_SEARCH);
 		IP4 *a = (IP4 *)&addr;
 
-printf("dht_callback_func: Received %zu IPv4 addresses:\n", data4_len );
 		for( i = 0; i < data4_len; i++ ) {
 			memset( &addr, '\0', sizeof(IP) );
 			a->sin_family = AF_INET;
 			a->sin_port = data4[i].port;
 			memcpy( &a->sin_addr, &data4[i].addr, 4 );
 			results_add_unique( vs, &addr );
-printf("%s\n", str_addr( &addr, addrbuf ) );
 		}
 	}
 
@@ -166,14 +164,12 @@ printf("%s\n", str_addr( &addr, addrbuf ) );
 		size_t data6_len = MIN(data_length / sizeof(ADDR6), MAX_RESULTS_PER_SEARCH);
 		IP6 *a = (IP6 *)&addr;
 
-printf("dht_callback_func: Received %zu IPv6 addresses:\n", data6_len );
 		for( i = 0; i < data6_len; i++ ) {
 			memset( &addr, '\0', sizeof(IP) );
 			a->sin6_family = AF_INET6;
 			a->sin6_port = data6[i].port;
 			memcpy( &a->sin6_addr, &data6[i].addr, 16 );
 			results_add_unique( vs, &addr );
-printf("%s\n", str_addr( &addr, addrbuf ) );
 		}
 	}
 }
