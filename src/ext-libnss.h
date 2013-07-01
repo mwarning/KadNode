@@ -1,4 +1,3 @@
-
 #ifndef _EXT_LIBNSS_H_
 #define _EXT_LIBNSS_H_
 

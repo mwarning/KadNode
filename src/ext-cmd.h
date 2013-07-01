@@ -8,10 +8,7 @@ typedef struct Reply {
 	ssize_t size;
 } REPLY;
 
-void cmd_console_loop( void );
-
 /* Start the remote console interface */
-void cmd_start( void );
-void cmd_stop( void );
+void cmd_setup( void );
 
 #endif /* _EXT_CMD_H_ */

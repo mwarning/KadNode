@@ -1,12 +1,10 @@
+
 #ifndef _KAD_H_
 #define _KAD_H_
 
 
-void kad_init( void );
-
-/* Start/Stop the DHT thread */
-void kad_start( void );
-void kad_stop( void );
+/* Setup the DHT */
+void kad_setup( void );
 
 /* Ping this node for bootstrapping */
 void kad_ping( const IP *addr );

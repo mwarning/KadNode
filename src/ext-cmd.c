@@ -15,6 +15,7 @@
 #include "utils.h"
 #include "log.h"
 #include "kad.h"
+#include "net.h"
 #include "ext-cmd.h"
 
 
@@ -266,157 +267,83 @@ int cmd_exec( REPLY * r, int argc, char **argv ) {
 	return rc;
 }
 
-void *cmd_remote_loop( void *_ ) {
-	struct timeval tv;
-	int rc;
+void cmd_remote_handler( int rc, int sock ) {
 	char* argv[32];
 	int argc;
 
-	int sock;
-    fd_set fds;
-	IP clientaddr, sockaddr;
+	IP clientaddr;
 	socklen_t addrlen_ret;
 	char request[1500];
 	REPLY reply;
-	char addrbuf[FULL_ADDSTRLEN+1];
 
-	if( addr_parse( &sockaddr, "::1", gstate->cmd_port, AF_INET6 ) != 0 ) {
-		log_err( "CMD: Failed to parse address." );
-		return NULL;
+	addrlen_ret = sizeof(IP);
+	rc = recvfrom( sock, request, sizeof(request) - 1, 0, (struct sockaddr*)&clientaddr, &addrlen_ret );
+	if( rc <= 0 ) {
+		return;
+	} else {
+		request[rc] = '\0';
 	}
 
-	sock = socket( sockaddr.ss_family, SOCK_DGRAM, IPPROTO_UDP );
-	if( sock < 0 ) {
-		log_err( "CMD: Failed to create socket: '%s'", strerror( errno ) );
-		return NULL;
-	}
+	/* init reply and reserve room for return status */
+	r_init( &reply );
+	r_printf( &reply, "_" );
 
-	/* Set receive timeout */
-	tv.tv_sec = 1;
-	tv.tv_usec = 0;
-	if( setsockopt( sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(tv) ) < 0) {
-		log_err( "CMD: Failed to set socket option: '%s'", strerror( errno ) );
-		return NULL;
-	}
+	/* split up the command line into an argument array */
+	cmd_to_args( request, &argc, &argv[0], N_ELEMS(argv) );
 
-	if( bind( sock, (struct sockaddr*) &sockaddr, sizeof(IP) ) < 0 ) {
-		log_err( "CMD: Failed to bind socket to address: '%s'", strerror( errno ) );
-		return NULL;
-	}
+	/* execute command line */
+	rc = cmd_exec( &reply, argc, argv );
 
-	log_info( "CMD: Bind to %s", str_addr( &sockaddr, addrbuf ) );
+	/* insert return code */
+	reply.data[0] = (rc == 0) ? '0' : '1';
 
-    while( gstate->is_running ) {
-		FD_ZERO( &fds );
-		FD_SET( sock, &fds );
-
-		tv.tv_sec = 1;
-		tv.tv_usec = 0;
-
-		rc = select( sock+1, &fds, NULL, NULL, &tv );
-		if( rc <= 0 ) {
-			continue;
-		}
-
-		addrlen_ret = sizeof(IP);
-		rc = recvfrom( sock, request, sizeof(request) - 1, 0, (struct sockaddr*)&clientaddr, &addrlen_ret );
-		if( rc <= 0 ) {
-			continue;
-		} else {
-			request[rc] = '\0';
-		}
-
-		/* init reply and reserve room for return status */
-		r_init( &reply );
-		r_printf( &reply, "_" );
-
-		/* split up the command line into an argument array */
-		cmd_to_args( request, &argc, &argv[0], N_ELEMS(argv) );
-
-		/* execute command line */
-		rc = cmd_exec( &reply, argc, argv );
-
-		/* insert return code */
-		reply.data[0] = (rc == 0) ? '0' : '1';
-
-		rc = sendto( sock, reply.data, reply.size, 0, (struct sockaddr *)&clientaddr, sizeof(IP) );
-	}
-
-	close( sock );
-
-	return NULL;
+	rc = sendto( sock, reply.data, reply.size, 0, (struct sockaddr *)&clientaddr, sizeof(IP) );
 }
 
-void cmd_console_loop() {
+void cmd_console_handler( int rc, int fd ) {
 	char request[512];
 	REPLY reply;
 	char *argv[32];
 	int argc;
-	struct timeval tv;
-    fd_set fds;
-	int rc;
 
-	fprintf( stdout, "Press Enter for help.\n" );
+	if( rc == 0 ) {
+		return;
+	}
 
-    while( gstate->is_running ) {
-		FD_ZERO( &fds );
-		FD_SET( STDIN_FILENO, &fds );
+	/* read line */
+	fgets( request, sizeof(request), stdin );
 
-		tv.tv_sec = 1;
-		tv.tv_usec = 0;
+	/* split up the command line into an argument array */
+	cmd_to_args( request, &argc, &argv[0], N_ELEMS(argv) );
 
-		rc = select( STDIN_FILENO+1, &fds, NULL, NULL, &tv );
+	/* init reply */
+	r_init( &reply );
 
-		if( rc == 0 ) {
-			continue;
-		}
+	/* execute command line */
+	rc = cmd_exec( &reply, argc, argv );
 
-		if( rc < 0 ) {
-			break;
-		}
-
-		/* read line */
-		fgets( request, sizeof(request), stdin );
-
-		/* split up the command line into an argument array */
-		cmd_to_args( request, &argc, &argv[0], N_ELEMS(argv) );
-
-		/* init reply */
-		r_init( &reply );
-
-		/* execute command line */
-		rc = cmd_exec( &reply, argc, argv );
-
-		if( rc == 0 ) {
-			fprintf( stdout, "%.*s\n", (int) reply.size, reply.data );
-		} else {
-			fprintf( stderr, "%.*s\n", (int) reply.size, reply.data );
-		}
-    }
+	if( rc == 0 ) {
+		fprintf( stdout, "%.*s\n", (int) reply.size, reply.data );
+	} else {
+		fprintf( stderr, "%.*s\n", (int) reply.size, reply.data );
+	}
 }
 
-void cmd_start( void ) {
-	pthread_attr_t attr;
+void cmd_setup( void ) {
+	int sock;
 
 	if( str_isZero( gstate->cmd_port ) ) {
 		return;
 	}
 
-	pthread_attr_init( &attr );
-	pthread_attr_setdetachstate( &attr, PTHREAD_CREATE_JOINABLE );
+	sock = net_bind( "CMD", "::1", gstate->cmd_port, NULL, IPPROTO_UDP, AF_INET6 );
+	net_add_handler( sock, &cmd_remote_handler );
 
-	if( pthread_create( &gstate->cmd_thread, &attr, &cmd_remote_loop, NULL ) != 0 ) {
-		log_crit( "CMD: Failed to create thread." );
-	}
-}
+	if( gstate->is_daemon == 0 ) {
+		/* Wait for other messages to be displayed */
+		sleep(1);
 
-void cmd_stop() {
-
-	if( str_isZero( gstate->cmd_port ) ) {
-		return;
-	}
-
-	if( pthread_join( gstate->cmd_thread, NULL ) != 0 ) {
-		log_err( "CMD: Failed to join thread." );
+		fprintf( stdout, "Press Enter for help.\n" );
+		net_add_handler( STDIN_FILENO, &cmd_console_handler );
 	}
 }

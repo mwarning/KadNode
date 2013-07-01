@@ -1,7 +1,6 @@
 
 #define _GNU_SOURCE
 
-#include <pthread.h>
 #include <netdb.h>
 #include <net/if.h>
 #include <sys/time.h>
@@ -68,7 +67,7 @@ void dht_unlock( void ) {
 }
 
 /* Send a ping over IPv4 multicast to find other nodes */
-void multicast_ping4( IP *addr ) {
+void multicast_ping4( int sock, IP *addr ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	struct ip_mreq mreq;
 
@@ -85,7 +84,7 @@ void multicast_ping4( IP *addr ) {
 			mreq.imr_interface.s_addr = 0;
 		}
 
-		if( setsockopt( gstate->sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq) ) < 0) {
+		if( setsockopt( sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq) ) < 0) {
 			log_warn( "DHT: Failed to register multicast address: %s", strerror( errno ) );
 			return;
 		} else {
@@ -103,7 +102,7 @@ void multicast_ping4( IP *addr ) {
 }
 
 /* Send a ping over IPv6 multicast to find other nodes */
-void multicast_ping6( IP *addr ) {
+void multicast_ping6( int sock, IP *addr ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	struct ipv6_mreq mreq;
 
@@ -117,7 +116,7 @@ void multicast_ping6( IP *addr ) {
 			log_err( "DHT: Cannot find interface '%s' for multicast: %s", gstate->dht_ifce, strerror( errno ) );
 		}
 
-		if( setsockopt( gstate->sock, IPPROTO_IPV6, IPV6_JOIN_GROUP, &mreq, sizeof(mreq)) != 0 ) {
+		if( setsockopt( sock, IPPROTO_IPV6, IPV6_JOIN_GROUP, &mreq, sizeof(mreq)) != 0 ) {
 			log_warn( "DHT: Failed to register multicast address. Try again later..." );
 			return;
 		} else {
@@ -153,148 +152,97 @@ void dht_callback_func( void *closure, int event, UCHAR *info_hash, void *data, 
 	}
 }
 
-/* Create an IPv4/IPv6 instance */
-void *dht_loop( void *arg ) {
+void dht_handler( int rc, int sock ) {
 	UCHAR buf[1500];
 	struct value *v;
-	char addrbuf[FULL_ADDSTRLEN+1];
-	UCHAR octet;
-	int rc;
     IP from;
     socklen_t fromlen;
 	time_t time_wait = 0;
-	time_t time_dht_maintenance = 0;
-	time_t time_value_search = 0;
-	time_t time_auto_announce = 0;
-	struct timeval tv;
-	fd_set workfds;
-	IP mcast_addr;
 
-	if( addr_parse( &mcast_addr, gstate->mcast_addr, gstate->dht_port, gstate->af ) != 0 ) {
-		log_err( "DHT: Failed to parse ip address for '%s'.", gstate->mcast_addr );
-	}
-
-	if( gstate->af == AF_INET ) {
-		/* Verifiy IPv4 multicast address */
-		octet = ((UCHAR *) &((IP4 *)&mcast_addr)->sin_addr)[0];
-		if( octet != 224 && octet != 239 ) {
-			log_err( "DHT: Multicast address expected: %s", str_addr( &mcast_addr, addrbuf ) );
-		}
-	} else {
-		/* Verifiy IPv6 multicast address */
-		octet = ((UCHAR *)&((IP6 *)&mcast_addr)->sin6_addr)[0];
-		if( octet != 0xFF ) {
-			log_err( "DHT: Multicast address expected: %s", str_addr( &mcast_addr, addrbuf ) );
-		}
-	}
-
-	time_wait = 0;
-	while( gstate->is_running ) {
-
-		tv.tv_sec = 1;
-		tv.tv_usec = 0;
-
-		/* Update clock */
-		gettimeofday( &gstate->time_now, NULL );
-
-		/* Send multicast ping */
-		if( buckets_empty() && gstate->time_mcast <= time_now_sec() ) {
-			if( gstate->af == AF_INET ) {
-				multicast_ping4( &mcast_addr );
-			} else {
-				multicast_ping6( &mcast_addr );
-			}
-			/* Try again in ~5 minutes */
-			gstate->time_mcast = time_add_min( 5 );
-		}
-
-		/* Expire value search results */
-		if( time_value_search <= time_now_sec() ) {
-			dht_lock();
-			results_expire();
-			dht_unlock();
-
-			/* Try again in ~2 minutes */
-			time_value_search = time_add_min( 2 );
-		}
-
-		/* Static value announcement */
-		if( !buckets_empty() && time_auto_announce <= time_now_sec() ) {
-			log_debug( "DHT: Announce static announcements." );
-
-			dht_lock();
-			v = gstate->values;
-			while( v != NULL ) {
-				if( v->port == 0 ) {
-					log_err( "DHT: Port for static value announcement is 0.");
-				}
-				dht_search( v->value_id, v->port, gstate->af, dht_callback_func, NULL );
-				v = v->next;
-			}
-			dht_unlock();
-
-			/* Announce again in ~30 minutes */
-			time_auto_announce = time_add_min( 30 );
-		}
-
-		/* Prepare a basic fd set */
-		FD_ZERO( &workfds );
-		FD_SET( gstate->sock, &workfds );
-
-        rc = select( gstate->sock + 1, &workfds, NULL, NULL, &tv );
-
-		if( rc > 0 ) {
-			/* Check which socket received the data */
-			fromlen = sizeof(from);
-			if( FD_ISSET( gstate->sock, &workfds ) ) {
-				rc = recvfrom( gstate->sock, buf, sizeof(buf) - 1, 0, (struct sockaddr*) &from, &fromlen );
-			} else {
-				log_crit( "DHT: Cannot identify socket we received the data from." );
-				return NULL;
-			}
-
-			/* Kademlia expects the message to be null-terminated. */
-			buf[rc] = '\0';
-
-			/* Handle incoming data */
-			dht_lock();
-			rc = dht_periodic( buf, rc, (struct sockaddr*) &from, fromlen, &time_wait, dht_callback_func, NULL );
-			dht_unlock();
-
-			if( rc < 0 && errno != EINTR ) {
-				if( rc == EINVAL || rc == EFAULT ) {
-					log_err("DHT: Error calling dht_periodic.");
-				}
-				time_dht_maintenance = time_now_sec() + 1;
-			}
-		} else if( time_dht_maintenance <= time_now_sec() ) {
-			/* Do a maintenance call */
-			dht_lock();
-			rc = dht_periodic( NULL, 0, NULL, 0, &time_wait, dht_callback_func, NULL );
-			dht_unlock();
-
-			/* Wait for the next maintenance call */
-			time_dht_maintenance = time_now_sec() + time_wait;
-			log_debug("DHT: Next maintenance call in %u seconds.", (unsigned int) time_wait);
+	/* Send multicast ping */
+	if( gstate->time_mcast <= time_now_sec() && buckets_empty() ) {
+		if( gstate->af == AF_INET ) {
+			multicast_ping4( sock, &gstate->mcast_addr );
 		} else {
-			rc = 0;
+			multicast_ping6( sock, &gstate->mcast_addr );
 		}
+		/* Try again in ~5 minutes */
+		gstate->time_mcast = time_add_min( 5 );
+	}
 
-		if( rc < 0 ) {
-			if( errno == EINTR ) {
-				continue;
-			} else if(rc == EINVAL || rc == EFAULT) {
-				log_err( "DHT: Error using select: %s", strerror( errno ) );
-				return NULL;
-			} else {
-				time_dht_maintenance = time_now_sec() + 1;
+	/* Expire value search results */
+	if( gstate->time_expire_results <= time_now_sec() ) {
+		dht_lock();
+		results_expire();
+		dht_unlock();
+
+		/* Try again in ~2 minutes */
+		gstate->time_expire_results = time_add_min( 2 );
+	}
+
+	/* Static value announcement */
+	if( gstate->time_announce_values <= time_now_sec() && !buckets_empty() ) {
+		log_debug( "DHT: Announce static announcements." );
+
+		dht_lock();
+		v = gstate->values;
+		while( v != NULL ) {
+			if( v->port == 0 ) {
+				log_err( "DHT: Port for static value announcement is 0.");
 			}
+			dht_search( v->value_id, v->port, gstate->af, dht_callback_func, NULL );
+			v = v->next;
 		}
-    }
+		dht_unlock();
 
-	close( gstate->sock );
+		/* Announce again in ~30 minutes */
+		gstate->time_announce_values = time_add_min( 30 );
+	}
 
-	return NULL;
+	if( rc > 0 ) {
+		/* Check which socket received the data */
+		fromlen = sizeof(from);
+		rc = recvfrom( sock, buf, sizeof(buf) - 1, 0, (struct sockaddr*) &from, &fromlen );
+
+		/* Kademlia expects the message to be null-terminated. */
+		buf[rc] = '\0';
+
+		/* Handle incoming data */
+		dht_lock();
+		rc = dht_periodic( buf, rc, (struct sockaddr*) &from, fromlen, &time_wait, dht_callback_func, NULL );
+		dht_unlock();
+
+		if( rc < 0 && errno != EINTR ) {
+			if( rc == EINVAL || rc == EFAULT ) {
+				log_err( "DHT: Error calling dht_periodic." );
+			}
+			gstate->time_dht_maintenance = time_now_sec() + 1;
+		} else {
+			gstate->time_dht_maintenance = time_now_sec() + time_wait;
+		}
+	} else if( gstate->time_dht_maintenance <= time_now_sec() ) {
+		/* Do a maintenance call */
+		dht_lock();
+		rc = dht_periodic( NULL, 0, NULL, 0, &time_wait, dht_callback_func, NULL );
+		dht_unlock();
+
+		/* Wait for the next maintenance call */
+		gstate->time_dht_maintenance = time_now_sec() + time_wait;
+		log_debug( "DHT: Next maintenance call in %u seconds.", (unsigned int) time_wait );
+	} else {
+		rc = 0;
+	}
+
+	if( rc < 0 ) {
+		if( errno == EINTR ) {
+			return;
+		} else if( rc == EINVAL || rc == EFAULT ) {
+			log_err( "DHT: Error using select: %s", strerror( errno ) );
+			return;
+		} else {
+			gstate->time_dht_maintenance = time_now_sec() + 1;
+		}
+	}
 }
 
 /*

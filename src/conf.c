@@ -83,6 +83,7 @@ void conf_init() {
 
 	id_random( gstate->node_id, SHA_DIGEST_LENGTH );
 
+	gstate->mcast_addr_str = NULL;
 	gstate->is_running = 1;
 
 #ifdef DEBUG
@@ -92,9 +93,7 @@ void conf_init() {
 #endif
 
 	gstate->af = AF_INET;
-	gstate->sock = -1;
 	gstate->dht_port = strdup( DHT_PORT );
-	gstate->mcast_addr = strdup( DHT_ADDR4_MCAST );
 
 #ifdef CMD
 	gstate->cmd_port = strdup( CMD_PORT );
@@ -115,6 +114,8 @@ void conf_init() {
 
 void conf_check() {
 	char hexbuf[HEX_LEN+1];
+	char addrbuf[FULL_ADDSTRLEN+1];
+	UCHAR octet;
 
 	log_info( "Starting KadNode v"MAIN_VERSION );
 	log_info( "Own ID: %s", str_id( gstate->node_id, hexbuf ) );
@@ -139,6 +140,33 @@ void conf_check() {
 		default:
 			log_err( "Invalid verbosity level." );
 	}
+
+	if( gstate->mcast_addr_str == NULL ) {
+		/* Set default multicast address string */
+		if( gstate->af == AF_INET ) {
+			gstate->mcast_addr_str = strdup( DHT_ADDR4_MCAST );
+		} else {
+			gstate->mcast_addr_str = strdup( DHT_ADDR6_MCAST );
+		}
+	}
+
+	/* Parse multicast address string */
+	if( addr_parse( &gstate->mcast_addr, gstate->mcast_addr_str, gstate->dht_port, gstate->af ) != 0 ) {
+		log_err( "CFG: Failed to parse IP address for '%s'.", gstate->mcast_addr );
+	}
+
+	/* Verifiy multicast address */
+	if( gstate->af == AF_INET ) {
+		octet = ((UCHAR *) &((IP4 *)&gstate->mcast_addr)->sin_addr)[0];
+		if( octet != 224 && octet != 239 ) {
+			log_err( "CFG: Multicast address expected: %s", str_addr( &gstate->mcast_addr, addrbuf ) );
+		}
+	} else {
+		octet = ((UCHAR *)&((IP6 *)&gstate->mcast_addr)->sin6_addr)[0];
+		if( octet != 0xFF ) {
+			log_err( "CFG: Multicast address expected: %s", str_addr( &gstate->mcast_addr, addrbuf ) );
+		}
+	}
 }
 
 void conf_free() {
@@ -147,7 +175,7 @@ void conf_free() {
 	free( gstate->pid_file );
 	free( gstate->dht_port );
 	free( gstate->dht_ifce );
-	free( gstate->mcast_addr );
+	free( gstate->mcast_addr_str );
 
 #ifdef CMD
 	free( gstate->cmd_port );
@@ -271,21 +299,15 @@ void conf_handle( char *var, char *val ) {
 	} else if( match( var, "--mode" ) ) {
 		if( val && match( val, "ipv4" ) ) {
 			gstate->af = AF_INET;
-			if( strcmp( gstate->mcast_addr, DHT_ADDR4_MCAST ) == 0 ) {
-				conf_str( var, &gstate->mcast_addr, DHT_ADDR4_MCAST );
-			}
 		} else if( val && match( val, "ipv6" ) ) {
 			gstate->af = AF_INET6;
-			if( strcmp( gstate->mcast_addr, DHT_ADDR4_MCAST ) == 0 ) {
-				conf_str( var, &gstate->mcast_addr, DHT_ADDR6_MCAST );
-			}
 		} else {
 			log_err("CFG: Value 'ipv4' or 'ipv6' for parameter --mode expected.");
 		}
 	} else if( match( var, "--port" ) ) {
 		conf_str( var, &gstate->dht_port, val );
 	} else if( match( var, "--mcast-addr" ) ) {
-		conf_str( var, &gstate->mcast_addr, val );
+		conf_str( var, &gstate->mcast_addr_str, val );
 	} else if( match( var, "--disable-mcast" ) ) {
 		if( val != NULL ) {
 			conf_no_arg_expected( var );

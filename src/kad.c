@@ -13,6 +13,7 @@
 #include "conf.h"
 #include "utils.h"
 #include "results.h"
+#include "net.h"
 #include "dht_wrapper.c"
 
 
@@ -20,61 +21,7 @@
 The interface that is used to interact with the DHT.
 */
 
-int udp_bind( const char* addr, const char* port, const char* ifce, int af ) {
-	char addrbuf[FULL_ADDSTRLEN+1];
-	int sock;
-	int val;
-	IP sockaddr;
-
-	if( af != AF_INET && af != AF_INET6 ) {
-		log_err( "DHT: Unknown address family value." );
-		return -1;
-	}
-
-	if( addr_parse( &sockaddr, addr, port, af ) != 0 ) {
-		log_err( "DHT: Failed to parse ip address '%s' and port '%s'.", addr, port );
-	}
-
-	sock = socket( sockaddr.ss_family, SOCK_DGRAM, IPPROTO_UDP );
-
-	if( sock < 0 ) {
-		log_err( "DHT: Failed to create socket: %s", strerror( errno ) );
-		return -1;
-	}
-
-	val = 1;
-	if ( setsockopt( sock, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val) ) < 0 ) {
-		log_err( "DHT: Failed to set socket option SO_REUSEADDR: %s", strerror( errno ));
-		return -1;
-	}
-
-	if( ifce && setsockopt( sock, SOL_SOCKET, SO_BINDTODEVICE, ifce, strlen( ifce ) ) ) {
-		log_warn( "DHT: Unable to bind to device '%s': %s", ifce, strerror( errno ) );
-		return -1;
-	}
-
-	if( af == AF_INET6 ) {
-		val = 1;
-		if( setsockopt( sock, IPPROTO_IPV6, IPV6_V6ONLY, &val, sizeof(val) ) < 0 ) {
-			log_err( "DHT: Failed to set socket option IPV6_V6ONLY: %s", strerror( errno ));
-			return -1;
-		}
-	}
-
-	if( bind( sock, (struct sockaddr*) &sockaddr, sizeof(IP) ) < 0 ) {
-		log_warn( "DHT: Failed to bind socket to address: '%s'", strerror( errno ) );
-		close( sock );
-		return -1;
-	}
-
-	log_info( ifce ? "DHT: Bind to %s, interface %s" : "DHT: Bind to %s" ,
-		str_addr( &sockaddr, addrbuf ), ifce
-	);
-
-	return sock;
-}
-
-void kad_init( void ) {
+void kad_setup( void ) {
 	int s4, s6;
 
 	s4 = -1;
@@ -88,32 +35,16 @@ void kad_init( void ) {
 	dht_lock_init();
 
 	if( gstate->af == AF_INET ) {
-		s4 = udp_bind( DHT_ADDR4, gstate->dht_port, gstate->dht_ifce, AF_INET );
-		gstate->sock = s4;
+		s4 = net_bind( "DHT", DHT_ADDR4, gstate->dht_port, gstate->dht_ifce, IPPROTO_UDP, AF_INET );
+		net_add_handler( s4, &dht_handler );
 	} else {
-		s6 = udp_bind( DHT_ADDR6, gstate->dht_port, gstate->dht_ifce, AF_INET6 );
-		gstate->sock = s6;
+		s6 = net_bind( "DHT", DHT_ADDR6, gstate->dht_port, gstate->dht_ifce, IPPROTO_UDP, AF_INET6 );
+		net_add_handler( s6, &dht_handler );
 	}
 
 	/* Init the DHT.  Also set the sockets into non-blocking mode. */
 	if( dht_init( s4, s6, gstate->node_id, (UCHAR*) "KN\0\0") < 0 ) {
 		log_err( "DHT: Failed to initialize the DHT." );
-	}
-}
-
-void kad_start( void ) {
-	pthread_attr_t attr;
-	pthread_attr_init( &attr );
-	pthread_attr_setdetachstate( &attr, PTHREAD_CREATE_JOINABLE );
-
-	if( pthread_create( &gstate->dht_thread, &attr, &dht_loop, NULL ) != 0 ) {
-		log_crit( "DHT: Failed to create thread." );
-	}
-}
-
-void kad_stop( void ) {
-	if( pthread_join( gstate->dht_thread, NULL ) != 0 ) {
-		log_err( "DHT: Failed to join thread." );
 	}
 }
 

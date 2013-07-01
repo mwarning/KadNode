@@ -19,6 +19,7 @@
 #include "log.h"
 #include "utils.h"
 #include "kad.h"
+#include "net.h"
 #include "ext-dns.h"
 
 
@@ -393,14 +394,10 @@ void dns_reply_msg( struct message *msg, IP *nodeaddr ) {
 	}
 }
 
-void* dns_loop( void *_ ) {
+void dns_handler( int rc, int sock ) {
 	int n;
-	int val;
-	struct timeval tv;
-
 	struct message msg;
-	int sock;
-	IP clientaddr, sockaddr, nodeaddr;
+	IP clientaddr, nodeaddr;
 	socklen_t addrlen_ret;
 
 	UCHAR buffer[1500];
@@ -410,117 +407,62 @@ void* dns_loop( void *_ ) {
 	char addrbuf2[FULL_ADDSTRLEN+1];
 	const char *hostname;
 
-	if( addr_parse( &sockaddr, "::1", gstate->dns_port, AF_INET6 ) != 0 ) {
-		log_err( "DNS: Failed to parse address." );
-		return NULL;
+	if( rc == 0 ) {
+		return;
 	}
 
-	if( (sock = socket( sockaddr.ss_family, SOCK_DGRAM, IPPROTO_UDP )) < 0 ) {
-		log_err( "DNS: Failed to create socket: %s", strerror( errno ) );
-		return NULL;
+	addrlen_ret = sizeof(IP);
+	n = recvfrom( sock, buffer, sizeof(buffer), 0, (struct sockaddr *) &clientaddr, &addrlen_ret );
+	if( n < 0 ) {
+		return;
 	}
 
-	val = 1;
-	if ( setsockopt( sock, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val) ) < 0 ) {
-		log_err( "DNS: Failed to set socket option SO_REUSEADDR: %s", strerror( errno ));
-		return NULL;
+	log_debug( "DNS: Received query from: %s",  str_addr( &clientaddr, addrbuf1 ) );
+
+	if( dns_decode_query( &msg, buffer, n ) < 0 ) {
+		return;
 	}
 
-	val = 1;
-	if( setsockopt( sock, IPPROTO_IPV6, IPV6_V6ONLY, (char*) &val, sizeof(val) ) < 0 ) {
-		log_err( "DNS: Failed to set socket option IPV6_V6ONLY: '%s'", strerror( errno ) );
-		return NULL;
+	hostname = msg.question.qName;
+
+	/* Validate hostname */
+	if ( hostname == NULL || !str_isValidHostname( (char*) hostname, strlen( hostname ) ) ) {
+		log_warn( "DNS: Invalid hostname for lookup: '%s'", hostname );
+		return;
 	}
 
-	/* Set receive timeout */
-	tv.tv_sec = 1;
-	tv.tv_usec = 0;
-	if( setsockopt( sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(tv) ) < 0 ) {
-		log_err( "DNS: Failed to set socket option SO_RCVTIMEO: '%s'", strerror( errno ) );
-		return NULL;
+	/* That is the lookup key */
+	id_compute( node_id, hostname );
+	log_debug( "DNS: Lookup '%s' as '%s'.", hostname, str_id( node_id, hexbuf ) );
+
+	if( dns_lookup( node_id, &nodeaddr ) != 0 ) {
+		log_debug( "DNS: Hostname not found." );
+		return;
 	}
 
-	if( bind( sock, (struct sockaddr*) &sockaddr, sizeof(IP) ) < 0 ) {
-		log_err( "DNS: Failed to bind socket to address: '%s'", strerror( errno ) );
-		return NULL;
+	dns_reply_msg( &msg, &nodeaddr );
+
+	UCHAR* p = dns_code_response( &msg, buffer );
+
+	if( p ) {
+		int buflen = p - buffer;
+		log_debug( "DNS: Send address %s to %s. Packet has %d bytes.",
+			str_addr( &nodeaddr, addrbuf1 ),
+			str_addr( &clientaddr, addrbuf2 ),
+			buflen
+		);
+
+		sendto( sock, buffer, buflen, 0, (struct sockaddr*) &clientaddr, sizeof(IP) );
 	}
-
-	log_info( "DNS: Bind to %s" , str_addr( &sockaddr, addrbuf1 ) );
-
-	while( gstate->is_running ) {
-
-		addrlen_ret = sizeof(IP);
-		n = recvfrom( sock, buffer, sizeof(buffer), 0, (struct sockaddr *) &clientaddr, &addrlen_ret );
-		if( n < 0 ) {
-			continue;
-		}
-
-		log_debug( "DNS: Received query from: %s",  str_addr( &clientaddr, addrbuf1 ) );
-
-		if( dns_decode_query( &msg, buffer, n ) < 0 ) {
-			continue;
-		}
-
-		hostname = msg.question.qName;
-
-		/* Validate hostname */
-		if ( hostname == NULL || !str_isValidHostname( (char*) hostname, strlen( hostname ) ) ) {
-			log_warn( "DNS: Invalid hostname for lookup: '%s'", hostname );
-			continue;
-		}
-
-		/* That is the lookup key */
-		id_compute( node_id, hostname );
-		log_debug( "DNS: Lookup '%s' as '%s'.", hostname, str_id( node_id, hexbuf ) );
-
-		if( dns_lookup( node_id, &nodeaddr ) != 0 ) {
-			log_debug( "DNS: Hostname not found." );
-			continue;
-		}
-
-		dns_reply_msg( &msg, &nodeaddr );
-
-		UCHAR* p = dns_code_response( &msg, buffer );
-
-		if( p ) {
-			int buflen = p - buffer;
-			log_debug( "DNS: Send address %s to %s. Packet has %d bytes.",
-				str_addr( &nodeaddr, addrbuf1 ),
-				str_addr( &clientaddr, addrbuf2 ),
-				buflen
-			);
-
-			sendto( sock, buffer, buflen, 0, (struct sockaddr*) &clientaddr, sizeof(IP) );
-		}
-	}
-
-	close( sock );
-
-	return NULL;
 }
 
-void dns_start( void ) {
-	pthread_attr_t attr;
+void dns_setup( void ) {
+	int sock;
 
 	if( str_isZero( gstate->dns_port ) ) {
 		return;
 	}
 
-	pthread_attr_init( &attr );
-	pthread_attr_setdetachstate( &attr, PTHREAD_CREATE_JOINABLE );
-
-	if( pthread_create( &gstate->dns_thread, &attr, &dns_loop, NULL ) != 0 ) {
-		log_crit( "DNS: Failed to create thread." );
-	}
-}
-
-void dns_stop( void ) {
-
-	if( str_isZero( gstate->dns_port ) ) {
-		return;
-	}
-
-	if( pthread_join( gstate->dns_thread, NULL ) != 0 ) {
-		log_err( "DNS: Failed to join thread." );
-	}
+	sock = net_bind( "DNS", "::1", gstate->dns_port, NULL, IPPROTO_UDP, AF_INET6 );
+	net_add_handler( sock, &dns_handler );
 }

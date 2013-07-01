@@ -43,9 +43,6 @@ struct obj_gstate {
 	/* IPv4 or IPv6 mode */
 	int af;
 
-	/* DHT socket */
-	int sock;
-
 	/* DHT port number */
 	char* dht_port;
 
@@ -53,32 +50,38 @@ struct obj_gstate {
 	char *dht_ifce;
 
 	/* DHT multicast address for bootstrapping */
-	char *mcast_addr;
+	char *mcast_addr_str;
+	IP mcast_addr;
 
 	/* Indicates if the multicast addresses has been registered */
 	int mcast_registered;
 
-	/* Last performed multicast ping */
+	/* Nex time to perform a multicast ping */
 	time_t time_mcast;
+
+	/* Next time to do DHT maintenance */
+	time_t time_dht_maintenance;
+
+	/* Next time to remove expired seach results */
+	time_t time_expire_results;
+
+	/* Next time to announce results */
+	time_t time_announce_values;
 
 #ifdef CMD
 	char *cmd_port;
-	pthread_t cmd_thread;
 #endif
 
 #ifdef DNS
 	char *dns_port;
-	pthread_t dns_thread;
 #endif
 
 #ifdef NSS
 	char *nss_port;
-	pthread_t nss_thread;
 #endif
 
 #ifdef WEB
 	char *web_port;
-	pthread_t web_thread;
 #endif
 
 	/* Catch signals */

@@ -18,6 +18,7 @@
 #include "kad.h"
 #include "utils.h"
 #include "unix.h"
+#include "net.h"
 
 #ifdef DNS
 #include "ext-dns.h"
@@ -63,48 +64,25 @@ int main( int argc, char **argv ) {
 	/* Drop privileges */
 	unix_dropuid0();
 
-	/* Init the Kademlia DHT */
-	kad_init();
+	/* Setup the Kademlia DHT */
+	kad_setup();
 
-	/* Start interfaces */
+	/* Setup interfaces */
 #ifdef DNS
-	dns_start();
+	dns_setup();
 #endif
 #ifdef WEB
-	web_start();
+	web_setup();
 #endif
 #ifdef NSS
-	nss_start();
+	nss_setup();
 #endif
 #ifdef CMD
-	cmd_start();
+	cmd_setup();
 #endif
 
-	kad_start();
-
-	#ifdef CMD
-    if( gstate->is_daemon == 0 ) {
-		/* Wait for other messages to be displayed */
-		sleep(1);
-		cmd_console_loop();
-	}
-	#endif
-
-	/* Stop interfaces */
-#ifdef DNS
-	dns_stop();
-#endif
-#ifdef WEB
-	web_stop();
-#endif
-#ifdef NSS
-	nss_stop();
-#endif
-#ifdef CMD
-	cmd_stop();
-#endif
-
-	kad_stop();
+	/* Loop over all sockets and FDs */
+	net_loop();
 
 	conf_free();
 
