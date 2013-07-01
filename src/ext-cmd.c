@@ -284,17 +284,17 @@ void cmd_remote_handler( int rc, int sock ) {
 		request[rc] = '\0';
 	}
 
-	/* init reply and reserve room for return status */
+	/* Initialize reply and reserve room for return status */
 	r_init( &reply );
 	r_printf( &reply, "_" );
 
-	/* split up the command line into an argument array */
+	/* Split up the command line into an argument array */
 	cmd_to_args( request, &argc, &argv[0], N_ELEMS(argv) );
 
-	/* execute command line */
+	/* Execute command line */
 	rc = cmd_exec( &reply, argc, argv );
 
-	/* insert return code */
+	/* Insert return code */
 	reply.data[0] = (rc == 0) ? '0' : '1';
 
 	rc = sendto( sock, reply.data, reply.size, 0, (struct sockaddr *)&clientaddr, sizeof(IP) );
@@ -310,16 +310,16 @@ void cmd_console_handler( int rc, int fd ) {
 		return;
 	}
 
-	/* read line */
+	/* Read line */
 	fgets( request, sizeof(request), stdin );
 
-	/* split up the command line into an argument array */
+	/* Split up the command line into an argument array */
 	cmd_to_args( request, &argc, &argv[0], N_ELEMS(argv) );
 
-	/* init reply */
+	/* Initialize reply */
 	r_init( &reply );
 
-	/* execute command line */
+	/* Execute command line */
 	rc = cmd_exec( &reply, argc, argv );
 
 	if( rc == 0 ) {
