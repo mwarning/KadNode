@@ -59,7 +59,7 @@ All these interfaces listen only for connections from localhost.
     Set the node identifier. This option is rarely needed.  
 	By default the node id is random.
 
-  * `--value-id` *id\[:port\]*  
+  * `--value-id` *id[:port]*  
     Add a value identifier and optional port to be announced every 30 minutes.  
     The announcement will associate this nodes IP address with this identifier.  
     This option can occur multiple times.
@@ -137,7 +137,7 @@ All these interfaces listen only for connections from localhost.
     Lookup the IP address of a node that has identifier id.  
 	The lookup is performed on the current search results.
 
-  * `announce` *id* \[*port*\]  
+  * `announce` *id* [*port*]  
     Announce that this instance is associated with identifier.  
     The announcement will happen only once and instantly.
 
