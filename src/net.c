@@ -20,7 +20,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-
 #include <fcntl.h>
 
 #include "main.h"
@@ -194,7 +193,6 @@ void net_loop( void ) {
 
 	/* Close sockets and FDs */
 	for( i = 0; i < numtasks; ++i ) {
-		struct task *t = &tasks[i];
-		close( t->fd );
+		close( tasks[i].fd );
 	}
 }

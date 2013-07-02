@@ -56,7 +56,7 @@ struct obj_gstate {
 	/* Indicates if the multicast addresses has been registered */
 	int mcast_registered;
 
-	/* Nex time to perform a multicast ping */
+	/* Next time to perform a multicast ping */
 	time_t time_mcast;
 
 	/* Next time to do DHT maintenance */

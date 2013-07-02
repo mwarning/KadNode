@@ -42,9 +42,12 @@ Name Service Switch (NSS) support through /etc/nsswitch\.conf\.
 A simple DNS server interface that can be used like a local upstream DNS server\.
 .
 .IP "\(bu" 4
-A simple web server interface to resolve queries: \fBhttp://localhost:8053/foo\.p2p\fR
+A simple web server interface to resolve queries: \fBhttp://localhost:8053/search?foo\.p2p\fR
 .
 .IP "" 0
+.
+.P
+All these interfaces listen only for connections from localhost\.
 .
 .SH "DOWNLOADS"
 .
@@ -164,13 +167,13 @@ Enable IPv4 or IPv6 mode for the DHT (Default: ipv4)\.
 \fB\-h\fR, \fB\-\-help\fR
 .
 .br
-Print this help\.
+Print the list of accepted options\.
 .
 .IP "\(bu" 4
 \fB\-v\fR, \fB\-\-version\fR
 .
 .br
-Print program version\.
+Print program version and included features\.
 .
 .IP "" 0
 .
@@ -240,7 +243,7 @@ Send a ping to another KadNode instance to establish a connection\.
 \fBexport\fR
 .
 .br
-Print a few good nodes\. The argument allows to select only IPv6 or IPv4 addresses\.
+Print a few good nodes\.
 .
 .IP "\(bu" 4
 \fBblacklist\fR \fIaddr\fR
@@ -256,6 +259,23 @@ Shutdown the daemon\.
 .
 .IP "" 0
 .
+.SH "Web Interface"
+The web interface allows queries of these forms:
+.
+.IP "\(bu" 4
+\fBhttp://localhost:8053/search?foo\.p2p\fR
+.
+.IP "\(bu" 4
+\fBhttp://localhost:8053/announce?foobar\fR
+.
+.IP "\(bu" 4
+\fBhttp://localhost:8053/blacklist?1\.2\.3\.4\fR
+.
+.IP "" 0
+.
+.P
+If the interface cannot be reached then the interface might be disabled (port set to 0) or not compiled in (check \fBkadnode \-\-version\fR)\. In case the IPv6 entry for localhost is not used or missing, try \fB[::1]\fR instead of \fBlocalhost\fR\.
+.
 .SH "LIMITATIONS"
 .
 .IP "\(bu" 4
@@ -263,9 +283,6 @@ KadNode cannot resolve its own node id without other nodes present\.
 .
 .IP "\(bu" 4
 No NAT\-traversal was implemented yet\.
-.
-.IP "\(bu" 4
-Kademlia drops announcements after 30 minutes\. Those need to be refreshed\.
 .
 .IP "\(bu" 4
 Blacklisted addreses are stored in a LRU cache of maximal 10 entries\.

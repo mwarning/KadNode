@@ -16,6 +16,7 @@ int net_bind(
 /* A socket to the file descriptor set */
 void net_add_handler( int fd, net_callback *callback );
 
+/* Start loop for all network events */
 void net_loop( void );
 
 #endif /* _NET_H */
