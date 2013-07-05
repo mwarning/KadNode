@@ -14,7 +14,7 @@ implementation of a distributed hash table (DHT).
 
 KadNode enables the user to announce any kind of resource by an identifier.
 This can be used e.g. to resolve a hostname to an IP address.
-It also is small in size (~75KB) and uses one thread only.
+It is also small in size (~75KB) and uses only one thread to save resources.
 
 By default, KadNode tries to send a ping to a multicast address on the local network
 to find nodes to bootstrap from. This is done every five minutes when no other nodes are known.
@@ -38,8 +38,8 @@ In contrast, the web and console interface are able to return all known
 IP addresses associated with an identifier.
 
 Every entered identifier (e.g. `myname.p2p`) will have everything after and including the last dot ignored.
-This is because the top level domain is often used the differentiate from classical domain names
-and to redirect them to KadNode to be resolved.
+This is because the top level domain is often used to differentiate from classical domain names
+and to redirect requests to KadNode.
 The rest of the string is converted to an 20 byte identifier using the sha1 hashing algorithm.
 As an alternative, the hash can be entered directly as a 40 character hexadecimal string.
 This can be used to entirely circumvent the build-in hashing algorithm (sha1).
