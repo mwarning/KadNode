@@ -14,6 +14,7 @@ implementation of a distributed hash table (DHT).
 
 KadNode enables the user to announce any kind of resource by an identifier.
 This can be used e.g. to resolve a hostname to an IP address.
+It also is small in size (~75KB) and uses one thread only.
 
 By default, KadNode tries to send a ping to a multicast address on the local network
 to find nodes to bootstrap from. This is done every five minutes when no other nodes are known.
@@ -32,11 +33,16 @@ therefore need to be refreshed around every 30 minutes.
 Please be aware that other people might use the same identifier.
 It is strongly advised to do additional identification/authentification
 when an address is used that has been resolved by KadNode.
+The DNS/NSS interfaces are only able to return one of these addresses.
+In contrast, the web and console interface are able to return all known
+IP addresses associated with an identifier.
 
-Every entered identifier (e.g. `myname.p2p`) will have everything after the last dot ignored as a top level domain like
-is often used only to redirect queries to KadNode.
+Every entered identifier (e.g. `myname.p2p`) will have everything after and including the last dot ignored.
+This is because the top level domain is often used the differentiate from classical domain names
+and to redirect them to KadNode to be resolved.
 The rest of the string is converted to an 20 byte identifier using the sha1 hashing algorithm.
 As an alternative, the hash can be entered directly as a 40 character hexadecimal string.
+This can be used to entirely circumvent the build-in hashing algorithm (sha1).
 The string `myname.p2p` is therefore eqivalent to `d13b93ea42804188d277c20f7d6e5be2732148b8`
 which is the result of sha1('myname'). This is true for every entered identifier that involves KadNode.
 
@@ -116,7 +122,7 @@ All these interfaces listen only for connections from localhost.
 **kadnode-ctl** allows to control KadNode from the command line.
 
   * `-p` *port*  
-    Connect to the local KadNode console on this interface (Default: 1700):
+    Connect to the local KadNode console on this interface (Default: 1700).
 
   * `-h`  
     Print this help.
