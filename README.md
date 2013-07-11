@@ -15,6 +15,8 @@ implementation of a distributed hash table (DHT).
 KadNode enables the user to announce any kind of resource by an identifier.
 This can be used e.g. to resolve a hostname to an IP address.
 It is also small in size (~75KB) and uses only one thread to save resources.
+The Kademlia implementation is identical to the one used for the Transmission Bittorrent client.
+Join any existing swarm to be able to find your node globally.
 
 By default, KadNode tries to send a ping to a multicast address on the local network
 to find nodes to bootstrap from. This is done every five minutes when no other nodes are known.
