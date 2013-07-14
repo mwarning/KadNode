@@ -83,6 +83,7 @@ int net_bind(
 
 	if( addr_parse( &sockaddr, addr, port, af ) != 0 ) {
 		log_err( "NET: Failed to parse ip address '%s' and port '%s'.", addr, port );
+		return -1;
 	}
 
 	if( protocol == IPPROTO_TCP ) {
@@ -105,7 +106,7 @@ int net_bind(
 	}
 
 	if( ifce && setsockopt( sock, SOL_SOCKET, SO_BINDTODEVICE, ifce, strlen( ifce ) ) ) {
-		log_warn( "NET: Unable to bind to device '%s': %s", ifce, strerror( errno ) );
+		log_err( "NET: Unable to bind to device '%s': %s", ifce, strerror( errno ) );
 		return -1;
 	}
 
@@ -118,13 +119,13 @@ int net_bind(
 	}
 
 	if( bind( sock, (struct sockaddr*) &sockaddr, sizeof(IP) ) < 0 ) {
-		log_warn( "NET: Failed to bind socket to address: '%s'", strerror( errno ) );
-		close( sock );
+		log_err( "NET: Failed to bind socket to address: '%s'", strerror( errno ) );
 		return -1;
 	}
 
 	if( net_set_nonblocking( sock ) < 0 ) {
 		log_err( "NET: Failed to make socket nonblocking: '%s'", strerror( errno ) );
+		return -1;
 	}
 
 	if( protocol == IPPROTO_TCP && listen( sock, 5 ) < 0 ) {
