@@ -53,8 +53,8 @@ void results_expire( void ) {
             } else {
                 results = next;
 			}
-            free( vs );
-            num_results--;
+			free( vs );
+			num_results--;
         } else {
             pre = vs;
         }
