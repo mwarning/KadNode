@@ -77,7 +77,7 @@ All these interfaces listen only for connections from localhost.
 
   * `--port` *port*  
     Bind the DHT to this port.  
-    Default: 8337
+    Default: 6881
 
   * `--ifce` *interface*  
     Bind to this specific interface.
