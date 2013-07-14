@@ -35,7 +35,7 @@ const char *version = "KadNode v"MAIN_VERSION" ( "
 
 const char *usage = "KadNode - A P2P name resolution daemon (IPv4/IPv6)\n"
 "A Wrapper for the Kademlia implementation of a Distributed Hash Table (DHT)\n"
-"with several interfaces for DNS, an interactive command line, web and NSS.\n"
+"with several optional interfaces (check -v).\n"
 "\n"
 "Usage: kadnode [OPTIONS]*\n"
 "\n"
@@ -202,7 +202,7 @@ void conf_no_arg_expected( const char *var ) {
 }
 
 /* free the old string and set the new */
-void conf_str( const char *var, char** dst, const char *src ) {
+void conf_str( const char *var, char **dst, const char *src ) {
 	if( src == NULL ) {
 		conf_arg_expected( var );
 	}
