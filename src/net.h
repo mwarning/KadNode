@@ -13,7 +13,7 @@ int net_bind(
 	int protocol, int af
 );
 
-/* A socket to the file descriptor set */
+/* Add a socket to the file descriptor set */
 void net_add_handler( int fd, net_callback *callback );
 
 /* Start loop for all network events */
