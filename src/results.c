@@ -135,7 +135,6 @@ typedef struct {
 } ADDR4;
 
 void results_import( const UCHAR *id, void *data, int data_length, int af ) {
-	char addrbuf[FULL_ADDSTRLEN+1];
 	struct result* vs;
 	IP addr;
 	int i;
