@@ -175,7 +175,6 @@ In case the IPv6 entry for localhost is not used or missing, try `[::1]` instead
 
 ## LIMITATIONS
 
-  * KadNode cannot resolve its own node id without other nodes present.
   * Blacklisted addreses are stored in a LRU cache of maximal 10 entries.
 
 ## LICENSE
