@@ -92,12 +92,19 @@ void cmd_to_args( char *str, int *argc, char **argv, int max_argv ) {
 int cmd_import( REPLY *r, const char *addr_str) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	IP addr;
+	int rc;
 
 	/* If the address contains no port - use the default port */
-	if( addr_parse_full( &addr, addr_str, DHT_PORT, gstate->af ) == 0 ) {
+	if( (rc = addr_parse_full( &addr, addr_str, DHT_PORT, gstate->af )) ==  ADDR_PARSE_SUCCESS) {
 		kad_ping( &addr );
 		r_printf( r, "Send ping to: %s\n", str_addr( &addr, addrbuf ) );
 		return 0;
+	} else if( rc == ADDR_PARSE_CANNOT_RESOLVE ) {
+		r_printf( r, "Failed to resolve address.\n" );
+		return 1;
+	} else if( rc == ADDR_PARSE_NO_ADDR_FOUND ) {
+		r_printf( r, "Failed to aquire address of required protocol.\n" );
+		return 1;
 	} else {
 		r_printf( r, "Failed to parse address.\n" );
 		return 1;
@@ -144,7 +151,7 @@ int cmd_export( REPLY *r ) {
 	}
 
 	if( i == 0 ) {
-		r_printf( r, "No nodes found.\n" );
+		r_printf( r, "No good nodes found.\n" );
 		return 1;
 	}
 

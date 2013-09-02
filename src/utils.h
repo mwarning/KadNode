@@ -11,6 +11,11 @@
 /* Simple string match */
 #define match(opt, arg) (strcmp( opt, arg ) == 0)
 
+#define ADDR_PARSE_SUCCESS 0
+#define ADDR_PARSE_INVALID_FORMAT 1
+#define ADDR_PARSE_CANNOT_RESOLVE 2
+#define ADDR_PARSE_NO_ADDR_FOUND 3
+
 
 int id_random( void *buffer, size_t size );
 void id_compute( UCHAR *id, const char *str );
