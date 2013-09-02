@@ -51,7 +51,7 @@ time_t time_now_sec( void ) {
 }
 
 time_t time_add_min( unsigned int min ) {
-	return time_now_sec() + 60 * min;
+	return time_now_sec() + (60 * min);
 }
 
 void dht_lock_init( void ) {
@@ -158,6 +158,7 @@ void dht_callback_func( void *closure, int event, UCHAR *info_hash, void *data, 
 	}
 }
 
+/* Handle incoming packets and pass them to the DHT code */
 void dht_handler( int rc, int sock ) {
 	UCHAR buf[1500];
 	struct value *v;
@@ -259,6 +260,7 @@ int dht_blacklisted( const struct sockaddr *sa, int salen ) {
     return 0;
 }
 
+/* Hashing for the DHT - implementation does not matter for interoperability */
 void dht_hash( void *hash_return, int hash_size,
 	const void *v1, int len1,
 	const void *v2, int len2,

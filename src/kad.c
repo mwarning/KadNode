@@ -252,7 +252,7 @@ int kad_status( char *buf, int size ) {
 	bprintf( "Bound to: %s:%s / %s\n",
 		(gstate->af == AF_INET) ? "0.0.0.0" : "[::1]",
 		gstate->dht_port,
-		(gstate->dht_ifce == NULL) ? "<any>" : gstate->dht_ifce
+		(gstate->dht_ifce == NULL) ? "<any device>" : gstate->dht_ifce
 	);
 
 	if( gstate->af == AF_INET ) {
