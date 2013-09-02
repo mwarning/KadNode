@@ -22,6 +22,9 @@ const char *version = "KadNode v"MAIN_VERSION" ( "
 #ifdef CMD
 " cmd"
 #endif
+#ifdef DEBUG
+" debug"
+#endif
 #ifdef DNS
 " dns"
 #endif
