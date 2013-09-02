@@ -1,6 +1,7 @@
 kadnode (0.4) unstable; urgency=low
 
   * Use only one thread to save resources.
+  * Change default DHT port to 6881
 
  -- mwarning <moritzwarning@web.de>  Mon, 01 Jul 2013 19:23:41 +0200
 
