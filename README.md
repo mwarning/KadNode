@@ -26,7 +26,7 @@ identifiers and send announcements.
 As an usage example one would start `kadnode --value-id myname.p2p` to let KadNode
 announce every 30 minutes, that the IP address of the running KadNode instance
 is associated with the identifier 'myname.p2p'.
-A call like `kadnode-ctl import dht.wifi.pps.jussieu.fr` can be used to help KadNode to bootstrap
+A call like `kadnode-ctl import bttracker.debian.org` can be used to help KadNode to bootstrap
 into an existing network.
 To announce an identifier just once, use `kadnode-ctl announce myname`.
 Any announcement will be dropped by other KadNode instances after 32 minutes and

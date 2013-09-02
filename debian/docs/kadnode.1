@@ -1,7 +1,7 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "KADNODE" "1" "June 2013" "" ""
+.TH "KADNODE" "1" "September 2013" "" ""
 .
 .SH "NAME"
 \fBkadnode\fR \- P2P name resolution daemon
@@ -16,19 +16,19 @@
 \fBKadNode\fR is a small P2P name/resource resolution daemon for IPv4/IPv6 based on the Kademlia implementation of a distributed hash table (DHT)\.
 .
 .P
-KadNode enables the user to announce any kind of resource by an identifier\. This can be used e\.g\. to resolve a hostname to an IP address\.
+KadNode enables the user to announce any kind of resource by an identifier\. This can be used e\.g\. to resolve a hostname to an IP address\. It is also small in size (~75KB) and uses only one thread to save resources\. The Kademlia implementation is identical to the one used for the Transmission Bittorrent client\. Join any existing swarm to be able to find your node globally\.
 .
 .P
 By default, KadNode tries to send a ping to a multicast address on the local network to find nodes to bootstrap from\. This is done every five minutes when no other nodes are known\. The interactive remote shell \fBkadnode\-ctl\fR let the user import and export nodes, issue queries for identifiers and send announcements\.
 .
 .P
-As an usage example one would start \fBkadnode \-\-value\-id myname\.p2p\fR to let KadNode announce every 30 minutes, that the IP address of the running KadNode instance is associated with the identifier \'myname\.p2p\'\. A call like \fBkadnode\-ctl import example\.com\fR can be used to help KadNode to bootstrap into an existing network\. To announce an identifier just once, use \fBkadnode\-ctl announce myname\fR\. Any announcement will be dropped by other KadNode instances after 32 minutes and therefore need to be refreshed around every 30 minutes\.
+As an usage example one would start \fBkadnode \-\-value\-id myname\.p2p\fR to let KadNode announce every 30 minutes, that the IP address of the running KadNode instance is associated with the identifier \'myname\.p2p\'\. A call like \fBkadnode\-ctl import bttracker\.debian\.org\fR can be used to help KadNode to bootstrap into an existing network\. To announce an identifier just once, use \fBkadnode\-ctl announce myname\fR\. Any announcement will be dropped by other KadNode instances after 32 minutes and therefore need to be refreshed around every 30 minutes\.
 .
 .P
-Please be aware that other people might use the same identifier\. It is strongly advised to do additional identification/authentification when an address is used that has been resolved by KadNode\.
+Please be aware that other people might use the same identifier\. It is strongly advised to do additional identification/authentification when an address is used that has been resolved by KadNode\. The DNS/NSS interfaces are only able to return one of these addresses\. In contrast, the web and console interface are able to return all known IP addresses associated with an identifier\.
 .
 .P
-Every entered identifier (e\.g\. \fBmyname\.p2p\fR) will have everything after the last dot ignored as a top level domain like is often used only to redirect queries to KadNode\. The rest of the string is converted to an 20 byte identifier using the sha1 hashing algorithm\. As an alternative, the hash can be entered directly as a 40 character hexadecimal string\. The string \fBmyname\.p2p\fR is therefore eqivalent to \fBd13b93ea42804188d277c20f7d6e5be2732148b8\fR which is the result of sha1(\'myname\')\. This is true for every entered identifier that involves KadNode\.
+Every entered identifier (e\.g\. \fBmyname\.p2p\fR) will have everything after and including the last dot ignored\. This is because the top level domain is often used to differentiate from classical domain names and to redirect requests to KadNode\. The rest of the string is converted to an 20 byte identifier using the sha1 hashing algorithm\. As an alternative, the hash can be entered directly as a 40 character hexadecimal string\. This can be used to entirely circumvent the build\-in hashing algorithm (sha1)\. The string \fBmyname\.p2p\fR is therefore eqivalent to \fBd13b93ea42804188d277c20f7d6e5be2732148b8\fR which is the result of sha1(\'myname\')\. This is true for every entered identifier that involves KadNode\.
 .
 .SH "INTERFACES"
 .
@@ -92,7 +92,7 @@ Change the UUID after start\.
 Bind the DHT to this port\.
 .
 .br
-Default: 8337
+Default: 6881
 .
 .IP "\(bu" 4
 \fB\-\-ifce\fR \fIinterface\fR
@@ -184,7 +184,7 @@ Print program version and included features\.
 \fB\-p\fR \fIport\fR
 .
 .br
-Connect to the local KadNode console on this interface (Default: 1700):
+Connect to the local KadNode console on this interface (Default: 1700)\.
 .
 .IP "\(bu" 4
 \fB\-h\fR
@@ -277,12 +277,6 @@ The web interface allows queries of these forms:
 If the interface cannot be reached then the interface might be disabled (port set to 0) or not compiled in (check \fBkadnode \-\-version\fR)\. In case the IPv6 entry for localhost is not used or missing, try \fB[::1]\fR instead of \fBlocalhost\fR\.
 .
 .SH "LIMITATIONS"
-.
-.IP "\(bu" 4
-KadNode cannot resolve its own node id without other nodes present\.
-.
-.IP "\(bu" 4
-No NAT\-traversal was implemented yet\.
 .
 .IP "\(bu" 4
 Blacklisted addreses are stored in a LRU cache of maximal 10 entries\.
