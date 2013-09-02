@@ -55,15 +55,21 @@ time_t time_add_min( unsigned int min ) {
 }
 
 void dht_lock_init( void ) {
+#ifdef PTHREAD
 	pthread_mutex_init( &gstate->dht_mutex, NULL );
+#endif
 }
 
 void dht_lock( void ) {
+#ifdef PTHREAD
 	pthread_mutex_lock( &gstate->dht_mutex );
+#endif
 }
 
 void dht_unlock( void ) {
+#ifdef PTHREAD
 	pthread_mutex_unlock( &gstate->dht_mutex );
+#endif
 }
 
 /* Send a ping over IPv4 multicast to find other nodes */

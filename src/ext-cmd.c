@@ -6,7 +6,6 @@
 #include <netdb.h>
 #include <stdlib.h>
 #include <sys/un.h>
-#include <pthread.h>
 #include <errno.h>
 #include <stdarg.h>
 

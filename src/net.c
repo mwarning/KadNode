@@ -6,13 +6,11 @@
 #include <stdarg.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
-#include <pthread.h>
 #include <semaphore.h>
 #include <signal.h>
 #include <netdb.h>
 #include <sys/epoll.h>
 #include <unistd.h>
-#include <pthread.h>
 #include <netdb.h>
 #include <net/if.h>
 #include <sys/time.h>

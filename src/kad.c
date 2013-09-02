@@ -1,7 +1,6 @@
 
 #define _GNU_SOURCE
 
-#include <pthread.h>
 #include <netdb.h>
 #include <net/if.h>
 #include <sys/time.h>

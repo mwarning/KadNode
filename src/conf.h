@@ -88,9 +88,11 @@ struct obj_gstate {
 	struct sigaction sig_stop;
 	struct sigaction sig_term;
 
+#ifdef PTHREAD
 	/* DHT thread stuff */
 	pthread_t dht_thread;
 	pthread_mutex_t dht_mutex;
+#endif
 };
 
 extern struct obj_gstate *gstate;
