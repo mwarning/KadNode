@@ -9,13 +9,13 @@ kadnode(1) -- P2P name resolution daemon
 
 ## DESCRIPTION
 
-**KadNode** is a small P2P name/resource resolution daemon for IPv4/IPv6 based on the Kademlia
-implementation of a distributed hash table (DHT).
+**KadNode** is a small P2P name/resource resolution daemon for IPv4/IPv6 based
+on a distributed hash table (DHT). The implementation is identical to the one used
+for the Transmission Bittorrent client.
 
 KadNode enables the user to announce any kind of resource by an identifier.
 This can be used e.g. to resolve a hostname to an IP address.
 It is also small in size (~75KB) and uses only one thread to save resources.
-The Kademlia implementation is identical to the one used for the Transmission Bittorrent client.
 Join any existing swarm to be able to find your node globally.
 
 By default, KadNode tries to send a ping to a multicast address on the local network
@@ -44,9 +44,9 @@ This is because the top level domain is often used to differentiate from classic
 and to redirect requests to KadNode.
 The rest of the string is converted to an 20 byte identifier using the sha1 hashing algorithm.
 As an alternative, the hash can be entered directly as a 40 character hexadecimal string.
-This can be used to entirely circumvent the build-in hashing algorithm (sha1).
 The string `myname.p2p` is therefore eqivalent to `d13b93ea42804188d277c20f7d6e5be2732148b8`
-which is the result of sha1('myname'). This is true for every entered identifier that involves KadNode.
+which is the result of sha1('myname'). The use of the build-in hashing algorithm (sha1) can be entirely
+circumvented this way.
 
 ## INTERFACES
 
