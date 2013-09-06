@@ -74,7 +74,7 @@ const char *usage = "KadNode - A P2P name resolution daemon (IPv4/IPv6)\n"
 " --web-port	Bind the web server to this local port.\n"
 "		Default: "WEB_PORT"\n\n"
 #endif
-" --mode	Enable IPv4 or IPv6 mode for the DHT.\n"
+" --mode		Enable IPv4 or IPv6 mode for the DHT.\n"
 "		Default: ipv4\n\n"
 " -h, --help	Print this help.\n\n"
 " -v, --version	Print program version.\n\n";
