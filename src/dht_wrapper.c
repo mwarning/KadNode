@@ -164,28 +164,17 @@ int multicast_leave( int sock, IP *addr ) {
 /* Send a ping over multicast to find other nodes */
 void dht_multicast_ping( int sock, IP *addr ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
-	int mcast_registered;
 
-	mcast_registered = gstate->mcast_registered;
-
-	if( buckets_empty() ) {
-		if( mcast_registered == 0 && multicast_join( sock, addr ) ) {
-			mcast_registered = 1;
-		}
-	} else {
-		if( mcast_registered == 1 && multicast_leave( sock, addr ) ) {
-			mcast_registered = 0;
-		}
+	if( gstate->mcast_registered == 0 && multicast_join( sock, addr ) ) {
+		gstate->mcast_registered = 1;
 	}
 
-	if( mcast_registered == 1 ) {
+	if( gstate->mcast_registered == 1 && buckets_empty() ) {
 		log_info( "DHT: Send multicast ping to %s", str_addr( addr, addrbuf ) );
 		dht_lock();
 		dht_ping_node( (struct sockaddr *)addr, sizeof(IP) );
 		dht_unlock();
 	}
-
-	gstate->mcast_registered = mcast_registered;
 }
 
 /* This callback is called when a search result arrives or a search completes */
