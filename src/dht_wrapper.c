@@ -72,71 +72,120 @@ void dht_unlock( void ) {
 #endif
 }
 
-/* Send a ping over IPv4 multicast to find other nodes */
-void multicast_ping4( int sock, IP *addr ) {
-	char addrbuf[FULL_ADDSTRLEN+1];
+/* Try to join/leave multicast group */
+int multicast_setup4( int sock, IP *addr, int enable ) {
 	struct ip_mreq mreq;
+	int optname;
 
-	/* Try to register multicast address */
-	if( gstate->mcast_registered == 0 ) {
+	memset( &mreq, '\0', sizeof(mreq) );
+	memcpy( &mreq.imr_multiaddr, &((IP4 *)addr)->sin_addr, sizeof(mreq.imr_multiaddr) );
 
-		memset( &mreq, '\0', sizeof(mreq) );
-		memcpy( &mreq.imr_multiaddr, &((IP4 *)addr)->sin_addr, sizeof(mreq.imr_multiaddr) );
-
-		/* Using an interface index of x is indicated by 0.0.0.x */
-		if( gstate->dht_ifce && ((mreq.imr_interface.s_addr = htonl( if_nametoindex( gstate->dht_ifce )) ) == 0) ) {
-			log_err( "DHT: Cannot find interface '%s' for multicast: %s", gstate->dht_ifce, strerror( errno ) );
-		} else {
-			mreq.imr_interface.s_addr = 0;
-		}
-
-		if( setsockopt( sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq) ) < 0) {
-			log_warn( "DHT: Failed to register multicast address: %s", strerror( errno ) );
-			return;
-		} else {
-			log_info( "DHT: Registered IPv4 multicast address." );
-			gstate->mcast_registered = 1;
-		}
+	/* Using an interface index of x is indicated by 0.0.0.x */
+	if( gstate->dht_ifce && ((mreq.imr_interface.s_addr = htonl( if_nametoindex( gstate->dht_ifce )) ) == 0) ) {
+		log_err( "DHT: Cannot find interface '%s' for multicast: %s", gstate->dht_ifce, strerror( errno ) );
+		return 0;
+	} else {
+		mreq.imr_interface.s_addr = 0;
 	}
 
-	log_info( "DHT: Send multicast ping to %s", str_addr( addr, addrbuf ) );
-
-	/* Send ping */
-	dht_lock();
-	dht_ping_node( (struct sockaddr *)addr, sizeof(IP4) );
-	dht_unlock();
+	optname = enable ? IP_ADD_MEMBERSHIP : IP_DROP_MEMBERSHIP;
+	if( setsockopt( sock, IPPROTO_IP, optname, &mreq, sizeof(mreq) ) < 0 ) {
+		if( enable ) {
+			log_warn( "DHT: Failed to join IPv4 multicast group: %s", strerror( errno ) );
+		} else {
+			log_warn( "DHT: Failed to leave IPv4 multicast group: %s", strerror( errno ) );
+		}
+		return 0;
+	} else {
+		if( enable ) {
+			log_info( "DHT: Joined IPv4 multicast group." );
+		} else {
+			log_info( "DHT: Left IPv4 multicast group." );
+		}
+		return 1;
+	}
 }
 
-/* Send a ping over IPv6 multicast to find other nodes */
-void multicast_ping6( int sock, IP *addr ) {
-	char addrbuf[FULL_ADDSTRLEN+1];
+/* Try to join/leave multicast group */
+int multicast_setup6( int sock, IP *addr, int enable ) {
 	struct ipv6_mreq mreq;
+	int optname;
 
-	/* Try to register multicast address */
-	if( gstate->mcast_registered == 0 ) {
+	memset( &mreq, '\0', sizeof(mreq) );
+	memcpy( &mreq.ipv6mr_multiaddr, &((IP6 *)addr)->sin6_addr, sizeof(mreq.ipv6mr_multiaddr) );
 
-		memset( &mreq, '\0', sizeof(mreq) );
-		memcpy( &mreq.ipv6mr_multiaddr, &((IP6 *)addr)->sin6_addr, sizeof(mreq.ipv6mr_multiaddr) );
+	if( gstate->dht_ifce && ((mreq.ipv6mr_interface = if_nametoindex( gstate->dht_ifce )) == 0) ) {
+		log_err( "DHT: Cannot find interface '%s' for multicast: %s", gstate->dht_ifce, strerror( errno ) );
+		return 0;
+	}
 
-		if( gstate->dht_ifce && ((mreq.ipv6mr_interface = if_nametoindex( gstate->dht_ifce )) == 0) ) {
-			log_err( "DHT: Cannot find interface '%s' for multicast: %s", gstate->dht_ifce, strerror( errno ) );
-		}
-
-		if( setsockopt( sock, IPPROTO_IPV6, IPV6_JOIN_GROUP, &mreq, sizeof(mreq)) != 0 ) {
-			log_warn( "DHT: Failed to register multicast address. Try again later..." );
-			return;
+	optname = enable ? IPV6_JOIN_GROUP : IPV6_LEAVE_GROUP;
+	if( setsockopt( sock, IPPROTO_IPV6, optname, &mreq, sizeof(mreq)) != 0 ) {
+		if( enable ) {
+			log_warn( "DHT: Failed to join IPv6 multicast group: %s", strerror( errno ) );
 		} else {
-			log_info( "DHT: Registered IPv6 multicast address." );
-			gstate->mcast_registered = 1;
+			log_warn( "DHT: Failed to leave IPv6 multicast group: %s", strerror( errno ) );
+		}
+		return 0;
+	} else {
+		if( enable ) {
+			log_info( "DHT: Joined IPv6 multicast group." );
+		} else {
+			log_info( "DHT: Left IPv6 multicast group." );
+		}
+		return 1;
+	}
+}
+
+int multicast_join( int sock, IP *addr ) {
+	const int af = addr->ss_family;
+
+	if( af == AF_INET ) {
+		return multicast_setup4( sock, addr, 1 );
+	} else if( af == AF_INET6 ) {
+		return multicast_setup6( sock, addr, 1 );
+	} else {
+		return 0;
+	}
+}
+
+int multicast_leave( int sock, IP *addr ) {
+	const int af = addr->ss_family;
+
+	if( af == AF_INET ) {
+		return multicast_setup4( sock, addr, 0 );
+	} else if( af == AF_INET6 ) {
+		return multicast_setup6( sock, addr, 0 );
+	} else {
+		return 0;
+	}
+}
+
+/* Send a ping over multicast to find other nodes */
+void dht_multicast_ping( int sock, IP *addr ) {
+	char addrbuf[FULL_ADDSTRLEN+1];
+	int mcast_registered;
+
+	mcast_registered = gstate->mcast_registered;
+
+	if( buckets_empty() ) {
+		if( mcast_registered == 0 && multicast_join( sock, addr ) ) {
+			mcast_registered = 1;
+		}
+	} else {
+		if( mcast_registered == 1 && multicast_leave( sock, addr ) ) {
+			mcast_registered = 0;
 		}
 	}
 
-	log_info( "DHT: Send multicast ping to %s", str_addr( addr, addrbuf ) );
+	if( mcast_registered == 1 ) {
+		log_info( "DHT: Send multicast ping to %s", str_addr( addr, addrbuf ) );
+		dht_lock();
+		dht_ping_node( (struct sockaddr *)addr, sizeof(IP) );
+		dht_unlock();
+	}
 
-	/* Send ping */
-	dht_lock();
-	dht_ping_node( (struct sockaddr *)addr, sizeof(IP6) );
-	dht_unlock();
+	gstate->mcast_registered = mcast_registered;
 }
 
 /* This callback is called when a search result arrives or a search completes */
@@ -167,12 +216,9 @@ void dht_handler( int rc, int sock ) {
 	time_t time_wait = 0;
 
 	/* Send multicast ping */
-	if( gstate->time_mcast <= time_now_sec() && buckets_empty() ) {
-		if( gstate->af == AF_INET ) {
-			multicast_ping4( sock, &gstate->mcast_addr );
-		} else {
-			multicast_ping6( sock, &gstate->mcast_addr );
-		}
+	if( gstate->time_mcast <= time_now_sec() ) {
+		dht_multicast_ping( sock, &gstate->mcast_addr );
+
 		/* Try again in ~5 minutes */
 		gstate->time_mcast = time_add_min( 5 );
 	}
