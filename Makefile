@@ -7,7 +7,7 @@ FEATURES ?= cmd dns nss web debug
 OBJS_ = main.o results.o kad.o log.o conf.o sha1.o unix.o net.o utils.o
 OBJS = $(patsubst %,build/%,$(OBJS_))
 
-.PHONY: all clean strip install kadnode kadnode-ctl libnss_kadnode.so.2
+.PHONY: all clean strip install kadnode kadnode-ctl libnss_kadnode.so.2 deb
 
 all: kadnode
 
@@ -60,6 +60,9 @@ strip:
 	strip build/kadnode
 	-strip build/kadnode-ctl
 	-strip build/libnss_kadnode.so.2
+
+deb:
+	dpkg-buildpackage -us -uc
 
 #install:
 #	cp build/kadnode /usr/bin/
