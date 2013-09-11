@@ -48,6 +48,9 @@ The string `myname.p2p` is therefore eqivalent to `d13b93ea42804188d277c20f7d6e5
 which is the result of sha1('myname'). The use of the build-in hashing algorithm (sha1) can be entirely
 circumvented this way.
 
+Please note that KadNode does not store any nodes before shutdown.
+This task is intended to be taken care of an init script (e.g. for Debian or OpenWrt).
+
 ## INTERFACES
 
   * An interactive shell to issue queries and manage the DHT. Useful for shell scripts:
