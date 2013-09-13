@@ -26,6 +26,7 @@
 #include "utils.h"
 #include "net.h"
 
+
 struct task {
 	int fd;
 	net_callback *callback;
@@ -151,10 +152,12 @@ void net_loop( void ) {
 
 	for( i = 0; i < numtasks; ++i ) {
 		struct task *t = &tasks[i];
-		if( t->fd > max_fd ) {
-			max_fd = t->fd;
+		if( t->fd >= 0 ) {
+			if( t->fd > max_fd ) {
+				max_fd = t->fd;
+			}
+			FD_SET( t->fd, &fds );
 		}
-		FD_SET( t->fd, &fds );
 	}
 
 	while( gstate->is_running ) {
