@@ -4,8 +4,8 @@ CFLAGS = -O2 -Wall -Wwrite-strings -pedantic -std=gnu99
 POST_LINKING = -lpthread
 FEATURES ?= cmd dns nss web debug
 
-OBJS_ = main.o results.o kad.o log.o conf.o sha1.o unix.o net.o utils.o
-OBJS = $(patsubst %,build/%,$(OBJS_))
+OBJS = build/main.o build/results.o build/kad.o build/log.o \
+	build/conf.o build/sha1.o build/unix.o build/net.o build/utils.o
 
 .PHONY: all clean strip install kadnode kadnode-ctl libnss_kadnode.so.2 deb
 
