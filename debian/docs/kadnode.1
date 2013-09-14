@@ -13,10 +13,10 @@
 \fBkadnode\-ctl\fR [\.\.\.]
 .
 .SH "DESCRIPTION"
-\fBKadNode\fR is a small P2P name/resource resolution daemon for IPv4/IPv6 based on the Kademlia implementation of a distributed hash table (DHT)\.
+\fBKadNode\fR is a small P2P name/resource resolution daemon for IPv4/IPv6 based on a distributed hash table (DHT)\. The implementation is identical to the one used for the Transmission Bittorrent client\.
 .
 .P
-KadNode enables the user to announce any kind of resource by an identifier\. This can be used e\.g\. to resolve a hostname to an IP address\. It is also small in size (~75KB) and uses only one thread to save resources\. The Kademlia implementation is identical to the one used for the Transmission Bittorrent client\. Join any existing swarm to be able to find your node globally\.
+KadNode enables the user to announce any kind of resource by an identifier\. This can be used e\.g\. to resolve a hostname to an IP address\. It is also small in size (~75KB) and uses only one thread to save resources\. Join any existing swarm to be able to find your node globally\.
 .
 .P
 By default, KadNode tries to send a ping to a multicast address on the local network to find nodes to bootstrap from\. This is done every five minutes when no other nodes are known\. The interactive remote shell \fBkadnode\-ctl\fR let the user import and export nodes, issue queries for identifiers and send announcements\.
@@ -28,7 +28,10 @@ As an usage example one would start \fBkadnode \-\-value\-id myname\.p2p\fR to l
 Please be aware that other people might use the same identifier\. It is strongly advised to do additional identification/authentification when an address is used that has been resolved by KadNode\. The DNS/NSS interfaces are only able to return one of these addresses\. In contrast, the web and console interface are able to return all known IP addresses associated with an identifier\.
 .
 .P
-Every entered identifier (e\.g\. \fBmyname\.p2p\fR) will have everything after and including the last dot ignored\. This is because the top level domain is often used to differentiate from classical domain names and to redirect requests to KadNode\. The rest of the string is converted to an 20 byte identifier using the sha1 hashing algorithm\. As an alternative, the hash can be entered directly as a 40 character hexadecimal string\. This can be used to entirely circumvent the build\-in hashing algorithm (sha1)\. The string \fBmyname\.p2p\fR is therefore eqivalent to \fBd13b93ea42804188d277c20f7d6e5be2732148b8\fR which is the result of sha1(\'myname\')\. This is true for every entered identifier that involves KadNode\.
+Every entered identifier (e\.g\. \fBmyname\.p2p\fR) will have everything after and including the last dot ignored\. This is because the top level domain is often used to differentiate from classical domain names and to redirect requests to KadNode\. The rest of the string is converted to an 20 byte identifier using the sha1 hashing algorithm\. As an alternative, the hash can be entered directly as a 40 character hexadecimal string\. The string \fBmyname\.p2p\fR is therefore eqivalent to \fBd13b93ea42804188d277c20f7d6e5be2732148b8\fR which is the result of sha1(\'myname\')\. The use of the build\-in hashing algorithm (sha1) can be entirely circumvented this way\.
+.
+.P
+Please note that KadNode does not store any nodes before shutdown\. This task is intended to be taken care of an init script (e\.g\. for Debian or OpenWrt)\.
 .
 .SH "INTERFACES"
 .
@@ -225,13 +228,19 @@ Lookup the IP address of a node that has identifier id\.
 The lookup is performed on the current search results\.
 .
 .IP "\(bu" 4
-\fBannounce\fR \fIid\fR [\fIport\fR]
+\fBannounce\fR \fIid\fR [\fI\fIport\fR\fR] [\fI\fIminutes\fR\fR]
 .
 .br
-Announce that this instance is associated with identifier\.
+Announce that this instance is associated with identifier
 .
 .br
-The announcement will happen only once and instantly\.
+and an optional port\. The default port is 1 (0 is for announces)\.
+.
+.br
+The announcement will happen only once unless a time
+.
+.br
+in minutes is given or \-1 minutes for the entire runtime\.
 .
 .IP "\(bu" 4
 \fBimport\fR \fIaddr\fR
