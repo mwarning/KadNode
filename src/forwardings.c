@@ -189,8 +189,6 @@ void forwardings_handle( int __rc, int __sock ) {
 		} else {
 			log_err( "FWD: Unhandled NAT-PMP reply." );
 		}
-	} else {
-		natpmp_init( &natpmp );
 	}
 #endif
 
@@ -215,13 +213,15 @@ void forwardings_handle( int __rc, int __sock ) {
 		} else {
 			log_err( "FWD: Unhandled UPnP reply." );
 		}
-	} else {
-		upnp_init( &upnp );
 	}
 #endif
 }
 
 void forwardings_setup( void ) {
+	if( gstate->disable_forwarding == 1 ) {
+		return;
+	}
+
 #ifdef FWD_NATPMP
 	log_info("FWD: Enable NAT-PMP");
 	natpmp_init( &natpmp );
