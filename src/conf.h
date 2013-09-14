@@ -65,6 +65,12 @@ struct obj_gstate {
 	/* Next time to announce results */
 	time_t time_announce_values;
 
+	/* Disable ping on multicast address */
+	int disable_multicast;
+
+	/* Disable port forwarding */
+	int disable_forwarding;
+
 #ifdef CMD
 	char *cmd_port;
 #endif

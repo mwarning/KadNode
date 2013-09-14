@@ -33,17 +33,17 @@ const char *version = "KadNode v"MAIN_VERSION" ( "
 #ifdef DNS
 " dns"
 #endif
+#ifdef FWD_NATPMP
+" natpmp"
+#endif
 #ifdef NSS
 " nss"
-#endif
-#ifdef WEB
-" web"
 #endif
 #ifdef FWD_UPNP
 " upnp"
 #endif
-#ifdef FWD_NATPMP
-" natpmp"
+#ifdef WEB
+" web"
 #endif
 " )\n";
 
@@ -53,42 +53,45 @@ const char *usage = "KadNode - A P2P name resolution daemon (IPv4/IPv6)\n"
 "\n"
 "Usage: kadnode [OPTIONS]*\n"
 "\n"
-" --node-id	Set the node id. Use --value-id to announce values.\n"
-"		Default: <random>\n\n"
-" --value-id	Add a '<id>[:<port>]' value to be announced every 30 minutes.\n"
-"		This option can occur multiple times.\n\n"
-" --user		Change the UUID after start.\n\n"
-" --port		Bind to this port.\n"
-"		Default: "DHT_PORT"\n\n"
-" --mcast-addr	Use multicast address for bootstrapping.\n"
-"		Default: "DHT_ADDR4_MCAST" / "DHT_ADDR6_MCAST"\n\n"
-" --disable-mcast Disable multicast.\n\n"
-" --ifce		Bind to this interface.\n"
-"		Default: <any>\n\n"
-" --daemon	Run the node in background.\n\n"
-" --verbosity	Verbosity level: quiet, verbose or debug.\n"
-"		Default: verbose\n\n"
-" --pidfile	Write process pid to a file.\n\n"
+" --node-id		Set the node id. Use --value-id to announce values.\n"
+"			Default: <random>\n\n"
+" --value-id		Add a '<id>[:<port>]' value to be announced every 30 minutes.\n"
+"			This option can occur multiple times.\n\n"
+" --user			Change the UUID after start.\n\n"
+" --port			Bind to this port.\n"
+"			Default: "DHT_PORT"\n\n"
+" --mcast-addr		Use multicast address for bootstrapping.\n"
+"			Default: "DHT_ADDR4_MCAST" / "DHT_ADDR6_MCAST"\n\n"
+" --ifce			Bind to this interface.\n"
+"			Default: <any>\n\n"
+" --daemon		Run the node in background.\n\n"
+" --verbosity		Verbosity level: quiet, verbose or debug.\n"
+"			Default: verbose\n\n"
+" --pidfile		Write process pid to a file.\n\n"
+" --mode			Enable IPv4 or IPv6 mode for the DHT.\n"
+"			Default: ipv4\n\n"
 #ifdef CMD
-" --cmd-port	Bind the remote control interface to this local port.\n"
-"		Default: "CMD_PORT"\n\n"
+" --cmd-port		Bind the remote control interface to this local port.\n"
+"			Default: "CMD_PORT"\n\n"
 #endif
 #ifdef DNS
-" --dns-port	Bind the DNS server to this local port.\n"
-"		Default: "DNS_PORT"\n\n"
+" --dns-port		Bind the DNS server to this local port.\n"
+"			Default: "DNS_PORT"\n\n"
 #endif
 #ifdef NSS
-" --nss-port	Bind the Network Service Switch to this local port.\n"
-"		Default: "NSS_PORT"\n\n"
+" --nss-port		Bind the Network Service Switch to this local port.\n"
+"			Default: "NSS_PORT"\n\n"
 #endif
 #ifdef WEB
-" --web-port	Bind the web server to this local port.\n"
-"		Default: "WEB_PORT"\n\n"
+" --web-port		Bind the web server to this local port.\n"
+"			Default: "WEB_PORT"\n\n"
 #endif
-" --mode		Enable IPv4 or IPv6 mode for the DHT.\n"
-"		Default: ipv4\n\n"
-" -h, --help	Print this help.\n\n"
-" -v, --version	Print program version.\n\n";
+#ifdef FWD
+" --disable-forwarding	Disable UPnP/NAT-PMP to forward router ports.\n\n"
+#endif
+" --disable-multicast	Disable multicast to discover local nodes.\n\n"
+" -h, --help		Print this help.\n\n"
+" -v, --version		Print program version.\n\n";
 
 void conf_init() {
 	gstate = (struct obj_gstate *) malloc( sizeof(struct obj_gstate) );
@@ -273,7 +276,7 @@ void conf_handle( char *var, char *val ) {
 		} else if( match( val, "debug" ) ) {
 			gstate->verbosity = VERBOSITY_DEBUG;
 		} else {
-			log_err( "CFG: Invalid verbosity argument." );
+			log_err( "CFG: Invalid argument for %s.", var );
 		}
 #ifdef CMD
 	} else if( match( var, "--cmd-port" ) ) {
@@ -297,17 +300,23 @@ void conf_handle( char *var, char *val ) {
 		} else if( val && match( val, "ipv6" ) ) {
 			gstate->af = AF_INET6;
 		} else {
-			log_err("CFG: Value 'ipv4' or 'ipv6' for parameter --mode expected.");
+			log_err("CFG: Invalid argument for %s. Use 'ipv4' or 'ipv6'.", var );
 		}
 	} else if( match( var, "--port" ) ) {
 		conf_str( var, &gstate->dht_port, val );
 	} else if( match( var, "--mcast-addr" ) ) {
 		conf_str( var, &gstate->mcast_addr_str, val );
-	} else if( match( var, "--disable-mcast" ) ) {
+	} else if( match( var, "--disable-multicast" ) ) {
 		if( val != NULL ) {
 			conf_no_arg_expected( var );
 		} else {
-			memset( &gstate->time_mcast, 0xFF, sizeof(time_t) );
+			gstate->disable_multicast = 1;
+		}
+	} else if( match( var, "--disable-forwarding" ) ) {
+		if( val != NULL ) {
+			conf_no_arg_expected( var );
+		} else {
+			gstate->disable_forwarding = 1;
 		}
 	} else if( match( var, "--ifce" ) ) {
 		conf_str( var, &gstate->dht_ifce, val );

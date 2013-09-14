@@ -77,6 +77,10 @@ void dht_unlock( void ) {
 void dht_multicast_ping( int sock, IP *addr ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 
+	if( gstate->disable_multicast == 1 ) {
+		return;
+	}
+
 	if( gstate->mcast_registered == 0 && multicast_join( sock, addr ) ) {
 		gstate->mcast_registered = 1;
 	}
