@@ -89,8 +89,11 @@ All these interfaces listen only for connections from localhost.
     Send pings to this multicast address as long no nodes were found.  
     Default: 239.192.202.7 / ff08:ca:07::
 
-  * `--disable-mcast`  
-   Disable multicast.
+  * `--disable-forwarding`  
+    Disable UPnP/NAT-PMP to forward router ports.
+
+  * `--disable-multicast`  
+    Disable multicast to discover local nodes.
 
   * `--daemon`  
     Run in background.
