@@ -93,8 +93,10 @@ int upnp_handler( struct upnp_handle_t *handle, unsigned short port, time_t life
 		devlist = upnpDiscover( 1000, NULL, NULL, 0 );
 
 		if( devlist == NULL ) {
-			log_debug( "UPnP: upnpDiscover failed: %s", strerror( errno ) );
-			goto error;
+			log_debug( "UPnP: Method upnpDiscover failed." );
+			handle->retry = now + (10 * 60);
+			handle->state = UPNP_STATE_DISCOVER_GATEWAY;
+			return PF_RETRY;
 		} else if( UPNP_GetValidIGD( devlist, &handle->urls, &handle->data,
 				handle->addr, sizeof(handle->addr) ) == 1 ) {
 			freeUPNPDevlist( devlist );
