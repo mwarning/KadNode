@@ -1,6 +1,6 @@
 
-#ifndef _PORTFORWARDING_H_
-#define _PORTFORWARDING_H_
+#ifndef _FORWARDINGs_H_
+#define _FORWARDINGs_H_
 
 #include <sys/time.h>
 
@@ -31,4 +31,4 @@ int forwardings_count( void );
 void forwardings_add( USHORT port, time_t host_lifetime );
 
 
-#endif /* _PORTFORWARDING_H_ */
+#endif /* _FORWARDINGs_H_ */
