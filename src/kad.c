@@ -188,7 +188,7 @@ void kad_debug( int fd ) {
 	dprintf( fd, "\nAnnouncements:\n" );
 	values_debug( fd );
 
-	dprintf( fd, "\nForwarding:\n" );
+	dprintf( fd, "\nForwardings:\n" );
 	forwardings_debug( fd );
 
 	dprintf( fd, "\nBuckets:\n" );

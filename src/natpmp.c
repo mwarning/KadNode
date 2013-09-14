@@ -78,7 +78,7 @@ int natpmp_handler( struct natpmp_handle_t *handle, unsigned short port, time_t 
 			handle->state = NATPMP_STATE_REQUEST_GATEWAY;
 			return PF_RETRY;
 		} else {
-			log_debug( "NAT-PMP: initnatpmp returned %d", rc );
+			log_debug( "NAT-PMP: Method initnatpmp returned %d.", rc );
 			goto error;
 		}
 	}
@@ -91,7 +91,7 @@ int natpmp_handler( struct natpmp_handle_t *handle, unsigned short port, time_t 
 			handle->state = NATPMP_STATE_RECEIVE_GATEWAY;
 			return PF_RETRY;
 		} else {
-			log_debug( "NAT-PMP: sendpublicaddressrequest returned %d", rc );
+			log_debug( "NAT-PMP: Method sendpublicaddressrequest returned %d.", rc );
 			goto error;
 		}
 	}
@@ -103,15 +103,15 @@ int natpmp_handler( struct natpmp_handle_t *handle, unsigned short port, time_t 
 		if( rc >= 0 ) {
 			char str[INET_ADDRSTRLEN];
 			inet_ntop(AF_INET, &response.pnu.publicaddress.addr, str, sizeof (str));
-			log_info( "NAT-PMP: Found public address \"%s\"", str );
+			log_info( "NAT-PMP: Found public address \"%s\".", str );
 			handle->state = NATPMP_STATE_REQUEST_PORTMAPPING;
 			return PF_RETRY;
 		} else if( rc == NATPMP_TRYAGAIN ) {
-			handle->retry = now + (5 * 60);
+			handle->retry = now + (10 * 60);
 			handle->state = NATPMP_STATE_REQUEST_GATEWAY;
 			return PF_RETRY;
 		} else {
-			log_debug( "NAT-PMP: readnatpmpresponseorretry returned %d", rc );
+			log_debug( "NAT-PMP: Method readnatpmpresponseorretry returned %d.", rc );
 			goto error;
 		}
 	}
@@ -127,7 +127,7 @@ int natpmp_handler( struct natpmp_handle_t *handle, unsigned short port, time_t 
 			return PF_RETRY;
 		} else {
 			int rc = (rc_udp >= 0) ? rc_tcp : rc_udp;
-			log_debug( "NAT-PMP: sendnewportmappingrequest returned %d (%s): %s",
+			log_debug( "NAT-PMP: Method sendnewportmappingrequest returned %d (%s): %s",
 				rc, strnatpmperr( rc ), strerror( errno ) );
 			goto error;
 		}
@@ -142,11 +142,11 @@ int natpmp_handler( struct natpmp_handle_t *handle, unsigned short port, time_t 
 			time_t lifetime = response.pnu.newportmapping.lifetime;
 
 			if( lifetime > 0 ) {
-				log_info( "NAT-PMP: Port forwarding added for port %d (to private port %d) for %ld seconds", public_port, private_port, lifetime );
+				log_info( "NAT-PMP: Port forwarding added for port %d (to private port %d) for %ld seconds.", public_port, private_port, lifetime );
 				handle->state = NATPMP_STATE_REQUEST_PORTMAPPING;
 				return PF_DONE;
 			} else {
-				log_debug( "NAT-PMP: Port forwarding removed for public port %d (to private port %d) for %ld seconds", public_port, private_port, lifetime );
+				log_debug( "NAT-PMP: Port forwarding removed for public port %d (to private port %d) for %ld seconds.", public_port, private_port, lifetime );
 				handle->state = NATPMP_STATE_REQUEST_PORTMAPPING;
 				return PF_DONE;
 			}

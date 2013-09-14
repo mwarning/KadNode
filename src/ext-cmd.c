@@ -122,7 +122,7 @@ void cmd_print_status( REPLY *r ) {
 #ifdef DEBUG
 void cmd_print_debug( REPLY *r ) {
 	kad_debug( STDOUT_FILENO );
-	r_printf( r ,"Debug output send to stdout.\n" );
+	r_printf( r ,"\nDebug output send to stdout.\n" );
 }
 #endif
 
