@@ -56,19 +56,24 @@ int forwardings_count( void ) {
 
 void forwardings_debug( int fd ) {
 	struct forwarding_t *item;
-	time_t refreshed;
-	time_t lifetime;
 	time_t now;
+	int counter;
 
 	now = gstate->time_now.tv_sec;
+	counter = 0;
 	item = forwardings.beg;
 	while( item ) {
-		refreshed = (now - item->refreshed) / 60;
-		lifetime = (item->lifetime -  now) / 60;
-		dprintf( fd, " port: %hu, refreshed: %ld min. ago, lifetime: %ld min. remaining\n",
-			item->port, refreshed, (lifetime == LONG_MAX) ? -1 : lifetime );
+		dprintf(
+			fd, " port: %hu, refreshed: %ld min. ago, lifetime: %ld min. remaining\n",
+			item->port,
+			(item->refreshed == 0) ? (-1) : ((now - item->refreshed) / 60),
+			(item->lifetime == LONG_MAX ) ? (-1) : ((item->lifetime -  now) / 60)
+		);
+		counter++;
 		item = item->next;
 	}
+
+	dprintf( fd, " Found %d forwardings.\n", counter );
 }
 
 void forwardings_add( USHORT port, time_t lifetime ) {
@@ -223,11 +228,11 @@ void forwardings_setup( void ) {
 	}
 
 #ifdef FWD_NATPMP
-	log_info("FWD: Enable NAT-PMP");
+	log_info("FWD: Enable NAT-PMP.");
 	natpmp_init( &natpmp );
 #endif
 #ifdef FWD_UPNP
-	log_info("FWD: Enable UPnP");
+	log_info("FWD: Enable UPnP.");
 	upnp_init( &upnp );
 #endif
 

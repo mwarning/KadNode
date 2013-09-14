@@ -44,19 +44,24 @@ int values_count( void ) {
 void values_debug( int fd ) {
 	char hexbuf[HEX_LEN+1];
 	struct announcement_t *item;
-	time_t refreshed; /* in minutes */
-	time_t lifetime; /* in minutes */
 	time_t now;
+	int counter;
 
 	now = gstate->time_now.tv_sec;
+	counter = 0;
 	item = values.beg;
 	while( item ) {
-		refreshed = (now - item->refreshed) / 60;
-		lifetime = (item->lifetime -  now) / 60;
-		dprintf( fd, " id: %s, port: %hu, refreshed: %ld min. ago, lifetime: %ld min. remaining\n",
-			str_id( item->value_id, hexbuf ), item->port, refreshed, (lifetime == LONG_MAX) ? -1 : lifetime );
+		dprintf(
+			fd, " id: %s, port: %hu, refreshed: %ld min. ago, lifetime: %ld min. remaining\n",
+			str_id( item->value_id, hexbuf ), item->port,
+			(item->refreshed == -1) ? (-1) : ((now - item->refreshed) / 60),
+			(item->lifetime == LONG_MAX) ? (-1) : ((item->lifetime -  now) / 60)
+		);
+		counter++;
 		item = item->next;
 	}
+
+	dprintf( fd, " Found %d values.\n", counter );
 }
 
 void values_add( const UCHAR *value_id, USHORT port, time_t lifetime ) {
