@@ -14,6 +14,10 @@
 #include "results.h"
 #include "net.h"
 #include "values.h"
+#ifdef FWD
+#include "forwardings.h"
+#endif
+
 #include "dht_wrapper.c"
 
 
@@ -49,6 +53,7 @@ void kad_setup( void ) {
 }
 
 #ifdef DEBUG
+
 void kad_debug_value_searches( int fd ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	char hexbuf[HEX_LEN+1];
@@ -183,6 +188,9 @@ void kad_debug( int fd ) {
 	dprintf( fd, "\nAnnouncements:\n" );
 	values_debug( fd );
 
+	dprintf( fd, "\nForwarding:\n" );
+	forwardings_debug( fd );
+
 	dprintf( fd, "\nBuckets:\n" );
 	kad_debug_buckets( fd, (gstate->af == AF_INET) ? buckets : buckets6 );
 
@@ -266,7 +274,7 @@ void kad_ping( const IP* addr ) {
 }
 
 /*
-* Find nodes that are near the given id and annouce
+* Find nodes that are near the given id and announce to them
 * that this node can satisfy the given id on the given port
 */
 int kad_announce( const UCHAR *id, int port ) {

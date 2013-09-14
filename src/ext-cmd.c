@@ -17,6 +17,9 @@
 #include "kad.h"
 #include "net.h"
 #include "values.h"
+#ifdef FWD
+#include "forwardings.h"
+#endif
 #include "ext-cmd.h"
 
 
@@ -260,7 +263,9 @@ int cmd_exec( REPLY * r, int argc, char **argv ) {
 			lifetime = (minutes < 0) ? LONG_MAX : (gstate->time_now .tv_sec + (minutes * 60));
 
 			values_add( id, port, lifetime );
-
+#ifdef FWD
+			forwardings_add( port,  lifetime);
+#endif
 			if( minutes > -1 ) {
 				r_printf( r ,"Announce resource %s on port %d for %d minutes.\n", str_id( id, hexbuf ), port, minutes );
 			} else {

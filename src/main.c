@@ -33,6 +33,9 @@
 #ifdef CMD
 #include "ext-cmd.h"
 #endif
+#ifdef FWD
+#include "forwardings.h"
+#endif
 
 
 int main( int argc, char **argv ) {
@@ -70,6 +73,11 @@ int main( int argc, char **argv ) {
 
 	/* Setup handler to announce values */
 	values_setup();
+
+	/* Setup port-forwarding */
+#ifdef FWD
+	forwardings_setup();
+#endif
 
 	/* Setup interfaces */
 #ifdef DNS

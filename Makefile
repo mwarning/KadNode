@@ -1,8 +1,8 @@
 
 CC ?= gcc
 CFLAGS = -O2 -Wall -Wwrite-strings -pedantic -std=gnu99
-POST_LINKING = -lpthread
-FEATURES ?= cmd dns nss web debug
+POST_LINKING =
+FEATURES ?= cmd dns nss web debug upnp natpmp
 
 OBJS = build/main.o build/results.o build/kad.o build/log.o \
 	build/conf.o build/sha1.o build/unix.o build/net.o build/utils.o \
@@ -37,6 +37,26 @@ ifeq ($(findstring web,$(FEATURES)),web)
   OBJS += build/ext-web.o
   CFLAGS += -DWEB
 endif
+
+ifeq ($(findstring upnp,$(FEATURES)),upnp)
+  OBJS += build/upnp.o
+  CFLAGS += -DFWD_UPNP
+  POST_LINKING += -lminiupnpc
+  ENABLE_FORWARDING = 1
+endif
+
+ifeq ($(findstring natpmp,$(FEATURES)),natpmp)
+  OBJS += build/natpmp.o
+  CFLAGS += -DFWD_NATPMP
+  POST_LINKING += -lnatpmp
+  ENABLE_FORWARDING = 1
+endif
+
+ifeq ($(ENABLE_FORWARDING),1)
+	OBJS += build/forwardings.o
+	CFLAGS += -DFWD
+endif
+
 
 build/%.o : src/%.c src/%.h
 	$(CC) $(CFLAGS) -c -o $@ $<

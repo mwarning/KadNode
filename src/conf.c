@@ -14,6 +14,9 @@
 #include "utils.h"
 #include "conf.h"
 #include "values.h"
+#ifdef FWD
+#include "forwardings.h"
+#endif
 
 
 /* Global object variables */
@@ -36,7 +39,13 @@ const char *version = "KadNode v"MAIN_VERSION" ( "
 #ifdef WEB
 " web"
 #endif
-" )\n\n";
+#ifdef FWD_UPNP
+" upnp"
+#endif
+#ifdef FWD_NATPMP
+" natpmp"
+#endif
+" )\n";
 
 const char *usage = "KadNode - A P2P name resolution daemon (IPv4/IPv6)\n"
 "A Wrapper for the Kademlia implementation of a Distributed Hash Table (DHT)\n"
@@ -242,6 +251,9 @@ void conf_add_value( char *var, char *val ) {
 	id_compute( value_id, val );
 
 	values_add( value_id, port, LONG_MAX );
+#ifdef FWD
+	forwardings_add( port, LONG_MAX );
+#endif
 }
 
 void conf_handle( char *var, char *val ) {
