@@ -8,7 +8,7 @@
 
 
 /* Searches along with received addresses */
-struct result {
+struct result_t {
 	/* The value id to search for */
 	UCHAR id[SHA_DIGEST_LENGTH];
 	int af;
@@ -18,12 +18,12 @@ struct result {
 	size_t numaddrs;
 	int done;
 
-	struct result* next;
+	struct result_t *next;
 };
 
-struct result* results_list( void );
+struct result_t *results_list( void );
 void results_expire( void );
-struct result* results_find( const UCHAR *id, int af );
+struct result_t *results_find( const UCHAR *id, int af );
 int results_insert( const UCHAR *id, int af );
 
 void results_import( const UCHAR *id, void *data, int data_length, int af );

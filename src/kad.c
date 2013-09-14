@@ -57,7 +57,7 @@ void kad_setup( void ) {
 void kad_debug_value_searches( int fd ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	char hexbuf[HEX_LEN+1];
-	struct result* vs;
+	struct result_t *vs;
 	int i, j;
 
 	j = 0;
@@ -308,7 +308,7 @@ int kad_search( const UCHAR *id ) {
 */
 int kad_lookup_value( const UCHAR* id, IP addr_array[], int *addr_num ) {
 	int rc;
-	struct result* vs;
+	struct result_t *vs;
 
 	dht_lock();
 

@@ -18,17 +18,17 @@
 * searches are collected and stored here until they expire.
 */
 
-struct result* results = NULL;
+struct result_t *results = NULL;
 int num_results = 0;
 
 
-struct result* results_list( void ) {
+struct result_t *results_list( void ) {
 	return results;
 }
 
 /* Find a value search result */
-struct result* results_find( const UCHAR *id, int af ) {
-	struct result* vs;
+struct result_t *results_find( const UCHAR *id, int af ) {
+	struct result_t *vs;
 
 	vs = results;
 	while( vs != NULL ) {
@@ -42,9 +42,9 @@ struct result* results_find( const UCHAR *id, int af ) {
 }
 
 void results_expire( void ) {
-	struct result* pre = NULL;
-	struct result* vs = results;
-	struct result *next = NULL;
+	struct result_t *pre = NULL;
+	struct result_t *vs = results;
+	struct result_t *next = NULL;
 
     while( vs ) {
         next = vs->next;
@@ -64,8 +64,8 @@ void results_expire( void ) {
 }
 
 int results_insert( const UCHAR *id, int af ) {
-	struct result* vs;
-	struct result* vss;
+	struct result_t* vs;
+	struct result_t* vss;
 
 	if( num_results > MAX_SEARCHES ) {
 		return 1;
@@ -78,7 +78,7 @@ int results_insert( const UCHAR *id, int af ) {
 		return 0;
 	}
 
-	vs = calloc( 1, sizeof(struct result) );
+	vs = calloc( 1, sizeof(struct result_t) );
 	if( vs == NULL ) {
 		return 0;
 	}
@@ -107,7 +107,7 @@ int results_insert( const UCHAR *id, int af ) {
 }
 
 /* Add an address to an array if it is not already contained in there */
-void results_add_unique( struct result *vs, IP* addr ) {
+void results_add_unique( struct result_t *vs, IP* addr ) {
 	int i;
 
 	if( vs->numaddrs >= MAX_RESULTS_PER_SEARCH ) {
@@ -136,7 +136,7 @@ typedef struct {
 } addr4_t;
 
 void results_import( const UCHAR *id, void *data, int data_length, int af ) {
-	struct result* vs;
+	struct result_t *vs;
 	IP addr;
 	int i;
 
@@ -175,7 +175,7 @@ void results_import( const UCHAR *id, void *data, int data_length, int af ) {
 }
 
 void results_done( const UCHAR *id, int af ) {
-	struct result* vs;
+	struct result_t *vs;
 
 	/* Find search to put results into */
 	if( (vs = results_find( id, af )) == NULL ) {

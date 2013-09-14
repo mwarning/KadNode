@@ -27,12 +27,12 @@
 #include "net.h"
 
 
-struct task {
+struct task_t {
 	int fd;
 	net_callback *callback;
 };
 
-struct task tasks[8];
+struct task_t tasks[8];
 int numtasks = 0;
 
 void net_add_handler( int fd, net_callback *callback ) {
@@ -151,12 +151,12 @@ void net_loop( void ) {
 	FD_ZERO( &fds );
 
 	for( i = 0; i < numtasks; ++i ) {
-		struct task *t = &tasks[i];
-		if( t->fd >= 0 ) {
-			if( t->fd > max_fd ) {
-				max_fd = t->fd;
+		struct task_t *task = &tasks[i];
+		if( task->fd >= 0 ) {
+			if( task->fd > max_fd ) {
+				max_fd = task->fd;
 			}
-			FD_SET( t->fd, &fds );
+			FD_SET( task->fd, &fds );
 		}
 	}
 
@@ -184,11 +184,11 @@ void net_loop( void ) {
 		}
 
 		for( i = 0; i < numtasks; ++i ) {
-			struct task *t = &tasks[i];
-			if( FD_ISSET( t->fd, &fds_working ) ) {
-				t->callback( rc, t->fd );
+			struct task_t *task = &tasks[i];
+			if( FD_ISSET( task->fd, &fds_working ) ) {
+				task->callback( rc, task->fd );
 			} else {
-				t->callback( 0, t->fd );
+				task->callback( 0, task->fd );
 			}
 		}
 	}
