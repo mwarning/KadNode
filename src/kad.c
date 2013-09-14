@@ -163,7 +163,7 @@ void kad_debug_blacklist( int fd ) {
 	int i;
 
 	for( i = 0; i < (next_blacklisted % DHT_MAX_BLACKLISTED); i++ ) {
-		dprintf( fd, " %s\n", str_addr( &blacklist[i], addrbuf) );
+		dprintf( fd, " %s\n", str_addr( &blacklist[i], addrbuf ) );
 	}
 
 	dprintf( fd, " Found %d blacklisted addresses.\n", i );
@@ -269,7 +269,7 @@ int kad_status( char *buf, int size ) {
 
 void kad_ping( const IP* addr ) {
 	dht_lock();
-	dht_ping_node( (struct sockaddr *)addr, addr_len(addr) );
+	dht_ping_node( (struct sockaddr *)addr, addr_len( addr ) );
 	dht_unlock();
 }
 

@@ -13,8 +13,9 @@
 #define MIN(x, y) ((x) <= (y) ? (x) : (y))
 
 /*
-The DHT implementation in KadNode does not store results from value searches.
-Therefore, results for value searches are collected and stored here until they expire.
+* The DHT implementation in KadNode does not store
+* results from value searches. Therefore, results for value
+* searches are collected and stored here until they expire.
 */
 
 struct result* results = NULL;
@@ -77,7 +78,7 @@ int results_insert( const UCHAR *id, int af ) {
 		return 0;
 	}
 
-	vs = calloc( 1, sizeof(struct result ) );
+	vs = calloc( 1, sizeof(struct result) );
 	if( vs == NULL ) {
 		return 0;
 	}
@@ -127,12 +128,12 @@ void results_add_unique( struct result *vs, IP* addr ) {
 typedef struct {
 	UCHAR addr[16];
 	unsigned short port;
-} ADDR6;
+} addr6_t;
 
 typedef struct {
 	UCHAR addr[4];
 	unsigned short port;
-} ADDR4;
+} addr4_t;
 
 void results_import( const UCHAR *id, void *data, int data_length, int af ) {
 	struct result* vs;
@@ -145,8 +146,8 @@ void results_import( const UCHAR *id, void *data, int data_length, int af ) {
 	}
 
 	if( af == AF_INET ) {
-		ADDR4 *data4 = (ADDR4 *) data;
-		size_t data4_len = MIN(data_length / sizeof(ADDR4), MAX_RESULTS_PER_SEARCH);
+		addr4_t *data4 = (addr4_t *) data;
+		size_t data4_len = MIN(data_length / sizeof(addr4_t), MAX_RESULTS_PER_SEARCH);
 		IP4 *a = (IP4 *)&addr;
 
 		for( i = 0; i < data4_len; i++ ) {
@@ -158,9 +159,9 @@ void results_import( const UCHAR *id, void *data, int data_length, int af ) {
 		}
 	}
 
-	if( af== AF_INET6) {
-		ADDR6 *data6 = (ADDR6 *) data;
-		size_t data6_len = MIN(data_length / sizeof(ADDR6), MAX_RESULTS_PER_SEARCH);
+	if( af == AF_INET6) {
+		addr6_t *data6 = (addr6_t *) data;
+		size_t data6_len = MIN(data_length / sizeof(addr6_t), MAX_RESULTS_PER_SEARCH);
 		IP6 *a = (IP6 *)&addr;
 
 		for( i = 0; i < data6_len; i++ ) {
