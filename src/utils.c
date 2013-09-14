@@ -162,7 +162,7 @@ char* str_addr( IP *addr, char *addrbuf ) {
 	char buf[INET6_ADDRSTRLEN+1];
 	unsigned short port;
 
-	switch(addr->ss_family) {
+	switch( addr->ss_family ) {
 		case AF_INET6:
 			port = ntohs( ((IP6 *)addr)->sin6_port );
 			inet_ntop( AF_INET6, &((IP6 *)addr)->sin6_addr, buf, sizeof(buf) );
