@@ -5,7 +5,7 @@ POST_LINKING = -lpthread
 FEATURES ?= cmd dns nss web debug
 
 OBJS = build/main.o build/results.o build/kad.o build/log.o \
-	build/conf.o build/sha1.o build/unix.o build/net.o build/utils.o
+	build/conf.o build/sha1.o build/unix.o build/net.o build/utils.o build/values.o
 
 .PHONY: all clean strip install kadnode kadnode-ctl libnss_kadnode.so.2 deb
 

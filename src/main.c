@@ -19,6 +19,7 @@
 #include "utils.h"
 #include "unix.h"
 #include "net.h"
+#include "values.h"
 
 #ifdef DNS
 #include "ext-dns.h"
@@ -66,6 +67,9 @@ int main( int argc, char **argv ) {
 
 	/* Setup the Kademlia DHT */
 	kad_setup();
+
+	/* Setup handler to announce values */
+	values_setup();
 
 	/* Setup interfaces */
 #ifdef DNS

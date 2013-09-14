@@ -22,9 +22,6 @@ struct obj_gstate {
 	/* Identifier of this instance */
 	UCHAR node_id[SHA_DIGEST_LENGTH];
 
-	/* Values that will be announced regulary */
-	struct value *values;
-
 	/* Drop privileges to user */
 	char *user;
 

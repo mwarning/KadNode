@@ -148,9 +148,11 @@ All these interfaces listen only for connections from localhost.
     Lookup the IP address of a node that has identifier id.  
 	The lookup is performed on the current search results.
 
-  * `announce` *id* [<i>*port*</i>]  
-    Announce that this instance is associated with identifier.  
-    The announcement will happen only once and instantly.
+  * `announce` *id* [<i>*port*</i>] [<i>*minutes*</i>]  
+    Announce that this instance is associated with identifier  
+	and an optional port. The default port is 1 (0 is for announces).  
+    The announcement will happen only once unless a time  
+	in minutes is given or -1 minutes for the entire runtime.
 
   * `import` *addr*  
     Send a ping to another KadNode instance to establish a connection.

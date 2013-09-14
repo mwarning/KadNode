@@ -8,6 +8,7 @@
 #include <sys/un.h>
 #include <errno.h>
 #include <stdarg.h>
+#include <limits.h>
 
 #include "main.h"
 #include "conf.h"
@@ -15,6 +16,7 @@
 #include "log.h"
 #include "kad.h"
 #include "net.h"
+#include "values.h"
 #include "ext-cmd.h"
 
 
@@ -161,6 +163,8 @@ int cmd_exec( REPLY * r, int argc, char **argv ) {
 	UCHAR id[SHA_DIGEST_LENGTH];
 	char addrbuf[FULL_ADDSTRLEN+1];
 	char hexbuf[HEX_LEN+1];
+	time_t lifetime;
+	int minutes;
 	IP addrs[16];
 	int port;
 	int rc = 0;
@@ -227,24 +231,41 @@ int cmd_exec( REPLY * r, int argc, char **argv ) {
 		/* Print node id and statistics */
 		cmd_print_status( r );
 
-	} else if( match( argv[0], "announce" ) && (argc == 2 || argc == 3) ) {
+	} else if( match( argv[0], "announce" ) && (argc == 2 || argc == 3 || argc == 4) ) {
 
-		/* That is the id to announce using the IP address of this instance */
+		/* The value id to announce using the IP address of this instance */
 		id_compute( id, argv[1] );
 
-		if( argc == 3 ) {
+		if( argc == 4 ) {
 			port = atoi( argv[2] );
+			minutes = atoi( argv[3] );
+		} else if( argc == 3 ) {
+			port = atoi( argv[2] );
+			minutes = 0;
 		} else {
 			/* Kademlia doesn't accept port 0 */
 			port = 1;
+			minutes = 0;
 		}
 
 		if( port < 1 || port > 65535 ) {
 			r_printf( r ,"Invalid port.\n" );
 			rc = 1;
+		} else if( minutes < -1 ) {
+			r_printf( r ,"Invalid time.\n" );
+			rc = 1;
 		} else {
-			kad_announce( id, port );
-			r_printf( r ,"Announced resource: %s\n", str_id( id, hexbuf ) );
+			/* round up to multiple of  30 minutes */
+			minutes = (minutes < 0) ? -1 : (30 * (minutes/30 + 1));
+			lifetime = (minutes < 0) ? LONG_MAX : (gstate->time_now .tv_sec + (minutes * 60));
+
+			values_add( id, port, lifetime );
+
+			if( minutes > -1 ) {
+				r_printf( r ,"Announce resource %s on port %d for %d minutes.\n", str_id( id, hexbuf ), port, minutes );
+			} else {
+				r_printf( r ,"Announce resource %s on port %d for entire run time.\n", str_id( id, hexbuf ), port );
+			}
 		}
 #ifdef DEBUG
 	} else if( match( argv[0], "debug" ) && argc == 1 ) {

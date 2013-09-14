@@ -22,6 +22,7 @@
 
 #include <netinet/in.h>
 
+typedef unsigned short USHORT;
 typedef unsigned char UCHAR;
 typedef struct sockaddr_storage IP;
 typedef struct sockaddr_in IP4;

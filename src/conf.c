@@ -7,11 +7,13 @@
 #include <signal.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <limits.h>
 
 #include "main.h"
 #include "log.h"
 #include "utils.h"
 #include "conf.h"
+#include "values.h"
 
 
 /* Global object variables */
@@ -215,7 +217,7 @@ void conf_str( const char *var, char **dst, const char *src ) {
 }
 
 void conf_add_value( char *var, char *val ) {
-	struct value *v, *c;
+	UCHAR value_id[SHA_DIGEST_LENGTH];
 	unsigned short port;
 	char *delim;
 
@@ -236,32 +238,10 @@ void conf_add_value( char *var, char *val ) {
 		log_err( "CFG: Invalid port used for value: %s", val );
 	}
 
-	v = calloc( 1, sizeof(struct value) );
-
 	/* Add new value */
-	id_compute( v->value_id, val );
-	v->port = port;
+	id_compute( value_id, val );
 
-	c = gstate->values;
-	if( c == NULL ) {
-		gstate->values = v;
-		return;
-	}
-
-	while( c != NULL ) {
-		if( id_equal( c->value_id, v->value_id ) ) {
-			log_err( "CFG: Duplicate identifier for '%s': %s", var, val );
-		}
-
-		if( c->next == NULL ) {
-			c->next = v;
-			return;
-		}
-
-		c = c->next;
-	}
-
-	log_crit( "CFG: Found value list loop." );
+	values_add( value_id, port, LONG_MAX );
 }
 
 void conf_handle( char *var, char *val ) {

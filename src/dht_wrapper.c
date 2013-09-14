@@ -196,32 +196,6 @@ void dht_callback_func( void *closure, int event, UCHAR *info_hash, void *data, 
 	}
 }
 
-/* Announce values given at the command line */
-void dht_announce_static() {
-	struct value *v;
-	int count;
-
-	v = gstate->values;
-	count = 0;
-	dht_lock();
-	while( v != NULL ) {
-		if( v->port == 0 ) {
-			log_err( "DHT: Port for static value announcement is 0.");
-		}
-
-		dht_search( v->value_id, v->port, gstate->af, dht_callback_func, NULL );
-
-#if defined (UPNP) || defined (NATPMP)
-		portforwarding_add(v->port, (21*60));
-#endif
-		count++;
-		v = v->next;
-	}
-	dht_unlock();
-
-	log_debug( "DHT: Announced %d static announcements.", count );
-}
-
 /* Handle incoming packets and pass them to the DHT code */
 void dht_handler( int rc, int sock ) {
 	UCHAR buf[1500];
@@ -245,14 +219,6 @@ void dht_handler( int rc, int sock ) {
 
 		/* Try again in ~2 minutes */
 		gstate->time_expire_results = time_add_min( 2 );
-	}
-
-	/* Announce values given at the command line */
-	if( gstate->time_announce_values <= time_now_sec() && !buckets_empty() ) {
-		dht_announce_static();
-
-		/* Announce again in ~30 minutes */
-		gstate->time_announce_values = time_add_min( 30 );
 	}
 
 	if( rc > 0 ) {

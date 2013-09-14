@@ -13,6 +13,7 @@
 #include "utils.h"
 #include "results.h"
 #include "net.h"
+#include "values.h"
 #include "dht_wrapper.c"
 
 
@@ -163,17 +164,6 @@ void kad_debug_blacklist( int fd ) {
 	dprintf( fd, " Found %d blacklisted addresses.\n", i );
 }
 
-void kad_debug_announces( int fd ) {
-	char hexbuf[HEX_LEN+1];
-	struct value *v;
-
-	v = gstate->values;
-	while( v ) {
-		dprintf( fd, " id: %s, port: %hu\n", str_id( v->value_id, hexbuf ), v->port );
-		v = v->next;
-	}
-}
-
 void kad_debug( int fd ) {
 
 	dprintf( fd, "DHT_SEARCH_EXPIRE_TIME: %d\n", DHT_SEARCH_EXPIRE_TIME );
@@ -191,7 +181,7 @@ void kad_debug( int fd ) {
 	dht_lock();
 
 	dprintf( fd, "\nAnnouncements:\n" );
-	kad_debug_announces( fd );
+	values_debug( fd );
 
 	dprintf( fd, "\nBuckets:\n" );
 	kad_debug_buckets( fd, (gstate->af == AF_INET) ? buckets : buckets6 );
@@ -218,7 +208,6 @@ int kad_status( char *buf, int size ) {
 	char hexbuf[HEX_LEN+1];
 	struct storage *strg = storage;
 	struct search *srch = searches;
-	struct value *value = gstate->values;
 	int numsearches_active = 0;
 	int numsearches_done = 0;
 	int numstorage = 0;
@@ -243,10 +232,7 @@ int kad_status( char *buf, int size ) {
 		strg = strg->next;
 	}
 
-	while( value != NULL ) {
-		numvalues++;
-		value = value->next;
-	}
+	numvalues = values_count();
 
 	bprintf( "Node id: %s\n", str_id( myid, hexbuf ) );
 	bprintf( "Bound to: %s:%s / %s\n",
