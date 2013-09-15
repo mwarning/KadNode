@@ -5,8 +5,9 @@ kadnode (0.4) unstable; urgency=low
   * Add optional support for UPNP/NAT-PMP to add router forwardings
     for KadNode announcements where port > 1
   * kadctl allows to specify the time in minutes a value id is to be announced
+  * remove lookup_node, it is not really helpful but confusing
 
- -- mwarning <moritzwarning@web.de>  Mon, 01 Jul 2013 19:23:41 +0200
+ -- mwarning <moritzwarning@web.de>  Sun, 15 Sep 2013 03:24:31 +0200
 
 kadnode (0.3) unstable; urgency=low
 
