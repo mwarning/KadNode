@@ -42,10 +42,10 @@ IP addresses associated with an identifier.
 Every entered identifier (e.g. `myname.p2p`) will have everything after and including the last dot ignored.
 This is because the top level domain is often used to differentiate from classical domain names
 and to redirect requests to KadNode.
-The rest of the string is converted to an 20 byte identifier using the sha1 hashing algorithm.
+The rest of the string is converted to an 20 byte identifier using the SHA1 hashing algorithm.
 As an alternative, the hash can be entered directly as a 40 character hexadecimal string.
 The string `myname.p2p` is therefore eqivalent to `d13b93ea42804188d277c20f7d6e5be2732148b8`
-which is the result of sha1('myname'). The use of the build-in hashing algorithm (sha1) can be entirely
+which is the result of SHA1('myname'). The use of the build-in hashing algorithm can be entirely
 circumvented this way.
 
 Please note that KadNode does not store any nodes before shutdown.
@@ -145,10 +145,6 @@ All these interfaces listen only for connections from localhost.
 
   * `lookup` *id*  
     Lookup the IP addresses of all nodes that claim to satisfy the identifier.  
-	The lookup is performed on the current search results.
-
-  * `lookup_node` *id*  
-    Lookup the IP address of a node that has identifier id.  
 	The lookup is performed on the current search results.
 
   * `announce` *id* [<i>*port*</i>] [<i>*minutes*</i>]  

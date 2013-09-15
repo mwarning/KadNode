@@ -28,7 +28,9 @@ const char* cmd_usage_str =
 "	status\n"
 "	search <id>\n"
 "	lookup <id>\n"
+#if 0
 "	lookup_node <id>\n"
+#endif
 "	announce <id> [<port>]\n"
 "	import <addr>\n"
 "	export\n"
@@ -181,7 +183,7 @@ int cmd_exec( REPLY * r, int argc, char **argv ) {
 	} else if( match( argv[0], "import" ) && argc == 2 ) {
 
 		rc = cmd_import( r, argv[1] );
-
+#if 0
 	} else if( match( argv[0], "lookup_node" ) && argc == 2 ) {
 
 		/* That is the node id to lookup */
@@ -198,6 +200,7 @@ int cmd_exec( REPLY * r, int argc, char **argv ) {
 			r_printf( r ,"No node found.\n" );
 			rc = 1;
 		}
+#endif
 	} else if( match( argv[0], "lookup" ) && argc == 2 ) {
 
 		/* That is the value id to lookup */
@@ -258,7 +261,7 @@ int cmd_exec( REPLY * r, int argc, char **argv ) {
 			r_printf( r ,"Invalid time.\n" );
 			rc = 1;
 		} else {
-			/* round up to multiple of  30 minutes */
+			/* round up to multiple of 30 minutes */
 			minutes = (minutes < 0) ? -1 : (30 * (minutes/30 + 1));
 			lifetime = (minutes < 0) ? LONG_MAX : (gstate->time_now .tv_sec + (minutes * 60));
 
