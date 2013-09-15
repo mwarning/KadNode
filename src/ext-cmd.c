@@ -101,10 +101,14 @@ int cmd_import( REPLY *r, const char *addr_str) {
 	int rc;
 
 	/* If the address contains no port - use the default port */
-	if( (rc = addr_parse_full( &addr, addr_str, DHT_PORT, gstate->af )) ==  ADDR_PARSE_SUCCESS) {
-		kad_ping( &addr );
-		r_printf( r, "Send ping to: %s\n", str_addr( &addr, addrbuf ) );
-		return 0;
+	if( (rc = addr_parse_full( &addr, addr_str, DHT_PORT, gstate->af )) == ADDR_PARSE_SUCCESS ) {
+		if( kad_ping( &addr ) == 0 ) {
+			r_printf( r, "Send ping to: %s\n", str_addr( &addr, addrbuf ) );
+			return 0;
+		} else {
+			r_printf( r, "Failed to send ping.\n" );
+			return 1;
+		}
 	} else if( rc == ADDR_PARSE_CANNOT_RESOLVE ) {
 		r_printf( r, "Failed to resolve address.\n" );
 		return 1;

@@ -7,7 +7,7 @@
 void kad_setup( void );
 
 /* Ping this node for bootstrapping */
-void kad_ping( const IP *addr );
+int kad_ping( const IP *addr );
 
 /* Blacklist a specific address */
 int kad_blacklist( const IP* addr );

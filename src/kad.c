@@ -269,10 +269,14 @@ int kad_status( char *buf, int size ) {
 }
 
 
-void kad_ping( const IP* addr ) {
+int kad_ping( const IP* addr ) {
+	int rc;
+
 	dht_lock();
-	dht_ping_node( (struct sockaddr *)addr, addr_len( addr ) );
+	rc = dht_ping_node( (struct sockaddr *)addr, addr_len( addr ) );
 	dht_unlock();
+
+	return (rc < 0);
 }
 
 /*
