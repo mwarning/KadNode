@@ -388,11 +388,11 @@ int kad_export_nodes( IP addr_array[], int *num ) {
 	count = 0;
 
 	for( i = 0; i < num6 && count < *num; ++i, ++count ) {
-		memcpy( addr_array, addr6, sizeof(IP6) );
+		memcpy( &addr_array[i], &addr6[i], sizeof(IP6) );
 	}
 
 	for( i = 0; i < num4 && count < *num; ++i, ++count ) {
-		memcpy( addr_array, addr4, sizeof(IP4) );
+		memcpy( &addr_array[i], &addr4[i], sizeof(IP4) );
 	}
 
 	/* store number of nodes we have actually found */
