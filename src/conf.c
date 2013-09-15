@@ -189,7 +189,7 @@ void conf_check() {
 void conf_free() {
 
 	free( gstate->user );
-	free( gstate->pid_file );
+	free( gstate->pidfile );
 	free( gstate->dht_port );
 	free( gstate->dht_ifce );
 	free( gstate->mcast_addr_str );
@@ -267,7 +267,7 @@ void conf_handle( char *var, char *val ) {
 	} else if( match( var, "--value-id" ) ) {
 		conf_add_value( var, val );
 	} else if( match( var, "--pidfile" ) ) {
-		conf_str( var, &gstate->pid_file, val );
+		conf_str( var, &gstate->pidfile, val );
 	} else if( match( var, "--verbosity" ) ) {
 		if( match( val, "quiet" ) ) {
 			gstate->verbosity = VERBOSITY_QUIET;

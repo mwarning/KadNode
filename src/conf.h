@@ -26,7 +26,7 @@ struct obj_gstate {
 	char *user;
 
 	/* Write a pid file if set */
-	char *pid_file;
+	char *pidfile;
 
 	/* Foreground / Background */
 	int is_daemon;

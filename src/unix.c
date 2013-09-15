@@ -66,11 +66,11 @@ void unix_fork( void ) {
 void unix_write_pidfile( pid_t pid ) {
 	FILE *file;
 
-	if( gstate->pid_file == NULL ) {
+	if( gstate->pidfile == NULL ) {
 		return;
 	}
 
-	file = fopen( gstate->pid_file, "w" );
+	file = fopen( gstate->pidfile, "w" );
 	if( file == NULL ) {
 		log_err( "UNX: Failed to open pid file." );
 	}
