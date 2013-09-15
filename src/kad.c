@@ -185,14 +185,16 @@ void kad_debug( int fd ) {
 
 	dht_lock();
 
+	dprintf( fd, "\nBuckets:\n" );
+	kad_debug_buckets( fd, (gstate->af == AF_INET) ? buckets : buckets6 );
+
 	dprintf( fd, "\nAnnouncements:\n" );
 	values_debug( fd );
 
+#ifdef FWD
 	dprintf( fd, "\nForwardings:\n" );
 	forwardings_debug( fd );
-
-	dprintf( fd, "\nBuckets:\n" );
-	kad_debug_buckets( fd, (gstate->af == AF_INET) ? buckets : buckets6 );
+#endif
 
 	dprintf( fd, "\nNode Searches:\n" );
 	kad_debug_node_searches( fd );
