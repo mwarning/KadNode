@@ -31,7 +31,7 @@ const char* cmd_usage_str =
 #if 0
 "	lookup_node <id>\n"
 #endif
-"	announce <id> [<port>]\n"
+"	announce <id> [<port>] [<minutes>]\n"
 "	import <addr>\n"
 "	export\n"
 "	blacklist <addr>\n"
