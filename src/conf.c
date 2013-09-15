@@ -53,45 +53,45 @@ const char *usage = "KadNode - A P2P name resolution daemon (IPv4/IPv6)\n"
 "\n"
 "Usage: kadnode [OPTIONS]*\n"
 "\n"
-" --node-id		Set the node id. Use --value-id to announce values.\n"
-"			Default: <random>\n\n"
-" --value-id		Add a '<id>[:<port>]' value to be announced every 30 minutes.\n"
-"			This option can occur multiple times.\n\n"
-" --user			Change the UUID after start.\n\n"
-" --port			Bind to this port.\n"
-"			Default: "DHT_PORT"\n\n"
-" --mcast-addr		Use multicast address for bootstrapping.\n"
-"			Default: "DHT_ADDR4_MCAST" / "DHT_ADDR6_MCAST"\n\n"
-" --ifce			Bind to this interface.\n"
-"			Default: <any>\n\n"
-" --daemon		Run the node in background.\n\n"
-" --verbosity		Verbosity level: quiet, verbose or debug.\n"
-"			Default: verbose\n\n"
-" --pidfile		Write process pid to a file.\n\n"
-" --mode			Enable IPv4 or IPv6 mode for the DHT.\n"
-"			Default: ipv4\n\n"
+" --node-id <id>			Set the node id. Use --value-id to announce values.\n"
+"				Default: <random>\n\n"
+" --value-id <id>[:<port>]	Add a value to be announced every 30 minutes.\n"
+"				This option can occur multiple times.\n\n"
+" --user <user>			Change the UUID after start.\n\n"
+" --port	<port>			Bind to this port.\n"
+"				Default: "DHT_PORT"\n\n"
+" --mcast-addr <addr>		Use multicast address for bootstrapping.\n"
+"				Default: "DHT_ADDR4_MCAST" / "DHT_ADDR6_MCAST"\n\n"
+" --ifce <interface>		Bind to this interface.\n"
+"				Default: <any>\n\n"
+" --daemon			Run the node in background.\n\n"
+" --verbosity <level>		Verbosity level: quiet, verbose or debug.\n"
+"				Default: verbose\n\n"
+" --pidfile <file>		Write process pid to a file.\n\n"
+" --mode <ipv4|ipv6>		Enable IPv4 or IPv6 mode for the DHT.\n"
+"				Default: ipv4\n\n"
 #ifdef CMD
-" --cmd-port		Bind the remote control interface to this local port.\n"
-"			Default: "CMD_PORT"\n\n"
+" --cmd-port <port>		Bind the remote control interface to this local port.\n"
+"				Default: "CMD_PORT"\n\n"
 #endif
 #ifdef DNS
-" --dns-port		Bind the DNS server to this local port.\n"
-"			Default: "DNS_PORT"\n\n"
+" --dns-port <port>		Bind the DNS server to this local port.\n"
+"				Default: "DNS_PORT"\n\n"
 #endif
 #ifdef NSS
-" --nss-port		Bind the Network Service Switch to this local port.\n"
-"			Default: "NSS_PORT"\n\n"
+" --nss-port <port>		Bind the Network Service Switch to this local port.\n"
+"				Default: "NSS_PORT"\n\n"
 #endif
 #ifdef WEB
-" --web-port		Bind the web server to this local port.\n"
-"			Default: "WEB_PORT"\n\n"
+" --web-port <port>		Bind the web server to this local port.\n"
+"				Default: "WEB_PORT"\n\n"
 #endif
 #ifdef FWD
-" --disable-forwarding	Disable UPnP/NAT-PMP to forward router ports.\n\n"
+" --disable-forwarding		Disable UPnP/NAT-PMP to forward router ports.\n\n"
 #endif
-" --disable-multicast	Disable multicast to discover local nodes.\n\n"
-" -h, --help		Print this help.\n\n"
-" -v, --version		Print program version.\n\n";
+" --disable-multicast		Disable multicast to discover local nodes.\n\n"
+" -h, --help			Print this help.\n\n"
+" -v, --version			Print program version.\n\n";
 
 void conf_init() {
 	gstate = (struct obj_gstate *) malloc( sizeof(struct obj_gstate) );
