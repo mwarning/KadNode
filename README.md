@@ -48,8 +48,6 @@ The string `myname.p2p` is therefore eqivalent to `d13b93ea42804188d277c20f7d6e5
 which is the result of SHA1('myname'). The use of the build-in hashing algorithm can be entirely
 circumvented this way.
 
-Please note that KadNode does not store any nodes before shutdown.
-This task is intended to be taken care of an init script (e.g. for Debian or OpenWrt).
 
 ## INTERFACES
 
@@ -74,6 +72,9 @@ All these interfaces listen only for connections from localhost.
     Add a value identifier and optional port to be announced every 30 minutes.  
     The announcement will associate this nodes IP address with this identifier.  
     This option can occur multiple times.
+
+  * `--peerfile` *file-path*  
+    Import/Export files from and to this file.
 
   * `--user` *name*  
     Change the UUID after start.

@@ -36,7 +36,7 @@ SCRIPTNAME=/etc/init.d/$NAME
 
 
 # Append the hostname if set in /etc/default/kadnode
-DAEMON_ARGS="$DAEMON_ARGS ${hostname:+--value-id '$hostname'}"
+DAEMON_ARGS="$DAEMON_ARGS ${hostname:+--value-id '$hostname'} ${$BOOTSTRAP_FILE:+--peerfile '$BOOTSTRAP_FILE'}"
 
 
 do_start()
@@ -51,19 +51,6 @@ do_start()
 	start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON -- \
 		$DAEMON_ARGS \
 		|| return 2
-
-	#import nodes for bootstrapping
-	if [ -f "$BOOTSTRAP_FILE" ]; then
-		#wait for kadnode to open the socket
-		sleep 1
-
-		stored_addrs="`cat $BOOTSTRAP_FILE 2> /dev/null`"
-		IFS="
-"
-		for addr in $stored_addrs; do
-			kadnode-ctl import $addr &> /dev/null
-		done
-	fi
 }
 
 do_stop()
@@ -73,21 +60,6 @@ do_stop()
 	#   1 if daemon was already stopped
 	#   2 if daemon could not be stopped
 	#   other if a failure occurred
-
-	#export nodes for bootstrapping
-	if [ -f "$BOOTSTRAP_FILE" ]; then
-		stored_addrs="`cat $BOOTSTRAP_FILE 2> /dev/null`"
-		current_addrs="`kadnode-ctl export 2> /dev/null`"
-
-		stored_addrs_n=`echo "$stored_addrs" | wc -l`
-		current_addrs_n=`echo "$current_addrs" | wc -l`
-
-		#overwrite bootstrap file only if more or
-		#equally as much entries can be written
-		if [ $current_addrs_n -ge $stored_addrs_n ]; then
-			echo "$current_addrs" > $BOOTSTRAP_FILE
-		fi
-	fi
 
 	start-stop-daemon --stop --quiet --retry=TERM/30/KILL/5 --pidfile $PIDFILE --name $NAME
 	RETVAL="$?"

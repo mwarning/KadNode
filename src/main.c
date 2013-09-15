@@ -38,6 +38,93 @@
 #endif
 
 
+void main_export_peers( void ) {
+	char addrbuf[FULL_ADDSTRLEN+1];
+	IP addrs[32];
+	int i, num;
+	FILE * fp;
+	const char *filename;
+
+	filename = gstate->peerfile;
+	if( filename == NULL ) {
+		return;
+	}
+
+	num = N_ELEMS(addrs);
+	if( kad_export_nodes( addrs, &num ) != 0 ) {
+		log_warn("MAIN: Failed to export nodes.");
+		return;
+	}
+
+	/* No peers to export */
+	if( num == 0 ) {
+		log_info( "MAIN: No peers to export." );
+		return;
+	}
+
+	if( gstate->time_now.tv_sec - gstate->startup_time < (5 * 60) ) {
+		log_info( "MAIN: No peers exported. Programm needs to run at least 5 minutes." );
+		return;
+	}
+
+	fp = fopen( filename, "w" );
+	if( fp == NULL ) {
+		log_err( "MAIN: Cannot open file '%s' for peer export: %s", filename, strerror( errno ) );
+		return;
+	}
+
+	/* Write peers to file */
+	for( i = 0; i < num; ++i ) {
+		if( fprintf( fp, "%s\n", str_addr( &addrs[i], addrbuf ) ) < 0 ) {
+			break;
+		}
+	}
+
+	fclose( fp );
+
+	log_info( "MAIN: Exported %d peers to: %s", i, filename );
+}
+
+void main_import_peers( void ) {
+	char linebuf[256];
+	FILE *fp;
+	int num;
+	IP addr;
+	const char *filename;
+
+	filename = gstate->peerfile;
+	if( filename == NULL ) {
+		return;
+	}
+
+	fp = fopen( filename, "r" );
+	if( fp == NULL ) {
+		log_err( "MAIN: Cannot open file '%s' for peer import: %s", filename, strerror( errno ) );
+	}
+
+	num = 0;
+	while( fgets( linebuf, sizeof(linebuf), fp ) != NULL ) {
+		linebuf[strcspn( linebuf, "\n" )] = '\0';
+		if( linebuf[0] == '\0' ) {
+			continue;
+		}
+
+		if( addr_parse_full( &addr, linebuf, DHT_PORT, gstate->af ) == ADDR_PARSE_SUCCESS ) {
+			if( kad_ping( &addr ) == 0 ) {
+				num++;
+			} else {
+				fclose( fp );
+				log_err( "MAIN: Cannot ping peers: %s", strerror( errno ) );
+				return;
+			}
+		}
+	}
+
+	fclose( fp );
+
+	log_info( "MAIN: Imported %d peers from: %s", num, filename );
+}
+
 int main( int argc, char **argv ) {
 
 	conf_init();
@@ -93,8 +180,12 @@ int main( int argc, char **argv ) {
 	cmd_setup();
 #endif
 
+	main_import_peers();
+
 	/* Loop over all sockets and FDs */
 	net_loop();
+
+	main_export_peers();
 
 	conf_free();
 

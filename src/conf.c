@@ -57,6 +57,7 @@ const char *usage = "KadNode - A P2P name resolution daemon (IPv4/IPv6)\n"
 "				Default: <random>\n\n"
 " --value-id <id>[:<port>]	Add a value to be announced every 30 minutes.\n"
 "				This option can occur multiple times.\n\n"
+" --peerfile <file>		Import/Export files from and to a file.\n\n"
 " --user <user>			Change the UUID after start.\n\n"
 " --port	<port>			Bind to this port.\n"
 "				Default: "DHT_PORT"\n\n"
@@ -158,6 +159,10 @@ void conf_check() {
 			log_err( "Invalid verbosity level." );
 	}
 
+	if( gstate->peerfile )  {
+		log_info( "Peerfile: %s", gstate->peerfile );
+	}
+
 	if( gstate->mcast_addr_str == NULL ) {
 		/* Set default multicast address string */
 		if( gstate->af == AF_INET ) {
@@ -184,6 +189,10 @@ void conf_check() {
 			log_err( "CFG: Multicast address expected: %s", str_addr( &gstate->mcast_addr, addrbuf ) );
 		}
 	}
+
+	/* Store startup time */
+	gettimeofday( &gstate->time_now, NULL );
+	gstate->startup_time = gstate->time_now.tv_sec;
 }
 
 void conf_free() {
@@ -268,6 +277,8 @@ void conf_handle( char *var, char *val ) {
 		conf_add_value( var, val );
 	} else if( match( var, "--pidfile" ) ) {
 		conf_str( var, &gstate->pidfile, val );
+	} else if( match( var, "--peerfile" ) ) {
+		conf_str( var, &gstate->peerfile, val );
 	} else if( match( var, "--verbosity" ) ) {
 		if( match( val, "quiet" ) ) {
 			gstate->verbosity = VERBOSITY_QUIET;

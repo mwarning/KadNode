@@ -28,6 +28,9 @@ struct obj_gstate {
 	/* Write a pid file if set */
 	char *pidfile;
 
+	/* Import/Export peers from this file */
+	char *peerfile;
+
 	/* Foreground / Background */
 	int is_daemon;
 
@@ -64,6 +67,9 @@ struct obj_gstate {
 
 	/* Next time to announce results */
 	time_t time_announce_values;
+
+	/* KadNode startup time */
+	time_t startup_time;
 
 	/* Disable ping on multicast address */
 	int disable_multicast;
