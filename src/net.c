@@ -163,8 +163,8 @@ void net_loop( void ) {
 	while( gstate->is_running ) {
 
 		/* Wait one second for inconing traffic */
-        tv.tv_sec = 1;
-        tv.tv_usec = 0;
+		tv.tv_sec = 1;
+		tv.tv_usec = 0;
 
 		/* Update clock */
 		gettimeofday( &gstate->time_now, NULL );
