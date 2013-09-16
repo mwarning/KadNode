@@ -9,6 +9,13 @@
 #include "upnp.h"
 
 
+/* A cheap way to distinguish between miniupnp versions 1.5 and 1.6 */
+#ifdef UPNPDISCOVER_SUCCESS
+	#define HAVE_MINIUPNP_16
+#else
+	#define HAVE_MINIUPNP_15
+#endif
+
 enum {
 	UPNP_STATE_DISCOVER_GATEWAY,
 	UPNP_STATE_RECEIVE_GATEWAY,
@@ -55,7 +62,13 @@ int upnpGetSpecificPortMappingEntry( struct upnp_handle_t *handle, const char *p
 	*intClient = '\0';
 	*intPort = '\0';
 
+#if defined HAVE_MINIUPNP_16
+	return UPNP_GetSpecificPortMappingEntry( handle->urls.controlURL, handle->data.first.servicetype, extPort, proto, intClient, intPort, NULL, NULL, NULL );
+#elif defined HAVE_MINIUPNP_15
 	return UPNP_GetSpecificPortMappingEntry( handle->urls.controlURL, handle->data.first.servicetype, extPort, proto, intClient, intPort );
+#else
+	return UPNPCOMMAND_UNKNOWN_ERROR;
+#endif
 }
 
 int upnpDeletePortMapping( struct upnp_handle_t *handle, const char *proto, unsigned short port ) {
@@ -72,8 +85,13 @@ int upnpAddPortMapping( struct upnp_handle_t *handle, const char *proto, unsigne
 
 	snprintf( extPort, sizeof(extPort), "%hu", port );
 	snprintf( inPort, sizeof(inPort), "%hu", port );
-
+#if defined HAVE_MINIUPNP_16
+	return UPNP_AddPortMapping( handle->urls.controlURL, handle->data.first.servicetype, extPort, inPort, handle->addr, NULL, proto, NULL, NULL );
+#elif defined HAVE_MINIUPNP_15
 	return UPNP_AddPortMapping( handle->urls.controlURL, handle->data.first.servicetype, extPort, inPort, handle->addr, NULL, proto, NULL );
+#else
+	return UPNPCOMMAND_UNKNOWN_ERROR;
+#endif
 }
 
 int upnp_handler( struct upnp_handle_t *handle, unsigned short port, time_t lifespan, time_t now ) {
@@ -90,9 +108,17 @@ int upnp_handler( struct upnp_handle_t *handle, unsigned short port, time_t life
 
 	/* Get gateway address */
 	if( handle->state == UPNP_STATE_DISCOVER_GATEWAY ) {
+#if defined HAVE_MINIUPNP_16
+		int err = UPNPDISCOVER_SUCCESS;
+		devlist = upnpDiscover( 1000, NULL, NULL, 0, 0, &err );
+		if( err != UPNPDISCOVER_SUCCESS ) {
+#elif defined HAVE_MINIUPNP_15
 		devlist = upnpDiscover( 1000, NULL, NULL, 0 );
-
 		if( devlist == NULL ) {
+#else
+		devlist = NULL;
+		if( devlist == NULL ) {
+#endif
 			log_debug( "UPnP: Method upnpDiscover failed." );
 			handle->retry = now + (10 * 60);
 			handle->state = UPNP_STATE_DISCOVER_GATEWAY;
