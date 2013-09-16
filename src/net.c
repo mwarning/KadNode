@@ -185,7 +185,7 @@ void net_loop( void ) {
 
 		for( i = 0; i < numtasks; ++i ) {
 			struct task_t *task = &tasks[i];
-			if( FD_ISSET( task->fd, &fds_working ) ) {
+			if( task->fd >= 0 && FD_ISSET( task->fd, &fds_working ) ) {
 				task->callback( rc, task->fd );
 			} else {
 				task->callback( 0, task->fd );
