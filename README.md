@@ -59,10 +59,6 @@ circumvented this way.
 
 All these interfaces listen only for connections from localhost.
 
-## DOWNLOADS
-
-  * https://sourceforge.net/projects/kadnode/files/
-
 ## OPTIONS
   * `--node-id` *id*  
     Set the node identifier. This option is rarely needed.  
