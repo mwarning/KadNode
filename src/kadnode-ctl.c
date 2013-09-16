@@ -66,10 +66,10 @@ int udp_send( char* buffer, int port ) {
 	close( sockfd );
 
 	if( buffer[0] == '0' ) {
-		fprintf( stdout, buffer+1 );
+		fprintf( stdout, "%s", buffer+1 );
 		return 0;
 	} else {
-		fprintf( stderr, buffer+1 );
+		fprintf( stderr, "%s", buffer+1 );
 		return 1;
 	}
 }

@@ -341,6 +341,7 @@ void cmd_remote_handler( int rc, int sock ) {
 
 void cmd_console_handler( int rc, int fd ) {
 	char request[512];
+	char *req;
 	REPLY reply;
 	char *argv[32];
 	int argc;
@@ -350,7 +351,11 @@ void cmd_console_handler( int rc, int fd ) {
 	}
 
 	/* Read line */
-	fgets( request, sizeof(request), stdin );
+	req = fgets( request, sizeof(request), stdin );
+
+	if( req == NULL ) {
+		return;
+	}
 
 	/* Split up the command line into an argument array */
 	cmd_to_args( request, &argc, &argv[0], N_ELEMS(argv) );
