@@ -119,16 +119,6 @@ void dht_handler( int rc, int sock ) {
 		gstate->time_mcast = time_add_min( 5 );
 	}
 
-	/* Expire value search results */
-	if( gstate->time_expire_results <= time_now_sec() ) {
-		dht_lock();
-		results_expire();
-		dht_unlock();
-
-		/* Try again in ~2 minutes */
-		gstate->time_expire_results = time_add_min( 2 );
-	}
-
 	if( rc > 0 ) {
 		/* Check which socket received the data */
 		fromlen = sizeof(from);

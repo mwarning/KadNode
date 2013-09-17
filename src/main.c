@@ -20,6 +20,7 @@
 #include "unix.h"
 #include "net.h"
 #include "values.h"
+#include "results.h"
 
 #ifdef DNS
 #include "ext-dns.h"
@@ -161,6 +162,9 @@ int main( int argc, char **argv ) {
 	/* Setup handler to announce values */
 	values_setup();
 
+	/* Setup handler to expire results */
+	results_setup();
+
 	/* Setup port-forwarding */
 #ifdef FWD
 	forwardings_setup();
@@ -180,11 +184,10 @@ int main( int argc, char **argv ) {
 	cmd_setup();
 #endif
 
-	main_import_peers();
-
 	/* Loop over all sockets and FDs */
 	net_loop();
 
+	/* Export peers if a file is provided */
 	main_export_peers();
 
 	conf_free();

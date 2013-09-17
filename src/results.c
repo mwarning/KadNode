@@ -7,6 +7,7 @@
 #include "main.h"
 #include "conf.h"
 #include "utils.h"
+#include "net.h"
 #include "results.h"
 
 #define MAX(x, y) ((x) >= (y) ? (x) : (y))
@@ -183,4 +184,18 @@ void results_done( const UCHAR *id, int af ) {
 	}
 
 	vs->done = 1;
+}
+
+void results_handle( int __rc, int __sock ) {
+	/* Expire value search results */
+	if( gstate->time_expire_results <= time_now_sec() ) {
+		results_expire();
+
+		/* Try again in ~2 minutes */
+		gstate->time_expire_results = time_add_min( 2 );
+	}
+}
+
+void results_setup( void ) {
+	net_add_handler( -1, &results_handle );
 }

@@ -21,6 +21,8 @@ struct result_t {
 	struct result_t *next;
 };
 
+void results_setup( void );
+
 struct result_t *results_list( void );
 void results_expire( void );
 struct result_t *results_find( const UCHAR *id, int af );

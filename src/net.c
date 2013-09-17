@@ -32,12 +32,12 @@ struct task_t {
 	net_callback *callback;
 };
 
-struct task_t tasks[8];
+struct task_t tasks[16];
 int numtasks = 0;
 
 void net_add_handler( int fd, net_callback *callback ) {
 
-	if( numtasks >= 8 ) {
+	if( numtasks >= 16 ) {
 		log_err( "NET: Too many file descriptors registered." );
 	}
 
