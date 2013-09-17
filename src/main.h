@@ -28,5 +28,6 @@ typedef struct sockaddr_storage IP;
 typedef struct sockaddr_in IP4;
 typedef struct sockaddr_in6 IP6;
 
+void main_import_peers( void );
 
 #endif /* _MAIN_H_ */

@@ -115,6 +115,9 @@ void dht_handler( int rc, int sock ) {
 	if( gstate->time_mcast <= time_now_sec() ) {
 		dht_multicast_ping( sock, &gstate->mcast_addr );
 
+		/* Ping peers from peerfile, if present */
+		main_import_peers();
+
 		/* Try again in ~5 minutes */
 		gstate->time_mcast = time_add_min( 5 );
 	}

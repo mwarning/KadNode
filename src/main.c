@@ -70,7 +70,7 @@ void main_export_peers( void ) {
 
 	fp = fopen( filename, "w" );
 	if( fp == NULL ) {
-		log_err( "MAIN: Cannot open file '%s' for peer export: %s", filename, strerror( errno ) );
+		log_warn( "MAIN: Cannot open file '%s' for peer export: %s", filename, strerror( errno ) );
 		return;
 	}
 
@@ -100,7 +100,8 @@ void main_import_peers( void ) {
 
 	fp = fopen( filename, "r" );
 	if( fp == NULL ) {
-		log_err( "MAIN: Cannot open file '%s' for peer import: %s", filename, strerror( errno ) );
+		log_warn( "MAIN: Cannot open file '%s' for peer import: %s", filename, strerror( errno ) );
+		return;
 	}
 
 	num = 0;
