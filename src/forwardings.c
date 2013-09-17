@@ -8,6 +8,7 @@
 #include "conf.h"
 #include "net.h"
 #include "log.h"
+#include "utils.h"
 #include "forwardings.h"
 #ifdef FWD_NATPMP
 #include "natpmp.h"
@@ -59,7 +60,7 @@ void forwardings_debug( int fd ) {
 	time_t now;
 	int counter;
 
-	now = gstate->time_now.tv_sec;
+	now = time_now_sec();
 	counter = 0;
 	item = forwardings.beg;
 	while( item ) {
@@ -140,7 +141,7 @@ void forwardings_handle( int __rc, int __sock ) {
 	time_t lifespan;
 	time_t now;
 
-	now = gstate->time_now.tv_sec;
+	now = time_now_sec();
 	item = forwardings.cur;
 
 	/* Handle current forwarding entry or wait 60 seconds to select a new one to process */

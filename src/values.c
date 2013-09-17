@@ -47,7 +47,7 @@ void values_debug( int fd ) {
 	time_t now;
 	int counter;
 
-	now = gstate->time_now.tv_sec;
+	now = time_now_sec();
 	counter = 0;
 	item = values.beg;
 	while( item ) {
@@ -118,7 +118,7 @@ void values_handle( int __rc, int __sock ) {
 	struct announcement_t *item;
 	time_t now;
 
-	now = gstate->time_now.tv_sec;
+	now = time_now_sec();
 
 	if( values.retry > now ) {
 		return;

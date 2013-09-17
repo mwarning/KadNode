@@ -49,7 +49,7 @@ void results_expire( void ) {
 
     while( vs ) {
         next = vs->next;
-        if( vs->start_time < (gstate->time_now.tv_sec - EXPIRE_SEARCH) ) {
+        if( vs->start_time < (time_now_sec() - EXPIRE_SEARCH) ) {
             if( pre ) {
                 pre->next = next;
             } else {
@@ -86,7 +86,7 @@ int results_insert( const UCHAR *id, int af ) {
 
 	memcpy( vs->id, id, SHA_DIGEST_LENGTH );
 	vs->af = af;
-	vs->start_time = gstate->time_now.tv_sec;
+	vs->start_time = time_now_sec();
 
 	num_results++;
 

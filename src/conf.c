@@ -192,7 +192,7 @@ void conf_check() {
 
 	/* Store startup time */
 	gettimeofday( &gstate->time_now, NULL );
-	gstate->startup_time = gstate->time_now.tv_sec;
+	gstate->startup_time = time_now_sec();
 }
 
 void conf_free() {

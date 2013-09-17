@@ -267,7 +267,7 @@ int cmd_exec( REPLY * r, int argc, char **argv ) {
 		} else {
 			/* round up to multiple of 30 minutes */
 			minutes = (minutes < 0) ? -1 : (30 * (minutes/30 + 1));
-			lifetime = (minutes < 0) ? LONG_MAX : (gstate->time_now .tv_sec + (minutes * 60));
+			lifetime = (minutes < 0) ? LONG_MAX : (time_now_sec() + (minutes * 60));
 
 			values_add( id, port, lifetime );
 #ifdef FWD
