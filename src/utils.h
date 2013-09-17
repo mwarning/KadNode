@@ -2,6 +2,8 @@
 #ifndef _UTILS_H_
 #define _UTILS_H_
 
+#include <sys/time.h>
+
 /* Size of a struct member */
 #define M_SIZEOF(type, member) sizeof(((type*) 0)->member)
 
@@ -37,6 +39,9 @@ int addr_parse_full( IP *addr, const char *full_addr_str, const char* default_po
 int addr_port( const IP *addr );
 int addr_len( const IP *addr );
 int addr_equal( const IP *addr1, const IP *addr2 );
+
+time_t time_now_sec( void );
+time_t time_add_min( unsigned int min );
 
 
 #endif /* _UTILS_H_ */

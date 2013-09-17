@@ -47,14 +47,6 @@ int buckets_empty( void ) {
 	return 1;
 }
 
-time_t time_now_sec( void ) {
-	return gstate->time_now.tv_sec;
-}
-
-time_t time_add_min( unsigned int min ) {
-	return time_now_sec() + (60 * min);
-}
-
 void dht_lock_init( void ) {
 #ifdef PTHREAD
 	pthread_mutex_init( &gstate->dht_mutex, NULL );
