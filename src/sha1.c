@@ -100,9 +100,9 @@ void SHA1_Transform(uint32_t state[5], const uint8_t buffer[64]);
 
 /* blk0() and blk() perform the initial expand. */
 /* I got the idea of expanding during the round function from SSLeay */
-#if __BYTE_ORDER == __BIG_ENDIAN
+#if (defined(__BYTE_ORDER__)&&(__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__))
 #define blk0(i) block->l[i]
-#elif __BYTE_ORDER == __LITTLE_ENDIAN
+#elif (defined(__BYTE_ORDER__)&&(__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__))
 #define blk0(i) (block->l[i] = (rol(block->l[i],24)&0xFF00FF00) \
     |(rol(block->l[i],8)&0x00FF00FF))
 #else
