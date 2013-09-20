@@ -100,11 +100,13 @@ int net_bind(
 
 	val = 1;
 	if ( setsockopt( sock, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val) ) < 0 ) {
+		close( sock );
 		log_err( "NET: Failed to set socket option SO_REUSEADDR: %s", strerror( errno ));
 		return -1;
 	}
 
 	if( ifce && setsockopt( sock, SOL_SOCKET, SO_BINDTODEVICE, ifce, strlen( ifce ) ) ) {
+		close( sock );
 		log_err( "NET: Unable to bind to device '%s': %s", ifce, strerror( errno ) );
 		return -1;
 	}
@@ -112,22 +114,26 @@ int net_bind(
 	if( af == AF_INET6 ) {
 		val = 1;
 		if( setsockopt( sock, IPPROTO_IPV6, IPV6_V6ONLY, &val, sizeof(val) ) < 0 ) {
+			close( sock );
 			log_err( "NET: Failed to set socket option IPV6_V6ONLY: %s", strerror( errno ));
 			return -1;
 		}
 	}
 
 	if( bind( sock, (struct sockaddr*) &sockaddr, sizeof(IP) ) < 0 ) {
+		close( sock );
 		log_err( "NET: Failed to bind socket to address: '%s'", strerror( errno ) );
 		return -1;
 	}
 
 	if( net_set_nonblocking( sock ) < 0 ) {
+		close( sock );
 		log_err( "NET: Failed to make socket nonblocking: '%s'", strerror( errno ) );
 		return -1;
 	}
 
 	if( protocol == IPPROTO_TCP && listen( sock, 5 ) < 0 ) {
+		close( sock );
 		log_err( "NET: Failed to listen on socket: '%s'", strerror( errno ) );
 		return -1;
 	}
