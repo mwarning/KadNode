@@ -7,7 +7,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=kadnode
-PKG_VERSION:=0.3
+PKG_VERSION:=0.4
 PKG_RELEASE:=1
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)/
@@ -17,22 +17,51 @@ PKG_SOURCE_VERSION:=master
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_BUILD_PARALLEL:=1
 
+
 include $(INCLUDE_DIR)/package.mk
 
 define Package/kadnode
 	SECTION:=net
 	CATEGORY:=Network
 	TITLE:=P2P DNS Server
-	DEPENDS:=+libpthread
+	DEPENDS:=
 	SUBMENU:=IP Addresses and Names
 	URL:=https://github.com/mwarning/KadNode
+	MENU:=1
 endef
 
 define Package/kadnode/description
 	P2P name resolution daemon
 endef
 
-MAKE_FLAGS += FEATURES="cmd dns"
+define Package/kadnode/config
+	source "$(SOURCE)/Config.in"
+endef
+
+FEATURES = cmd
+
+ifeq ($(CONFIG_KADNODE_ENABLE_DNS),y)
+FEATURES += dns
+endif
+
+ifeq ($(CONFIG_KADNODE_ENABLE_WEB),y)
+FEATURES += web
+endif
+
+ifeq ($(CONFIG_KADNODE_ENABLE_UPNP),y)
+FEATURES += upnp
+endif
+
+ifeq ($(CONFIG_KADNODE_ENABLE_NATPMP),y)
+FEATURES += natpmp
+endif
+
+ifeq ($(CONFIG_KADNODE_ENABLE_DEBUG),y)
+FEATURES += debug
+endif
+
+MAKE_FLAGS += FEATURES="$(FEATURES)"
+
 
 define Package/kadnode/install
 	$(INSTALL_DIR) $(1)/usr/bin

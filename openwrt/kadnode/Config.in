@@ -1,0 +1,31 @@
+menu "Configuration"
+	depends on PACKAGE_kadnode
+
+config CONFIG_KADNODE_ENABLE_DNS
+	bool "Enable the local DNS server"
+	depends on PACKAGE_kadnode
+	default y
+
+config CONFIG_KADNODE_ENABLE_WEB
+	bool "Enable the local web interface"
+	depends on PACKAGE_kadnode
+	default n
+
+config CONFIG_KADNODE_ENABLE_UPNP
+	bool "Enable UPnP support to add port forwardings on other routers"
+	depends on PACKAGE_kadnode
+	select PACKAGE_libupnp
+	default n
+
+config CONFIG_KADNODE_ENABLE_NATPMP
+	bool "Enable NAT-PMP support to add port forwardings on other routers"
+	depends on PACKAGE_kadnode
+	select PACKAGE_libnatpmp
+	default n
+
+config CONFIG_KADNODE_ENABLE_DEBUG
+	bool "Build in debug mode"
+	depends on PACKAGE_kadnode
+	default n
+
+endmenu
