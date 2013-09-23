@@ -5,6 +5,7 @@ export CFLAGS=$(shell dpkg-buildflags --get CFLAGS)
 export LDFLAGS=$(shell dpkg-buildflags --get LDFLAGS)
 CFLAGS += $(HARDENING_CFLAGS)
 LDFLAGS += $(HARDENING_LDFLAGS)
+export FEATURES = cmd dns nss web upnp natpmp
 
 %:
 	dh $@ 
