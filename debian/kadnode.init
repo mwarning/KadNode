@@ -17,7 +17,6 @@ DESC="P2P DNS service"
 NAME=kadnode
 PIDFILE=/var/run/$NAME.pid
 DAEMON=/usr/bin/$NAME
-DAEMON_ARGS="--daemon --pidfile $PIDFILE"
 SCRIPTNAME=/etc/init.d/$NAME
 
 # Exit if the package is not installed
@@ -36,8 +35,6 @@ SCRIPTNAME=/etc/init.d/$NAME
 
 
 # Append the hostname if set in /etc/default/kadnode
-DAEMON_ARGS="$DAEMON_ARGS ${hostname:+--value-id '$hostname'} ${BOOTSTRAP_FILE:+--peerfile '$BOOTSTRAP_FILE'}"
-
 
 do_start()
 {
@@ -49,7 +46,9 @@ do_start()
 	start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON --test > /dev/null \
 		|| return 1
 	start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON -- \
-		$DAEMON_ARGS \
+		--daemon --pidfile "$PIDFILE" \
+		${hostname:+--value-id "$hostname"} \
+		${BOOTSTRAP_FILE:+--peerfile "$BOOTSTRAP_FILE"} \
 		|| return 2
 }
 
