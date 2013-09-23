@@ -35,7 +35,11 @@ const char* cmd_usage_str =
 "	import <addr>\n"
 "	export\n"
 "	blacklist <addr>\n"
+#ifdef FWD
 "	list [values|forwardings]\n"
+#else
+"	list [values]\n"
+#endif
 #ifdef DEBUG
 "	debug\n"
 #endif
@@ -194,6 +198,7 @@ int cmd_list_values( REPLY *r ) {
 	return 0;
 }
 
+#ifdef FWD
 int cmd_list_forwardings( REPLY *r ) {
 	struct forwarding_t *item;
 	time_t now;
@@ -217,6 +222,7 @@ int cmd_list_forwardings( REPLY *r ) {
 	r_printf( r, "Found %d items.\n", counter );
 	return 0;
 }
+#endif
 
 int cmd_exec( REPLY * r, int argc, char **argv ) {
 	UCHAR id[SHA_DIGEST_LENGTH];
@@ -346,8 +352,10 @@ int cmd_exec( REPLY * r, int argc, char **argv ) {
 
 		if( match( argv[1], "values" ) ) {
 			rc = cmd_list_values( r );
+#ifdef FWD
 		} else if( match( argv[1], "forwardings" ) ) {
 			rc = cmd_list_forwardings( r );
+#endif
 		} else {
 			r_printf( r ,"Argument is wrong.");
 			rc = 1;
