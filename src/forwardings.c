@@ -62,7 +62,7 @@ void forwardings_debug( int fd ) {
 	item = forwardings.beg;
 	while( item ) {
 		dprintf(
-			fd, " port: %hu, refreshed: %ld min. ago, lifetime: %ld min. remaining\n",
+			fd, " port: %hu, refreshed: %ld min ago, lifetime: %ld min remaining\n",
 			item->port,
 			(item->refreshed == 0) ? (-1) : ((now - item->refreshed) / 60),
 			(item->lifetime == LONG_MAX ) ? (-1) : ((item->lifetime -  now) / 60)

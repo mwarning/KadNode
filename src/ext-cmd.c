@@ -182,7 +182,7 @@ int cmd_list_values( REPLY *r ) {
 	counter = 0;
 	now = time_now_sec();
 	item = values_get();
-	r_printf( r, "id:port | refreshed min. ago | lifetime min. remaining\n");
+	r_printf( r, "id:port | refreshed ago [min] | lifetime remaining [min]\n");
 	while( item ) {
 		r_printf(
 			r, " %s:%hu | %ld | %ld\n",
@@ -207,7 +207,7 @@ int cmd_list_forwardings( REPLY *r ) {
 	counter = 0;
 	now = time_now_sec();
 	item = forwardings_get();
-	r_printf( r, "port | refreshed min. ago | lifetime min. remaining\n");
+	r_printf( r, "port | refreshed ago [min] | lifetime remaining [min]\n");
 	while( item ) {
 		r_printf(
 			r, "%hu | %ld | %ld\n",

@@ -48,7 +48,7 @@ void values_debug( int fd ) {
 	item = values.beg;
 	while( item ) {
 		dprintf(
-			fd, " id: %s, port: %hu, refreshed: %ld min. ago, lifetime: %ld min. remaining\n",
+			fd, " id: %s, port: %hu, refreshed: %ld min ago, lifetime: %ld min remaining\n",
 			str_id( item->value_id, hexbuf ), item->port,
 			(item->refreshed == -1) ? (-1) : ((now - item->refreshed) / 60),
 			(item->lifetime == LONG_MAX) ? (-1) : ((item->lifetime -  now) / 60)
