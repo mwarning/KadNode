@@ -68,6 +68,11 @@ int main( int argc, char **argv ) {
 	/* Drop privileges */
 	unix_dropuid0();
 
+	/* Setup port-forwarding */
+#ifdef FWD
+	forwardings_setup();
+#endif
+
 	/* Setup the Kademlia DHT */
 	kad_setup();
 
@@ -79,11 +84,6 @@ int main( int argc, char **argv ) {
 
 	/* Setup handler to find nodes for bootstrapping */
 	bootstrap_setup();
-
-	/* Setup port-forwarding */
-#ifdef FWD
-	forwardings_setup();
-#endif
 
 	/* Setup interfaces */
 #ifdef DNS
