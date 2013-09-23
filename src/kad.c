@@ -52,6 +52,19 @@ void kad_setup( void ) {
 	}
 }
 
+int kad_count_nodes( void ) {
+	struct bucket *bucket;
+	int count;
+
+	bucket = (gstate->af == AF_INET ) ? buckets : buckets6;
+	count = 0;
+	while( bucket ) {
+		count += bucket->count;
+		bucket = bucket->next;
+	}
+	return count;
+}
+
 #ifdef DEBUG
 
 void kad_debug_value_searches( int fd ) {
@@ -251,11 +264,7 @@ int kad_status( char *buf, int size ) {
 		(gstate->dht_ifce == NULL) ? "<any device>" : gstate->dht_ifce
 	);
 
-	if( gstate->af == AF_INET ) {
-		bprintf( "Nodes: %d (IPv4)\n", count_nodes( buckets ) );
-	} else {
-		bprintf( "Nodes: %d (IPv6)\n", count_nodes( buckets6 ) );
-	}
+	bprintf( "Nodes: %d (%s)\n", kad_count_nodes(), (gstate->af == AF_INET) ? "IPv4" : "IPv6" );
 
 	bprintf( "Storage: %d (max %d), %d peers (max %d per storage)\n",
 		numstorage, DHT_MAX_HASHES, numstorage_peers, DHT_MAX_PEERS );
@@ -267,7 +276,6 @@ int kad_status( char *buf, int size ) {
 
 	return written;
 }
-
 
 int kad_ping( const IP* addr ) {
 	int rc;

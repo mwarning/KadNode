@@ -1,6 +1,4 @@
 
-#define _GNU_SOURCE
-
 #include <netdb.h>
 #include <net/if.h>
 #include <sys/time.h>
@@ -11,7 +9,6 @@
 #include "utils.h"
 #include "conf.h"
 #include "results.h"
-#include "multicast.h"
 
 #include "dht.c"
 #include "dht_wrapper.h"
@@ -21,31 +18,6 @@
 * that contains the event loop and stores
 * the search results.
 */
-
-/* Count all nodes in the given bucket */
-int count_nodes( struct bucket *bucket ) {
-	int count = 0;
-	while( bucket ) {
-		count += bucket->count;
-		bucket = bucket->next;
-	}
-	return count;
-}
-
-/* Check if any nodes are in the bucket */
-int buckets_empty( void ) {
-	struct bucket *bucket;
-
-	bucket = (gstate->af == AF_INET ) ? buckets : buckets6;
-
-	while( bucket ) {
-		if( bucket->count > 0 ) {
-			return 0;
-		}
-		bucket = bucket->next;
-	}
-	return 1;
-}
 
 void dht_lock_init( void ) {
 #ifdef PTHREAD
@@ -63,26 +35,6 @@ void dht_unlock( void ) {
 #ifdef PTHREAD
 	pthread_mutex_unlock( &gstate->dht_mutex );
 #endif
-}
-
-/* Send a ping over multicast to find other nodes */
-void dht_multicast_ping( int sock, IP *addr ) {
-	char addrbuf[FULL_ADDSTRLEN+1];
-
-	if( gstate->disable_multicast == 1 ) {
-		return;
-	}
-
-	if( gstate->mcast_registered == 0 && multicast_join( sock, addr ) ) {
-		gstate->mcast_registered = 1;
-	}
-
-	if( gstate->mcast_registered == 1 && buckets_empty() ) {
-		log_info( "DHT: Send multicast ping to %s", str_addr( addr, addrbuf ) );
-		dht_lock();
-		dht_ping_node( (struct sockaddr *)addr, sizeof(IP) );
-		dht_unlock();
-	}
 }
 
 /* This callback is called when a search result arrives or a search completes */
@@ -111,21 +63,14 @@ void dht_handler( int rc, int sock ) {
     socklen_t fromlen;
 	time_t time_wait = 0;
 
-	/* Send multicast ping */
-	if( gstate->time_mcast <= time_now_sec() ) {
-		dht_multicast_ping( sock, &gstate->mcast_addr );
-
-		/* Ping peers from peerfile, if present */
-		main_import_peers();
-
-		/* Try again in ~5 minutes */
-		gstate->time_mcast = time_add_min( 5 );
-	}
-
 	if( rc > 0 ) {
 		/* Check which socket received the data */
 		fromlen = sizeof(from);
 		rc = recvfrom( sock, buf, sizeof(buf) - 1, 0, (struct sockaddr*) &from, &fromlen );
+
+		if( rc <= 0 || rc >= sizeof(buf) ) {
+			return;
+		}
 
 		/* Kademlia expects the message to be null-terminated. */
 		buf[rc] = '\0';

@@ -28,10 +28,7 @@ As an usage example one would start \fBkadnode \-\-value\-id myname\.p2p\fR to l
 Please be aware that other people might use the same identifier\. It is strongly advised to do additional identification/authentification when an address is used that has been resolved by KadNode\. The DNS/NSS interfaces are only able to return one of these addresses\. In contrast, the web and console interface are able to return all known IP addresses associated with an identifier\.
 .
 .P
-Every entered identifier (e\.g\. \fBmyname\.p2p\fR) will have everything after and including the last dot ignored\. This is because the top level domain is often used to differentiate from classical domain names and to redirect requests to KadNode\. The rest of the string is converted to an 20 byte identifier using the sha1 hashing algorithm\. As an alternative, the hash can be entered directly as a 40 character hexadecimal string\. The string \fBmyname\.p2p\fR is therefore eqivalent to \fBd13b93ea42804188d277c20f7d6e5be2732148b8\fR which is the result of sha1(\'myname\')\. The use of the build\-in hashing algorithm (sha1) can be entirely circumvented this way\.
-.
-.P
-Please note that KadNode does not store any nodes before shutdown\. This task is intended to be taken care of an init script (e\.g\. for Debian or OpenWrt)\.
+Every entered identifier (e\.g\. \fBmyname\.p2p\fR) will have everything after and including the last dot ignored\. This is because the top level domain is often used to differentiate from classical domain names and to redirect requests to KadNode\. The rest of the string is converted to an 20 byte identifier using the SHA1 hashing algorithm\. As an alternative, the hash can be entered directly as a 40 character hexadecimal string\. The string \fBmyname\.p2p\fR is therefore eqivalent to \fBd13b93ea42804188d277c20f7d6e5be2732148b8\fR which is the result of SHA1(\'myname\')\. The use of the build\-in hashing algorithm can be entirely circumvented this way\.
 .
 .SH "INTERFACES"
 .
@@ -51,13 +48,6 @@ A simple web server interface to resolve queries: \fBhttp://localhost:8053/searc
 .
 .P
 All these interfaces listen only for connections from localhost\.
-.
-.SH "DOWNLOADS"
-.
-.IP "\(bu" 4
-https://sourceforge\.net/projects/kadnode/files/
-.
-.IP "" 0
 .
 .SH "OPTIONS"
 .
@@ -81,6 +71,12 @@ The announcement will associate this nodes IP address with this identifier\.
 .
 .br
 This option can occur multiple times\.
+.
+.IP "\(bu" 4
+\fB\-\-peerfile\fR \fIfile\-path\fR
+.
+.br
+Import peers for bootstrapping and write good peers to this file on shutdown\.
 .
 .IP "\(bu" 4
 \fB\-\-user\fR \fIname\fR
@@ -110,13 +106,19 @@ Bind to this specific interface\.
 Send pings to this multicast address as long no nodes were found\.
 .
 .br
-Default: 239\.192\.202\.7 / ff08:ca:07::
+Default: 239\.192\.202\.7:6771 / [ff08:ca:07::]:6771
 .
 .IP "\(bu" 4
-\fB\-\-disable\-mcast\fR
+\fB\-\-disable\-forwarding\fR
 .
 .br
-Disable multicast\.
+Disable UPnP/NAT\-PMP to forward router ports\.
+.
+.IP "\(bu" 4
+\fB\-\-disable\-multicast\fR
+.
+.br
+Disable multicast to discover local nodes\.
 .
 .IP "\(bu" 4
 \fB\-\-daemon\fR
@@ -214,15 +216,6 @@ Start a search for nodes closest to the given identifier id\.
 .
 .br
 Lookup the IP addresses of all nodes that claim to satisfy the identifier\.
-.
-.br
-The lookup is performed on the current search results\.
-.
-.IP "\(bu" 4
-\fBlookup_node\fR \fIid\fR
-.
-.br
-Lookup the IP address of a node that has identifier id\.
 .
 .br
 The lookup is performed on the current search results\.

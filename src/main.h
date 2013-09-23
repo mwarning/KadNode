@@ -11,6 +11,7 @@
 /* Default addresses and ports */
 #define DHT_ADDR4_MCAST "239.192.202.7"
 #define DHT_ADDR6_MCAST "ff08:ca:07::"
+#define DHT_PORT_MCAST "6771"
 #define DHT_ADDR4 "0.0.0.0"
 #define DHT_ADDR6 "::"
 #define DHT_PORT "6881"
@@ -27,7 +28,5 @@ typedef unsigned char UCHAR;
 typedef struct sockaddr_storage IP;
 typedef struct sockaddr_in IP4;
 typedef struct sockaddr_in6 IP6;
-
-void main_import_peers( void );
 
 #endif /* _MAIN_H_ */

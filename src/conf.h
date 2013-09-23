@@ -50,14 +50,7 @@ struct obj_gstate {
 	char *dht_ifce;
 
 	/* DHT multicast address for bootstrapping */
-	char *mcast_addr_str;
-	IP mcast_addr;
-
-	/* Indicates if the multicast addresses has been registered */
-	int mcast_registered;
-
-	/* Next time to perform a multicast ping */
-	time_t time_mcast;
+	char *mcast_addr;
 
 	/* Next time to do DHT maintenance */
 	time_t time_dht_maintenance;

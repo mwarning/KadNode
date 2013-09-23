@@ -101,7 +101,7 @@ void conf_init() {
 
 	id_random( gstate->node_id, SHA_DIGEST_LENGTH );
 
-	gstate->mcast_addr_str = NULL;
+	gstate->mcast_addr = NULL;
 	gstate->is_running = 1;
 
 #ifdef DEBUG
@@ -133,6 +133,7 @@ void conf_init() {
 void conf_check() {
 	char hexbuf[HEX_LEN+1];
 	char addrbuf[FULL_ADDSTRLEN+1];
+	IP mcast_addr;
 	UCHAR octet;
 
 	log_info( "Starting KadNode v"MAIN_VERSION );
@@ -159,36 +160,36 @@ void conf_check() {
 			log_err( "Invalid verbosity level." );
 	}
 
-	if( gstate->peerfile )  {
-		log_info( "Peerfile: %s", gstate->peerfile );
-	}
+	log_info( "Peerfile: %s", gstate->peerfile ? gstate->peerfile : "None" );
 
-	if( gstate->mcast_addr_str == NULL ) {
+	if( gstate->mcast_addr == NULL ) {
 		/* Set default multicast address string */
 		if( gstate->af == AF_INET ) {
-			gstate->mcast_addr_str = strdup( DHT_ADDR4_MCAST );
+			gstate->mcast_addr = strdup( DHT_ADDR4_MCAST );
 		} else {
-			gstate->mcast_addr_str = strdup( DHT_ADDR6_MCAST );
+			gstate->mcast_addr = strdup( DHT_ADDR6_MCAST );
 		}
 	}
 
 	/* Parse multicast address string */
-	if( addr_parse( &gstate->mcast_addr, gstate->mcast_addr_str, gstate->dht_port, gstate->af ) != 0 ) {
+	if( addr_parse( &mcast_addr, gstate->mcast_addr, DHT_PORT_MCAST, gstate->af ) != 0 ) {
 		log_err( "CFG: Failed to parse IP address for '%s'.", gstate->mcast_addr );
 	}
 
 	/* Verifiy multicast address */
 	if( gstate->af == AF_INET ) {
-		octet = ((UCHAR *) &((IP4 *)&gstate->mcast_addr)->sin_addr)[0];
+		octet = ((UCHAR *) &((IP4 *)&mcast_addr)->sin_addr)[0];
 		if( octet != 224 && octet != 239 ) {
-			log_err( "CFG: Multicast address expected: %s", str_addr( &gstate->mcast_addr, addrbuf ) );
+			log_err( "CFG: Multicast address expected: %s", str_addr( &mcast_addr, addrbuf ) );
 		}
 	} else {
-		octet = ((UCHAR *)&((IP6 *)&gstate->mcast_addr)->sin6_addr)[0];
+		octet = ((UCHAR *)&((IP6 *)&mcast_addr)->sin6_addr)[0];
 		if( octet != 0xFF ) {
-			log_err( "CFG: Multicast address expected: %s", str_addr( &gstate->mcast_addr, addrbuf ) );
+			log_err( "CFG: Multicast address expected: %s", str_addr( &mcast_addr, addrbuf ) );
 		}
 	}
+
+	log_info("Multicast: %s", (gstate->disable_multicast == 0) ? str_addr( &mcast_addr, addrbuf ) : "Disabled" );
 
 	/* Store startup time */
 	gettimeofday( &gstate->time_now, NULL );
@@ -201,7 +202,7 @@ void conf_free() {
 	free( gstate->pidfile );
 	free( gstate->dht_port );
 	free( gstate->dht_ifce );
-	free( gstate->mcast_addr_str );
+	free( gstate->mcast_addr );
 
 #ifdef CMD
 	free( gstate->cmd_port );
@@ -316,7 +317,7 @@ void conf_handle( char *var, char *val ) {
 	} else if( match( var, "--port" ) ) {
 		conf_str( var, &gstate->dht_port, val );
 	} else if( match( var, "--mcast-addr" ) ) {
-		conf_str( var, &gstate->mcast_addr_str, val );
+		conf_str( var, &gstate->mcast_addr, val );
 	} else if( match( var, "--disable-multicast" ) ) {
 		if( val != NULL ) {
 			conf_no_arg_expected( var );

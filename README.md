@@ -70,7 +70,7 @@ All these interfaces listen only for connections from localhost.
     This option can occur multiple times.
 
   * `--peerfile` *file-path*  
-    Import/Export files from and to this file.
+    Import peers for bootstrapping and write good peers to this file on shutdown.
 
   * `--user` *name*  
     Change the UUID after start.
@@ -84,7 +84,7 @@ All these interfaces listen only for connections from localhost.
 
   * `--mcast-addr` *address*  
     Send pings to this multicast address as long no nodes were found.  
-    Default: 239.192.202.7 / ff08:ca:07::
+    Default: 239.192.202.7:6771 / [ff08:ca:07::]:6771
 
   * `--disable-forwarding`  
     Disable UPnP/NAT-PMP to forward router ports.

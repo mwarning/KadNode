@@ -33,6 +33,9 @@ int kad_export_nodes( IP addr_array[], int *addr_num );
 /* Print status information */
 int kad_status( char *buf, int len );
 
+/* Count all nodes in the given bucket */
+int kad_count_nodes( void );
+
 #ifdef DEBUG
 /* Print DHT data structures */
 void kad_debug( int fd );

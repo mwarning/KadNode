@@ -8,7 +8,9 @@ kadnode (0.4) unstable; urgency=low
   * remove lookup_node, it is not really helpful but confusing
   * fix broken node export on command line
   * add --peerfile option to import/export peers
-    on startup/shutdown from a file
+    for bootstrapping and to save good peers on shutdown
+  * decouple local multicast boostrapping from DHT and
+    exit multicast group when it becomes too crowded
 
  -- mwarning <moritzwarning@web.de>  Mon, 16 Sep 2013 00:38:34 +0200
 
