@@ -407,7 +407,7 @@ int kad_export_nodes( IP addr_array[], int *num ) {
 		memcpy( &addr_array[i], &addr4[i], sizeof(IP4) );
 	}
 
-	/* store number of nodes we have actually found */
+	/* Store number of nodes we have actually found */
 	*num = count;
 
 	return 0;
