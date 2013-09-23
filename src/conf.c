@@ -264,7 +264,6 @@ void conf_add_value( char *var, char *val ) {
 	/* Add new value */
 	id_compute( value_id, val );
 
-	log_info( "CFG: Add value %s:%d (based on '%s')", str_id( value_id, hexbuf ), port, val );
 	values_add( value_id, port, LONG_MAX );
 #ifdef FWD
 	forwardings_add( port, LONG_MAX );
