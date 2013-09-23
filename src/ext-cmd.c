@@ -357,7 +357,7 @@ int cmd_exec( REPLY * r, int argc, char **argv ) {
 			rc = cmd_list_forwardings( r );
 #endif
 		} else {
-			r_printf( r ,"Argument is wrong.");
+			r_printf( r ,"Argument is wrong.\n");
 			rc = 1;
 		}
 
