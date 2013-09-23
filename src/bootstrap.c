@@ -274,7 +274,7 @@ void bootstrap_handle( int rc, int sock ) {
 		if( kad_count_nodes() == 0 ) {
 			/* Join multicast group if possible */
 			if( mcast_registered == 0 && multicast_join( sock, &mcast_addr ) ) {
-				log_warn( "BOOT: No peers known. Joined multicast group.\n" );
+				log_warn( "BOOT: No peers known. Joined multicast group." );
 				mcast_registered = 1;
 			}
 
@@ -313,7 +313,7 @@ void bootstrap_handle( int rc, int sock ) {
 		if( packet_limit < 0 ) {
 			/* Too much traffic - leave multicast group for now */
 			if( mcast_registered == 1 && multicast_leave( sock, &mcast_addr ) ) {
-				log_warn( "BOOT: Too much traffic. Left multicast group.\n" );
+				log_warn( "BOOT: Too much traffic. Left multicast group." );
 				mcast_registered = 0;
 			}
 			return;
