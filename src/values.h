@@ -9,7 +9,17 @@
 * using the DHT until the lifetime expires.
 */
 
+struct value_t {
+	UCHAR value_id[SHA_DIGEST_LENGTH];
+	int port;
+	time_t lifetime; /* keep entry until lifetime expires */
+	time_t refreshed; /* last time the entry was refreshed */
+	struct value_t *next;
+};
+
 void values_setup( void );
+
+struct value_t* values_get( void );
 
 /* List all entries */
 void values_debug( int fd );

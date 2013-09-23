@@ -19,7 +19,16 @@ enum {
 	PF_ERROR = -1
 };
 
+struct forwarding_t {
+	int port; /* the port to be forwarded on the router */
+	time_t lifetime; /* keep entry until lifetime expires */
+	time_t refreshed; /* last time the entry was refreshed */
+	struct forwarding_t *next;
+};
+
 void forwardings_setup( void );
+
+struct forwarding_t *forwardings_get( void );
 
 /* List all entries */
 void forwardings_debug( int fd );

@@ -12,23 +12,19 @@
 #include "values.h"
 
 
-struct announcement_t {
-	UCHAR value_id[SHA_DIGEST_LENGTH];
-	int port;
-	time_t lifetime; /* keep entry until lifetime expires */
-	time_t refreshed; /* last time the entry was refreshed */
-	struct announcement_t *next;
-};
-
 struct values_t {
 	time_t retry;
-	struct announcement_t *beg;
+	struct value_t *beg;
 };
 
 struct values_t values = { .retry = 0, .beg = NULL };
 
+struct value_t* values_get( void ) {
+	return values.beg;
+}
+
 int values_count( void ) {
-	struct announcement_t *item;
+	struct value_t *item;
 	int count;
 
 	count = 0;
@@ -43,7 +39,7 @@ int values_count( void ) {
 
 void values_debug( int fd ) {
 	char hexbuf[HEX_LEN+1];
-	struct announcement_t *item;
+	struct value_t *item;
 	time_t now;
 	int counter;
 
@@ -65,8 +61,8 @@ void values_debug( int fd ) {
 }
 
 void values_add( const UCHAR *value_id, USHORT port, time_t lifetime ) {
-	struct announcement_t *cur;
-	struct announcement_t *new;
+	struct value_t *cur;
+	struct value_t *new;
 
 	if( port == 0 ) {
 		log_err("Announces: Port 0 is invalid.");
@@ -81,7 +77,7 @@ void values_add( const UCHAR *value_id, USHORT port, time_t lifetime ) {
 		cur = cur->next;
 	}
 
-	new = (struct announcement_t*) malloc( sizeof(struct announcement_t) );
+	new = (struct value_t*) malloc( sizeof(struct value_t) );
 	memcpy( &new->value_id, value_id, SHA_DIGEST_LENGTH);
 	new->port = port;
 	new->lifetime = lifetime;
@@ -93,9 +89,9 @@ void values_add( const UCHAR *value_id, USHORT port, time_t lifetime ) {
 }
 
 /* Remove a port from the list - internal use only */
-void values_remove( struct announcement_t *item ) {
-	struct announcement_t *pre;
-	struct announcement_t *cur;
+void values_remove( struct value_t *item ) {
+	struct value_t *pre;
+	struct value_t *cur;
 
 	pre = NULL;
 	cur = values.beg;
@@ -115,7 +111,7 @@ void values_remove( struct announcement_t *item ) {
 }
 
 void values_handle( int __rc, int __sock ) {
-	struct announcement_t *item;
+	struct value_t *item;
 	time_t now;
 
 	now = time_now_sec();

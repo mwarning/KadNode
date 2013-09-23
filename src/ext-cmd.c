@@ -35,6 +35,7 @@ const char* cmd_usage_str =
 "	import <addr>\n"
 "	export\n"
 "	blacklist <addr>\n"
+"	list [values|forwardings]\n"
 #ifdef DEBUG
 "	debug\n"
 #endif
@@ -168,6 +169,55 @@ int cmd_export( REPLY *r ) {
 	return 0;
 }
 
+int cmd_list_values( REPLY *r ) {
+	struct value_t *item;
+	char hexbuf[HEX_LEN+1];
+	time_t now;
+	int counter;
+
+	counter = 0;
+	now = time_now_sec();
+	item = values_get();
+	r_printf( r, "id:port | refreshed min. ago | lifetime min. remaining\n");
+	while( item ) {
+		r_printf(
+			r, " %s:%hu | %ld | %ld\n",
+			str_id( item->value_id, hexbuf ), item->port,
+			(item->refreshed == -1) ? (-1) : ((now - item->refreshed) / 60),
+			(item->lifetime == LONG_MAX) ? (-1) : ((item->lifetime -  now) / 60)
+		);
+		counter++;
+		item = item->next;
+	}
+
+	r_printf( r, "Found %d items.\n", counter );
+	return 0;
+}
+
+int cmd_list_forwardings( REPLY *r ) {
+	struct forwarding_t *item;
+	time_t now;
+	int counter;
+
+	counter = 0;
+	now = time_now_sec();
+	item = forwardings_get();
+	r_printf( r, "port | refreshed min. ago | lifetime min. remaining\n");
+	while( item ) {
+		r_printf(
+			r, "%hu | %ld | %ld\n",
+			item->port,
+			(item->refreshed == 0) ? (-1) : ((now - item->refreshed) / 60),
+			(item->lifetime == LONG_MAX ) ? (-1) : ((item->lifetime -  now) / 60)
+		);
+		counter++;
+		item = item->next;
+	}
+
+	r_printf( r, "Found %d items.\n", counter );
+	return 0;
+}
+
 int cmd_exec( REPLY * r, int argc, char **argv ) {
 	UCHAR id[SHA_DIGEST_LENGTH];
 	char addrbuf[FULL_ADDSTRLEN+1];
@@ -291,6 +341,17 @@ int cmd_exec( REPLY * r, int argc, char **argv ) {
 	} else if( match( argv[0], "export" ) && argc == 1 ) {
 
 		rc = cmd_export( r );
+
+	} else if( match( argv[0], "list" ) && argc == 2 ) {
+
+		if( match( argv[1], "values" ) ) {
+			rc = cmd_list_values( r );
+		} else if( match( argv[1], "forwardings" ) ) {
+			rc = cmd_list_forwardings( r );
+		} else {
+			r_printf( r ,"Argument is wrong.");
+			rc = 1;
+		}
 
 	} else if( match( argv[0], "shutdown" ) && argc == 1 ) {
 

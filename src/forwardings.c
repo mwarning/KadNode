@@ -18,13 +18,6 @@
 #endif
 
 
-struct forwarding_t {
-	int port; /* the port to be forwarded on the router */
-	time_t lifetime; /* keep entry until lifetime expires */
-	time_t refreshed; /* last time the entry was refreshed */
-	struct forwarding_t *next;
-};
-
 struct forwardings_t {
 	time_t retry;
 	struct forwarding_t *beg;
@@ -40,6 +33,10 @@ struct upnp_handle_t *upnp = NULL;
 #endif
 
 struct forwardings_t forwardings = { .retry = 0, .beg = NULL, .cur = NULL };
+
+struct forwarding_t *forwardings_get( void ) {
+	return forwardings.beg;
+}
 
 int forwardings_count( void ) {
 	struct forwarding_t *item;
