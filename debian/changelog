@@ -11,8 +11,12 @@ kadnode (0.4) unstable; urgency=low
     for bootstrapping and to save good peers on shutdown
   * decouple local multicast boostrapping from DHT and
     exit multicast group when it becomes too crowded
+  * add --disable-multicast
+  * fix argument quoting in Debian init script
+  * add list command to command line to list value ids that will be
+    announced and to list port forwardings
 
- -- mwarning <moritzwarning@web.de>  Mon, 16 Sep 2013 00:38:34 +0200
+ -- mwarning <moritzwarning@web.de>  Mon, 23 Sep 2013 21:41:24 +0200
 
 kadnode (0.3) unstable; urgency=low
 
