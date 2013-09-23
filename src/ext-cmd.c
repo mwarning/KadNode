@@ -274,9 +274,9 @@ int cmd_exec( REPLY * r, int argc, char **argv ) {
 			forwardings_add( port,  lifetime);
 #endif
 			if( minutes > -1 ) {
-				r_printf( r ,"Announce resource %s on port %d for %d minutes.\n", str_id( id, hexbuf ), port, minutes );
+				r_printf( r ,"Announce value id %s on port %d for %d minutes.\n", str_id( id, hexbuf ), port, minutes );
 			} else {
-				r_printf( r ,"Announce resource %s on port %d for entire run time.\n", str_id( id, hexbuf ), port );
+				r_printf( r ,"Announce value id %s on port %d for entire run time.\n", str_id( id, hexbuf ), port );
 			}
 		}
 #ifdef DEBUG
