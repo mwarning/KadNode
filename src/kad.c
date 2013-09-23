@@ -384,8 +384,8 @@ int kad_blacklist( const IP* addr ) {
 }
 
 int kad_export_nodes( IP addr_array[], int *num ) {
-	IP4 addr4[32];
-	IP6 addr6[32];
+	IP4 addr4[64];
+	IP6 addr6[64];
 	int num4;
 	int num6;
 	int i, count;
