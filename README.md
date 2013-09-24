@@ -156,7 +156,7 @@ All these interfaces listen only for connections from localhost.
   * `export`  
     Print a few good nodes.
 
-  * `list [values|forwardings]`  
+  * `list` [`values`|`forwardings`]  
     List announced value identifiers or port forwardings via UPnP/NAT_PMP.
 
   * `blacklist` *addr*  
