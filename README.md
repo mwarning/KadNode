@@ -26,8 +26,8 @@ identifiers and send announcements.
 As an usage example one would start `kadnode --value-id myname.p2p` to let KadNode
 announce every 30 minutes, that the IP address of the running KadNode instance
 is associated with the identifier 'myname.p2p'.
-A call like `kadnode-ctl import bttracker.debian.org` can be used to help KadNode to bootstrap
-into an existing network.
+A call as `kadnode-ctl import bttracker.debian.org` can be used to help KadNode to bootstrap
+into an existing network. Check `kadnode-ctl status` to see the rising number of known nodes.
 To announce an identifier just once, use `kadnode-ctl announce myname`.
 Any announcement will be dropped by other KadNode instances after 32 minutes and
 therefore need to be refreshed around every 30 minutes.
@@ -127,7 +127,7 @@ All these interfaces listen only for connections from localhost.
 **kadnode-ctl** allows to control KadNode from the command line.
 
   * `-p` *port*  
-    Connect to the local KadNode console on this interface (Default: 1700).
+    The port used to connect to the command line of a local KadNode instance (Default: 1700).
 
   * `-h`  
     Print this help.
@@ -157,7 +157,7 @@ All these interfaces listen only for connections from localhost.
     Print a few good nodes.
 
   * `list` [`values`|`forwardings`]  
-    List announced value identifiers or port forwardings via UPnP/NAT_PMP.
+    List announced value identifiers or port forwardings via UPnP/NAT-PMP.
 
   * `blacklist` *addr*  
     Blacklist a specifc IP address.
