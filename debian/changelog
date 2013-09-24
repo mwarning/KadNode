@@ -4,16 +4,16 @@ kadnode (0.4) unstable; urgency=low
   * Change default DHT port to 6881
   * Add optional support for UPNP/NAT-PMP to add router forwardings
     for KadNode announcements where port > 1
-  * kadctl allows to specify the time in minutes a value id is to be announced
-  * remove lookup_node, it is not really helpful but confusing
-  * fix broken node export on command line
-  * add --peerfile option to import/export peers
+  * Now kadctl allows to specify the time in minutes a value id is to be announced
+  * Remove lookup_node, it is not really helpful but confusing
+  * Fix broken node export on command line
+  * Add --peerfile option to import/export peers
     for bootstrapping and to save good peers on shutdown
-  * decouple local multicast boostrapping from DHT and
+  * Decouple local multicast boostrapping from DHT and
     exit multicast group when it becomes too crowded
-  * add --disable-multicast
-  * fix argument quoting in Debian init script
-  * add list command to command line to list value ids that will be
+  * Add --disable-multicast
+  * Fix argument quoting in Debian init script
+  * Add list command to command line to list value ids that will be
     announced and to list port forwardings
 
  -- mwarning <moritzwarning@web.de>  Mon, 23 Sep 2013 21:41:24 +0200
