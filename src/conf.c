@@ -240,7 +240,6 @@ void conf_str( const char *var, char **dst, const char *src ) {
 
 void conf_add_value( char *var, char *val ) {
 	UCHAR value_id[SHA_DIGEST_LENGTH];
-	char hexbuf[HEX_LEN+1];
 	unsigned short port;
 	char *delim;
 
