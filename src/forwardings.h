@@ -37,7 +37,7 @@ void forwardings_debug( int fd );
 int forwardings_count( void );
 
 /* Add a port forwarding from external port to the same local port. */
-void forwardings_add( USHORT port, time_t host_lifetime );
+void forwardings_add( int port, time_t host_lifetime );
 
 
 #endif /* _FORWARDINGs_H_ */

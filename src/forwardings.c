@@ -74,11 +74,11 @@ void forwardings_debug( int fd ) {
 	dprintf( fd, " Found %d forwardings.\n", counter );
 }
 
-void forwardings_add( USHORT port, time_t lifetime ) {
+void forwardings_add( int port, time_t lifetime ) {
 	struct forwarding_t *cur;
 	struct forwarding_t *new;
 
-	if( port <= 1 ) {
+	if( port <= 1 || port > 65535 ) {
 		return;
 	}
 
@@ -235,7 +235,7 @@ void forwardings_setup( void ) {
 #endif
 
 	/* Add a port forwarding for the DHT for the entire run time */
-	USHORT port = atoi( gstate->dht_port );
+	int port = atoi( gstate->dht_port );
 	forwardings_add( port, LONG_MAX );
 
 	/* Cause the callback to be called in intervals */
