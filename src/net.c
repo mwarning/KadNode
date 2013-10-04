@@ -39,6 +39,7 @@ void net_add_handler( int fd, net_callback *callback ) {
 
 	if( numtasks >= 16 ) {
 		log_err( "NET: Too many file descriptors registered." );
+		return;
 	}
 
 	tasks[numtasks].fd = fd;
@@ -184,7 +185,7 @@ void net_loop( void ) {
 			if( errno == EINTR ) {
 				continue;
 			} else {
-				log_err( "NET: Error using select: %s\n", strerror( errno ) );
+				log_err( "NET: Error using select: %s", strerror( errno ) );
 				return;
 			}
 		}
