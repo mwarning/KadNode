@@ -1,0 +1,18 @@
+
+post_install() {
+	#add kadnode entry to NSS config file
+	local file="${DESTDIR}/etc/nsswitch.conf"
+	if [ -f "$file" ]; then
+		cp -f $file $file.dpkg-old
+		sed -e 's/^hosts:\s*files \(kadnode\)\?\s*/hosts:          files kadnode /' $file.dpkg-old > $file
+	fi
+}
+
+post_remove() {
+	#remove kadnode entry from NSS config file
+	local file="${DESTDIR}/etc/nsswitch.conf"
+	if [ -f "$file" ]; then
+		cp -f $file $file.dpkg-old
+		sed -e 's/^hosts:\s*files kadnode /hosts:          files /' $file.dpkg-old > $file
+	fi
+}

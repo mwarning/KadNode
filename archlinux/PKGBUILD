@@ -1,0 +1,40 @@
+# Maintainer: Moritz Warning <moritzwarning@web.de>
+
+pkgname=kadnode-git
+pkgver=1
+pkgrel=1
+pkgdesc="A P2P based DNS service using the Kademlia Distributed Hash Table (DHT)"
+arch=('x86_64' 'i686')
+url="http://github.com/mwarning/KadNode"
+license=('MIT')
+depends=('pacman')
+makedepends=('git')
+source=("$pkgname"::git://github.com/mwarning/KadNode.git)
+md5sums=('SKIP')
+install="kadnode.install"
+
+
+pkgver() {
+	cd "$pkgname"
+	# Use the tag of the last commit
+	local ver="$(git describe --long)"
+	printf "%s" "${ver//-/.}"
+}
+
+build() {
+	cd "$pkgname"
+	make FEATURES="cmd nss"
+}
+
+package() {
+	cd "$pkgname"
+	msg "Installing files..."
+
+	mkdir -p "${pkgdir}/usr/bin"
+	mkdir -p "${pkgdir}/lib"
+	mkdir -p "${pkgdir}/etc"
+
+	cp build/kadnode ${pkgdir}/usr/bin/
+	cp build/kadnode-ctl ${pkgdir}/usr/bin/
+	cp build/libnss_kadnode.so.2 ${pkgdir}/lib/
+}
