@@ -29,8 +29,8 @@ is associated with the identifier 'myname.p2p'.
 A call as `kadnode-ctl import bttracker.debian.org` can be used to help KadNode to bootstrap
 into an existing network. Check `kadnode-ctl status` to see the rising number of known nodes.
 To announce an identifier just once, use `kadnode-ctl announce myname`.
-Any announcement will be dropped by other KadNode instances after 32 minutes and
-therefore need to be refreshed around every 30 minutes.
+Any announcement will be dropped by other Kademlia DHT instances (such as Transmission)
+after 32 minutes and therefore need to be refreshed around every 30 minutes.
 
 Please be aware that other people might use the same identifier.
 It is strongly advised to do additional identification/authentification
@@ -157,7 +157,7 @@ All these interfaces listen only for connections from localhost.
     Print a few good nodes.
 
   * `list` [`values`|`forwardings`]  
-    List announced value identifiers or port forwardings via UPnP/NAT-PMP.
+    List announced value identifiers or UPnP/NAT-PMP port forwardings via.
 
   * `blacklist` *addr*  
     Blacklist a specifc IP address.
@@ -177,7 +177,11 @@ If the interface cannot be reached then the interface might be disabled (port se
 or not compiled in (check `kadnode --version`).
 In case the IPv6 entry for localhost is not used or missing, try `[::1]` instead of `localhost`.
 
-## LIMITATIONS
+## NOTES
+
+  * This is not about traditional DNS. Everybody can announce everything. You need to decide which  
+  of the resolved IP addresses you trust. Be random about the identifiers you announce. When retrieved  
+  IP addresses do not deliver/verify for you, then you should blacklist those IP addresses.
 
   * Blacklisted addreses are stored in a LRU cache of maximal 10 entries.
 
