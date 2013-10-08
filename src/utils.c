@@ -160,7 +160,7 @@ char* str_id( const UCHAR *in, char *buf ) {
 	return buf;
 }
 
-char* str_addr( IP *addr, char *addrbuf ) {
+char* str_addr( const IP *addr, char *addrbuf ) {
 	char buf[INET6_ADDRSTRLEN+1];
 	unsigned short port;
 
@@ -182,12 +182,12 @@ char* str_addr( IP *addr, char *addrbuf ) {
 	return addrbuf;
 }
 
-char* str_addr6( IP6 *addr, char *addrbuf ) {
-	return str_addr( (IP *)addr, addrbuf );
+char* str_addr6( const IP6 *addr, char *addrbuf ) {
+	return str_addr( (const IP *)addr, addrbuf );
 }
 
-char* str_addr4( IP4 *addr, char *addrbuf ) {
-	return str_addr( (IP *)addr, addrbuf );
+char* str_addr4( const IP4 *addr, char *addrbuf ) {
+	return str_addr( (const IP *)addr, addrbuf );
 }
 
 int addr_port( const IP *addr ) {

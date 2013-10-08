@@ -30,9 +30,9 @@ int str_isZero( const char* str );
 void str_toLower( char* str, int size );
 
 char *str_id( const UCHAR *in, char *idbuf );
-char *str_addr( IP *addr, char *addrbuf );
-char *str_addr4( IP4 *addr, char *addrbuf );
-char *str_addr6( IP6 *addr, char *addrbuf );
+char *str_addr( const IP *addr, char *addrbuf );
+char *str_addr4( const IP4 *addr, char *addrbuf );
+char *str_addr6( const IP6 *addr, char *addrbuf );
 
 int addr_parse( IP *addr, const char *addr_str, const char *port_str, int af );
 int addr_parse_full( IP *addr, const char *full_addr_str, const char* default_port, int af );
