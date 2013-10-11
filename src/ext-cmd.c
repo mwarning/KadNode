@@ -252,7 +252,7 @@ int cmd_exec( REPLY * r, int argc, char **argv ) {
 		rc = kad_lookup_node( id, &addrs[0] );
 		if( rc == 0 ) {
 			r_printf( r, "%s\n", str_addr( &addrs[0], addrbuf ) );
-		} else if( rc == 1 ) {
+		} else if( rc == -1 ) {
 			r_printf( r ,"No search found.\n" );
 			rc = 1;
 		} else {
@@ -274,7 +274,7 @@ int cmd_exec( REPLY * r, int argc, char **argv ) {
 			for( i = 0; i < addrs_n; ++i ) {
 				r_printf( r, "%s\n", str_addr( &addrs[i], addrbuf ) );
 			}
-		} else if( rc == 2 ) {
+		} else if( rc == -1 ) {
 			r_printf( r ,"Search started - try again.\n" );
 			rc = 1;
 		} else {

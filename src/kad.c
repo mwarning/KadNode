@@ -405,7 +405,7 @@ int kad_ping( const IP* addr ) {
 	rc = dht_ping_node( (struct sockaddr *)addr, addr_len( addr ) );
 	dht_unlock();
 
-	return (rc < 0);
+	return (rc < 0) ? -1 : 0;
 }
 
 /*
@@ -415,7 +415,7 @@ int kad_ping( const IP* addr ) {
 int kad_announce( const UCHAR *id, int port ) {
 
 	if( port < 1 || port > 65535 ) {
-		return 1;
+		return -1;
 	}
 
 	dht_lock();
@@ -442,11 +442,11 @@ int kad_lookup_value( const UCHAR* id, IP addr_array[], int *addr_num ) {
 		results_insert( id, gstate->af );
 		dht_search( id, 0, gstate->af, dht_callback_func, NULL );
 		dht_unlock();
-		rc = 2;
+		rc = -1;
 	} else {
 		*addr_num = MIN(vs->numaddrs, *addr_num);
 		memcpy( addr_array, vs->addrs, *addr_num * sizeof(IP) );
-		rc = (*addr_num == 0) ? 1 : 0;
+		rc = (*addr_num == 0) ? -2 : 0;
 	}
 
 	dht_unlock();
@@ -464,7 +464,7 @@ int kad_lookup_node( const UCHAR* id, IP *addr_return ) {
 
 	dht_lock();
 
-	rc = 1;
+	rc = -1;
 	sr = searches;
     while( sr ) {
 		if( sr->af == gstate->af && id_equal( sr->id, id ) ) {
