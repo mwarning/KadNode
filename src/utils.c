@@ -206,6 +206,10 @@ int addr_len( const IP *addr ) {
 	}
 }
 
+/*
+* Resolve an IP address.
+* The port must be specified separately.
+*/
 int addr_parse( IP *addr, const char *addr_str, const char *port_str, int af ) {
 	struct addrinfo hints;
 	struct addrinfo *info = NULL;
@@ -243,13 +247,10 @@ int addr_parse( IP *addr, const char *addr_str, const char *port_str, int af ) {
 * An address can also be a domain name.
 * A port can also be a service  (e.g. 'www').
 *
-* "<ipv4_addr>"
-* "<ipv6_addr>"
-* "<ipv4_addr>:<port>"
-* "[<ipv4_addr>]"
-* "[<ipv6_addr>]"
-* "[<ipv4_addr>]:<port>"
-* "[<ipv6_addr>]:<port>"
+* "<address>"
+* "<ipv4_address>:<port>"
+* "[<address>]"
+* "[<address>]:<port>"
 */
 int addr_parse_full( IP *addr, const char *full_addr_str, const char* default_port, int af ) {
 	char addr_buf[256];
