@@ -341,14 +341,11 @@ UCHAR *dns_code_response( struct message *msg, UCHAR *buffer ) {
 int dns_lookup( UCHAR *node_id, IP *node_addr ) {
 	int n;
 
-	/* Check if we know that node already. */
+	/* Start lookup for one address */
 	n = 1;
 	if( kad_lookup_value( node_id, node_addr, &n ) == 0 ) {
 		return 0;
 	}
-
-	/* Start find process */
-	kad_search( node_id );
 
 	return 1;
 }

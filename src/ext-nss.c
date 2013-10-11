@@ -27,11 +27,9 @@ void nss_lookup( int sock, IP *clientaddr, UCHAR *id ) {
 	IP addr;
 	int n;
 
-	/* Check if we know that node already. */
+	/* Lookup id. Starts search when not already started. */
 	n = 1;
 	if( kad_lookup_value( id, &addr, &n ) != 0 ) {
-		/* Start find process */
-		kad_search( id );
 		log_debug( "NSS: Node not found; starting search." );
 		return;
 	}

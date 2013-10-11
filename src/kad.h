@@ -12,18 +12,15 @@ int kad_ping( const IP *addr );
 /* Blacklist a specific address */
 int kad_blacklist( const IP* addr );
 
-/* Start a search for a node id */
-int kad_search( const UCHAR *id );
-
 /*
 * Lookup the address of the node whose node id matches id.
-* The Lookup will be performed on the search results.
+* The lookup will be performed on the results of kad_lookup_value().
 */
 int kad_lookup_node( const UCHAR* id, IP *addr_return );
 
 /*
 * Lookup the addresses of the nodes who have announced value id.
-* The Lookup will be performed on the search results.
+* The first call will start the search.
 */
 int kad_lookup_value( const UCHAR* id, IP addr_array[], int *addr_num );
 

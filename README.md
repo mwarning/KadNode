@@ -52,10 +52,10 @@ circumvented this way.
 ## INTERFACES
 
   * An interactive shell to issue queries and manage the DHT. Useful for shell scripts:
-  `kadnode-ctl search myname.p2p`
+  `kadnode-ctl lookup myname.p2p`
   * Name Service Switch (NSS) support through /etc/nsswitch.conf.
   * A simple DNS server interface that can be used like a local upstream DNS server.
-  * A simple web server interface to resolve queries: `http://localhost:8053/search?foo.p2p`
+  * A simple web server interface to resolve queries: `http://localhost:8053/lookup?foo.p2p`
 
 All these interfaces listen only for connections from localhost.
 
@@ -137,12 +137,9 @@ All these interfaces listen only for connections from localhost.
   * `status`  
     Print the node id, the number of known nodes / searches / stored hashes and more.
 
-  * `search` *id*  
-    Start a search for nodes closest to the given identifier id.
-
   * `lookup` *id*  
     Lookup the IP addresses of all nodes that claim to satisfy the identifier.  
-	The lookup is performed on the current search results.
+	The first call will start the search.
 
   * `announce` *id* [<i>*port*</i>] [<i>*minutes*</i>]  
     Announce that this instance is associated with identifier  
@@ -169,7 +166,7 @@ All these interfaces listen only for connections from localhost.
 
 The web interface allows queries of these forms:
 
-  * `http://localhost:8053/search?foo.p2p`
+  * `http://localhost:8053/lookup?foo.p2p`
   * `http://localhost:8053/announce?foobar`
   * `http://localhost:8053/blacklist?1.2.3.4`
 

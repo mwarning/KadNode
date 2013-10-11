@@ -1,7 +1,7 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "KADNODE" "1" "September 2013" "" ""
+.TH "KADNODE" "1" "October 2013" "" ""
 .
 .SH "NAME"
 \fBkadnode\fR \- P2P name resolution daemon
@@ -22,7 +22,7 @@ KadNode enables the user to announce any kind of resource by an identifier\. Thi
 By default, KadNode tries to send a ping to a multicast address on the local network to find nodes to bootstrap from\. This is done every five minutes when no other nodes are known\. The interactive remote shell \fBkadnode\-ctl\fR let the user import and export nodes, issue queries for identifiers and send announcements\.
 .
 .P
-As an usage example one would start \fBkadnode \-\-value\-id myname\.p2p\fR to let KadNode announce every 30 minutes, that the IP address of the running KadNode instance is associated with the identifier \'myname\.p2p\'\. A call like \fBkadnode\-ctl import bttracker\.debian\.org\fR can be used to help KadNode to bootstrap into an existing network\. To announce an identifier just once, use \fBkadnode\-ctl announce myname\fR\. Any announcement will be dropped by other KadNode instances after 32 minutes and therefore need to be refreshed around every 30 minutes\.
+As an usage example one would start \fBkadnode \-\-value\-id myname\.p2p\fR to let KadNode announce every 30 minutes, that the IP address of the running KadNode instance is associated with the identifier \'myname\.p2p\'\. A call as \fBkadnode\-ctl import bttracker\.debian\.org\fR can be used to help KadNode to bootstrap into an existing network\. Check \fBkadnode\-ctl status\fR to see the rising number of known nodes\. To announce an identifier just once, use \fBkadnode\-ctl announce myname\fR\. Any announcement will be dropped by other Kademlia DHT instances (such as Transmission) after 32 minutes and therefore need to be refreshed around every 30 minutes\.
 .
 .P
 Please be aware that other people might use the same identifier\. It is strongly advised to do additional identification/authentification when an address is used that has been resolved by KadNode\. The DNS/NSS interfaces are only able to return one of these addresses\. In contrast, the web and console interface are able to return all known IP addresses associated with an identifier\.
@@ -33,7 +33,7 @@ Every entered identifier (e\.g\. \fBmyname\.p2p\fR) will have everything after a
 .SH "INTERFACES"
 .
 .IP "\(bu" 4
-An interactive shell to issue queries and manage the DHT\. Useful for shell scripts: \fBkadnode\-ctl search myname\.p2p\fR
+An interactive shell to issue queries and manage the DHT\. Useful for shell scripts: \fBkadnode\-ctl lookup myname\.p2p\fR
 .
 .IP "\(bu" 4
 Name Service Switch (NSS) support through /etc/nsswitch\.conf\.
@@ -42,7 +42,7 @@ Name Service Switch (NSS) support through /etc/nsswitch\.conf\.
 A simple DNS server interface that can be used like a local upstream DNS server\.
 .
 .IP "\(bu" 4
-A simple web server interface to resolve queries: \fBhttp://localhost:8053/search?foo\.p2p\fR
+A simple web server interface to resolve queries: \fBhttp://localhost:8053/lookup?foo\.p2p\fR
 .
 .IP "" 0
 .
@@ -189,7 +189,7 @@ Print program version and included features\.
 \fB\-p\fR \fIport\fR
 .
 .br
-Connect to the local KadNode console on this interface (Default: 1700)\.
+The port used to connect to the command line of a local KadNode instance (Default: 1700)\.
 .
 .IP "\(bu" 4
 \fB\-h\fR
@@ -206,19 +206,13 @@ Print this help\.
 Print the node id, the number of known nodes / searches / stored hashes and more\.
 .
 .IP "\(bu" 4
-\fBsearch\fR \fIid\fR
-.
-.br
-Start a search for nodes closest to the given identifier id\.
-.
-.IP "\(bu" 4
 \fBlookup\fR \fIid\fR
 .
 .br
 Lookup the IP addresses of all nodes that claim to satisfy the identifier\.
 .
 .br
-The lookup is performed on the current search results\.
+The first call will start the search\.
 .
 .IP "\(bu" 4
 \fBannounce\fR \fIid\fR [\fI\fIport\fR\fR] [\fI\fIminutes\fR\fR]
@@ -248,6 +242,12 @@ Send a ping to another KadNode instance to establish a connection\.
 Print a few good nodes\.
 .
 .IP "\(bu" 4
+\fBlist\fR [\fBvalues\fR|\fBforwardings\fR]
+.
+.br
+List announced value identifiers or UPnP/NAT\-PMP port forwardings via\.
+.
+.IP "\(bu" 4
 \fBblacklist\fR \fIaddr\fR
 .
 .br
@@ -265,7 +265,7 @@ Shutdown the daemon\.
 The web interface allows queries of these forms:
 .
 .IP "\(bu" 4
-\fBhttp://localhost:8053/search?foo\.p2p\fR
+\fBhttp://localhost:8053/lookup?foo\.p2p\fR
 .
 .IP "\(bu" 4
 \fBhttp://localhost:8053/announce?foobar\fR
@@ -278,7 +278,16 @@ The web interface allows queries of these forms:
 .P
 If the interface cannot be reached then the interface might be disabled (port set to 0) or not compiled in (check \fBkadnode \-\-version\fR)\. In case the IPv6 entry for localhost is not used or missing, try \fB[::1]\fR instead of \fBlocalhost\fR\.
 .
-.SH "LIMITATIONS"
+.SH "NOTES"
+.
+.IP "\(bu" 4
+This is not about traditional DNS\. Everybody can announce everything\. You need to decide which
+.
+.br
+of the resolved IP addresses you trust\. Be random about the identifiers you announce\. When retrieved
+.
+.br
+IP addresses do not deliver/verify for you, then you should blacklist those IP addresses\.
 .
 .IP "\(bu" 4
 Blacklisted addreses are stored in a LRU cache of maximal 10 entries\.

@@ -26,7 +26,6 @@
 const char* cmd_usage_str = 
 "Usage:\n"
 "	status\n"
-"	search <id>\n"
 "	lookup <id>\n"
 #if 0
 "	lookup_node <id>\n"
@@ -275,23 +274,13 @@ int cmd_exec( REPLY * r, int argc, char **argv ) {
 			for( i = 0; i < addrs_n; ++i ) {
 				r_printf( r, "%s\n", str_addr( &addrs[i], addrbuf ) );
 			}
-		} else if( rc == 1 ) {
-			r_printf( r ,"No search found.\n" );
+		} else if( rc == 2 ) {
+			r_printf( r ,"Search started - try again.\n" );
 			rc = 1;
 		} else {
 			r_printf( r ,"No nodes found.\n" );
 			rc = 1;
 		}
-	} else if( match( argv[0], "search" ) && argc == 2 ) {
-
-		/* That is the id to lookup nodes for */
-		id_compute( id, argv[1] );
-
-		/* Start find process */
-		kad_search( id );
-
-		r_printf( r, "Search started for: %s\n", str_id( id, hexbuf ) );
-
 	} else if( match( argv[0], "status" ) && argc == 1 ) {
 
 		/* Print node id and statistics */

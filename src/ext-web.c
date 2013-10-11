@@ -16,8 +16,8 @@
 #include "ext-web.h"
 
 
-/* handle 'GET /search?foo.p2p' */
-void handle_search( char *reply_buf, char *params ) {
+/* handle 'GET /lookup?foo.p2p' */
+void handle_lookup( char *reply_buf, char *params ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	char hexbuf[HEX_LEN+1];
 	UCHAR id[SHA_DIGEST_LENGTH];
@@ -29,12 +29,9 @@ void handle_search( char *reply_buf, char *params ) {
 	id_compute( id, params );
 	log_debug( "WEB: Lookup '%s' as '%s'.", params, str_id( id, hexbuf ) );
 
-	/* Check searches for node */
+	/* Lookup id - starts search when not already done */
 	addrsnum = N_ELEMS(addrs);
-	if( kad_lookup_value( id, addrs, &addrsnum ) != 0 ) {
-		/* Start find process */
-		kad_search( id );
-	} else {
+	if( kad_lookup_value( id, addrs, &addrsnum ) == 0 ) {
 		for( n = 0, i = 0; i < addrsnum; i++ ) {
 			n += sprintf( reply_buf + n, "%s\n", str_addr( &addrs[i], addrbuf ) );
 		}
@@ -107,8 +104,8 @@ void web_handler( int rc, int sock ) {
 	reply_buf[0] = '\n';
 	reply_buf[1] = '\0';
 
-	if( match( cmd, "search" ) ) {
-		handle_search( reply_buf, params );
+	if( match( cmd, "lookup" ) ) {
+		handle_lookup( reply_buf, params );
 	} else if( match( cmd, "announce" ) ) {
 		handle_announce( reply_buf, params );
 	} else if( match( cmd, "blacklist" ) ) {

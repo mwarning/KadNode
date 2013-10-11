@@ -426,19 +426,6 @@ int kad_announce( const UCHAR *id, int port ) {
 }
 
 /*
-* Start a search for nodes that are near the given id.
-*/
-int kad_search( const UCHAR *id ) {
-
-	dht_lock();
-	results_insert( id, gstate->af );
-	dht_search( id, 0, gstate->af, dht_callback_func, NULL );
-	dht_unlock();
-
-	return 0;
-}
-
-/*
 * Lookup known nodes that are nearest to the given id.
 */
 int kad_lookup_value( const UCHAR* id, IP addr_array[], int *addr_num ) {
@@ -450,11 +437,16 @@ int kad_lookup_value( const UCHAR* id, IP addr_array[], int *addr_num ) {
 	vs = results_find( id, gstate->af );
 
 	if( vs == NULL ) {
-		rc = 1;
+		/* No results item found - no search in progress - start search */
+		dht_lock();
+		results_insert( id, gstate->af );
+		dht_search( id, 0, gstate->af, dht_callback_func, NULL );
+		dht_unlock();
+		rc = 2;
 	} else {
 		*addr_num = MIN(vs->numaddrs, *addr_num);
 		memcpy( addr_array, vs->addrs, *addr_num * sizeof(IP) );
-		rc = (*addr_num == 0);
+		rc = (*addr_num == 0) ? 1 : 0;
 	}
 
 	dht_unlock();
