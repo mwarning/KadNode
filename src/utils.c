@@ -25,7 +25,7 @@ int id_random( void *buffer, size_t size ) {
 
 	fd = open( "/dev/urandom", O_RDONLY );
 	if( fd < 0 ) {
-		log_err( "Failed to open /dev/urandom" );
+		log_err( "Utils: Failed to open /dev/urandom" );
 		return -1;
 	}
 

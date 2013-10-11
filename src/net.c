@@ -82,7 +82,7 @@ int net_bind(
 	}
 
 	if( addr_parse( &sockaddr, addr, port, af ) != 0 ) {
-		log_err( "NET: Failed to parse ip address '%s' and port '%s'.", addr, port );
+		log_err( "NET: Failed to parse IP address '%s' and port '%s'.", addr, port );
 		return -1;
 	}
 
