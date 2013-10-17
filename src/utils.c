@@ -149,8 +149,6 @@ char* str_id( const UCHAR *in, char *buf ) {
 	UCHAR *p0 = (UCHAR *)in;
 	char *p1 = buf;
 
-	memset( buf, '\0', HEX_LEN+1 );
-
 	for( i = 0; i < SHA_DIGEST_LENGTH; i++ ) {
 		snprintf( p1, 3, "%02x", *p0 );
 		p0 += 1;
