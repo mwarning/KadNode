@@ -55,6 +55,8 @@ int main( int argc, char **argv ) {
 			log_err( "UNX: Changing working directory to / failed: %s", strerror( errno ) );
 		}
 
+		gstate->use_syslog = 1;
+
 		/* Fork before any threads are started */
 		unix_fork();
 	}

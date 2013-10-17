@@ -49,7 +49,7 @@ void _log( const char *filename, int line, int priority, const char *format, ...
 			prefix = "(?)";
 	}
 
-	if( gstate->is_daemon ) {
+	if( gstate->use_syslog ) {
 		/* Write messages to e.g. /var/log/syslog */
 		openlog( MAIN_SRVNAME, LOG_PID|LOG_CONS, LOG_USER|LOG_PERROR );
 		if( filename ) {

@@ -40,6 +40,9 @@ struct obj_gstate {
 	/* Quiet / Verbose / Debug */
 	int verbosity;
 
+	/* Write log to /var/log/message */
+	int use_syslog;
+
 	/* IPv4 or IPv6 mode */
 	int af;
 
