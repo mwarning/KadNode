@@ -1,3 +1,9 @@
+kadnode (0.6) UNRELEASED; urgency=low
+
+  * kadnode-ctl: merge search command into lookup command
+
+ -- mwarning <moritzwarning@web.de>  Sun, 13 Oct 2013 13:47:54 +0200
+
 kadnode (0.4) unstable; urgency=low
 
   * Use only one thread to save resources.
