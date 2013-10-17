@@ -95,7 +95,7 @@ All these interfaces listen only for connections from localhost.
   * `--daemon`  
     Run in background.
 
-  * `--verbosity`  
+  * `--verbosity` *level*  
     Verbosity level: quiet, verbose or debug (Default: verbose).
 
   * `--pidfile` *file-path*  
@@ -180,7 +180,7 @@ In case the IPv6 entry for localhost is not used or missing, try `[::1]` instead
   of the resolved IP addresses you trust. Be random about the identifiers you announce. When retrieved  
   IP addresses do not deliver/verify for you, then you should blacklist those IP addresses.
 
-  * Blacklisted addreses are stored in a LRU cache of maximal 10 entries.
+  * Blacklisted addresses are stored in a LRU cache of maximal 10 entries.
 
 ## LICENSE
 
