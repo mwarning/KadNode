@@ -207,7 +207,7 @@ int addr_len( const IP *addr ) {
 }
 
 /*
-* Resolve an IP address.
+* Parse/Resolve an IP address.
 * The port must be specified separately.
 */
 int addr_parse( IP *addr, const char *addr_str, const char *port_str, int af ) {
@@ -242,7 +242,7 @@ int addr_parse( IP *addr, const char *addr_str, const char *port_str, int af ) {
 }
 
 /*
-* Parse various string representations of
+* Parse/Resolve various string representations of
 * IPv4/IPv6 addresses and optional port.
 * An address can also be a domain name.
 * A port can also be a service  (e.g. 'www').
