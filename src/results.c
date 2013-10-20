@@ -10,8 +10,6 @@
 #include "net.h"
 #include "results.h"
 
-#define MAX(x, y) ((x) >= (y) ? (x) : (y))
-#define MIN(x, y) ((x) <= (y) ? (x) : (y))
 
 /*
 * The DHT implementation in KadNode does not store
@@ -19,110 +17,163 @@
 * searches are collected and stored here until they expire.
 */
 
-struct result_t *results = NULL;
+struct results_t *results = NULL;
 int num_results = 0;
 
 
-struct result_t *results_list( void ) {
+struct results_t *results_list( void ) {
 	return results;
 }
 
 /* Find a value search result */
-struct result_t *results_find( const UCHAR *id, int af ) {
-	struct result_t *vs;
+struct results_t *results_find( const UCHAR *id, int af ) {
+	struct results_t *rs;
 
-	vs = results;
-	while( vs != NULL ) {
-		if(  id_equal( vs->id, id ) && vs->af == af ) {
-			return vs;
+	rs = results;
+	while( rs != NULL ) {
+		if(  id_equal( rs->id, id ) && rs->af == af ) {
+			return rs;
 		}
-		vs = vs->next;
+		rs = rs->next;
 	}
 
 	return NULL;
 }
 
-void results_expire( void ) {
-	struct result_t *pre = NULL;
-	struct result_t *vs = results;
-	struct result_t *next = NULL;
+int results_count( struct results_t *rs ) {
+	struct result_t *result;
+	int count;
 
-    while( vs ) {
-        next = vs->next;
-        if( vs->start_time < (time_now_sec() - EXPIRE_SEARCH) ) {
+	count = 0;
+	result = rs->entries;
+	while( result ) {
+		count++;
+		result = result->next;
+	}
+	return count;
+}
+
+/* Free a results_t item and all its result_t entries */
+void results_free( struct results_t *rs ) {
+	struct result_t *cur;
+	struct result_t *next;
+
+	cur = rs->entries;
+	while( cur ) {
+		next = cur->next;
+		free( cur );
+		cur = next;
+	}
+
+	free( rs );
+}
+
+struct results_t * results_new( const UCHAR *id, int af ) {
+	struct results_t *new;
+
+	new = calloc( 1, sizeof(struct results_t) );
+
+	memcpy( new->id, id, SHA_DIGEST_LENGTH );
+	new->af = af;
+	new->start_time = time_now_sec();
+
+	return new;
+}
+
+void results_expire( void ) {
+	struct results_t *pre = NULL;
+	struct results_t *rs = results;
+	struct results_t *next = NULL;
+
+    while( rs ) {
+        next = rs->next;
+        if( rs->start_time < (time_now_sec() - EXPIRE_SEARCH) ) {
             if( pre ) {
                 pre->next = next;
             } else {
                 results = next;
 			}
-			free( vs );
+			results_free( rs );
 			num_results--;
         } else {
-            pre = vs;
+            pre = rs;
         }
-        vs = next;
+        rs = next;
     }
 }
 
 int results_insert( const UCHAR *id, int af ) {
-	struct result_t* vs;
-	struct result_t* vss;
+	struct results_t* new;
+	struct results_t* rs;
 
 	if( num_results > MAX_SEARCHES ) {
 		return 1;
 	}
 
-	vs = results_find( id, af );
-
-	/* Search exists */
-	if( vs != NULL ) {
+	/* Search already exists */
+	if( results_find( id, af ) != NULL ) {
 		return 0;
 	}
 
-	vs = calloc( 1, sizeof(struct result_t) );
-	if( vs == NULL ) {
-		return 0;
-	}
-
-	memcpy( vs->id, id, SHA_DIGEST_LENGTH );
-	vs->af = af;
-	vs->start_time = time_now_sec();
-
+	new = results_new( id, af );
 	num_results++;
 
-	if( results == NULL ) {
-		results = vs;
-		return 1;
+	rs = results;
+	while( rs ) {
+		if( rs->next == NULL ) {
+			break;
+		}
+		rs = rs->next;
 	}
 
-	vss = results;
-	while( 1 ) {
-		if( vss->next == NULL ) {
-			vss->next = vs;
-			return 1;
-		}
-		vss = vss->next;
+	/* Append new search */
+	if( rs ) {
+		rs->next = new;
+	} else {
+		results = new;
 	}
 
 	return 1;
 }
 
-/* Add an address to an array if it is not already contained in there */
-void results_add_unique( struct result_t *vs, IP* addr ) {
-	int i;
+struct result_t *result_new( IP* addr ) {
+	struct result_t *new;
 
-	if( vs->numaddrs >= MAX_RESULTS_PER_SEARCH ) {
+	new = calloc( 1, sizeof(struct result_t) );
+	memcpy( &new->addr, addr, sizeof(IP) );
+
+	return new;
+}
+
+/* Add an address to an array if it is not already contained in there */
+void results_add_unique( struct results_t *rs, IP* addr ) {
+	struct result_t *result;
+	struct result_t *new;
+
+	if( results_count( rs ) > MAX_RESULTS_PER_SEARCH ) {
 		return;
 	}
 
-	for( i = 0; i < vs->numaddrs; i++ ) {
-		if( addr_equal( &vs->addrs[i], addr ) ) {
+	result = rs->entries;
+	while( result ) {
+		if( addr_equal( &result->addr, addr ) ) {
 			return;
 		}
+
+		if( result->next == NULL ) {
+			break;
+		}
+
+		result = result->next;
 	}
 
-	memcpy( &vs->addrs[vs->numaddrs], addr, sizeof(IP) );
-	vs->numaddrs++;
+	new = result_new( addr );
+
+	if( result ) {
+		result->next = new;
+	} else {
+		rs->entries = new;
+	}
 }
 
 /* Structure of the compact data received from the DHT */
@@ -137,53 +188,55 @@ typedef struct {
 } addr4_t;
 
 void results_import( const UCHAR *id, void *data, int data_length, int af ) {
-	struct result_t *vs;
+	struct results_t *rs;
 	IP addr;
 	int i;
 
 	/* Find search to put results into */
-	if( (vs = results_find( id, af )) == NULL ) {
+	if( (rs = results_find( id, af )) == NULL ) {
+		return;
+	}
+
+	if( results_count( rs ) > MAX_RESULTS_PER_SEARCH ) {
 		return;
 	}
 
 	if( af == AF_INET ) {
 		addr4_t *data4 = (addr4_t *) data;
-		size_t data4_len = MIN(data_length / sizeof(addr4_t), MAX_RESULTS_PER_SEARCH);
 		IP4 *a = (IP4 *)&addr;
 
-		for( i = 0; i < data4_len; i++ ) {
+		for( i = 0; i < (data_length / sizeof(addr4_t)); i++ ) {
 			memset( &addr, '\0', sizeof(IP) );
 			a->sin_family = AF_INET;
 			a->sin_port = data4[i].port;
 			memcpy( &a->sin_addr, &data4[i].addr, 4 );
-			results_add_unique( vs, &addr );
+			results_add_unique( rs, &addr );
 		}
 	}
 
 	if( af == AF_INET6) {
 		addr6_t *data6 = (addr6_t *) data;
-		size_t data6_len = MIN(data_length / sizeof(addr6_t), MAX_RESULTS_PER_SEARCH);
 		IP6 *a = (IP6 *)&addr;
 
-		for( i = 0; i < data6_len; i++ ) {
+		for( i = 0; i < (data_length / sizeof(addr6_t)); i++ ) {
 			memset( &addr, '\0', sizeof(IP) );
 			a->sin6_family = AF_INET6;
 			a->sin6_port = data6[i].port;
 			memcpy( &a->sin6_addr, &data6[i].addr, 16 );
-			results_add_unique( vs, &addr );
+			results_add_unique( rs, &addr );
 		}
 	}
 }
 
 void results_done( const UCHAR *id, int af ) {
-	struct result_t *vs;
+	struct results_t *rs;
 
 	/* Find search to put results into */
-	if( (vs = results_find( id, af )) == NULL ) {
+	if( (rs = results_find( id, af )) == NULL ) {
 		return;
 	}
 
-	vs->done = 1;
+	rs->done = 1;
 }
 
 void results_handle( int __rc, int __sock ) {

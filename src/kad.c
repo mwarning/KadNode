@@ -191,23 +191,24 @@ int kad_count_nodes( void ) {
 void kad_debug_value_searches( int fd ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	char hexbuf[HEX_LEN+1];
-	struct result_t *vs;
-	int i, j;
+	struct results_t *results;
+	struct result_t *result;
+	int j;
 
 	j = 0;
-	vs = results_list();
-	while( vs != NULL ) {
+	results = results_list();
+	while( results != NULL ) {
 
-		dprintf( fd, " Value Search: %s\n", str_id( vs->id, hexbuf ) );
-		dprintf( fd, "  af: %s\n", (vs->af == AF_INET) ? "AF_INET" : "AF_INET6" );
-		dprintf( fd, "  done: %d\n", vs->done );
-		for( i = 0; i < vs->numaddrs; ++i ) {
-			dprintf( fd, "   addr: %s\n", str_addr( &vs->addrs[i], addrbuf ) );
+		dprintf( fd, " Value Search: %s\n", str_id( results->id, hexbuf ) );
+		dprintf( fd, "  af: %s\n", (results->af == AF_INET) ? "AF_INET" : "AF_INET6" );
+		dprintf( fd, "  done: %d\n", results->done );
+		result = results->entries;
+		while( result ) {
+			dprintf( fd, "   addr: %s\n", str_addr( &result->addr, addrbuf ) );
+			result = result->next;
 		}
-		dprintf( fd, "  numaddrs: %zu\n", vs->numaddrs );
-
 		j++;
-		vs = vs->next;
+		results = results->next;
 	}
 	dprintf( fd, " Found %d value searches.\n", j );
 }
@@ -429,14 +430,15 @@ int kad_announce( const UCHAR *id, int port ) {
 * Lookup known nodes that are nearest to the given id.
 */
 int kad_lookup_value( const UCHAR* id, IP addr_array[], int *addr_num ) {
-	int rc;
-	struct result_t *vs;
+	int rc, i;
+	struct results_t *results;
+	struct result_t *result;
 
 	dht_lock();
 
-	vs = results_find( id, gstate->af );
+	results = results_find( id, gstate->af );
 
-	if( vs == NULL ) {
+	if( results == NULL ) {
 		/* No results item found - no search in progress - start search */
 		dht_lock();
 		results_insert( id, gstate->af );
@@ -444,9 +446,15 @@ int kad_lookup_value( const UCHAR* id, IP addr_array[], int *addr_num ) {
 		dht_unlock();
 		rc = -1;
 	} else {
-		*addr_num = MIN(vs->numaddrs, *addr_num);
-		memcpy( addr_array, vs->addrs, *addr_num * sizeof(IP) );
-		rc = (*addr_num == 0) ? -2 : 0;
+		i = 0;
+		result = results->entries;
+		while( result && i < *addr_num ) {
+			memcpy( &addr_array[i], &result->addr, sizeof(IP) );
+			i++;
+			result = result->next;
+		}
+		*addr_num = i;
+		rc = (i == 0) ? -2 : 0;
 	}
 
 	dht_unlock();
