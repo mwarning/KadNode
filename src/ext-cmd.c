@@ -175,6 +175,8 @@ int cmd_export( REPLY *r ) {
 int cmd_list_values( REPLY *r ) {
 	struct value_t *item;
 	char hexbuf[HEX_LEN+1];
+	char refreshed[64];
+	char lifetime[64];
 	time_t now;
 	int counter;
 
@@ -183,11 +185,22 @@ int cmd_list_values( REPLY *r ) {
 	item = values_get();
 	r_printf( r, "id:port | refreshed ago [min] | lifetime remaining [min]\n");
 	while( item ) {
+		if( item->refreshed == -1 ) {
+			sprintf( refreshed, "never" );
+		} else {
+			sprintf( refreshed, "%ld", (now - item->refreshed) / 60 );
+		}
+
+		if( item->lifetime == LONG_MAX ) {
+			sprintf( lifetime, "infinite" );
+		} else {
+			sprintf( lifetime, "%ld", (item->lifetime -  now) / 60 );
+		}
+
 		r_printf(
-			r, " %s:%hu | %ld | %ld\n",
+			r, " %s:%hu | %s | %s\n",
 			str_id( item->value_id, hexbuf ), item->port,
-			(item->refreshed == -1) ? (-1) : ((now - item->refreshed) / 60),
-			(item->lifetime == LONG_MAX) ? (-1) : ((item->lifetime -  now) / 60)
+			refreshed, lifetime
 		);
 		counter++;
 		item = item->next;
