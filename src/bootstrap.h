@@ -12,7 +12,7 @@ The first is to ping nodes from a given peerfile
 as long as no nodes are known.
 The second mechanism is to send multicast
 messages until another node is known.
-Good nodes need also be written bakc to a peerfile
+Good nodes need also be written back to a peerfile
 on shutdown.
 */
 
