@@ -123,7 +123,7 @@ int multicast_leave( int sock, IP *addr ) {
 	}
 }
 
-const char *parser_packet_param( const char* str, const char* param ) {
+const char *parse_packet_param( const char* str, const char* param ) {
 	const char* pos;
 
 	pos = strstr( str, param );
@@ -134,12 +134,12 @@ const char *parser_packet_param( const char* str, const char* param ) {
 	}
 }
 
-int parser_packet( const char *str ) {
+int parse_packet( const char *str ) {
 	const char *beg;
 	int port = 0;
 
 	/* Parse port */
-	beg = parser_packet_param( str, "Port: ");
+	beg = parse_packet_param( str, "Port: ");
 	if( beg == NULL ) {
 		return 0;
 	}
@@ -149,13 +149,13 @@ int parser_packet( const char *str ) {
 	}
 
 	/* Check for existence of server field */
-	beg = parser_packet_param( str, "Server: ");
+	beg = parse_packet_param( str, "Server: ");
 	if( beg == NULL ) {
 		return 0;
 	}
 
 	/* Check for existence of version field */
-	beg = parser_packet_param( str, "Version: ");
+	beg = parse_packet_param( str, "Version: ");
 	if( beg == NULL ) {
 		return 0;
 	}
@@ -325,7 +325,7 @@ void bootstrap_handle( int rc, int sock ) {
 			buf[rc_recv] = '\0';
 		}
 
-		int port = parser_packet( buf );
+		int port = parse_packet( buf );
 		if( port > 0 ) {
 			set_port( &c_addr, port );
 			log_debug( "BOOT: Ping lonely peer at %s", str_addr( &c_addr, addrbuf ) );
