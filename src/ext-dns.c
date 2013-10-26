@@ -396,8 +396,8 @@ void dns_handler( int rc, int sock ) {
 	socklen_t addrlen_ret;
 
 	UCHAR buffer[1500];
-	UCHAR node_id[SHA_DIGEST_LENGTH];
-	char hexbuf[HEX_LEN+1];
+	UCHAR node_id[SHA1_BIN_LENGTH];
+	char hexbuf[SHA1_HEX_LENGTH+1];
 	char addrbuf1[FULL_ADDSTRLEN+1];
 	char addrbuf2[FULL_ADDSTRLEN+1];
 	const char *hostname;

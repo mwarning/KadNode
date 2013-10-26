@@ -17,7 +17,7 @@ struct result_t {
 /* Searches along with received addresses */
 struct results_t {
 	/* The value id to search for */
-	UCHAR id[SHA_DIGEST_LENGTH];
+	UCHAR id[SHA1_BIN_LENGTH];
 	int af;
 	time_t start_time;
 	struct result_t *entries;

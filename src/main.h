@@ -6,7 +6,7 @@
 
 #define MAIN_SRVNAME "kadnode"
 #define MAIN_VERSION "0.4"
-#define SHA_DIGEST_LENGTH 20
+#define SHA1_BIN_LENGTH 20
 
 /* Default addresses and ports */
 #define DHT_ADDR4_MCAST "239.192.202.7"

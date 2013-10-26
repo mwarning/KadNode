@@ -174,7 +174,7 @@ int cmd_export( REPLY *r ) {
 
 int cmd_list_values( REPLY *r ) {
 	struct value_t *item;
-	char hexbuf[HEX_LEN+1];
+	char hexbuf[SHA1_HEX_LENGTH+1];
 	char refreshed[64];
 	char lifetime[64];
 	time_t now;
@@ -237,9 +237,9 @@ int cmd_list_forwardings( REPLY *r ) {
 #endif
 
 int cmd_exec( REPLY * r, int argc, char **argv ) {
-	UCHAR id[SHA_DIGEST_LENGTH];
+	UCHAR id[SHA1_BIN_LENGTH];
 	char addrbuf[FULL_ADDSTRLEN+1];
-	char hexbuf[HEX_LEN+1];
+	char hexbuf[SHA1_HEX_LENGTH+1];
 	time_t lifetime;
 	int minutes;
 	IP addrs[16];

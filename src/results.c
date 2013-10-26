@@ -73,7 +73,7 @@ struct results_t * results_new( const UCHAR *id, int af ) {
 
 	new = calloc( 1, sizeof(struct results_t) );
 
-	memcpy( new->id, id, SHA_DIGEST_LENGTH );
+	memcpy( new->id, id, SHA1_BIN_LENGTH );
 	new->af = af;
 	new->start_time = time_now_sec();
 

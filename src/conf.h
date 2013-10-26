@@ -9,7 +9,7 @@ void conf_free( void );
 
 /* value to announce */
 struct value {
-	UCHAR value_id[SHA_DIGEST_LENGTH];
+	UCHAR value_id[SHA1_BIN_LENGTH];
 	int port;
 	struct value *next;
 };
@@ -20,7 +20,7 @@ struct obj_gstate {
 	struct timeval time_now;
 
 	/* Identifier of this instance */
-	UCHAR node_id[SHA_DIGEST_LENGTH];
+	UCHAR node_id[SHA1_BIN_LENGTH];
 
 	/* Drop privileges to user */
 	char *user;

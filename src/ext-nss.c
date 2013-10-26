@@ -51,8 +51,8 @@ void nss_handler( int rc, int sock ) {
 	IP clientaddr;
 	socklen_t addrlen_ret;
 	char hostname[256];
-	UCHAR host_id[SHA_DIGEST_LENGTH];
-	char hexbuf[HEX_LEN+1];
+	UCHAR host_id[SHA1_BIN_LENGTH];
+	char hexbuf[SHA1_HEX_LENGTH+1];
 
 	if( rc == 0 ) {
 		return;

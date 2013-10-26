@@ -190,7 +190,7 @@ int kad_count_nodes( void ) {
 
 void kad_debug_value_searches( int fd ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
-	char hexbuf[HEX_LEN+1];
+	char hexbuf[SHA1_HEX_LENGTH+1];
 	struct results_t *results;
 	struct result_t *result;
 	int j;
@@ -216,7 +216,7 @@ void kad_debug_value_searches( int fd ) {
 /* Print buckets (leaf/finger table) */
 void kad_debug_buckets( int fd, struct bucket *b ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
-	char hexbuf[HEX_LEN+1];
+	char hexbuf[SHA1_HEX_LENGTH+1];
 	struct node *n;
 	int i, j;
 
@@ -239,7 +239,7 @@ void kad_debug_buckets( int fd, struct bucket *b ) {
 /* Print searches */
 void kad_debug_node_searches( int fd ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
-	char hexbuf[HEX_LEN+1];
+	char hexbuf[SHA1_HEX_LENGTH+1];
 	struct search *s = searches;
 	int i, j;
 
@@ -265,7 +265,7 @@ void kad_debug_node_searches( int fd ) {
 /* Print announced ids we have received */
 void kad_debug_storage( int fd ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
-	char hexbuf[HEX_LEN+1];	
+	char hexbuf[SHA1_HEX_LENGTH+1];
 	struct storage *s = storage;
 	IP addr;
 	int i, j;
@@ -350,7 +350,7 @@ void kad_debug( int fd ) {
 #define bprintf(...) (written += snprintf( buf+written, size-written, __VA_ARGS__))
 
 int kad_status( char *buf, int size ) {
-	char hexbuf[HEX_LEN+1];
+	char hexbuf[SHA1_HEX_LENGTH+1];
 	struct storage *strg = storage;
 	struct search *srch = searches;
 	int numsearches_active = 0;

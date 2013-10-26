@@ -6,7 +6,7 @@
 #define _hidden_ __attribute__( ( visibility( "hidden")))
 
 #define MAIN_BUF 1024
-#define SHA_DIGEST_LENGTH 20
+#define SHA1_BIN_LENGTH 20
 
 /*
 * For a domain name to be handled by the KadNode NSS module

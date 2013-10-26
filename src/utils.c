@@ -50,9 +50,9 @@ void id_compute( UCHAR *id, const char *str ) {
 		size = tld - str;
 	}
 
-	if( size >= HEX_LEN && str_isHex( str, HEX_LEN ) ) {
+	if( size >= SHA1_HEX_LENGTH && str_isHex( str, SHA1_HEX_LENGTH ) ) {
 		/* treat hostname as hex string and ignore any kind of suffix */
-		id_fromHex( id, str, HEX_LEN );
+		id_fromHex( id, str, SHA1_HEX_LENGTH );
 	} else {
 		cpy = strdup( str );
 		str_toLower( cpy, size );
@@ -91,7 +91,7 @@ void id_fromHex( UCHAR *id, const char *hex, size_t size ) {
 }
 
 int id_equal( const UCHAR *id1, const UCHAR *id2 ) {
-	return (memcmp( id1, id2, SHA_DIGEST_LENGTH ) == 0);
+	return (memcmp( id1, id2, SHA1_BIN_LENGTH ) == 0);
 }
 
 /* Check if string consist of hexdecimal characters */
@@ -149,7 +149,7 @@ char* str_id( const UCHAR *in, char *buf ) {
 	UCHAR *p0 = (UCHAR *)in;
 	char *p1 = buf;
 
-	for( i = 0; i < SHA_DIGEST_LENGTH; i++ ) {
+	for( i = 0; i < SHA1_BIN_LENGTH; i++ ) {
 		snprintf( p1, 3, "%02x", *p0 );
 		p0 += 1;
 		p1 += 2;

@@ -10,7 +10,7 @@
 */
 
 struct value_t {
-	UCHAR value_id[SHA_DIGEST_LENGTH];
+	UCHAR value_id[SHA1_BIN_LENGTH];
 	int port;
 	time_t lifetime; /* keep entry until lifetime expires */
 	time_t refreshed; /* last time the entry was refreshed */

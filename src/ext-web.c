@@ -19,8 +19,8 @@
 /* handle 'GET /lookup?foo.p2p' */
 void handle_lookup( char *reply_buf, char *params ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
-	char hexbuf[HEX_LEN+1];
-	UCHAR id[SHA_DIGEST_LENGTH];
+	char hexbuf[SHA1_HEX_LENGTH+1];
+	UCHAR id[SHA1_BIN_LENGTH];
 	IP addrs[16];
 	int addrsnum;
 	int i, n;
@@ -40,7 +40,7 @@ void handle_lookup( char *reply_buf, char *params ) {
 
 /* handle 'GET /announce?foo.p2p' */
 void handle_announce( char *reply_buf, char *params ) {
-	UCHAR id[SHA_DIGEST_LENGTH];
+	UCHAR id[SHA1_BIN_LENGTH];
 	id_compute( id, params );
 
 	kad_announce( id, 1 );

@@ -99,7 +99,7 @@ void conf_init() {
 
 	memset( gstate, '\0', sizeof(struct obj_gstate) );
 
-	id_random( gstate->node_id, SHA_DIGEST_LENGTH );
+	id_random( gstate->node_id, SHA1_BIN_LENGTH );
 
 	gstate->mcast_addr = NULL;
 	gstate->is_running = 1;
@@ -131,7 +131,7 @@ void conf_init() {
 }
 
 void conf_check() {
-	char hexbuf[HEX_LEN+1];
+	char hexbuf[SHA1_HEX_LENGTH+1];
 	char addrbuf[FULL_ADDSTRLEN+1];
 	IP mcast_addr;
 	UCHAR octet;
@@ -239,7 +239,7 @@ void conf_str( const char *var, char **dst, const char *src ) {
 }
 
 void conf_add_value( char *var, char *val ) {
-	UCHAR value_id[SHA_DIGEST_LENGTH];
+	UCHAR value_id[SHA1_BIN_LENGTH];
 	unsigned short port;
 	char *delim;
 

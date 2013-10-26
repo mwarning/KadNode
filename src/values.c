@@ -38,7 +38,7 @@ int values_count( void ) {
 }
 
 void values_debug( int fd ) {
-	char hexbuf[HEX_LEN+1];
+	char hexbuf[SHA1_HEX_LENGTH+1];
 	struct value_t *item;
 	time_t now;
 	int counter;
@@ -78,7 +78,7 @@ void values_add( const UCHAR *value_id, USHORT port, time_t lifetime ) {
 	}
 
 	new = (struct value_t*) malloc( sizeof(struct value_t) );
-	memcpy( &new->value_id, value_id, SHA_DIGEST_LENGTH);
+	memcpy( &new->value_id, value_id, SHA1_BIN_LENGTH);
 	new->port = port;
 	new->lifetime = lifetime;
 	new->refreshed = 0;
@@ -132,7 +132,7 @@ void values_handle( int __rc, int __sock ) {
 
 		if( (item->refreshed + (30 * 60)) < now ) {
 #ifdef DEBUG
-			char hexbuf[HEX_LEN+1];
+			char hexbuf[SHA1_HEX_LENGTH+1];
 			log_debug( "VAL: Announce %s:%hu.",  str_id( item->value_id, hexbuf ), item->port );
 #endif
 			kad_announce( item->value_id, item->port );
