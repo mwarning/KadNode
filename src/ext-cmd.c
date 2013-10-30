@@ -17,6 +17,7 @@
 #include "kad.h"
 #include "net.h"
 #include "values.h"
+#include "results.h"
 #ifdef FWD
 #include "forwardings.h"
 #endif
@@ -35,12 +36,9 @@ const char* cmd_usage_str =
 "	export\n"
 "	blacklist <addr>\n"
 #ifdef FWD
-"	list [values|forwardings]\n"
+"	list [blacklist|buckets|constants|forwardings|results|searches|storage|values]\n"
 #else
-"	list [values]\n"
-#endif
-#ifdef DEBUG
-"	debug\n"
+"	list [blacklist|buckets|constants|results|searches|storage|values]\n"
 #endif
 "	shutdown\n";
 
@@ -129,13 +127,6 @@ void cmd_print_status( REPLY *r ) {
 	r->size += kad_status( r->data + r->size, 1472 - r->size );
 }
 
-#ifdef DEBUG
-void cmd_print_debug( REPLY *r ) {
-	kad_debug( STDOUT_FILENO );
-	r_printf( r ,"\nDebug output send to stdout.\n" );
-}
-#endif
-
 int cmd_blacklist( REPLY *r, const char *addr_str ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	IP addr;
@@ -153,8 +144,8 @@ int cmd_blacklist( REPLY *r, const char *addr_str ) {
 int cmd_export( REPLY *r ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	IP addr_array[32];
-	int addr_num = N_ELEMS(addr_array);
-	int i;
+	size_t addr_num = N_ELEMS(addr_array);
+	size_t i;
 
 	if( kad_export_nodes( addr_array, &addr_num ) != 0 ) {
 		return 1;
@@ -172,74 +163,8 @@ int cmd_export( REPLY *r ) {
 	return 0;
 }
 
-int cmd_list_values( REPLY *r ) {
-	struct value_t *item;
-	char hexbuf[SHA1_HEX_LENGTH+1];
-	char refreshed[64];
-	char lifetime[64];
-	time_t now;
-	int counter;
-
-	counter = 0;
-	now = time_now_sec();
-	item = values_get();
-	r_printf( r, "id:port | refreshed ago [min] | lifetime remaining [min]\n");
-	while( item ) {
-		if( item->refreshed == -1 ) {
-			sprintf( refreshed, "never" );
-		} else {
-			sprintf( refreshed, "%ld", (now - item->refreshed) / 60 );
-		}
-
-		if( item->lifetime == LONG_MAX ) {
-			sprintf( lifetime, "infinite" );
-		} else {
-			sprintf( lifetime, "%ld", (item->lifetime -  now) / 60 );
-		}
-
-		r_printf(
-			r, " %s:%hu | %s | %s\n",
-			str_id( item->value_id, hexbuf ), item->port,
-			refreshed, lifetime
-		);
-		counter++;
-		item = item->next;
-	}
-
-	r_printf( r, "Found %d items.\n", counter );
-	return 0;
-}
-
-#ifdef FWD
-int cmd_list_forwardings( REPLY *r ) {
-	struct forwarding_t *item;
-	time_t now;
-	int counter;
-
-	counter = 0;
-	now = time_now_sec();
-	item = forwardings_get();
-	r_printf( r, "port | refreshed ago [min] | lifetime remaining [min]\n");
-	while( item ) {
-		r_printf(
-			r, "%hu | %ld | %ld\n",
-			item->port,
-			(item->refreshed == 0) ? (-1) : ((now - item->refreshed) / 60),
-			(item->lifetime == LONG_MAX ) ? (-1) : ((item->lifetime -  now) / 60)
-		);
-		counter++;
-		item = item->next;
-	}
-
-	r_printf( r, "Found %d items.\n", counter );
-	return 0;
-}
-#endif
-
-int cmd_exec( REPLY * r, int argc, char **argv ) {
-	UCHAR id[SHA1_BIN_LENGTH];
+int cmd_exec( REPLY *r, int argc, char **argv ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
-	char hexbuf[SHA1_HEX_LENGTH+1];
 	time_t lifetime;
 	int minutes;
 	IP addrs[16];
@@ -258,11 +183,8 @@ int cmd_exec( REPLY * r, int argc, char **argv ) {
 #if 0
 	} else if( match( argv[0], "lookup_node" ) && argc == 2 ) {
 
-		/* That is the node id to lookup */
-		id_compute( id, argv[1] );
-
 		/* Check searches for node */
-		rc = kad_lookup_node( id, &addrs[0] );
+		rc = kad_lookup_node( argv[1, &addrs[0] );
 		if( rc == 0 ) {
 			r_printf( r, "%s\n", str_addr( &addrs[0], addrbuf ) );
 		} else if( rc == -1 ) {
@@ -275,24 +197,21 @@ int cmd_exec( REPLY * r, int argc, char **argv ) {
 #endif
 	} else if( match( argv[0], "lookup" ) && argc == 2 ) {
 
-		/* That is the value id to lookup */
-		id_compute( id, argv[1] );
-
-		int addrs_n = N_ELEMS(addrs);
-		int i;
+		size_t addrs_n = N_ELEMS(addrs);
+		size_t i;
 
 		/* Check searches for node */
-		rc = kad_lookup_value( id, addrs, &addrs_n );
-		if( rc == 0 ) {
+		rc = kad_lookup_value( argv[1], addrs, &addrs_n );
+		if( rc < 0 ) {
+			r_printf( r ,"Search started - try again.\n" );
+			rc = 1;
+		} else if( addrs_n == 0 ) {
+			r_printf( r ,"No nodes found.\n" );
+			rc = 1;
+		} else {
 			for( i = 0; i < addrs_n; ++i ) {
 				r_printf( r, "%s\n", str_addr( &addrs[i], addrbuf ) );
 			}
-		} else if( rc == -1 ) {
-			r_printf( r ,"Search started - try again.\n" );
-			rc = 1;
-		} else {
-			r_printf( r ,"No nodes found.\n" );
-			rc = 1;
 		}
 	} else if( match( argv[0], "status" ) && argc == 1 ) {
 
@@ -300,9 +219,6 @@ int cmd_exec( REPLY * r, int argc, char **argv ) {
 		cmd_print_status( r );
 
 	} else if( match( argv[0], "announce" ) && (argc == 2 || argc == 3 || argc == 4) ) {
-
-		/* The value id to announce using the IP address of this instance */
-		id_compute( id, argv[1] );
 
 		if( argc == 4 ) {
 			port = atoi( argv[2] );
@@ -327,21 +243,16 @@ int cmd_exec( REPLY * r, int argc, char **argv ) {
 			minutes = (minutes < 0) ? -1 : (30 * (minutes/30 + 1));
 			lifetime = (minutes < 0) ? LONG_MAX : (time_now_sec() + (minutes * 60));
 
-			values_add( id, port, lifetime );
+			values_add( argv[1], port, lifetime );
 #ifdef FWD
-			forwardings_add( port,  lifetime);
+			forwardings_add( port, lifetime);
 #endif
 			if( minutes > -1 ) {
-				r_printf( r ,"Announce value id %s on port %d for %d minutes.\n", str_id( id, hexbuf ), port, minutes );
+				r_printf( r ,"Announce value for port %d for %d minutes.\n", port, minutes );
 			} else {
-				r_printf( r ,"Announce value id %s on port %d for entire run time.\n", str_id( id, hexbuf ), port );
+				r_printf( r ,"Announce value for port %d for entire run time.\n", port );
 			}
 		}
-#ifdef DEBUG
-	} else if( match( argv[0], "debug" ) && argc == 1 ) {
-
-		cmd_print_debug( r );
-#endif
 	} else if( match( argv[0], "blacklist" ) && argc == 2 ) {
 
 		rc = cmd_blacklist( r, argv[1] );
@@ -352,16 +263,37 @@ int cmd_exec( REPLY * r, int argc, char **argv ) {
 
 	} else if( match( argv[0], "list" ) && argc == 2 ) {
 
-		if( match( argv[1], "values" ) ) {
-			rc = cmd_list_values( r );
+		if( match( argv[1], "blacklist" ) ) {
+			kad_debug_blacklist( STDOUT_FILENO );
+			rc = 0;
+		} else if( match( argv[1], "buckets" ) ) {
+			kad_debug_buckets( STDOUT_FILENO );
+			rc = 0;
+		} else if( match( argv[1], "constants" ) ) {
+			kad_debug_constants( STDOUT_FILENO );
+			rc = 0;
 #ifdef FWD
 		} else if( match( argv[1], "forwardings" ) ) {
-			rc = cmd_list_forwardings( r );
+			forwardings_debug( STDOUT_FILENO );
+			rc = 0;
 #endif
+		} else if( match( argv[1], "results" ) ) {
+			results_debug( STDOUT_FILENO );
+			rc = 0;
+		} else if( match( argv[1], "searches" ) ) {
+			kad_debug_searches( STDOUT_FILENO );
+			rc = 0;
+		} else if( match( argv[1], "storage" ) ) {
+			kad_debug_storage( STDOUT_FILENO );
+			rc = 0;
+		} else if( match( argv[1], "values" ) ) {
+			values_debug( STDOUT_FILENO );
+			rc = 0;
 		} else {
-			r_printf( r ,"Argument is wrong.\n");
+			dprintf( STDERR_FILENO, "Unknown argument.\n" );
 			rc = 1;
 		}
+		r_printf( r ,"\nOutput send to console.\n" );
 
 	} else if( match( argv[0], "shutdown" ) && argc == 1 ) {
 

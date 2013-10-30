@@ -21,15 +21,15 @@
 #include "ext-nss.h"
 
 
-void nss_lookup( int sock, IP *clientaddr, UCHAR *id ) {
+void nss_lookup( int sock, IP *clientaddr, const char *hostname ) {
 	char addrbuf1[FULL_ADDSTRLEN+1];
 	char addrbuf2[FULL_ADDSTRLEN+1];
 	IP addr;
-	int n;
+	size_t n;
 
 	/* Lookup id. Starts search when not already started. */
 	n = 1;
-	if( kad_lookup_value( id, &addr, &n ) != 0 ) {
+	if( kad_lookup_value( hostname, &addr, &n ) != 0 ) {
 		log_debug( "NSS: Node not found; starting search." );
 		return;
 	}
@@ -50,9 +50,7 @@ void nss_lookup( int sock, IP *clientaddr, UCHAR *id ) {
 void nss_handler( int rc, int sock ) {
 	IP clientaddr;
 	socklen_t addrlen_ret;
-	char hostname[256];
-	UCHAR host_id[SHA1_BIN_LENGTH];
-	char hexbuf[SHA1_HEX_LENGTH+1];
+	char hostname[512];
 
 	if( rc == 0 ) {
 		return;
@@ -74,11 +72,7 @@ void nss_handler( int rc, int sock ) {
 		return;
 	}
 
-	/* That is the lookup key */
-	id_compute( host_id, hostname );
-	log_debug( "NSS: Lookup '%s' as '%s'.", hostname, str_id( host_id, hexbuf ) );
-
-	nss_lookup( sock, &clientaddr, host_id );
+	nss_lookup( sock, &clientaddr, hostname );
 }
 
 void nss_setup( void ) {

@@ -18,7 +18,6 @@
 #include "forwardings.h"
 #endif
 
-
 /* Global object variables */
 struct obj_gstate *gstate = NULL;
 
@@ -99,7 +98,7 @@ void conf_init() {
 
 	memset( gstate, '\0', sizeof(struct obj_gstate) );
 
-	id_random( gstate->node_id, SHA1_BIN_LENGTH );
+	bytes_random( gstate->node_id, SHA1_BIN_LENGTH );
 
 	gstate->mcast_addr = NULL;
 	gstate->is_running = 1;
@@ -183,7 +182,7 @@ void conf_check() {
 			log_err( "CFG: Multicast address expected: %s", str_addr( &mcast_addr, addrbuf ) );
 		}
 	} else {
-		octet = ((UCHAR *)&((IP6 *)&mcast_addr)->sin6_addr)[0];
+		octet = ((UCHAR *) &((IP6 *)&mcast_addr)->sin6_addr)[0];
 		if( octet != 0xFF ) {
 			log_err( "CFG: Multicast address expected: %s", str_addr( &mcast_addr, addrbuf ) );
 		}
@@ -228,7 +227,7 @@ void conf_no_arg_expected( const char *var ) {
 	log_err( "CFG: No argument expected for option %s.", var );
 }
 
-/* free the old string and set the new */
+/* Free the old string and set the new */
 void conf_str( const char *var, char **dst, const char *src ) {
 	if( src == NULL ) {
 		conf_arg_expected( var );
@@ -239,8 +238,7 @@ void conf_str( const char *var, char **dst, const char *src ) {
 }
 
 void conf_add_value( char *var, char *val ) {
-	UCHAR value_id[SHA1_BIN_LENGTH];
-	unsigned short port;
+	int port;
 	char *delim;
 
 	if( val == NULL ) {
@@ -260,10 +258,8 @@ void conf_add_value( char *var, char *val ) {
 		log_err( "CFG: Invalid port used for value: %s", val );
 	}
 
-	/* Add new value */
-	id_compute( value_id, val );
+	values_add( val, port, LONG_MAX );
 
-	values_add( value_id, port, LONG_MAX );
 #ifdef FWD
 	forwardings_add( port, LONG_MAX );
 #endif
@@ -347,7 +343,7 @@ void conf_handle( char *var, char *val ) {
 		printf( "%s", version );
 		exit( 0 );
 	} else {
-		log_err( "CFG: Unknown command line option '%s'", var );
+		log_err( "CFG: Unknown command line option '%s'", var ? var : val );
 	}
 }
 
@@ -370,7 +366,7 @@ void conf_load( int argc, char **argv ) {
 			}
 		} else {
 			/* x */
-			conf_handle( argv[i], NULL );
+			conf_handle( NULL, argv[i] );
 		}
 	}
 }

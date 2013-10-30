@@ -55,15 +55,6 @@ struct obj_gstate {
 	/* DHT multicast address for bootstrapping */
 	char *mcast_addr;
 
-	/* Next time to do DHT maintenance */
-	time_t time_dht_maintenance;
-
-	/* Next time to remove expired seach results */
-	time_t time_expire_results;
-
-	/* Next time to announce results */
-	time_t time_announce_values;
-
 	/* KadNode startup time */
 	time_t startup_time;
 

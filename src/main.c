@@ -87,7 +87,7 @@ int main( int argc, char **argv ) {
 	/* Setup handler to find nodes for bootstrapping */
 	bootstrap_setup();
 
-	/* Setup interfaces */
+	/* Setup extensions */
 #ifdef DNS
 	dns_setup();
 #endif

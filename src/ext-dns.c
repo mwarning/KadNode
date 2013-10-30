@@ -139,7 +139,7 @@ struct message {
 */
 
 int get16bits( const UCHAR** buffer ) {
-	int value = (*buffer)[0];
+	size_t value = (*buffer)[0];
 	value = value << 8;
 	value += (*buffer)[1];
 	(*buffer) += 2;
@@ -168,8 +168,8 @@ void put32bits( UCHAR** buffer, ulong value ) {
 int dns_decode_domain( char *domain, const UCHAR** buffer, int size ) {
 	const UCHAR *p = *buffer;
 	const UCHAR *beg = p;
-	int i = 0;
-	int len = 0;
+	size_t i = 0;
+	size_t len = 0;
 
 	while( *p != '\0' ) {
 
@@ -203,8 +203,8 @@ void dns_code_domain( UCHAR** buffer, const char *domain ) {
 	char *buf = (char*) *buffer;
 	const char *beg = domain;
 	const char *pos;
-	int len = 0;
-	int i = 0;
+	size_t len = 0;
+	size_t i = 0;
 
 	while( (pos = strchr(beg, '.')) != '\0' ) {
 		len = pos - beg;
@@ -269,7 +269,7 @@ void dns_code_header( struct message *msg, UCHAR** buffer ) {
 }
 
 int dns_decode_query( struct message *msg, const UCHAR *buffer, int size ) {
-	int i, n;
+	size_t i, n;
 
 	if( (n = dns_decode_header( msg, &buffer, size )) < 0 ) {
 		return -1;
@@ -338,12 +338,12 @@ UCHAR *dns_code_response( struct message *msg, UCHAR *buffer ) {
 	return buffer;
 }
 
-int dns_lookup( UCHAR *node_id, IP *node_addr ) {
-	int n;
+int dns_lookup( const char *hostname, IP *node_addr ) {
+	size_t n;
 
 	/* Start lookup for one address */
 	n = 1;
-	if( kad_lookup_value( node_id, node_addr, &n ) == 0 ) {
+	if( kad_lookup_value( hostname, node_addr, &n ) == 0 ) {
 		return 0;
 	}
 
@@ -396,8 +396,6 @@ void dns_handler( int rc, int sock ) {
 	socklen_t addrlen_ret;
 
 	UCHAR buffer[1500];
-	UCHAR node_id[SHA1_BIN_LENGTH];
-	char hexbuf[SHA1_HEX_LENGTH+1];
 	char addrbuf1[FULL_ADDSTRLEN+1];
 	char addrbuf2[FULL_ADDSTRLEN+1];
 	const char *hostname;
@@ -426,11 +424,7 @@ void dns_handler( int rc, int sock ) {
 		return;
 	}
 
-	/* That is the lookup key */
-	id_compute( node_id, hostname );
-	log_debug( "DNS: Lookup '%s' as '%s'.", hostname, str_id( node_id, hexbuf ) );
-
-	if( dns_lookup( node_id, &nodeaddr ) != 0 ) {
+	if( dns_lookup( hostname, &nodeaddr ) != 0 ) {
 		log_debug( "DNS: Hostname not found." );
 		return;
 	}

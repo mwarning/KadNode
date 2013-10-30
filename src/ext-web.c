@@ -17,21 +17,15 @@
 
 
 /* handle 'GET /lookup?foo.p2p' */
-void handle_lookup( char *reply_buf, char *params ) {
+void handle_lookup( char *reply_buf, const char *params ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
-	char hexbuf[SHA1_HEX_LENGTH+1];
-	UCHAR id[SHA1_BIN_LENGTH];
 	IP addrs[16];
-	int addrsnum;
-	int i, n;
-
-	/* That is the lookup key */
-	id_compute( id, params );
-	log_debug( "WEB: Lookup '%s' as '%s'.", params, str_id( id, hexbuf ) );
+	size_t addrsnum;
+	size_t i, n;
 
 	/* Lookup id - starts search when not already done */
 	addrsnum = N_ELEMS(addrs);
-	if( kad_lookup_value( id, addrs, &addrsnum ) == 0 ) {
+	if( kad_lookup_value( params, addrs, &addrsnum ) == 0 ) {
 		for( n = 0, i = 0; i < addrsnum; i++ ) {
 			n += sprintf( reply_buf + n, "%s\n", str_addr( &addrs[i], addrbuf ) );
 		}
@@ -61,14 +55,14 @@ void handle_blacklist( char *reply_buf, char *params ) {
 }
 
 void web_handler( int rc, int sock ) {
-	int clientfd;
+	size_t clientfd;
 	IP clientaddr;
 	socklen_t addrlen_ret;
 	char request_buf[1024];
 	char reply_buf[1024];
 	char *cmd, *params;
 	char *space, *delim;
-	int n;
+	size_t n;
 
 	addrlen_ret = sizeof(IP);
 	clientfd = accept( sock, (struct sockaddr*)&clientaddr, &addrlen_ret );

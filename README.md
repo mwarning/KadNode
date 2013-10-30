@@ -23,14 +23,19 @@ to find nodes to bootstrap from. This is done every five minutes when no other n
 The interactive remote shell `kadnode-ctl` let the user import and export nodes, issue queries for
 identifiers and send announcements.
 
-As an usage example one would start `kadnode --value-id myname.p2p` to let KadNode
-announce every 30 minutes, that the IP address of the running KadNode instance
-is associated with the identifier 'myname.p2p'.
-A call as `kadnode-ctl import bttracker.debian.org` can be used to help KadNode to bootstrap
-into an existing network. Check `kadnode-ctl status` to see the rising number of known nodes.
-To announce an identifier just once, use `kadnode-ctl announce myname`.
+As an usage example start `kadnode` and enter `import bttracker.debian.org`
+to help KadNode to bootstrap into an existing network. The `status` command
+will let you see the rising number of known nodes.
+To let KadNode announce to the network that the identifier 'myname.p2p' should resolve to your
+IP address, use `announce myname.p2p -1`.
+The second argument "-1" is a special value and will cause Kadnode to keep the announcement
+alive for the entire runtime. The same can be achieved using the `--value-id` argument at startup.
 Any announcement will be dropped by other Kademlia DHT instances (such as Transmission)
-after 32 minutes and therefore need to be refreshed around every 30 minutes.
+after 32 minutes and therefore need to be refreshed by KadNode around every 30 minutes.
+
+Values like `myname.p2p ` can be resolved by using the command `lookup myname.p2p`.
+The NSS (Network Service Switch) support on many Posix systems (e.g. Ubuntu) can intercept
+requests for the .p2p top level domain and allows the value to be used e.g. in the web browser.
 
 Please be aware that other people might use the same identifier.
 It is strongly advised to do additional identification/authentification
@@ -153,8 +158,8 @@ All these interfaces listen only for connections from localhost.
   * `export`  
     Print a few good nodes.
 
-  * `list` [`values`|`forwardings`]  
-    List announced value identifiers or UPnP/NAT-PMP port forwardings via.
+  * `list` [`blacklist`|`buckets`|`constants`|`forwardings`|`results`|`searches`|`storage`|`values`]  
+    List various internal data structures.
 
   * `blacklist` *addr*  
     Blacklist a specifc IP address.
@@ -164,7 +169,7 @@ All these interfaces listen only for connections from localhost.
 
 ## Web Interface
 
-The web interface allows queries of these forms:
+The optional web interface allows queries of these forms:
 
   * `http://localhost:8053/lookup?foo.p2p`
   * `http://localhost:8053/announce?foobar`

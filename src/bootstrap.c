@@ -13,7 +13,7 @@
 #include "bootstrap.h"
 
 
-/* Multicast message format - inspired by but not compatible with the BitTorrent Local Peer Discovery (LPD)*/
+/* Multicast message format - inspired by, but not compatible with the BitTorrent Local Peer Discovery (LPD) */
 const char msg_fmt[] =
 	"DHT-SEARCH * HTTP/1.0\r\n"
 	"Port: %u\r\n"
@@ -167,7 +167,7 @@ void bootstrap_export_peerfile( void ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	const char *filename;
 	IP addrs[32];
-	int i, num;
+	size_t i, num;
 	FILE * fp;
 
 	filename = gstate->peerfile;
@@ -253,9 +253,9 @@ void bootstrap_import_peerfile( void ) {
 
 int set_port( IP *addr, unsigned short port ) {
 	if( addr->ss_family == AF_INET ) {
-		((IP4 *)addr)->sin_port = htons(port);
+		((IP4 *)addr)->sin_port = htons( port );
 	} else if( addr->ss_family == AF_INET6 ) {
-		((IP6 *)addr)->sin6_port = htons(port);
+		((IP6 *)addr)->sin6_port = htons( port );
 	} else {
 		return 1;
 	}
@@ -280,7 +280,7 @@ void bootstrap_handle( int rc, int sock ) {
 
 			if( mcast_registered == 1 ) {
 				snprintf( buf, sizeof(buf), msg_fmt, atoi(gstate->dht_port) );
-				
+
 				rc_send = sendto( sock, buf, strlen(buf), 0, (struct sockaddr*) &mcast_addr, sizeof(IP) );
 				if( rc_send < 0 ) {
 					log_warn( "BOOT: Cannot send multicast message: %s", strerror( errno ) );
@@ -347,7 +347,7 @@ void bootstrap_setup( void ) {
 	if( gstate->disable_multicast == 0 ) {
 		sock = net_bind( "BOOT", gstate->mcast_addr, DHT_PORT_MCAST, NULL, IPPROTO_UDP, gstate->af );
 	} else {
-		sock = -1;
+		return;
 	}
 
 	net_add_handler(sock , &bootstrap_handle );

@@ -7,7 +7,7 @@
 #include "main.h"
 
 #define SHA1_HEX_LENGTH (2 * SHA1_BIN_LENGTH)
-/* IPv6 address length including port, e.g. [::1]:12345*/
+/* IPv6 address length including port, e.g. [::1]:12345 */
 #define FULL_ADDSTRLEN (INET6_ADDRSTRLEN + 8)
 
 /* Verbosity levels */

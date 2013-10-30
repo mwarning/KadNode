@@ -10,10 +10,10 @@
 */
 
 struct value_t {
-	UCHAR value_id[SHA1_BIN_LENGTH];
+	UCHAR id[SHA1_BIN_LENGTH];
 	int port;
-	time_t lifetime; /* keep entry until lifetime expires */
-	time_t refreshed; /* last time the entry was refreshed */
+	time_t lifetime; /* Keep entry until lifetime expires */
+	time_t refreshed; /* Last time the entry was refreshed */
 	struct value_t *next;
 };
 
@@ -28,7 +28,7 @@ void values_debug( int fd );
 int values_count( void );
 
 /* Add a value id / port that will be announced until lifetime is exceeded */
-void values_add( const UCHAR *value_id, USHORT port, time_t lifetime );
+void values_add( const char query[], int port, time_t lifetime );
 
 
 #endif /* _EXT_VALUES_H_ */

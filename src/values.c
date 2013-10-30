@@ -12,95 +12,107 @@
 #include "values.h"
 
 
-struct values_t {
-	time_t retry;
-	struct value_t *beg;
-};
-
-struct values_t values = { .retry = 0, .beg = NULL };
+static time_t g_values_expire = 0;
+static struct value_t *g_values = NULL;
 
 struct value_t* values_get( void ) {
-	return values.beg;
+	return g_values;
 }
 
 int values_count( void ) {
-	struct value_t *item;
+	struct value_t *value;
 	int count;
 
 	count = 0;
-	item = values.beg;
-	while( item ) {
-		item = item->next;
+	value = g_values;
+	while( value ) {
 		count++;
+		value = value->next;
 	}
 
 	return count;
 }
 
 void values_debug( int fd ) {
-	char hexbuf[SHA1_HEX_LENGTH+1];
-	struct value_t *item;
+	char hexbuf[256+1];
+	struct value_t *value;
 	time_t now;
-	int counter;
+	int value_counter;
 
 	now = time_now_sec();
-	counter = 0;
-	item = values.beg;
-	while( item ) {
-		dprintf(
-			fd, " id: %s, port: %hu, refreshed: %ld min ago, lifetime: %ld min remaining\n",
-			str_id( item->value_id, hexbuf ), item->port,
-			(item->refreshed == -1) ? (-1) : ((now - item->refreshed) / 60),
-			(item->lifetime == LONG_MAX) ? (-1) : ((item->lifetime -  now) / 60)
-		);
-		counter++;
-		item = item->next;
+	value_counter = 0;
+	value = g_values;
+	dprintf( fd, "Announced values:\n" );
+	while( value ) {
+		dprintf( fd, " id: %s\n", str_id( value->id, hexbuf ) );
+		dprintf( fd, "  port: %d\n", value->port );
+		if( value->refreshed == -1 ) {
+			dprintf( fd, "  refreshed ago: never\n" );
+		} else {
+			dprintf( fd, "  refreshed: %ld min ago\n", (now - value->refreshed) / 60 );
+		}
+
+		if( value->lifetime == LONG_MAX ) {
+			dprintf( fd, "  lifetime: infinite\n" );
+		} else {
+			dprintf( fd, "  lifetime: %ld min left\n", (value->lifetime -  now) / 60 );
+		}
+
+		value_counter++;
+		value = value->next;
 	}
 
-	dprintf( fd, " Found %d values.\n", counter );
+	dprintf( fd, " Found %d values.\n", value_counter );
 }
 
-void values_add( const UCHAR *value_id, USHORT port, time_t lifetime ) {
+void values_add( const char query[], int port, time_t lifetime ) {
+	UCHAR id[SHA1_BIN_LENGTH];
+	char hexbuf[SHA1_HEX_LENGTH+1];
 	struct value_t *cur;
 	struct value_t *new;
 
-	if( port == 0 ) {
+	if( port < 1 || port > 65535 ) {
 		log_err("Announces: Port 0 is invalid.");
 	}
 
-	cur = values.beg;
+	id_compute( id, query );
+
+	log_debug( "VAL: Add value id %s:%hu.",  str_id( id, hexbuf ), port );
+
+	cur = g_values;
 	while( cur ) {
-		if( id_equal( cur->value_id, value_id ) && cur->port == port ) {
+		if( id_equal( cur->id, id ) && cur->port == port ) {
 			cur->lifetime = lifetime;
+			cur->refreshed = 0;
 			return;
 		}
 		cur = cur->next;
 	}
 
-	new = (struct value_t*) malloc( sizeof(struct value_t) );
-	memcpy( &new->value_id, value_id, SHA1_BIN_LENGTH);
+	new = (struct value_t*) calloc( 1, sizeof(struct value_t) );
+	memcpy( &new->id, id, SHA1_BIN_LENGTH );
 	new->port = port;
 	new->lifetime = lifetime;
 	new->refreshed = 0;
-	new->next = values.beg;
+	new->next = g_values;
 
-	values.beg = new;
-	values.retry = 0; //trigger an immediate handling
+	g_values = new;
+	g_values_expire = 0; /* Trigger an immediate handling */
 }
 
 /* Remove a port from the list - internal use only */
-void values_remove( struct value_t *item ) {
+void values_remove( struct value_t *value ) {
 	struct value_t *pre;
 	struct value_t *cur;
 
 	pre = NULL;
-	cur = values.beg;
+	cur = g_values;
 	while( cur ) {
-		if( cur == item ) {
+		if( cur == value ) {
 			if( pre ) {
 				pre->next = cur->next;
 			} else {
-				values.beg = cur->next;
+				g_values = cur->next;
 			}
 			free( cur );
 			return;
@@ -110,36 +122,39 @@ void values_remove( struct value_t *item ) {
 	}
 }
 
-void values_handle( int __rc, int __sock ) {
-	struct value_t *item;
+void values_expire( void ) {
+	struct value_t *value;
 	time_t now;
 
 	now = time_now_sec();
-
-	if( values.retry > now ) {
-		return;
-	} else {
-		values.retry = now + (1 * 60);
-	}
-
-	item = values.beg;
-	while( item ) {
-		if( item->lifetime < now ) {
-			values_remove( item );
-			item = item->next;
+	value = g_values;
+	while( value ) {
+		if( value->lifetime < now ) {
+			values_remove( value );
+			value = value->next;
 			continue;
 		}
 
-		if( (item->refreshed + (30 * 60)) < now ) {
+		if( (value->refreshed + (30 * 60)) < now ) {
 #ifdef DEBUG
 			char hexbuf[SHA1_HEX_LENGTH+1];
-			log_debug( "VAL: Announce %s:%hu.",  str_id( item->value_id, hexbuf ), item->port );
+			log_debug( "VAL: Announce %s:%hu",  str_id( value->id, hexbuf ), value->port );
 #endif
-			kad_announce( item->value_id, item->port );
-			item->refreshed = now;
+			kad_announce( value->id, value->port );
+			value->refreshed = now;
 		}
 
-		item = item->next;
+		value = value->next;
+	}
+}
+
+void values_handle( int _rc, int _sock ) {
+	/* Expire search results */
+	if( g_values_expire <= time_now_sec() ) {
+		values_expire();
+
+		/* Try again in ~1 minute */
+		g_values_expire = time_add_min( 1 );
 	}
 }
 

@@ -11,7 +11,7 @@
 #define N_ELEMS(x)  (sizeof(x) / sizeof(x[0]))
 
 /* Simple string match */
-#define match(opt, arg) (strcmp( opt, arg ) == 0)
+#define match(opt, arg) ((opt != NULL) && (strcmp( opt, arg ) == 0))
 
 #define ADDR_PARSE_SUCCESS 0
 #define ADDR_PARSE_INVALID_FORMAT 1
@@ -19,15 +19,17 @@
 #define ADDR_PARSE_NO_ADDR_FOUND 3
 
 
-int id_random( void *buffer, size_t size );
+int bytes_random( UCHAR buffer[], size_t size );
+void bytes_from_hex( UCHAR bin[], const char hex[], size_t length );
+char *bytes_to_hex( char hex[], const UCHAR bin[], size_t length );
+
 void id_compute( UCHAR *id, const char *str );
-void id_fromHex( UCHAR *id, const char *hex, size_t size );
 int id_equal( const UCHAR *id1, const UCHAR *id2 );
 
-int str_isHex( const char *string, int size );
-int str_isValidHostname( const char *hostname, int size );
+int str_isHex( const char *string, size_t size );
+int str_isValidHostname( const char *hostname, size_t size );
 int str_isZero( const char* str );
-void str_toLower( char* str, int size );
+void str_toLower( char* str, size_t size );
 
 char *str_id( const UCHAR *in, char *idbuf );
 char *str_addr( const IP *addr, char *addrbuf );

@@ -18,12 +18,6 @@
 #endif
 
 
-struct forwardings_t {
-	time_t retry;
-	struct forwarding_t *beg;
-	struct forwarding_t *cur;
-};
-
 #ifdef FWD_NATPMP
 struct natpmp_handle_t *natpmp = NULL;
 #endif
@@ -32,10 +26,12 @@ struct natpmp_handle_t *natpmp = NULL;
 struct upnp_handle_t *upnp = NULL;
 #endif
 
-struct forwardings_t forwardings = { .retry = 0, .beg = NULL, .cur = NULL };
+static time_t g_forwardings_retry = 0;
+static struct forwarding_t *g_forwardings_beg = NULL;
+static struct forwarding_t *g_forwardings_cur = NULL;
 
 struct forwarding_t *forwardings_get( void ) {
-	return forwardings.beg;
+	return g_forwardings_beg;
 }
 
 int forwardings_count( void ) {
@@ -43,7 +39,7 @@ int forwardings_count( void ) {
 	int count;
 
 	count = 0;
-	item = forwardings.beg;
+	item = g_forwardings_beg;
 	while( item ) {
 		item = item->next;
 		count++;
@@ -53,22 +49,33 @@ int forwardings_count( void ) {
 }
 
 void forwardings_debug( int fd ) {
-	struct forwarding_t *item;
+	struct forwarding_t *fwd;
+	char refreshed[64];
+	char lifetime[64];
 	time_t now;
 	int counter;
 
 	now = time_now_sec();
 	counter = 0;
-	item = forwardings.beg;
-	while( item ) {
-		dprintf(
-			fd, " port: %hu, refreshed: %ld min ago, lifetime: %ld min remaining\n",
-			item->port,
-			(item->refreshed == 0) ? (-1) : ((now - item->refreshed) / 60),
-			(item->lifetime == LONG_MAX ) ? (-1) : ((item->lifetime -  now) / 60)
-		);
+	fwd = g_forwardings_beg;
+	dprintf( fd, "port | refreshed ago [min] | lifetime remaining [min]\n");
+	while( fwd ) {
+		if( fwd->refreshed == 0 ) {
+			sprintf( refreshed, "never" );
+		} else {
+			sprintf( refreshed, "%ld", (now - fwd->refreshed) / 60 );
+		}
+
+		if( fwd->lifetime == LONG_MAX ) {
+			sprintf( lifetime, "infinite" );
+		} else {
+			sprintf( lifetime, "%ld", (fwd->lifetime -  now) / 60 );
+		}
+
+		dprintf( fd, "%hu | %s | %s\n", fwd->port, refreshed, lifetime );
+
 		counter++;
-		item = item->next;
+		fwd = fwd->next;
 	}
 
 	dprintf( fd, " Found %d forwardings.\n", counter );
@@ -82,7 +89,7 @@ void forwardings_add( int port, time_t lifetime ) {
 		return;
 	}
 
-	cur = forwardings.beg;
+	cur = g_forwardings_beg;
 	while( cur ) {
 		if( cur->port == port ) {
 			cur->lifetime = lifetime;
@@ -95,10 +102,10 @@ void forwardings_add( int port, time_t lifetime ) {
 	new->port = port;
 	new->lifetime = lifetime;
 	new->refreshed = 0;
-	new->next = forwardings.beg;
+	new->next = g_forwardings_beg;
 
-	forwardings.beg = new;
-	forwardings.retry = 0; /* Trigger quick handling */
+	g_forwardings_beg = new;
+	g_forwardings_retry = 0; /* Trigger quick handling */
 }
 
 /* Remove a port from the list - internal use only */
@@ -106,18 +113,18 @@ void forwardings_remove( struct forwarding_t *item ) {
 	struct forwarding_t *pre;
 	struct forwarding_t *cur;
 
-	if( forwardings.cur == item ) {
-		forwardings.cur = NULL;
+	if( g_forwardings_cur == item ) {
+		g_forwardings_cur = NULL;
 	}
 
 	pre = NULL;
-	cur = forwardings.beg;
+	cur = g_forwardings_beg;
 	while( cur ) {
 		if( cur == item ) {
 			if( pre ) {
 				pre->next = cur->next;
 			} else {
-				forwardings.beg = cur->next;
+				g_forwardings_beg = cur->next;
 			}
 			free( cur );
 			return;
@@ -132,22 +139,22 @@ void forwardings_remove( struct forwarding_t *item ) {
 * We do not actually check if we are in a private network.
 * This function is called in intervals.
 */
-void forwardings_handle( int __rc, int __sock ) {
+void forwardings_handle( int _rc, int _sock ) {
 	struct forwarding_t *item;
 	int rc;
 	time_t lifespan;
 	time_t now;
 
 	now = time_now_sec();
-	item = forwardings.cur;
+	item = g_forwardings_cur;
 
 	/* Handle current forwarding entry or wait 60 seconds to select a new one to process */
 	if( item == NULL ) {
-		if( forwardings.retry > now ) {
+		if( g_forwardings_retry > now ) {
 			return;
 		} else {
-			item = forwardings.beg;
-			forwardings.retry = now + (1 * 60);
+			item = g_forwardings_beg;
+			g_forwardings_retry = now + (1 * 60);
 		}
 	}
 
@@ -159,10 +166,10 @@ void forwardings_handle( int __rc, int __sock ) {
 	}
 
 	if( item == NULL ) {
-		forwardings.cur = NULL;
+		g_forwardings_cur = NULL;
 		return;
 	} else {
-		forwardings.cur = item;
+		g_forwardings_cur = item;
 	}
 
 	if( item->lifetime < now ) {

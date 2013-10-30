@@ -25,6 +25,10 @@
 The interface that is used to interact with the DHT.
 */
 
+/* Next time to do DHT maintenance */
+static time_t g_dht_maintenance = 0;
+
+
 void dht_lock_init( void ) {
 #ifdef PTHREAD
 	pthread_mutex_init( &gstate->dht_mutex, NULL );
@@ -48,16 +52,12 @@ void dht_callback_func( void *closure, int event, UCHAR *info_hash, void *data, 
 
 	switch( event ) {
 		case DHT_EVENT_VALUES:
-			results_import( info_hash, data, data_len, AF_INET );
-			break;
 		case DHT_EVENT_VALUES6:
-			results_import( info_hash, data, data_len, AF_INET6 );
+			results_import( info_hash, data, data_len );
 			break;
 		case DHT_EVENT_SEARCH_DONE:
-			results_done( info_hash, AF_INET );
-			break;
 		case DHT_EVENT_SEARCH_DONE6:
-			results_done( info_hash, AF_INET6 );
+			results_done( info_hash );
 			break;
 	}
 }
@@ -78,7 +78,7 @@ void dht_handler( int rc, int sock ) {
 			return;
 		}
 
-		/* Kademlia expects the message to be null-terminated. */
+		/* The DHT code expects the message to be null-terminated. */
 		buf[rc] = '\0';
 
 		/* Handle incoming data */
@@ -90,18 +90,18 @@ void dht_handler( int rc, int sock ) {
 			if( rc == EINVAL || rc == EFAULT ) {
 				log_err( "DHT: Error calling dht_periodic." );
 			}
-			gstate->time_dht_maintenance = time_now_sec() + 1;
+			g_dht_maintenance = time_now_sec() + 1;
 		} else {
-			gstate->time_dht_maintenance = time_now_sec() + time_wait;
+			g_dht_maintenance = time_now_sec() + time_wait;
 		}
-	} else if( gstate->time_dht_maintenance <= time_now_sec() ) {
+	} else if( g_dht_maintenance <= time_now_sec() ) {
 		/* Do a maintenance call */
 		dht_lock();
 		rc = dht_periodic( NULL, 0, NULL, 0, &time_wait, dht_callback_func, NULL );
 		dht_unlock();
 
 		/* Wait for the next maintenance call */
-		gstate->time_dht_maintenance = time_now_sec() + time_wait;
+		g_dht_maintenance = time_now_sec() + time_wait;
 		log_debug( "DHT: Next maintenance call in %u seconds.", (unsigned int) time_wait );
 	} else {
 		rc = 0;
@@ -114,7 +114,7 @@ void dht_handler( int rc, int sock ) {
 			log_err( "DHT: Error using select: %s", strerror( errno ) );
 			return;
 		} else {
-			gstate->time_dht_maintenance = time_now_sec() + 1;
+			g_dht_maintenance = time_now_sec() + 1;
 		}
 	}
 }
@@ -143,7 +143,7 @@ void dht_hash( void *hash_return, int hash_size,
 }
 
 int dht_random_bytes( void *buf, size_t size ) {
-	return id_random( buf, size );
+	return bytes_random( buf, size );
 }
 
 void kad_setup( void ) {
@@ -185,167 +185,6 @@ int kad_count_nodes( void ) {
 	}
 	return count;
 }
-
-#ifdef DEBUG
-
-void kad_debug_value_searches( int fd ) {
-	char addrbuf[FULL_ADDSTRLEN+1];
-	char hexbuf[SHA1_HEX_LENGTH+1];
-	struct results_t *results;
-	struct result_t *result;
-	int j;
-
-	j = 0;
-	results = results_list();
-	while( results != NULL ) {
-
-		dprintf( fd, " Value Search: %s\n", str_id( results->id, hexbuf ) );
-		dprintf( fd, "  af: %s\n", (results->af == AF_INET) ? "AF_INET" : "AF_INET6" );
-		dprintf( fd, "  done: %d\n", results->done );
-		result = results->entries;
-		while( result ) {
-			dprintf( fd, "   addr: %s\n", str_addr( &result->addr, addrbuf ) );
-			result = result->next;
-		}
-		j++;
-		results = results->next;
-	}
-	dprintf( fd, " Found %d value searches.\n", j );
-}
-
-/* Print buckets (leaf/finger table) */
-void kad_debug_buckets( int fd, struct bucket *b ) {
-	char addrbuf[FULL_ADDSTRLEN+1];
-	char hexbuf[SHA1_HEX_LENGTH+1];
-	struct node *n;
-	int i, j;
-
-	for( j = 0; b != NULL; ++j ) {
-		dprintf( fd, " Bucket: %s\n", str_id( b->first, hexbuf ) );
-
-		n = b->nodes;
-		for( i = 0; n != NULL; ++i ) {
-			dprintf( fd, "   Node: %s\n", str_id( n->id, hexbuf ) );
-			dprintf( fd, "    addr: %s\n", str_addr( &n->ss, addrbuf ) );
-			dprintf( fd, "    pinged: %d\n", n->pinged );
-			n = n->next;
-		}
-		dprintf( fd, "  Found %d nodes.\n", i );
-		b = b->next;
-	}
-	dprintf( fd, " Found %d buckets.\n", j );
-}
-
-/* Print searches */
-void kad_debug_node_searches( int fd ) {
-	char addrbuf[FULL_ADDSTRLEN+1];
-	char hexbuf[SHA1_HEX_LENGTH+1];
-	struct search *s = searches;
-	int i, j;
-
-	for( j = 0; s != NULL; ++j ) {
-		dprintf( fd, " Search: %s\n", str_id( s->id, hexbuf ) );
-		dprintf( fd, "  af: %s\n", (s->af == AF_INET) ? "AF_INET" : "AF_INET6" );
-		dprintf( fd, "  port: %hu\n", s->port );
-		dprintf( fd, "  done: %d\n", s->done );
-		for(i = 0; i < s->numnodes; ++i) {
-			struct search_node *sn = &s->nodes[i];
-			dprintf( fd, "   Node: %s\n", str_id(sn->id, hexbuf ) );
-			dprintf( fd, "    addr: %s\n", str_addr( &sn->ss, addrbuf ) );
-			dprintf( fd, "    pinged: %d\n", sn->pinged );
-			dprintf( fd, "    replied: %d\n", sn->replied );
-			dprintf( fd, "    acked: %d\n", sn->acked );
-		}
-		dprintf( fd, "  Found %d nodes.\n", i );
-		s = s->next;
-	}
-	dprintf( fd, " Found %d node searches.\n", j );
-}
-
-/* Print announced ids we have received */
-void kad_debug_storage( int fd ) {
-	char addrbuf[FULL_ADDSTRLEN+1];
-	char hexbuf[SHA1_HEX_LENGTH+1];
-	struct storage *s = storage;
-	IP addr;
-	int i, j;
-
-	for( j = 0; s != NULL; ++j ) {
-		dprintf( fd, "Id: %s\n", str_id(s->id, hexbuf ));
-		for( i = 0; i < s->numpeers; ++i ) {
-			struct peer* p = &s->peers[i];
-			if( p->len == 16 ) {
-				IP6 *a = (IP6 *) &addr;
-				a->sin6_family = AF_INET6;
-				a->sin6_port = htons( p->port );
-				memcpy( &a->sin6_addr, p->ip, 16 );
-			} else {
-				IP4 *a = (IP4 *) &addr;
-				a->sin_family = AF_INET;
-				a->sin_port = htons( p->port );
-				memcpy( &a->sin_addr, p->ip, 4 );
-			}
-			dprintf( fd, "  Peer: %s\n", str_addr( &addr, addrbuf)  );
-		}
-		dprintf( fd, " Found %d peers.\n", i );
-		s = s->next;
-	}
-	dprintf( fd, " Found %d stored hashes from received announcements.\n", j );
-}
-
-void kad_debug_blacklist( int fd ) {
-	char addrbuf[FULL_ADDSTRLEN+1];
-	int i;
-
-	for( i = 0; i < (next_blacklisted % DHT_MAX_BLACKLISTED); i++ ) {
-		dprintf( fd, " %s\n", str_addr( &blacklist[i], addrbuf ) );
-	}
-
-	dprintf( fd, " Found %d blacklisted addresses.\n", i );
-}
-
-void kad_debug( int fd ) {
-
-	dprintf( fd, "DHT_SEARCH_EXPIRE_TIME: %d\n", DHT_SEARCH_EXPIRE_TIME );
-	dprintf( fd, "DHT_MAX_SEARCHES: %d\n", DHT_MAX_SEARCHES );
-
-	/* maximum number of announced hashes we track */
-	dprintf( fd, "DHT_MAX_HASHES: %d\n", DHT_MAX_HASHES );
-
-	/* maximum number of peers for each announced hash we track */
-	dprintf( fd, "DHT_MAX_PEERS: %d\n", DHT_MAX_PEERS );
-
-	/* maximum number of blacklisted nodes */
-	dprintf( fd, "DHT_MAX_BLACKLISTED: %d\n", DHT_MAX_BLACKLISTED );
-
-	dht_lock();
-
-	dprintf( fd, "\nBuckets:\n" );
-	kad_debug_buckets( fd, (gstate->af == AF_INET) ? buckets : buckets6 );
-
-	dprintf( fd, "\nAnnouncements:\n" );
-	values_debug( fd );
-
-#ifdef FWD
-	dprintf( fd, "\nForwardings:\n" );
-	forwardings_debug( fd );
-#endif
-
-	dprintf( fd, "\nNode Searches:\n" );
-	kad_debug_node_searches( fd );
-
-	dprintf( fd, "\nValue Searches:\n" );
-	kad_debug_value_searches( fd );
-
-	dprintf( fd, "\nStorage:\n" );
-	kad_debug_storage( fd );
-
-	dprintf( fd, "\nBlacklist:\n" );
-	kad_debug_blacklist( fd );
-
-	dht_unlock();
-}
-#endif
 
 #define bprintf(...) (written += snprintf( buf+written, size-written, __VA_ARGS__))
 
@@ -429,32 +268,31 @@ int kad_announce( const UCHAR *id, int port ) {
 /*
 * Lookup known nodes that are nearest to the given id.
 */
-int kad_lookup_value( const UCHAR* id, IP addr_array[], int *addr_num ) {
-	int rc, i;
-	struct results_t *results;
-	struct result_t *result;
+int kad_lookup_value( const char query[], IP addr_array[], size_t *addr_num ) {
+	char hexbuf[SHA1_HEX_LENGTH+1];
+	UCHAR id[SHA1_BIN_LENGTH];
+	int rc;
+
+	/* Generate the id, e.g. id = sha1(query) */
+	id_compute( id, query );
+
+	log_debug( "KAD: Lookup '%s' as '%s'.", query, str_id( id, hexbuf ) );
 
 	dht_lock();
 
-	results = results_find( id, gstate->af );
+	rc = results_collect( id, addr_array, *addr_num );
 
-	if( results == NULL ) {
+	if( rc < 0 ) {
 		/* No results item found - no search in progress - start search */
 		dht_lock();
-		results_insert( id, gstate->af );
+		results_add( id, query );
 		dht_search( id, 0, gstate->af, dht_callback_func, NULL );
 		dht_unlock();
+		*addr_num = 0;
 		rc = -1;
 	} else {
-		i = 0;
-		result = results->entries;
-		while( result && i < *addr_num ) {
-			memcpy( &addr_array[i], &result->addr, sizeof(IP) );
-			i++;
-			result = result->next;
-		}
-		*addr_num = i;
-		rc = (i == 0) ? -2 : 0;
+		*addr_num = rc;
+		rc = 0;
 	}
 
 	dht_unlock();
@@ -466,9 +304,13 @@ int kad_lookup_value( const UCHAR* id, IP addr_array[], int *addr_num ) {
 * Lookup the address of the node that has the given id.
 * The port refers to the kad instance.
 */
-int kad_lookup_node( const UCHAR* id, IP *addr_return ) {
+int kad_lookup_node( const char query[], IP *addr_return ) {
+	UCHAR id[SHA1_BIN_LENGTH];
 	struct search *sr;
 	int i, rc;
+
+	/* That is the node id to lookup */
+	id_compute( id, query );
 
 	dht_lock();
 
@@ -504,7 +346,7 @@ int kad_blacklist( const IP* addr ) {
 	return 0;
 }
 
-int kad_export_nodes( IP addr_array[], int *num ) {
+int kad_export_nodes( IP addr_array[], size_t *num ) {
 	IP4 addr4[64];
 	IP6 addr6[64];
 	int num4;
@@ -532,4 +374,127 @@ int kad_export_nodes( IP addr_array[], int *num ) {
 	*num = count;
 
 	return 0;
+}
+
+/* Print buckets (leaf/finger table) */
+void kad_debug_buckets( int fd ) {
+	char addrbuf[FULL_ADDSTRLEN+1];
+	char hexbuf[SHA1_HEX_LENGTH+1];
+	struct bucket *b;
+	struct node *n;
+	int i, j;
+
+	dht_lock();
+
+	b = (gstate->af == AF_INET) ? buckets : buckets6;
+	for( j = 0; b != NULL; ++j ) {
+		dprintf( fd, " Bucket: %s\n", str_id( b->first, hexbuf ) );
+
+		n = b->nodes;
+		for( i = 0; n != NULL; ++i ) {
+			dprintf( fd, "   Node: %s\n", str_id( n->id, hexbuf ) );
+			dprintf( fd, "    addr: %s\n", str_addr( &n->ss, addrbuf ) );
+			dprintf( fd, "    pinged: %d\n", n->pinged );
+			n = n->next;
+		}
+		dprintf( fd, "  Found %d nodes.\n", i );
+		b = b->next;
+	}
+	dprintf( fd, " Found %d buckets.\n", j );
+
+	dht_unlock();
+}
+
+/* Print searches */
+void kad_debug_searches( int fd ) {
+	char addrbuf[FULL_ADDSTRLEN+1];
+	char hexbuf[SHA1_HEX_LENGTH+1];
+	struct search *s = searches;
+	int i, j;
+
+	dht_lock();
+
+	for( j = 0; s != NULL; ++j ) {
+		dprintf( fd, " Search: %s\n", str_id( s->id, hexbuf ) );
+		dprintf( fd, "  af: %s\n", (s->af == AF_INET) ? "AF_INET" : "AF_INET6" );
+		dprintf( fd, "  port: %hu\n", s->port );
+		dprintf( fd, "  done: %d\n", s->done );
+		for(i = 0; i < s->numnodes; ++i) {
+			struct search_node *sn = &s->nodes[i];
+			dprintf( fd, "   Node: %s\n", str_id(sn->id, hexbuf ) );
+			dprintf( fd, "    addr: %s\n", str_addr( &sn->ss, addrbuf ) );
+			dprintf( fd, "    pinged: %d\n", sn->pinged );
+			dprintf( fd, "    replied: %d\n", sn->replied );
+			dprintf( fd, "    acked: %d\n", sn->acked );
+		}
+		dprintf( fd, "  Found %d nodes.\n", i );
+		s = s->next;
+	}
+	dprintf( fd, " Found %d searches.\n", j );
+
+	dht_unlock();
+}
+
+/* Print announced ids we have received */
+void kad_debug_storage( int fd ) {
+	char addrbuf[FULL_ADDSTRLEN+1];
+	char hexbuf[SHA1_HEX_LENGTH+1];
+	struct storage *s = storage;
+	IP addr;
+	int i, j;
+
+	dht_lock();
+
+	for( j = 0; s != NULL; ++j ) {
+		dprintf( fd, "Id: %s\n", str_id(s->id, hexbuf ));
+		for( i = 0; i < s->numpeers; ++i ) {
+			struct peer* p = &s->peers[i];
+			if( p->len == 16 ) {
+				IP6 *a = (IP6 *) &addr;
+				a->sin6_family = AF_INET6;
+				a->sin6_port = htons( p->port );
+				memcpy( &a->sin6_addr, p->ip, 16 );
+			} else {
+				IP4 *a = (IP4 *) &addr;
+				a->sin_family = AF_INET;
+				a->sin_port = htons( p->port );
+				memcpy( &a->sin_addr, p->ip, 4 );
+			}
+			dprintf( fd, "  Peer: %s\n", str_addr( &addr, addrbuf)  );
+		}
+		dprintf( fd, " Found %d peers.\n", i );
+		s = s->next;
+	}
+	dprintf( fd, " Found %d stored hashes from received announcements.\n", j );
+
+	dht_unlock();
+}
+
+void kad_debug_blacklist( int fd ) {
+	char addrbuf[FULL_ADDSTRLEN+1];
+	int i;
+
+	dht_lock();
+
+	for( i = 0; i < (next_blacklisted % DHT_MAX_BLACKLISTED); i++ ) {
+		dprintf( fd, " %s\n", str_addr( &blacklist[i], addrbuf ) );
+	}
+
+	dprintf( fd, " Found %d blacklisted addresses.\n", i );
+
+	dht_unlock();
+}
+
+void kad_debug_constants( int fd ) {
+	dprintf( fd, "DHT_SEARCH_EXPIRE_TIME: %d\n", DHT_SEARCH_EXPIRE_TIME );
+	dprintf( fd, "DHT_MAX_SEARCHES: %d\n", DHT_MAX_SEARCHES );
+
+	/* maximum number of announced hashes we track */
+	dprintf( fd, "DHT_MAX_HASHES: %d\n", DHT_MAX_HASHES );
+
+	/* maximum number of peers for each announced hash we track */
+	dprintf( fd, "DHT_MAX_PEERS: %d\n", DHT_MAX_PEERS );
+
+	/* maximum number of blacklisted nodes */
+	dprintf( fd, "DHT_MAX_BLACKLISTED: %d\n", DHT_MAX_BLACKLISTED );
 }

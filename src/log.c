@@ -15,7 +15,7 @@ void _log( const char *filename, int line, int priority, const char *format, ...
 	va_list vlist;
 
 	if( (gstate->verbosity == VERBOSITY_QUIET) &&
-		(priority == LOG_INFO || priority == LOG_DEBUG)) {
+		(priority == LOG_INFO || priority == LOG_DEBUG) ) {
 		return;
 	}
 

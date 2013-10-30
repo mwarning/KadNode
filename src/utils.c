@@ -20,13 +20,14 @@
 
 
 /* Fill buffer with random bytes */
-int id_random( void *buffer, size_t size ) {
-	int rc, fd;
+int bytes_random( UCHAR buffer[], size_t size ) {
+	int fd;
+	int rc;
 
 	fd = open( "/dev/urandom", O_RDONLY );
 	if( fd < 0 ) {
-		log_err( "Utils: Failed to open /dev/urandom" );
-		return -1;
+		log_err( "Failed to open /dev/urandom" );
+		exit( 1 );
 	}
 
 	if( (rc = read( fd, buffer, size )) >= 0 ) {
@@ -36,6 +37,49 @@ int id_random( void *buffer, size_t size ) {
 	return rc;
 }
 
+void bytes_from_hex( UCHAR bin[], const char hex[], size_t length ) {
+	size_t i;
+	size_t xv = 0;
+
+	for( i = 0; i < length; ++i ) {
+		const char c = hex[i];
+		if( c >= 'a' ) {
+			xv += (c - 'a') + 10;
+		} else if ( c >= 'A') {
+			xv += (c - 'A') + 10;
+		} else {
+			xv += c - '0';
+		}
+
+		if( i % 2 ) {
+			bin[i/2] = xv;
+			xv = 0;
+		} else {
+			xv *= 16;
+		}
+	}
+}
+
+char *bytes_to_hex( char hex[], const UCHAR bin[], size_t length ) {
+	size_t i;
+	UCHAR *p0 = (UCHAR *)bin;
+	char *p1 = hex;
+
+	for( i = 0; i < length; i++ ) {
+		snprintf( p1, 3, "%02x", *p0 );
+		p0 += 1;
+		p1 += 2;
+	}
+
+	return hex;
+}
+
+/*
+* Compute the id of a string.
+* The character case and the top level domain is ignored.
+* If the string represent a sha1 hash in hex - then it is
+* converted explicitly instead of hashing.
+*/
 void id_compute( UCHAR *id, const char *str ) {
 	SHA1_CTX ctx;
 	size_t size;
@@ -50,9 +94,9 @@ void id_compute( UCHAR *id, const char *str ) {
 		size = tld - str;
 	}
 
-	if( size >= SHA1_HEX_LENGTH && str_isHex( str, SHA1_HEX_LENGTH ) ) {
-		/* treat hostname as hex string and ignore any kind of suffix */
-		id_fromHex( id, str, SHA1_HEX_LENGTH );
+	if( size == SHA1_HEX_LENGTH && str_isHex( str, SHA1_HEX_LENGTH ) ) {
+		/* Treat hostname as hex string and ignore any kind of suffix */
+		bytes_from_hex( id, str, SHA1_HEX_LENGTH );
 	} else {
 		cpy = strdup( str );
 		str_toLower( cpy, size );
@@ -65,38 +109,13 @@ void id_compute( UCHAR *id, const char *str ) {
 	}
 }
 
-
-/* Parse a hexdecimal string into id */
-void id_fromHex( UCHAR *id, const char *hex, size_t size ) {
-	int i;
-	int xv = 0;
-
-	for( i = 0; i < size; ++i ) {
-		const char c = hex[i];
-		if( c >= 'a' ) {
-			xv += (c - 'a') + 10;
-		} else if ( c >= 'A') {
-			xv += (c - 'A') + 10;
-		} else {
-			xv += c - '0';
-		}
-
-		if( i % 2 ) {
-			id[i/2] = xv;
-			xv = 0;
-		} else {
-			xv *= 16;
-		}
-	}
-}
-
 int id_equal( const UCHAR *id1, const UCHAR *id2 ) {
 	return (memcmp( id1, id2, SHA1_BIN_LENGTH ) == 0);
 }
 
 /* Check if string consist of hexdecimal characters */
-int str_isHex( const char *string, int size ) {
-	int i = 0;
+int str_isHex( const char *string, size_t size ) {
+	size_t i = 0;
 
 	for( i = 0; i < size; i++ ) {
 		const char c = string[i];
@@ -112,8 +131,8 @@ int str_isHex( const char *string, int size ) {
 	return 1;
 }
 
-int str_isValidHostname( const char *hostname, int size ) {
-	int i;
+int str_isValidHostname( const char *hostname, size_t size ) {
+	size_t i;
 
 	for( i = 0; i < size; i++ ) {
 		const char c = hostname[i];
@@ -136,29 +155,19 @@ int str_isZero( const char* str ) {
 	return (str == NULL) || (strcmp( str, "0" ) == 0);
 }
 
-void str_toLower( char* str, int size ) {
-	int i;
+void str_toLower( char* str, size_t size ) {
+	size_t i;
 
 	for( i = 0; i < size; ++i ) {
 		str[i] = tolower( str[i] );
 	}
 }
 
-char* str_id( const UCHAR *in, char *buf ) {
-	int i = 0;
-	UCHAR *p0 = (UCHAR *)in;
-	char *p1 = buf;
-
-	for( i = 0; i < SHA1_BIN_LENGTH; i++ ) {
-		snprintf( p1, 3, "%02x", *p0 );
-		p0 += 1;
-		p1 += 2;
-	}
-
-	return buf;
+char *str_id( const UCHAR *in, char *buf ) {
+	return bytes_to_hex( buf, in, SHA1_BIN_LENGTH );
 }
 
-char* str_addr( const IP *addr, char *addrbuf ) {
+char *str_addr( const IP *addr, char *addrbuf ) {
 	char buf[INET6_ADDRSTRLEN+1];
 	unsigned short port;
 
@@ -180,11 +189,11 @@ char* str_addr( const IP *addr, char *addrbuf ) {
 	return addrbuf;
 }
 
-char* str_addr6( const IP6 *addr, char *addrbuf ) {
+char *str_addr6( const IP6 *addr, char *addrbuf ) {
 	return str_addr( (const IP *)addr, addrbuf );
 }
 
-char* str_addr4( const IP4 *addr, char *addrbuf ) {
+char *str_addr4( const IP4 *addr, char *addrbuf ) {
 	return str_addr( (const IP *)addr, addrbuf );
 }
 
@@ -257,7 +266,7 @@ int addr_parse_full( IP *addr, const char *full_addr_str, const char* default_po
 	char *last_colon;
 	const char *addr_str = NULL;
 	const char *port_str = NULL;
-	int len;
+	size_t len;
 
 	len = strlen( full_addr_str );
 	if( len >= (sizeof(addr_buf) - 1) ) {
