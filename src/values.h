@@ -12,8 +12,8 @@
 struct value_t {
 	UCHAR id[SHA1_BIN_LENGTH];
 	int port;
-	time_t lifetime; /* Keep entry until lifetime expires */
-	time_t refreshed; /* Last time the entry was refreshed */
+	time_t lifetime; /* Keep entry refreshed until the lifetime expires */
+	time_t refresh; /* Next time the entry need to be refreshed */
 	struct value_t *next;
 };
 
