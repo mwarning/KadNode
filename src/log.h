@@ -15,13 +15,14 @@
 #define VERBOSITY_VERBOSE 1
 #define VERBOSITY_DEBUG 2
 
-#define log_crit(...) _log(NULL, 0, LOG_CRIT, __VA_ARGS__)
-#define log_err(...) _log(NULL, 0, LOG_ERR, __VA_ARGS__)
-#define log_info(...) _log(NULL, 0, LOG_INFO, __VA_ARGS__)
-#define log_warn(...) _log(NULL, 0, LOG_WARNING, __VA_ARGS__)
-#define log_debug(...) _log(NULL, 0, LOG_DEBUG, __VA_ARGS__)
+#define log_crit(...) if(_log_check(LOG_CRIT)) {_log_print(LOG_CRIT, __VA_ARGS__);}
+#define log_err(...) if(_log_check(LOG_ERR)) {_log_print(LOG_ERR, __VA_ARGS__);}
+#define log_info(...) if(_log_check(LOG_INFO)) {_log_print(LOG_INFO, __VA_ARGS__);}
+#define log_warn(...) if(_log_check(LOG_WARNING)) {_log_print(LOG_WARNING, __VA_ARGS__);}
+#define log_debug(...) if(_log_check(LOG_DEBUG)) {_log_print(LOG_DEBUG, __VA_ARGS__);}
 
 
-void _log( const char *filename, int line, int priority, const char *format, ... );
+int _log_check( int priority );
+void _log_print( int priority, const char *format, ... );
 
 #endif /* _LOG_H_ */
