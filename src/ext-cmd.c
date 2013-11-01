@@ -103,7 +103,7 @@ int cmd_import( REPLY *r, const char *addr_str) {
 	int rc;
 
 	/* If the address contains no port - use the default port */
-	if( (rc = addr_parse_full( &addr, addr_str, DHT_PORT, gstate->af )) == ADDR_PARSE_SUCCESS ) {
+	if( (rc = addr_parse_full( &addr, addr_str, DHT_PORT, gconf->af )) == ADDR_PARSE_SUCCESS ) {
 		if( kad_ping( &addr ) == 0 ) {
 			r_printf( r, "Send ping to: %s\n", str_addr( &addr, addrbuf ) );
 			return 0;
@@ -131,7 +131,7 @@ int cmd_blacklist( REPLY *r, const char *addr_str ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	IP addr;
 
-	if( addr_parse( &addr, addr_str, NULL, gstate->af ) != 0 ) {
+	if( addr_parse( &addr, addr_str, NULL, gconf->af ) != 0 ) {
 		r_printf( r, "Invalid address.\n" );
 		return 1;
 	} else {
@@ -298,7 +298,7 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 	} else if( match( argv[0], "shutdown" ) && argc == 1 ) {
 
 		r_printf( r, "Shutting down ...\n" );
-		gstate->is_running = 0;
+		gconf->is_running = 0;
 
 	} else {
 		/* print usage */
@@ -379,14 +379,14 @@ void cmd_console_handler( int rc, int fd ) {
 void cmd_setup( void ) {
 	int sock;
 
-	if( str_isZero( gstate->cmd_port ) ) {
+	if( str_isZero( gconf->cmd_port ) ) {
 		return;
 	}
 
-	sock = net_bind( "CMD", "::1", gstate->cmd_port, NULL, IPPROTO_UDP, AF_INET6 );
+	sock = net_bind( "CMD", "::1", gconf->cmd_port, NULL, IPPROTO_UDP, AF_INET6 );
 	net_add_handler( sock, &cmd_remote_handler );
 
-	if( gstate->is_daemon == 0 ) {
+	if( gconf->is_daemon == 0 ) {
 		/* Wait for other messages to be displayed */
 		sleep(1);
 

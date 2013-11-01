@@ -219,7 +219,7 @@ int results_import( const UCHAR id[], void *data, size_t data_length ) {
 		return -1;
 	}
 
-	if( gstate->af == AF_INET ) {
+	if( gconf->af == AF_INET ) {
 		dht_addr4_t *data4 = (dht_addr4_t *) data;
 		IP4 *a = (IP4 *)&addr;
 
@@ -233,7 +233,7 @@ int results_import( const UCHAR id[], void *data, size_t data_length ) {
 		return 0;
 	}
 
-	if( gstate->af == AF_INET6) {
+	if( gconf->af == AF_INET6) {
 		dht_addr6_t *data6 = (dht_addr6_t *) data;
 		IP6 *a = (IP6 *)&addr;
 

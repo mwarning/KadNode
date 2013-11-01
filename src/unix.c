@@ -22,27 +22,27 @@
 void unix_signal( void ) {
 
 	/* STRG+C aka SIGINT => Stop the program */
-	gstate->sig_stop.sa_handler = unix_sig_stop;
-	gstate->sig_stop.sa_flags = 0;
-	if( ( sigemptyset( &gstate->sig_stop.sa_mask ) == -1) || (sigaction( SIGINT, &gstate->sig_stop, NULL ) != 0) ) {
+	gconf->sig_stop.sa_handler = unix_sig_stop;
+	gconf->sig_stop.sa_flags = 0;
+	if( ( sigemptyset( &gconf->sig_stop.sa_mask ) == -1) || (sigaction( SIGINT, &gconf->sig_stop, NULL ) != 0) ) {
 		log_err( "UNX: Failed to set SIGINT to handle Ctrl-C" );
 	}
 
 	/* SIGTERM => Stop the program gracefully */
-	gstate->sig_term.sa_handler = unix_sig_term;
-	gstate->sig_term.sa_flags = 0;
-	if( ( sigemptyset( &gstate->sig_term.sa_mask ) == -1) || (sigaction( SIGTERM, &gstate->sig_term, NULL ) != 0) ) {
+	gconf->sig_term.sa_handler = unix_sig_term;
+	gconf->sig_term.sa_flags = 0;
+	if( ( sigemptyset( &gconf->sig_term.sa_mask ) == -1) || (sigaction( SIGTERM, &gconf->sig_term, NULL ) != 0) ) {
 		log_err( "UNX: Failed to set SIGTERM to handle Ctrl-C" );
 	}
 }
 
 void unix_sig_stop( int signo ) {
-	gstate->is_running = 0;
+	gconf->is_running = 0;
 	log_info( "Shutting down..." );
 }
 
 void unix_sig_term( int signo ) {
-	gstate->is_running = 0;
+	gconf->is_running = 0;
 }
 
 void unix_fork( void ) {
@@ -66,11 +66,11 @@ void unix_fork( void ) {
 void unix_write_pidfile( pid_t pid ) {
 	FILE *file;
 
-	if( gstate->pidfile == NULL ) {
+	if( gconf->pidfile == NULL ) {
 		return;
 	}
 
-	file = fopen( gstate->pidfile, "w" );
+	file = fopen( gconf->pidfile, "w" );
 	if( file == NULL ) {
 		log_err( "UNX: Failed to open pid file." );
 	}
@@ -88,7 +88,7 @@ void unix_dropuid0( void ) {
 	struct passwd *pw = NULL;
 
 	/* Return if no user is set */
-	if( gstate->user == NULL ) {
+	if( gconf->user == NULL ) {
 		return;
 	}
 
@@ -98,7 +98,7 @@ void unix_dropuid0( void ) {
 	}
 
 	/* Process is running as root, drop privileges */
-	if( (pw = getpwnam( gstate->user )) == NULL ) {
+	if( (pw = getpwnam( gconf->user )) == NULL ) {
 		log_err( "UNX: Dropping uid 0 failed. Set a valid user." );
 	}
 

@@ -44,7 +44,7 @@ int main( int argc, char **argv ) {
 	conf_load( argc, argv );
 	conf_check();
 
-    if( gstate->is_daemon == 1 ) {
+    if( gconf->is_daemon == 1 ) {
 
 		/* Close pipes */
 		fclose( stderr );
@@ -55,7 +55,7 @@ int main( int argc, char **argv ) {
 			log_err( "UNX: Changing working directory to / failed: %s", strerror( errno ) );
 		}
 
-		gstate->use_syslog = 1;
+		gconf->use_syslog = 1;
 
 		/* Fork before any threads are started */
 		unix_fork();

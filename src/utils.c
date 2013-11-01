@@ -14,7 +14,7 @@
 #include <ctype.h>
 
 #include "log.h"
-#include "conf.h" /* For gstate->time_now */
+#include "conf.h" /* For gconf->time_now */
 #include "sha1.h"
 #include "utils.h"
 
@@ -335,7 +335,7 @@ int addr_equal( const IP *addr1, const IP *addr2 ) {
 }
 
 time_t time_now_sec( void ) {
-	return gstate->time_now.tv_sec;
+	return gconf->time_now.tv_sec;
 }
 
 time_t time_add_min( unsigned int min ) {

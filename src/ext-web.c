@@ -118,10 +118,10 @@ void web_handler( int rc, int sock ) {
 void web_setup( void ) {
 	int sock;
 
-	if( str_isZero( gstate->web_port ) ) {
+	if( str_isZero( gconf->web_port ) ) {
 		return;
 	}
 
-	sock = net_bind( "WEB", "::1", gstate->web_port, NULL, IPPROTO_TCP, AF_INET6 );
+	sock = net_bind( "WEB", "::1", gconf->web_port, NULL, IPPROTO_TCP, AF_INET6 );
 	net_add_handler( sock, &web_handler );
 }

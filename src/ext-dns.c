@@ -448,10 +448,10 @@ void dns_handler( int rc, int sock ) {
 void dns_setup( void ) {
 	int sock;
 
-	if( str_isZero( gstate->dns_port ) ) {
+	if( str_isZero( gconf->dns_port ) ) {
 		return;
 	}
 
-	sock = net_bind( "DNS", "::1", gstate->dns_port, NULL, IPPROTO_UDP, AF_INET6 );
+	sock = net_bind( "DNS", "::1", gconf->dns_port, NULL, IPPROTO_UDP, AF_INET6 );
 	net_add_handler( sock, &dns_handler );
 }

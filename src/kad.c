@@ -31,19 +31,19 @@ static time_t g_dht_maintenance = 0;
 
 void dht_lock_init( void ) {
 #ifdef PTHREAD
-	pthread_mutex_init( &gstate->dht_mutex, NULL );
+	pthread_mutex_init( &gconf->dht_mutex, NULL );
 #endif
 }
 
 void dht_lock( void ) {
 #ifdef PTHREAD
-	pthread_mutex_lock( &gstate->dht_mutex );
+	pthread_mutex_lock( &gconf->dht_mutex );
 #endif
 }
 
 void dht_unlock( void ) {
 #ifdef PTHREAD
-	pthread_mutex_unlock( &gstate->dht_mutex );
+	pthread_mutex_unlock( &gconf->dht_mutex );
 #endif
 }
 
@@ -153,22 +153,22 @@ void kad_setup( void ) {
 	s6 = -1;
 
 	/* Let the DHT output debug text */
-	if( gstate->verbosity == VERBOSITY_DEBUG ) {
+	if( gconf->verbosity == VERBOSITY_DEBUG ) {
 		dht_debug = stdout;
 	}
 
 	dht_lock_init();
 
-	if( gstate->af == AF_INET ) {
-		s4 = net_bind( "DHT", DHT_ADDR4, gstate->dht_port, gstate->dht_ifce, IPPROTO_UDP, AF_INET );
+	if( gconf->af == AF_INET ) {
+		s4 = net_bind( "DHT", DHT_ADDR4, gconf->dht_port, gconf->dht_ifce, IPPROTO_UDP, AF_INET );
 		net_add_handler( s4, &dht_handler );
 	} else {
-		s6 = net_bind( "DHT", DHT_ADDR6, gstate->dht_port, gstate->dht_ifce, IPPROTO_UDP, AF_INET6 );
+		s6 = net_bind( "DHT", DHT_ADDR6, gconf->dht_port, gconf->dht_ifce, IPPROTO_UDP, AF_INET6 );
 		net_add_handler( s6, &dht_handler );
 	}
 
 	/* Init the DHT.  Also set the sockets into non-blocking mode. */
-	if( dht_init( s4, s6, gstate->node_id, (UCHAR*) "KN\0\0") < 0 ) {
+	if( dht_init( s4, s6, gconf->node_id, (UCHAR*) "KN\0\0") < 0 ) {
 		log_err( "DHT: Failed to initialize the DHT." );
 	}
 }
@@ -177,7 +177,7 @@ int kad_count_nodes( void ) {
 	struct bucket *bucket;
 	int count;
 
-	bucket = (gstate->af == AF_INET ) ? buckets : buckets6;
+	bucket = (gconf->af == AF_INET ) ? buckets : buckets6;
 	count = 0;
 	while( bucket ) {
 		count += bucket->count;
@@ -220,12 +220,12 @@ int kad_status( char *buf, int size ) {
 
 	bprintf( "Node id: %s\n", str_id( myid, hexbuf ) );
 	bprintf( "Bound to: %s:%s / %s\n",
-		(gstate->af == AF_INET) ? "0.0.0.0" : "[::1]",
-		gstate->dht_port,
-		(gstate->dht_ifce == NULL) ? "<any device>" : gstate->dht_ifce
+		(gconf->af == AF_INET) ? "0.0.0.0" : "[::1]",
+		gconf->dht_port,
+		(gconf->dht_ifce == NULL) ? "<any device>" : gconf->dht_ifce
 	);
 
-	bprintf( "Nodes: %d (%s)\n", kad_count_nodes(), (gstate->af == AF_INET) ? "IPv4" : "IPv6" );
+	bprintf( "Nodes: %d (%s)\n", kad_count_nodes(), (gconf->af == AF_INET) ? "IPv4" : "IPv6" );
 
 	bprintf( "Storage: %d (max %d), %d peers (max %d per storage)\n",
 		numstorage, DHT_MAX_HASHES, numstorage_peers, DHT_MAX_PEERS );
@@ -259,7 +259,7 @@ int kad_announce( const UCHAR *id, int port ) {
 	}
 
 	dht_lock();
-	dht_search( id, port, gstate->af, dht_callback_func, NULL );
+	dht_search( id, port, gconf->af, dht_callback_func, NULL );
 	dht_unlock();
 
 	return 0;
@@ -286,7 +286,7 @@ int kad_lookup_value( const char query[], IP addr_array[], size_t *addr_num ) {
 		/* No results item found - no search in progress - start search */
 		dht_lock();
 		results_add( id, query );
-		dht_search( id, 0, gstate->af, dht_callback_func, NULL );
+		dht_search( id, 0, gconf->af, dht_callback_func, NULL );
 		dht_unlock();
 		*addr_num = 0;
 		rc = -1;
@@ -317,7 +317,7 @@ int kad_lookup_node( const char query[], IP *addr_return ) {
 	rc = -1;
 	sr = searches;
     while( sr ) {
-		if( sr->af == gstate->af && id_equal( sr->id, id ) ) {
+		if( sr->af == gconf->af && id_equal( sr->id, id ) ) {
 			for( i = 0; i < sr->numnodes; ++i ) {
 				if( id_equal( sr->nodes[i].id, id ) ) {
 					memcpy( addr_return, &sr->nodes[i].ss, sizeof(IP) );
@@ -386,7 +386,7 @@ void kad_debug_buckets( int fd ) {
 
 	dht_lock();
 
-	b = (gstate->af == AF_INET) ? buckets : buckets6;
+	b = (gconf->af == AF_INET) ? buckets : buckets6;
 	for( j = 0; b != NULL; ++j ) {
 		dprintf( fd, " Bucket: %s\n", str_id( b->first, hexbuf ) );
 

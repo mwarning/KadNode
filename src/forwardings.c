@@ -228,7 +228,7 @@ void forwardings_handle( int _rc, int _sock ) {
 }
 
 void forwardings_setup( void ) {
-	if( gstate->disable_forwarding == 1 ) {
+	if( gconf->disable_forwarding == 1 ) {
 		return;
 	}
 
@@ -242,7 +242,7 @@ void forwardings_setup( void ) {
 #endif
 
 	/* Add a port forwarding for the DHT for the entire run time */
-	int port = atoi( gstate->dht_port );
+	int port = atoi( gconf->dht_port );
 	forwardings_add( port, LONG_MAX );
 
 	/* Cause the callback to be called in intervals */

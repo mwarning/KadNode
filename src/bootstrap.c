@@ -39,8 +39,8 @@ int multicast_setup4( int sock, IP *addr, int enable ) {
 	memcpy( &mreq.imr_multiaddr, &((IP4 *)addr)->sin_addr, sizeof(mreq.imr_multiaddr) );
 
 	/* Using an interface index of x is indicated by 0.0.0.x */
-	if( gstate->dht_ifce && ((mreq.imr_interface.s_addr = htonl( if_nametoindex( gstate->dht_ifce )) ) == 0) ) {
-		log_err( "BOOT: Cannot find interface '%s' for multicast: %s", gstate->dht_ifce, strerror( errno ) );
+	if( gconf->dht_ifce && ((mreq.imr_interface.s_addr = htonl( if_nametoindex( gconf->dht_ifce )) ) == 0) ) {
+		log_err( "BOOT: Cannot find interface '%s' for multicast: %s", gconf->dht_ifce, strerror( errno ) );
 		return 0;
 	} else {
 		mreq.imr_interface.s_addr = 0;
@@ -75,8 +75,8 @@ int multicast_setup6( int sock, IP *addr, int enable ) {
 	memset( &mreq, '\0', sizeof(mreq) );
 	memcpy( &mreq.ipv6mr_multiaddr, &((IP6 *)addr)->sin6_addr, sizeof(mreq.ipv6mr_multiaddr) );
 
-	if( gstate->dht_ifce && ((mreq.ipv6mr_interface = if_nametoindex( gstate->dht_ifce )) == 0) ) {
-		log_err( "BOOT: Cannot find interface '%s' for multicast: %s", gstate->dht_ifce, strerror( errno ) );
+	if( gconf->dht_ifce && ((mreq.ipv6mr_interface = if_nametoindex( gconf->dht_ifce )) == 0) ) {
+		log_err( "BOOT: Cannot find interface '%s' for multicast: %s", gconf->dht_ifce, strerror( errno ) );
 		return 0;
 	}
 
@@ -170,7 +170,7 @@ void bootstrap_export_peerfile( void ) {
 	size_t i, num;
 	FILE * fp;
 
-	filename = gstate->peerfile;
+	filename = gconf->peerfile;
 	if( filename == NULL ) {
 		return;
 	}
@@ -187,7 +187,7 @@ void bootstrap_export_peerfile( void ) {
 		return;
 	}
 
-	if( time_now_sec() - gstate->startup_time < (5 * 60) ) {
+	if( time_now_sec() - gconf->startup_time < (5 * 60) ) {
 		log_info( "BOOT: No peers exported. KadNode needs to run at least 5 minutes." );
 		return;
 	}
@@ -217,7 +217,7 @@ void bootstrap_import_peerfile( void ) {
 	int num;
 	IP addr;
 
-	filename = gstate->peerfile;
+	filename = gconf->peerfile;
 	if( filename == NULL ) {
 		return;
 	}
@@ -235,7 +235,7 @@ void bootstrap_import_peerfile( void ) {
 			continue;
 		}
 
-		if( addr_parse_full( &addr, linebuf, DHT_PORT, gstate->af ) == ADDR_PARSE_SUCCESS ) {
+		if( addr_parse_full( &addr, linebuf, DHT_PORT, gconf->af ) == ADDR_PARSE_SUCCESS ) {
 			if( kad_ping( &addr ) == 0 ) {
 				num++;
 			} else {
@@ -279,7 +279,7 @@ void bootstrap_handle( int rc, int sock ) {
 			}
 
 			if( mcast_registered == 1 ) {
-				snprintf( buf, sizeof(buf), msg_fmt, atoi(gstate->dht_port) );
+				snprintf( buf, sizeof(buf), msg_fmt, atoi(gconf->dht_port) );
 
 				rc_send = sendto( sock, buf, strlen(buf), 0, (struct sockaddr*) &mcast_addr, sizeof(IP) );
 				if( rc_send < 0 ) {
@@ -340,12 +340,12 @@ void bootstrap_setup( void ) {
 	int sock;
 
 	packet_limit = PACKET_LIMIT_MAX;
-	if( addr_parse( &mcast_addr, gstate->mcast_addr, DHT_PORT_MCAST, gstate->af ) != 0 ) {
-		log_err( "BOOT: Failed to parse IP address for '%s'.", gstate->mcast_addr );
+	if( addr_parse( &mcast_addr, gconf->mcast_addr, DHT_PORT_MCAST, gconf->af ) != 0 ) {
+		log_err( "BOOT: Failed to parse IP address for '%s'.", gconf->mcast_addr );
 	}
 
-	if( gstate->disable_multicast == 0 ) {
-		sock = net_bind( "BOOT", gstate->mcast_addr, DHT_PORT_MCAST, NULL, IPPROTO_UDP, gstate->af );
+	if( gconf->disable_multicast == 0 ) {
+		sock = net_bind( "BOOT", gconf->mcast_addr, DHT_PORT_MCAST, NULL, IPPROTO_UDP, gconf->af );
 	} else {
 		return;
 	}

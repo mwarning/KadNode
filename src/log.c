@@ -14,12 +14,12 @@ void _log( const char *filename, int line, int priority, const char *format, ...
 	const char *prefix;
 	va_list vlist;
 
-	if( (gstate->verbosity == VERBOSITY_QUIET) &&
+	if( (gconf->verbosity == VERBOSITY_QUIET) &&
 		(priority == LOG_INFO || priority == LOG_DEBUG) ) {
 		return;
 	}
 
-	if( (gstate->verbosity == VERBOSITY_VERBOSE) &&
+	if( (gconf->verbosity == VERBOSITY_VERBOSE) &&
 		(priority == LOG_DEBUG) ) {
 		return;
 	}
@@ -49,7 +49,7 @@ void _log( const char *filename, int line, int priority, const char *format, ...
 			prefix = "(?)";
 	}
 
-	if( gstate->use_syslog ) {
+	if( gconf->use_syslog ) {
 		/* Write messages to e.g. /var/log/syslog */
 		openlog( MAIN_SRVNAME, LOG_PID|LOG_CONS, LOG_USER|LOG_PERROR );
 		if( filename ) {

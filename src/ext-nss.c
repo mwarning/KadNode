@@ -78,10 +78,10 @@ void nss_handler( int rc, int sock ) {
 void nss_setup( void ) {
 	int sock;
 
-	if( str_isZero( gstate->nss_port ) ) {
+	if( str_isZero( gconf->nss_port ) ) {
 		return;
 	}
 
-	sock = net_bind( "NSS", "::1", gstate->nss_port, NULL, IPPROTO_UDP, AF_INET6 );
+	sock = net_bind( "NSS", "::1", gconf->nss_port, NULL, IPPROTO_UDP, AF_INET6 );
 	net_add_handler( sock, &nss_handler );
 }

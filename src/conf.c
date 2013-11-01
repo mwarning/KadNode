@@ -19,7 +19,7 @@
 #endif
 
 /* Global object variables */
-struct obj_gstate *gstate = NULL;
+struct obj_gconf *gconf = NULL;
 
 const char *version = "KadNode v"MAIN_VERSION" ( "
 "Features:"
@@ -94,38 +94,38 @@ const char *usage = "KadNode - A P2P name resolution daemon (IPv4/IPv6)\n"
 " -v, --version			Print program version.\n\n";
 
 void conf_init() {
-	gstate = (struct obj_gstate *) malloc( sizeof(struct obj_gstate) );
+	gconf = (struct obj_gconf *) malloc( sizeof(struct obj_gconf) );
 
-	memset( gstate, '\0', sizeof(struct obj_gstate) );
+	memset( gconf, '\0', sizeof(struct obj_gconf) );
 
-	bytes_random( gstate->node_id, SHA1_BIN_LENGTH );
+	bytes_random( gconf->node_id, SHA1_BIN_LENGTH );
 
-	gstate->mcast_addr = NULL;
-	gstate->is_running = 1;
+	gconf->mcast_addr = NULL;
+	gconf->is_running = 1;
 
 #ifdef DEBUG
-	gstate->verbosity = VERBOSITY_DEBUG;
+	gconf->verbosity = VERBOSITY_DEBUG;
 #else
-	gstate->verbosity = VERBOSITY_VERBOSE;
+	gconf->verbosity = VERBOSITY_VERBOSE;
 #endif
 
-	gstate->af = AF_INET;
-	gstate->dht_port = strdup( DHT_PORT );
+	gconf->af = AF_INET;
+	gconf->dht_port = strdup( DHT_PORT );
 
 #ifdef CMD
-	gstate->cmd_port = strdup( CMD_PORT );
+	gconf->cmd_port = strdup( CMD_PORT );
 #endif
 
 #ifdef DNS
-	gstate->dns_port = strdup( DNS_PORT );
+	gconf->dns_port = strdup( DNS_PORT );
 #endif
 
 #ifdef NSS
-	gstate->nss_port = strdup( NSS_PORT );
+	gconf->nss_port = strdup( NSS_PORT );
 #endif
 
 #ifdef WEB
-	gstate->web_port = strdup( WEB_PORT );
+	gconf->web_port = strdup( WEB_PORT );
 #endif
 }
 
@@ -136,16 +136,16 @@ void conf_check() {
 	UCHAR octet;
 
 	log_info( "Starting KadNode v"MAIN_VERSION );
-	log_info( "Own ID: %s", str_id( gstate->node_id, hexbuf ) );
-	log_info( "Kademlia mode: %s", (gstate->af == AF_INET) ? "IPv4" : "IPv6");
+	log_info( "Own ID: %s", str_id( gconf->node_id, hexbuf ) );
+	log_info( "Kademlia mode: %s", (gconf->af == AF_INET) ? "IPv4" : "IPv6");
 
-	if( gstate->is_daemon ) {
+	if( gconf->is_daemon ) {
 		log_info( "Mode: Daemon" );
 	} else {
 		log_info( "Mode: Foreground" );
 	}
 
-	switch( gstate->verbosity ) {
+	switch( gconf->verbosity ) {
 		case VERBOSITY_QUIET:
 			log_info( "Verbosity: Quiet" );
 			break;
@@ -159,24 +159,24 @@ void conf_check() {
 			log_err( "Invalid verbosity level." );
 	}
 
-	log_info( "Peerfile: %s", gstate->peerfile ? gstate->peerfile : "None" );
+	log_info( "Peerfile: %s", gconf->peerfile ? gconf->peerfile : "None" );
 
-	if( gstate->mcast_addr == NULL ) {
+	if( gconf->mcast_addr == NULL ) {
 		/* Set default multicast address string */
-		if( gstate->af == AF_INET ) {
-			gstate->mcast_addr = strdup( DHT_ADDR4_MCAST );
+		if( gconf->af == AF_INET ) {
+			gconf->mcast_addr = strdup( DHT_ADDR4_MCAST );
 		} else {
-			gstate->mcast_addr = strdup( DHT_ADDR6_MCAST );
+			gconf->mcast_addr = strdup( DHT_ADDR6_MCAST );
 		}
 	}
 
 	/* Parse multicast address string */
-	if( addr_parse( &mcast_addr, gstate->mcast_addr, DHT_PORT_MCAST, gstate->af ) != 0 ) {
-		log_err( "CFG: Failed to parse IP address for '%s'.", gstate->mcast_addr );
+	if( addr_parse( &mcast_addr, gconf->mcast_addr, DHT_PORT_MCAST, gconf->af ) != 0 ) {
+		log_err( "CFG: Failed to parse IP address for '%s'.", gconf->mcast_addr );
 	}
 
 	/* Verifiy multicast address */
-	if( gstate->af == AF_INET ) {
+	if( gconf->af == AF_INET ) {
 		octet = ((UCHAR *) &((IP4 *)&mcast_addr)->sin_addr)[0];
 		if( octet != 224 && octet != 239 ) {
 			log_err( "CFG: Multicast address expected: %s", str_addr( &mcast_addr, addrbuf ) );
@@ -188,35 +188,35 @@ void conf_check() {
 		}
 	}
 
-	log_info("Multicast: %s", (gstate->disable_multicast == 0) ? str_addr( &mcast_addr, addrbuf ) : "Disabled" );
+	log_info("Multicast: %s", (gconf->disable_multicast == 0) ? str_addr( &mcast_addr, addrbuf ) : "Disabled" );
 
 	/* Store startup time */
-	gettimeofday( &gstate->time_now, NULL );
-	gstate->startup_time = time_now_sec();
+	gettimeofday( &gconf->time_now, NULL );
+	gconf->startup_time = time_now_sec();
 }
 
 void conf_free() {
 
-	free( gstate->user );
-	free( gstate->pidfile );
-	free( gstate->dht_port );
-	free( gstate->dht_ifce );
-	free( gstate->mcast_addr );
+	free( gconf->user );
+	free( gconf->pidfile );
+	free( gconf->dht_port );
+	free( gconf->dht_ifce );
+	free( gconf->mcast_addr );
 
 #ifdef CMD
-	free( gstate->cmd_port );
+	free( gconf->cmd_port );
 #endif
 #ifdef DNS
-	free( gstate->dns_port );
+	free( gconf->dns_port );
 #endif
 #ifdef NSS
-	free( gstate->nss_port );
+	free( gconf->nss_port );
 #endif
 #ifdef WEB
-	free( gstate->web_port );
+	free( gconf->web_port );
 #endif
 
-	free( gstate );
+	free( gconf );
 }
 
 void conf_arg_expected( const char *var ) {
@@ -269,72 +269,72 @@ void conf_handle( char *var, char *val ) {
 
 	if( match( var, "--node-id" ) ) {
 		/* Compute node id */
-		id_compute( gstate->node_id, val );
+		id_compute( gconf->node_id, val );
 	} else if( match( var, "--value-id" ) ) {
 		conf_add_value( var, val );
 	} else if( match( var, "--pidfile" ) ) {
-		conf_str( var, &gstate->pidfile, val );
+		conf_str( var, &gconf->pidfile, val );
 	} else if( match( var, "--peerfile" ) ) {
-		conf_str( var, &gstate->peerfile, val );
+		conf_str( var, &gconf->peerfile, val );
 	} else if( match( var, "--verbosity" ) ) {
 		if( match( val, "quiet" ) ) {
-			gstate->verbosity = VERBOSITY_QUIET;
+			gconf->verbosity = VERBOSITY_QUIET;
 		} else if( match( val, "verbose" ) ) {
-			gstate->verbosity = VERBOSITY_VERBOSE;
+			gconf->verbosity = VERBOSITY_VERBOSE;
 		} else if( match( val, "debug" ) ) {
-			gstate->verbosity = VERBOSITY_DEBUG;
+			gconf->verbosity = VERBOSITY_DEBUG;
 		} else {
 			log_err( "CFG: Invalid argument for %s.", var );
 		}
 #ifdef CMD
 	} else if( match( var, "--cmd-port" ) ) {
-		conf_str( var, &gstate->cmd_port, val );
+		conf_str( var, &gconf->cmd_port, val );
 #endif
 #ifdef DNS
 	} else if( match( var, "--dns-port" ) ) {
-		conf_str( var, &gstate->dns_port, val );
+		conf_str( var, &gconf->dns_port, val );
 #endif
 #ifdef NSS
 	} else if( match( var, "--nss-port" ) ) {
-		conf_str( var, &gstate->nss_port, val );
+		conf_str( var, &gconf->nss_port, val );
 #endif
 #ifdef WEB
 	} else if( match( var, "--web-port" ) ) {
-		conf_str( var, &gstate->web_port, val );
+		conf_str( var, &gconf->web_port, val );
 #endif
 	} else if( match( var, "--mode" ) ) {
 		if( val && match( val, "ipv4" ) ) {
-			gstate->af = AF_INET;
+			gconf->af = AF_INET;
 		} else if( val && match( val, "ipv6" ) ) {
-			gstate->af = AF_INET6;
+			gconf->af = AF_INET6;
 		} else {
 			log_err("CFG: Invalid argument for %s. Use 'ipv4' or 'ipv6'.", var );
 		}
 	} else if( match( var, "--port" ) ) {
-		conf_str( var, &gstate->dht_port, val );
+		conf_str( var, &gconf->dht_port, val );
 	} else if( match( var, "--mcast-addr" ) ) {
-		conf_str( var, &gstate->mcast_addr, val );
+		conf_str( var, &gconf->mcast_addr, val );
 	} else if( match( var, "--disable-multicast" ) ) {
 		if( val != NULL ) {
 			conf_no_arg_expected( var );
 		} else {
-			gstate->disable_multicast = 1;
+			gconf->disable_multicast = 1;
 		}
 	} else if( match( var, "--disable-forwarding" ) ) {
 		if( val != NULL ) {
 			conf_no_arg_expected( var );
 		} else {
-			gstate->disable_forwarding = 1;
+			gconf->disable_forwarding = 1;
 		}
 	} else if( match( var, "--ifce" ) ) {
-		conf_str( var, &gstate->dht_ifce, val );
+		conf_str( var, &gconf->dht_ifce, val );
 	} else if( match( var, "--user" ) ) {
-		conf_str( var, &gstate->user, val );
+		conf_str( var, &gconf->user, val );
 	} else if( match( var, "--daemon" ) ) {
 		if( val != NULL ) {
 			conf_no_arg_expected( var );
 		} else {
-			gstate->is_daemon = 1;
+			gconf->is_daemon = 1;
 		}
 	} else if( match( var, "-h" ) || match( var, "--help" ) ) {
 		printf( "%s", usage );

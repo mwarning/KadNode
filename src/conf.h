@@ -14,7 +14,7 @@ struct value {
 	struct value *next;
 };
 
-struct obj_gstate {
+struct obj_gconf {
 
 	/* Current time */
 	struct timeval time_now;
@@ -91,6 +91,6 @@ struct obj_gstate {
 #endif
 };
 
-extern struct obj_gstate *gstate;
+extern struct obj_gconf *gconf;
 
 #endif /* _CONF_H_ */
