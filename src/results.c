@@ -131,8 +131,8 @@ int results_add( const UCHAR id[], const char query[] ) {
 
 	/* Search already exists */
 	if( (results = results_find( id )) != NULL ) {
-		new->start_time = time_now_sec();
-		new->done = 0;
+		results->start_time = time_now_sec();
+		results->done = 0;
 		return 0;
 	}
 
