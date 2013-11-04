@@ -2,7 +2,7 @@
 CC ?= gcc
 CFLAGS = -O2 -Wall -Wwrite-strings -pedantic -std=gnu99
 POST_LINKING =
-FEATURES ?= cmd dns nss web debug upnp natpmp
+FEATURES ?= auth cmd debug dns natpmp nss upnp web
 
 OBJS = build/main.o build/results.o build/kad.o build/log.o \
 	build/conf.o build/sha1.o build/unix.o build/net.o build/utils.o \
@@ -11,6 +11,12 @@ OBJS = build/main.o build/results.o build/kad.o build/log.o \
 .PHONY: all clean strip install kadnode kadnode-ctl libnss_kadnode.so.2 deb install uninstall
 
 all: kadnode
+
+ifeq ($(findstring auth,$(FEATURES)),auth)
+  OBJS += build/ext-auth.o
+  CFLAGS += -DAUTH
+  POST_LINKING += -lsodium
+endif
 
 ifeq ($(findstring cmd,$(FEATURES)),cmd)
   OBJS += build/ext-cmd.o

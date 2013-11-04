@@ -8,6 +8,9 @@
 #include "conf.h"
 #include "utils.h"
 #include "net.h"
+#ifdef AUTH
+#include "ext-auth.h"
+#endif
 #include "results.h"
 
 
@@ -61,10 +64,16 @@ void results_free( struct results_t *results ) {
 	cur = results->entries;
 	while( cur ) {
 		next = cur->next;
+#ifdef AUTH
+		free( cur->challenge );
+#endif
 		free( cur );
 		cur = next;
 	}
 
+#ifdef AUTH
+	free( results->pkey );
+#endif
 	free( results );
 }
 
@@ -81,11 +90,17 @@ void results_debug( int fd ) {
 	while( results != NULL ) {
 		dprintf( fd, " id: %s\n", str_id( results->id, buf ) );
 		dprintf( fd, "  done: %d\n", results->done );
-
+#ifdef AUTH
+		dprintf( fd, "  pkey: %s\n", auth_str_pkey( buf, results->pkey ) );
+#endif
 		result_counter = 0;
 		result = results->entries;
 		while( result ) {
 			dprintf( fd, "   addr: %s\n", str_addr( &result->addr, buf ) );
+#ifdef AUTH
+			dprintf( fd, "    challenge: %s\n", auth_str_challenge( buf, result->challenge ) );
+			dprintf( fd, "    challenges_send: %d\n", result->challenges_send );
+#endif
 			result = result->next;
 		}
 		dprintf( fd, "  Found %d results.\n", result_counter );
@@ -138,6 +153,9 @@ struct results_t* results_add( const UCHAR id[], const char query[] ) {
 	new = calloc( 1, sizeof(struct results_t) );
 	memcpy( new->id, id, SHA1_BIN_LENGTH );
 	new->start_time = time_now_sec();
+#ifdef AUTH
+	new->pkey = auth_create_pkey( query );
+#endif
 	g_results_num++;
 
 	results = g_results;
@@ -182,6 +200,13 @@ int results_add_addr( struct results_t *results, const IP *addr ) {
 
 	new = calloc( 1, sizeof(struct result_t) );
 	memcpy( &new->addr, addr, sizeof(IP) );
+#ifdef AUTH
+	if( results->pkey ) {
+		/* Create a new challenge if needed */
+		new->challenge = calloc( 1, CHALLENGE_BIN_LENGTH );
+		bytes_random( new->challenge, CHALLENGE_BIN_LENGTH );
+	}
+#endif
 
 	if( result ) {
 		result->next = new;
@@ -262,6 +287,13 @@ int results_collect( struct results_t *results, IP addr_array[], size_t addr_num
 	i = 0;
 	result = results->entries;
 	while( result && i < addr_num ) {
+#ifdef AUTH
+		/* If there is a challenge - then the address is not verified */
+		if( results->pkey && result->challenge ) {
+			result = result->next;
+			continue;
+		}
+#endif
 		memcpy( &addr_array[i], &result->addr, sizeof(IP) );
 		i++;
 		result = result->next;

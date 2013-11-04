@@ -21,6 +21,9 @@
 #include "results.h"
 #include "bootstrap.h"
 
+#ifdef AUTH
+#include "ext-auth.h"
+#endif
 #ifdef DNS
 #include "ext-dns.h"
 #endif
@@ -88,6 +91,9 @@ int main( int argc, char **argv ) {
 	bootstrap_setup();
 
 	/* Setup extensions */
+#ifdef AUTH
+	auth_setup();
+#endif
 #ifdef DNS
 	dns_setup();
 #endif

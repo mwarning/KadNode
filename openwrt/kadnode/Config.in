@@ -11,6 +11,12 @@ config CONFIG_KADNODE_ENABLE_WEB
 	depends on PACKAGE_kadnode
 	default n
 
+config CONFIG_KADNODE_ENABLE_AUTH
+	bool "Enable the public authentification interface"
+	depends on PACKAGE_kadnode
+	select PACKAGE_sodium
+	default n
+
 config CONFIG_KADNODE_ENABLE_UPNP
 	bool "Enable UPnP support to add port forwardings on other routers"
 	depends on PACKAGE_kadnode

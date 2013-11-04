@@ -9,6 +9,9 @@
 #include "utils.h"
 #include "net.h"
 #include "kad.h"
+#ifdef AUTH
+#include "ext-auth.h"
+#endif
 #include "values.h"
 
 
@@ -71,6 +74,11 @@ void values_debug( int fd ) {
 			dprintf( fd, "  lifetime: %ld min left\n", (value->lifetime -  now) / 60 );
 		}
 
+#ifdef AUTH
+		char sbuf[2*crypto_sign_SECRETKEYBYTES+1];
+		dprintf( fd, "  skey: %s\n", auth_str_skey( sbuf, value->skey ) );
+#endif
+
 		value_counter++;
 		value = value->next;
 	}
@@ -87,6 +95,23 @@ int values_add( const char query[], int port, time_t lifetime ) {
 	if( port < 1 || port > 65535 ) {
 		return -1;
 	}
+
+#ifdef AUTH
+	UCHAR *skey = NULL;
+	if( auth_is_skey( query ) ) {
+		if( port != atoi( gconf->auth_port ) ) {
+			return -1;
+		}
+		skey = auth_create_skey( query );
+		/*
+		* Since the ID is based on the sha1 hash of the public key,
+		* we need to convert the secret key to the public key in hex.
+		* This is easy because the public key is in the second
+		* half of the secret key string for libsodium.
+		*/
+		query += 2*crypto_sign_PUBLICKEYBYTES;
+	}
+#endif
 
 	id_compute( id, query );
 
@@ -107,6 +132,9 @@ int values_add( const char query[], int port, time_t lifetime ) {
 
 	new = (struct value_t*) calloc( 1, sizeof(struct value_t) );
 	memcpy( &new->id, id, SHA1_BIN_LENGTH );
+#ifdef AUTH
+	new->skey = skey;
+#endif
 	new->port = port;
 	new->lifetime = lifetime;
 	new->refresh = time_now_sec() - 1;
@@ -138,6 +166,9 @@ void values_remove( struct value_t *value ) {
 			} else {
 				g_values = cur->next;
 			}
+#ifdef AUTH
+			free( cur->skey );
+#endif
 			free( cur );
 			return;
 		}
@@ -161,6 +192,9 @@ void values_expire( void ) {
 			} else {
 				g_values = cur->next;
 			}
+#ifdef AUTH
+			free( cur->skey );
+#endif
 			free( cur );
 			return;
 		}

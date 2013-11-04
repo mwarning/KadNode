@@ -2,6 +2,11 @@
 #ifndef _EXT_RESULTS_H_
 #define _EXT_RESULTS_H_
 
+#ifdef AUTH
+#include <sodium.h>
+#define CHALLENGE_BIN_LENGTH 16
+#endif
+
 #define MAX_RESULTS_PER_SEARCH 16
 #define MAX_SEARCHES 64
 #define MAX_SEARCH_LIFETIME (5*60)
@@ -9,6 +14,10 @@
 /* An address that was received as a result of an id search */
 struct result_t {
 	IP addr;
+#ifdef AUTH
+	UCHAR *challenge;
+	int challenges_send;
+#endif
 	struct result_t *next;
 };
 
@@ -16,6 +25,9 @@ struct result_t {
 struct results_t {
 	/* The value id to search for */
 	UCHAR id[SHA1_BIN_LENGTH];
+#ifdef AUTH
+	UCHAR *pkey;
+#endif
 	time_t start_time;
 	struct result_t *entries;
 	int done;

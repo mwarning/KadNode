@@ -18,6 +18,9 @@
 #include "net.h"
 #include "values.h"
 #include "results.h"
+#ifdef AUTH
+#include "ext-auth.h"
+#endif
 #ifdef FWD
 #include "forwardings.h"
 #endif
@@ -238,6 +241,18 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 		/* Split query and optional port */
 		port = chop_port( argv[1], 1, -1 );
 
+#ifdef AUTH
+		if( auth_is_skey( argv[1] ) ) {
+			if( port == 1 ) {
+				port = atoi( gconf->auth_port );
+			} else {
+				r_printf( r ,"No port expected. Auth requests will be expected on port %s.\n", gconf->auth_port );
+				rc = 1;
+				goto end;
+			}
+		}
+#endif
+
 		rc = values_add( argv[1], port, lifetime );
 		if( rc == 0 ) {
 #ifdef FWD
@@ -306,6 +321,7 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 		rc = 1;
 	}
 
+end:
 	return rc;
 }
 

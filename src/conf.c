@@ -14,6 +14,9 @@
 #include "utils.h"
 #include "conf.h"
 #include "values.h"
+#ifdef AUTH
+#include "ext-auth.h"
+#endif
 #ifdef FWD
 #include "forwardings.h"
 #endif
@@ -23,6 +26,9 @@ struct obj_gconf *gconf = NULL;
 
 const char *version = "KadNode v"MAIN_VERSION" ( "
 "Features:"
+#ifdef AUTH
+" auth"
+#endif
 #ifdef CMD
 " cmd"
 #endif
@@ -70,6 +76,11 @@ const char *usage = "KadNode - A P2P name resolution daemon (IPv4/IPv6)\n"
 " --pidfile <file>		Write process pid to a file.\n\n"
 " --mode <ipv4|ipv6>		Enable IPv4 or IPv6 mode for the DHT.\n"
 "				Default: ipv4\n\n"
+#ifdef AUTH
+" --auth-port <port>		Bind the authentication server to this public port.\n"
+"				Default: "AUTH_PORT"\n\n"
+" --auth-gen-keys		Generate a new public/secret key pair and exit.\n\n"
+#endif
 #ifdef CMD
 " --cmd-port <port>		Bind the remote control interface to this local port.\n"
 "				Default: "CMD_PORT"\n\n"
@@ -126,6 +137,10 @@ void conf_init() {
 
 #ifdef WEB
 	gconf->web_port = strdup( WEB_PORT );
+#endif
+
+#ifdef AUTH
+	gconf->auth_port = strdup( AUTH_PORT );
 #endif
 }
 
@@ -215,6 +230,9 @@ void conf_free() {
 #ifdef WEB
 	free( gconf->web_port );
 #endif
+#ifdef AUTH
+	free( gconf->auth_port );
+#endif
 
 	free( gconf );
 }
@@ -246,6 +264,17 @@ void conf_add_value( char *var, char *val ) {
 
 	/* Split query and optional port */
 	port = chop_port( val, 1, -1 );
+
+#ifdef AUTH
+	if( auth_is_skey( val ) ) {
+		if( port == 1 ) {
+			port = atoi( gconf->auth_port );
+		} else {
+			log_err( "No port expected. Auth requests will be expected on a fixed port." );
+			return;
+		}
+	}
+#endif
 
 	if( port <= 0 ) {
 		log_err( "CFG: Invalid port for value annoucement: %d", port );
@@ -295,6 +324,12 @@ void conf_handle( char *var, char *val ) {
 #ifdef WEB
 	} else if( match( var, "--web-port" ) ) {
 		conf_str( var, &gconf->web_port, val );
+#endif
+#ifdef AUTH
+	} else if( match( var, "--auth-port" ) ) {
+		conf_str( var, &gconf->auth_port, val );
+	} else if( match( var, "--auth-gen-keys" ) ) {
+		exit( auth_generate_key_pair() );
 #endif
 	} else if( match( var, "--mode" ) ) {
 		if( val && match( val, "ipv4" ) ) {

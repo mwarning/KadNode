@@ -3,6 +3,9 @@
 #define _EXT_VALUES_H_
 
 #include <sys/time.h>
+#ifdef AUTH
+#include <sodium.h>
+#endif
 
 /*
 * Announce a value id / port pair every 30 minutes
@@ -11,6 +14,9 @@
 
 struct value_t {
 	UCHAR id[SHA1_BIN_LENGTH];
+#ifdef AUTH
+	UCHAR *skey;
+#endif
 	int port;
 	time_t lifetime; /* Keep entry refreshed until the lifetime expires */
 	time_t refresh; /* Next time the entry need to be refreshed */
