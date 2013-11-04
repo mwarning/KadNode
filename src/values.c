@@ -19,6 +19,19 @@ struct value_t* values_get( void ) {
 	return g_values;
 }
 
+struct value_t* values_find( UCHAR id[] ) {
+	struct value_t *value;
+
+	value = g_values;
+	while( value ) {
+		if( id_equal( id, value->id ) ) {
+			return value;
+		}
+		value = value->next;
+	}
+	return NULL;
+}
+
 int values_count( void ) {
 	struct value_t *value;
 	int count;
@@ -34,7 +47,7 @@ int values_count( void ) {
 }
 
 void values_debug( int fd ) {
-	char hexbuf[256+1];
+	char hexbuf[SHA1_HEX_LENGTH+1];
 	struct value_t *value;
 	time_t now;
 	int value_counter;
@@ -65,14 +78,14 @@ void values_debug( int fd ) {
 	dprintf( fd, " Found %d values.\n", value_counter );
 }
 
-void values_add( const char query[], int port, time_t lifetime ) {
+int values_add( const char query[], int port, time_t lifetime ) {
 	UCHAR id[SHA1_BIN_LENGTH];
 	char hexbuf[SHA1_HEX_LENGTH+1];
 	struct value_t *cur;
 	struct value_t *new;
 
 	if( port < 1 || port > 65535 ) {
-		log_err("Announces: Port 0 is invalid.");
+		return -1;
 	}
 
 	id_compute( id, query );
@@ -84,7 +97,10 @@ void values_add( const char query[], int port, time_t lifetime ) {
 		if( id_equal( cur->id, id ) && cur->port == port ) {
 			cur->lifetime = lifetime;
 			cur->refresh = time_now_sec() - 1;
-			return;
+			return 0;
+		}
+		if( cur->next == NULL ) {
+			break;
 		}
 		cur = cur->next;
 	}
@@ -96,8 +112,16 @@ void values_add( const char query[], int port, time_t lifetime ) {
 	new->refresh = time_now_sec() - 1;
 	new->next = g_values;
 
-	g_values = new;
-	g_values_expire = 0; /* Trigger an immediate handling */
+	if( cur ) {
+		cur->next = new;
+	} else {
+		g_values = new;
+	}
+
+	/* Trigger immediate handling */
+	g_values_expire = 0;
+
+	return 0;
 }
 
 /* Remove an element from the list - internal use only */

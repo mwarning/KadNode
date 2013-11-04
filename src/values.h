@@ -20,6 +20,7 @@ struct value_t {
 void values_setup( void );
 
 struct value_t* values_get( void );
+struct value_t* values_find( UCHAR id[] );
 
 /* List all entries */
 void values_debug( int fd );
@@ -28,7 +29,7 @@ void values_debug( int fd );
 int values_count( void );
 
 /* Add a value id / port that will be announced until lifetime is exceeded */
-void values_add( const char query[], int port, time_t lifetime );
+int values_add( const char query[], int port, time_t lifetime );
 
 
 #endif /* _EXT_VALUES_H_ */
