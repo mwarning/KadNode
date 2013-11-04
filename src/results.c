@@ -18,7 +18,7 @@
 */
 
 static struct results_t *g_results = NULL;
-static int g_results_num = 0;
+static size_t g_results_num = 0;
 static time_t g_results_expire = 0;
 
 struct results_t* results_get( void ) {
@@ -77,10 +77,11 @@ void results_debug( int fd ) {
 
 	results_counter = 0;
 	results = g_results;
-	dprintf( fd, "Received results:\n" );
+	dprintf( fd, "Result buckets:\n" );
 	while( results != NULL ) {
 		dprintf( fd, " id: %s\n", str_id( results->id, buf ) );
 		dprintf( fd, "  done: %d\n", results->done );
+
 		result_counter = 0;
 		result = results->entries;
 		while( result ) {
@@ -121,19 +122,17 @@ void results_expire( void ) {
     }
 }
 
-int results_add( const UCHAR id[], const char query[] ) {
+struct results_t* results_add( const UCHAR id[], const char query[] ) {
 	struct results_t* new;
 	struct results_t* results;
 
 	if( g_results_num > MAX_SEARCHES ) {
-		return -1;
+		return NULL;
 	}
 
 	/* Search already exists */
 	if( (results = results_find( id )) != NULL ) {
-		results->start_time = time_now_sec();
-		results->done = 0;
-		return 0;
+		return results;
 	}
 
 	new = calloc( 1, sizeof(struct results_t) );
@@ -156,22 +155,22 @@ int results_add( const UCHAR id[], const char query[] ) {
 		g_results = new;
 	}
 
-	return 0;
+	return new;
 }
 
 /* Add an address to an array if it is not already contained in there */
-void results_add_addr( struct results_t *results, IP* addr ) {
+int results_add_addr( struct results_t *results, const IP *addr ) {
 	struct result_t *result;
 	struct result_t *new;
 
 	if( results_count( results ) > MAX_RESULTS_PER_SEARCH ) {
-		return;
+		return -1;
 	}
 
 	result = results->entries;
 	while( result ) {
 		if( addr_equal( &result->addr, addr ) ) {
-			return;
+			return 0;
 		}
 
 		if( result->next == NULL ) {
@@ -189,6 +188,8 @@ void results_add_addr( struct results_t *results, IP* addr ) {
 	} else {
 		results->entries = new;
 	}
+
+	return 0;
 }
 
 typedef struct {
@@ -201,15 +202,9 @@ typedef struct {
 	unsigned short port;
 } dht_addr4_t;
 
-int results_import( const UCHAR id[], void *data, size_t data_length ) {
-	struct results_t *results;
+int results_import( struct results_t *results, void *data, size_t data_length ) {
 	IP addr;
 	size_t i;
-
-	/* Find search to put results into */
-	if( (results = results_find( id )) == NULL ) {
-		return -1;
-	}
 
 	if( results->done == 1 ) {
 		return -1;
@@ -250,27 +245,19 @@ int results_import( const UCHAR id[], void *data, size_t data_length ) {
 	return -1;
 }
 
-int results_done( const UCHAR id[] ) {
-	struct results_t *results;
-
-	/* Find search to put results into */
-	if( (results = results_find( id )) == NULL ) {
-		return -1;
+int results_done( struct results_t *results, int done ) {
+	if( done ) {
+		results->done = 1;
+	} else {
+		results->start_time = time_now_sec();
+		results->done = 0;
 	}
-
-	results->done = 1;
 	return 0;
 }
 
-int results_collect( const UCHAR id[], IP addr_array[], size_t addr_num ) {
-	struct results_t *results;
+int results_collect( struct results_t *results, IP addr_array[], size_t addr_num ) {
 	struct result_t *result;
 	size_t i;
-
-	results = results_find( id );
-	if( results == NULL ) {
-		return -1;
-	}
 
 	i = 0;
 	result = results->entries;

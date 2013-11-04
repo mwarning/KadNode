@@ -18,6 +18,7 @@
 #define ADDR_PARSE_CANNOT_RESOLVE 2
 #define ADDR_PARSE_NO_ADDR_FOUND 3
 
+int chop_port( char *str, int def, int err );
 
 int bytes_random( UCHAR buffer[], size_t size );
 void bytes_from_hex( UCHAR bin[], const char hex[], size_t length );

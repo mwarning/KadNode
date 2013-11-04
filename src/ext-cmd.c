@@ -31,7 +31,7 @@ const char* cmd_usage_str =
 #if 0
 "	lookup_node <id>\n"
 #endif
-"	announce <id> [<port>] [<minutes>]\n"
+"	announce <id>[:<port>] [<minutes>]\n"
 "	import <addr>\n"
 "	export\n"
 "	blacklist <addr>\n"
@@ -202,7 +202,7 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 
 		/* Check searches for node */
 		rc = kad_lookup_value( argv[1], addrs, &addrs_n );
-		if( rc < 0 ) {
+		if( rc > 0 ) {
 			r_printf( r ,"Search started - try again.\n" );
 			rc = 1;
 		} else if( addrs_n == 0 ) {
@@ -218,41 +218,41 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 		/* Print node id and statistics */
 		cmd_print_status( r );
 
-	} else if( match( argv[0], "announce" ) && (argc == 2 || argc == 3 || argc == 4) ) {
+	} else if( match( argv[0], "announce" ) && (argc == 2 || argc == 3) ) {
 
-		if( argc == 4 ) {
-			port = atoi( argv[2] );
-			minutes = atoi( argv[3] );
-		} else if( argc == 3 ) {
-			port = atoi( argv[2] );
-			minutes = 0;
+		if( argc == 3 ) {
+			minutes = atoi( argv[2] );
 		} else {
-			/* Kademlia doesn't accept port 0 */
-			port = 1;
 			minutes = 0;
 		}
 
-		if( port < 1 || port > 65535 ) {
-			r_printf( r ,"Invalid port.\n" );
-			rc = 1;
-		} else if( minutes < -1 ) {
-			r_printf( r ,"Invalid time.\n" );
-			rc = 1;
+		/* round up to multiple of 30 minutes */
+		if( minutes < 0 ) {
+			minutes = -1;
+			lifetime = LONG_MAX;
 		} else {
-			/* round up to multiple of 30 minutes */
-			minutes = (minutes < 0) ? -1 : (30 * (minutes/30 + 1));
-			lifetime = (minutes < 0) ? LONG_MAX : (time_now_sec() + (minutes * 60));
+			minutes = (30 * (minutes/30 + 1));
+			lifetime = (time_now_sec() + (minutes * 60));
+		}
 
-			values_add( argv[1], port, lifetime );
+		/* Split query and optional port */
+		port = chop_port( argv[1], 1, -1 );
+
+		rc = values_add( argv[1], port, lifetime );
+		if( rc == 0 ) {
 #ifdef FWD
 			forwardings_add( port, lifetime);
 #endif
-			if( minutes > -1 ) {
-				r_printf( r ,"Announce value for port %d for %d minutes.\n", port, minutes );
+			if( minutes < 0 ) {
+				r_printf( r ,"Announce value on port %d for entire run time.\n", port );
 			} else {
-				r_printf( r ,"Announce value for port %d for entire run time.\n", port );
+				r_printf( r ,"Announce value on port %d for %d minutes.\n", port, minutes );
 			}
+		} else {
+			r_printf( r ,"Invalid port.\n" );
+			rc = 1;
 		}
+
 	} else if( match( argv[0], "blacklist" ) && argc == 2 ) {
 
 		rc = cmd_blacklist( r, argv[1] );

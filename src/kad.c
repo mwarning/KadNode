@@ -49,15 +49,21 @@ void dht_unlock( void ) {
 
 /* This callback is called when a search result arrives or a search completes */
 void dht_callback_func( void *closure, int event, UCHAR *info_hash, void *data, size_t data_len ) {
+	struct results_t *results;
+
+	results = results_find( info_hash );
+	if( results == NULL ) {
+		return;
+	}
 
 	switch( event ) {
 		case DHT_EVENT_VALUES:
 		case DHT_EVENT_VALUES6:
-			results_import( info_hash, data, data_len );
+			results_import( results, data, data_len );
 			break;
 		case DHT_EVENT_SEARCH_DONE:
 		case DHT_EVENT_SEARCH_DONE6:
-			results_done( info_hash );
+			results_done( results, 1 );
 			break;
 	}
 }
@@ -269,6 +275,7 @@ int kad_announce( const UCHAR *id, int port ) {
 * Lookup known nodes that are nearest to the given id.
 */
 int kad_lookup_value( const char query[], IP addr_array[], size_t *addr_num ) {
+	struct results_t *results;
 	char hexbuf[SHA1_HEX_LENGTH+1];
 	UCHAR id[SHA1_BIN_LENGTH];
 	int rc;
@@ -280,20 +287,24 @@ int kad_lookup_value( const char query[], IP addr_array[], size_t *addr_num ) {
 
 	dht_lock();
 
-	rc = results_collect( id, addr_array, *addr_num );
+	results = results_find( id );
 
-	if( rc < 0 ) {
-		/* No results item found - no search in progress - start search */
-		dht_lock();
-		results_add( id, query );
+	if( results && results->done ) {
+		/* Re-enable results bucket */
+		results_done( results, 0 );
+
+		/* Start DHT search */
 		dht_search( id, 0, gconf->af, dht_callback_func, NULL );
-		dht_unlock();
-		*addr_num = 0;
-		rc = -1;
+		rc = 2;
+	} else if( results == NULL ) {
+		/* Create and append a new item */
+		results = results_add( id, query );
+		rc = 1;
 	} else {
-		*addr_num = rc;
 		rc = 0;
 	}
+
+	*addr_num = results_collect( results, addr_array, *addr_num );
 
 	dht_unlock();
 

@@ -239,23 +239,17 @@ void conf_str( const char *var, char **dst, const char *src ) {
 
 void conf_add_value( char *var, char *val ) {
 	int port;
-	char *delim;
 
 	if( val == NULL ) {
 		conf_arg_expected( var );
 	}
 
-	/* Split identifier and optional port */
-	delim = strchr( val, ':' );
-	if( delim ) {
-		*delim = '\0';
-		port = atoi( delim + 1 );
-	} else {
-		port = 1;
-	}
+	/* Split query and optional port */
+	port = chop_port( val, 1, -1 );
 
-	if( port < 1 || port > 65535 ) {
-		log_err( "CFG: Invalid port used for value: %s", val );
+	if( port <= 0 ) {
+		log_err( "CFG: Invalid port for value annoucement: %d", port );
+		return;
 	}
 
 	values_add( val, port, LONG_MAX );

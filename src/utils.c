@@ -19,6 +19,34 @@
 #include "utils.h"
 
 
+/* Extract port from '<string>:<port>' and set ':' to '\0' */
+int chop_port( char *str, int def, int err ) {
+	int port;
+	char *p;
+	size_t i;
+
+	p = strchr( str, ':' );
+	if( p == NULL ) {
+		return def;
+	}
+
+	port = 0;
+	for( i = 1; p[i] != '\0'; i++ ) {
+		if( p[i] < '0' || p[i] > '9' ) {
+			return err;
+		}
+		port *= 10;
+		port += p[i] - '0';
+	}
+
+	if( port < 1 || port > 65535 ) {
+		return err;
+	}
+
+	*p = '\0';
+	return port;
+}
+
 /* Fill buffer with random bytes */
 int bytes_random( UCHAR buffer[], size_t size ) {
 	int fd;
