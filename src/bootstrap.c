@@ -274,7 +274,7 @@ void bootstrap_handle( int rc, int sock ) {
 		if( kad_count_nodes() == 0 ) {
 			/* Join multicast group if possible */
 			if( mcast_registered == 0 && multicast_join( sock, &mcast_addr ) ) {
-				log_warn( "BOOT: No peers known. Joined multicast group." );
+				log_info( "BOOT: No peers known. Joined multicast group." );
 				mcast_registered = 1;
 			}
 
