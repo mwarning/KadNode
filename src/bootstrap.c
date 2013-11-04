@@ -13,7 +13,7 @@
 #include "bootstrap.h"
 
 
-/* Multicast message format - inspired by, but not compatible with the BitTorrent Local Peer Discovery (LPD) */
+/* Multicast message format - inspired by, but not compatible to the BitTorrent Local Peer Discovery (LPD) */
 const char msg_fmt[] =
 	"DHT-SEARCH * HTTP/1.0\r\n"
 	"Port: %u\r\n"
