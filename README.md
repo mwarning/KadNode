@@ -38,7 +38,7 @@ The NSS (Network Service Switch) support on many Posix systems (e.g. Ubuntu) can
 requests for the .p2p top level domain and allows the value to be used e.g. in the web browser.
 
 Please be aware that other people might use the same identifier.
-It is strongly advised to do additional identification/authentification
+It is strongly advised to do additional identification/authentication
 when an address is used that has been resolved by KadNode.
 The DNS/NSS interfaces are only able to return one of these addresses.
 In contrast, the web and console interface are able to return all known
@@ -173,6 +173,15 @@ All these interfaces listen only for connections from localhost.
 
   * `shutdown`  
     Shutdown the daemon.
+
+## Authentication
+
+KadNode allows optional node authentication. This means that you can lookup nodes using
+a public key and verify that those nodes are in posession of the corresponding secret key.
+To generate a new key pair use `kadnode --auth-gen-keys`.
+Announce the secret key on a node e.g. via `kadnode --value-id <secret-key>` and then
+lookup the nodes IP address on another computer using `<public-key>.p2p` in your browser
+or `kadnode-ctl lookup <public-key>`.
 
 ## Web Interface
 
