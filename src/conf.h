@@ -7,6 +7,8 @@ void conf_load( int argc, char **argv );
 void conf_check( void );
 void conf_free( void );
 
+void conf_handle( char *var, char *val );
+
 /* value to announce */
 struct value {
 	UCHAR value_id[SHA1_BIN_LENGTH];

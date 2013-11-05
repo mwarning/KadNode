@@ -8,6 +8,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <limits.h>
+#include <errno.h>
 
 #include "main.h"
 #include "log.h"
@@ -66,6 +67,8 @@ const char *usage = "KadNode - A P2P name resolution daemon (IPv4/IPv6)\n"
 " --user <user>			Change the UUID after start.\n\n"
 " --port	<port>			Bind to this port.\n"
 "				Default: "DHT_PORT"\n\n"
+" --config <file>		Provide a configuration file with one command line\n"
+"				option on each line. Comments start after '#'.\n\n"
 " --mcast-addr <addr>		Use multicast address for bootstrapping.\n"
 "				Default: "DHT_ADDR4_MCAST" / "DHT_ADDR6_MCAST"\n\n"
 " --ifce <interface>		Bind to this interface.\n"
@@ -279,6 +282,58 @@ void conf_add_value( char *var, char *val ) {
 #endif
 }
 
+void read_conf_file( const char *filename ) {
+	char line[1000];
+	size_t n;
+	FILE *file;
+	char *var;
+	char *val;
+	char *p;
+
+	n = 0;
+	file = fopen( filename, "rt" );
+	if( file == NULL ) {
+		log_err( "CFG: Cannot open file '%s': %s\n", filename, strerror( errno ) );
+		exit( 1 );
+	}
+
+	while( fgets( line, sizeof(line), file ) != NULL ) {
+		n++;
+		var = NULL;
+		val = NULL;
+
+		/* End line early at '#' */
+		if( (p = strchr( line, '#' )) != NULL ) {
+			*p =  '\0';
+		}
+
+		char *pch = strtok( line," \t\n" );
+		while( pch != NULL ) {
+			if( var == NULL ) {
+				var = pch;
+			} else if( val == NULL ) {
+				val = pch;
+			} else {
+				fclose( file );
+				log_err( "CFG: Too many arguments in line %ld.", n );
+				exit( 1 );
+			}
+			pch = strtok( NULL, " \t\n" );
+		}
+
+		if( var == NULL  ) {
+			continue;
+		}
+
+		if( strcmp( var, "--config" ) == 0 ) {
+			log_err( "CFG: Recursive configuration in line %ld.", n );
+			exit( 1 );
+		}
+		conf_handle( var, val );
+	}
+	fclose( file );
+}
+
 void conf_handle( char *var, char *val ) {
 
 	if( match( var, "--node-id" ) ) {
@@ -320,6 +375,11 @@ void conf_handle( char *var, char *val ) {
 	} else if( match( var, "--auth-gen-keys" ) ) {
 		exit( auth_generate_key_pair() );
 #endif
+	} else if( match( var, "--config" ) ) {
+		if( val == NULL ) {
+			conf_arg_expected( var );
+		}
+		read_conf_file( val );
 	} else if( match( var, "--mode" ) ) {
 		if( val && match( val, "ipv4" ) ) {
 			gconf->af = AF_INET;

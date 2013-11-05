@@ -84,6 +84,10 @@ All these interfaces listen only for connections from localhost.
     Bind the DHT to this port.  
     Default: 6881
 
+  * `--config` *file*  
+    Provide a configuration file with one command line  
+    option on each line. Comments start after '#'.
+
   * `--ifce` *interface*  
     Bind to this specific interface.
 
