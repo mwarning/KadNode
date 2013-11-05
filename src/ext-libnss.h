@@ -18,7 +18,7 @@
 */
 
 /* Accepted TLDs */
-const char *domains[] = { "p2p", "dht", "kad" };
+const char *domains[] = { "p2p" };
 
 
 enum nss_status _nss_kadnode_gethostbyname_r(
