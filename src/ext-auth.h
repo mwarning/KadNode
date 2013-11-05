@@ -16,13 +16,15 @@ int auth_handle_packet( int sock, UCHAR buf[], size_t buflen, IP *from );
 
 /*
 * Allocate and create a public key if the query
-* is of the form <hex-public-key>[.<...>]
+* is of the form '<hex-public-key>[.<...>]'.
+* Everything after and including the last dot is ignored.
 */
 UCHAR *auth_create_pkey( const char query[] );
 
 /*
 * Allocate and create a secret key if the query
-* is of the form <hex-secret-key>[.<...>]
+* is of the form '<hex-secret-key>[.<...>]'.
+* Everything after and including the last dot is ignored.
 */
 UCHAR *auth_create_skey( const char query[] );
 

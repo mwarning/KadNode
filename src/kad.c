@@ -293,7 +293,7 @@ int kad_lookup_value( const char query[], IP addr_array[], size_t *addr_num ) {
 	/* Generate the id, e.g. id = sha1(query) */
 	id_compute( id, query );
 
-	log_debug( "KAD: Lookup '%s' as '%s'.", query, str_id( id, hexbuf ) );
+	log_debug( "KAD: Lookup string '%s' as id: %s", query, str_id( id, hexbuf ) );
 
 	dht_lock();
 
