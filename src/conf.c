@@ -22,7 +22,7 @@
 #endif
 
 /* Global object variables */
-struct obj_gconf *gconf = NULL;
+struct gconf_t *gconf = NULL;
 
 const char *version = "KadNode v"MAIN_VERSION" ( "
 "Features:"
@@ -103,9 +103,9 @@ const char *usage = "KadNode - A P2P name resolution daemon (IPv4/IPv6)\n"
 " -v, --version			Print program version.\n\n";
 
 void conf_init() {
-	gconf = (struct obj_gconf *) malloc( sizeof(struct obj_gconf) );
+	gconf = (struct gconf_t *) malloc( sizeof(struct gconf_t) );
 
-	memset( gconf, '\0', sizeof(struct obj_gconf) );
+	memset( gconf, '\0', sizeof(struct gconf_t) );
 
 	bytes_random( gconf->node_id, SHA1_BIN_LENGTH );
 
