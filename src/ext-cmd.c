@@ -244,9 +244,9 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 #ifdef AUTH
 		if( auth_is_skey( argv[1] ) ) {
 			if( port == 1 ) {
-				port = atoi( gconf->auth_port );
+				port = atoi( gconf->dht_port );
 			} else {
-				r_printf( r ,"No port expected. Auth requests will be expected on port %s.\n", gconf->auth_port );
+				r_printf( r ,"No port expected. Auth requests will be expected on the DHT port.\n" );
 				rc = 1;
 				goto end;
 			}

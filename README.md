@@ -118,9 +118,6 @@ All these interfaces listen only for connections from localhost.
   * `--web-port` *port*  
     Bind the web server to this local port (Default: 8053).
 
-  * `--auth-port` *port*  
-    Bind the authentication server to this public port (Default: 8225).
-
   * `--auth-gen-keys`  
     Generate a secret/public key pair. Use the public key
     to resolve the node announcing the secret key.

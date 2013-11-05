@@ -77,8 +77,6 @@ const char *usage = "KadNode - A P2P name resolution daemon (IPv4/IPv6)\n"
 " --mode <ipv4|ipv6>		Enable IPv4 or IPv6 mode for the DHT.\n"
 "				Default: ipv4\n\n"
 #ifdef AUTH
-" --auth-port <port>		Bind the authentication server to this public port.\n"
-"				Default: "AUTH_PORT"\n\n"
 " --auth-gen-keys		Generate a new public/secret key pair and exit.\n\n"
 #endif
 #ifdef CMD
@@ -137,10 +135,6 @@ void conf_init() {
 
 #ifdef WEB
 	gconf->web_port = strdup( WEB_PORT );
-#endif
-
-#ifdef AUTH
-	gconf->auth_port = strdup( AUTH_PORT );
 #endif
 }
 
@@ -230,9 +224,6 @@ void conf_free() {
 #ifdef WEB
 	free( gconf->web_port );
 #endif
-#ifdef AUTH
-	free( gconf->auth_port );
-#endif
 
 	free( gconf );
 }
@@ -268,9 +259,9 @@ void conf_add_value( char *var, char *val ) {
 #ifdef AUTH
 	if( auth_is_skey( val ) ) {
 		if( port == 1 ) {
-			port = atoi( gconf->auth_port );
+			port = atoi( gconf->dht_port );
 		} else {
-			log_err( "No port expected. Auth requests will be expected on a fixed port." );
+			log_err( "No port expected. Auth requests will be expected on the DHT port." );
 			return;
 		}
 	}
@@ -326,8 +317,6 @@ void conf_handle( char *var, char *val ) {
 		conf_str( var, &gconf->web_port, val );
 #endif
 #ifdef AUTH
-	} else if( match( var, "--auth-port" ) ) {
-		conf_str( var, &gconf->auth_port, val );
 	} else if( match( var, "--auth-gen-keys" ) ) {
 		exit( auth_generate_key_pair() );
 #endif

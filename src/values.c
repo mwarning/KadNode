@@ -99,7 +99,7 @@ int values_add( const char query[], int port, time_t lifetime ) {
 #ifdef AUTH
 	UCHAR *skey = NULL;
 	if( auth_is_skey( query ) ) {
-		if( port != atoi( gconf->auth_port ) ) {
+		if( port != atoi( gconf->dht_port ) ) {
 			return -1;
 		}
 		skey = auth_create_skey( query );

@@ -11,6 +11,9 @@ char *auth_str_challenge( char *buf, const UCHAR challenge[] );
 int auth_is_pkey( const char query[] );
 int auth_is_skey( const char query[] );
 
+/* Function that is hooked up the DHT socket */
+int auth_handle_packet( int sock, UCHAR buf[], size_t buflen, IP *from );
+
 /*
 * Allocate and create a public key if the query
 * is of the form <hex-public-key>[.<...>]

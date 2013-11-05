@@ -20,7 +20,6 @@
 #define DNS_PORT "5353"
 #define NSS_PORT "4053"
 #define WEB_PORT "8053"
-#define AUTH_PORT "8225"
 
 #include <netinet/in.h>
 

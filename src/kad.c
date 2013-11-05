@@ -14,6 +14,9 @@
 #include "results.h"
 #include "net.h"
 #include "values.h"
+#ifdef AUTH
+#include "ext-auth.h"
+#endif
 #ifdef FWD
 #include "forwardings.h"
 #endif
@@ -86,6 +89,13 @@ void dht_handler( int rc, int sock ) {
 
 		/* The DHT code expects the message to be null-terminated. */
 		buf[rc] = '\0';
+
+#ifdef AUTH
+		/* Hook up AUTH extension on the DHT socket */
+		if( auth_handle_packet( sock, buf, rc, &from ) == 0 ) {
+			return;
+		}
+#endif
 
 		/* Handle incoming data */
 		dht_lock();

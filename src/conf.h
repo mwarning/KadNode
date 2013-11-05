@@ -80,10 +80,6 @@ struct obj_gconf {
 	char *web_port;
 #endif
 
-#ifdef AUTH
-	char *auth_port;
-#endif
-
 	/* Catch signals */
 	struct sigaction sig_stop;
 	struct sigaction sig_term;

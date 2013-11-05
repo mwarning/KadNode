@@ -256,11 +256,7 @@ void auth_receive_challenge( int sock, UCHAR buf[], size_t buflen, IP *addr, tim
 	sendto( sock, outbuf, 4+SHA1_BIN_LENGTH+smlen, 0, (struct sockaddr*) addr, sizeof(IP) );
 }
 
-void auth_handle( int rc, int sock ) {
-	UCHAR buf[4+SHA1_BIN_LENGTH+(CHALLENGE_BIN_LENGTH+crypto_sign_BYTES)];
-	socklen_t addrlen_ret;
-	size_t buflen;
-	IP addr;
+int auth_handle_packet( int sock, UCHAR buf[], size_t buflen, IP *from ) {
 	time_t now;
 
 	now = time_now_sec();
@@ -272,45 +268,35 @@ void auth_handle( int rc, int sock ) {
 		g_send_challenges = now;
 	}
 
-	if( rc > 0 ) {
-		addrlen_ret = sizeof(IP);
-		buflen = recvfrom( sock, buf, sizeof(buf), 0, (struct sockaddr *) &addr, &addrlen_ret );
-
-		g_request_counter++;
-
-		/* Reset counter every second */
-		if( now > g_request_counter_started ) {
-			g_request_counter_started = now;
-			g_request_counter = 0;
-		}
-
-		/* Too many challenges */
-		if( g_request_counter > MAX_AUTH_REQUESTS ) {
-			return;
-		}
-
-		if( buflen == (4+SHA1_BIN_LENGTH+CHALLENGE_BIN_LENGTH) ) {
-			/* Receive plaintext challenge */
-			auth_receive_challenge( sock, buf, buflen, &addr, now );
-		} else {
-			/* Receive encrypted challenge */
-			auth_verify_challenge( sock, buf, buflen, &addr, now );
-		}
+	if( buflen < 4 || memcmp( buf, "AUTH", 4 ) != 0 ) {
+		/* The received packet was not meant for this extension */
+		return 1;
 	}
+
+	g_request_counter++;
+
+	/* Reset counter every second */
+	if( now > g_request_counter_started ) {
+		g_request_counter_started = now;
+		g_request_counter = 0;
+	}
+
+	/* Too many challenges */
+	if( g_request_counter > MAX_AUTH_REQUESTS ) {
+		return 0;
+	}
+
+	if( buflen == (4+SHA1_BIN_LENGTH+CHALLENGE_BIN_LENGTH) ) {
+		/* Receive plaintext challenge */
+		auth_receive_challenge( sock, buf, buflen, from, now );
+	} else {
+		/* Receive encrypted challenge */
+		auth_verify_challenge( sock, buf, buflen, from, now );
+	}
+
+	return 0;
 }
 
 void auth_setup( void ) {
-	int sock;
-
-	if( str_isZero( gconf->auth_port ) ) {
-		return;
-	}
-
-	if( gconf->af == AF_INET ) {
-		sock = net_bind( "AUTH", "0.0.0.0", gconf->auth_port, gconf->dht_ifce, IPPROTO_UDP, AF_INET );
-	} else {
-		sock = net_bind( "AUTH", "::", gconf->auth_port, gconf->dht_ifce , IPPROTO_UDP, AF_INET6 );
-	}
-
-	net_add_handler( sock, &auth_handle );
+	/* Nothing to do */
 }
