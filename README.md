@@ -131,7 +131,7 @@ All these interfaces listen only for connections from localhost.
   * `-v`, `--version`  
     Print program version and included features.
 
-### kadnode-ctl
+## kadnode-ctl
 
 **kadnode-ctl** allows to control KadNode from the command line.
 
@@ -141,7 +141,7 @@ All these interfaces listen only for connections from localhost.
   * `-h`  
     Print this help.
 
-#### KadNode Console Commands
+### KadNode Console Commands
 
   * `status`  
     Print the node id, the number of known nodes / searches / stored hashes and more.
