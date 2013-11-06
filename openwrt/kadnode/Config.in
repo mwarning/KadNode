@@ -12,9 +12,9 @@ config CONFIG_KADNODE_ENABLE_WEB
 	default n
 
 config CONFIG_KADNODE_ENABLE_AUTH
-	bool "Enable the public authentification interface"
+	bool "Enable authentification support"
 	depends on PACKAGE_kadnode
-	select PACKAGE_sodium
+	select PACKAGE_libsodium
 	default n
 
 config CONFIG_KADNODE_ENABLE_UPNP

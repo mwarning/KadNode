@@ -40,6 +40,11 @@ endef
 
 FEATURES = cmd
 
+ifeq ($(CONFIG_KADNODE_ENABLE_AUTH),y)
+FEATURES += auth
+DEPENDS += +libsodium
+endif
+
 ifeq ($(CONFIG_KADNODE_ENABLE_DNS),y)
 FEATURES += dns
 endif
