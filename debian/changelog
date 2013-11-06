@@ -7,6 +7,7 @@ kadnode (0.6) UNRELEASED; urgency=low
   * limit 'list' command output to stdout for security reasons
   * major code refactoring
   * less resource use due to more efficient logging
+  * add --config to load a configuration file
 
  -- mwarning <moritzwarning@web.de>  Sun, 13 Oct 2013 13:47:54 +0200
 
