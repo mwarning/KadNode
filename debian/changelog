@@ -1,4 +1,4 @@
-kadnode (0.6) UNRELEASED; urgency=low
+kadnode (0.5) UNRELEASED; urgency=low
 
   * add optional support for node authentification
     using public/secret key pairs (based on libsodium)
