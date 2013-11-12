@@ -8,11 +8,9 @@
 # Please be aware that other people might use the same identifier.
 # It is strongly advised to use additional measurements such as
 # authentification (e.g. certificates) to validate the resolved address.
-# Conflicts will also resolve to any of the announced addresses
-# associated with this identifier.
 #
 
 hostname=""
 
 # Note: sha1 hashing will be applied to the given string
-# unless it is a 40 digit hex string.
+# unless it is a 40 digit hex string or secret key hex string.

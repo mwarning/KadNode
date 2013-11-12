@@ -1,7 +1,9 @@
-kadnode (0.5) UNRELEASED; urgency=low
+kadnode (0.5) unstable; urgency=low
 
-  * add optional support for node authentification
-    using public/secret key pairs (based on libsodium)
+  * add optional support for public/secret key
+    authentication using libsodium (crypto_sign_*)
+    * at most 100 auth packets will be processed
+	  per second to mitigate DDOS attacks
   * merge 'search' command into 'lookup' command
   * extend 'list' command to show most internal data structures
   * limit 'list' command output to stdout for security reasons
@@ -9,7 +11,7 @@ kadnode (0.5) UNRELEASED; urgency=low
   * less resource use due to more efficient logging
   * add --config to load a configuration file
 
- -- mwarning <moritzwarning@web.de>  Sun, 13 Oct 2013 13:47:54 +0200
+ -- mwarning <moritzwarning@web.de>  Tue, 12 Nov 2013 02:31:57 +0100
 
 kadnode (0.4) unstable; urgency=low
 
