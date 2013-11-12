@@ -309,6 +309,9 @@ int kad_lookup_value( const char query[], IP addr_array[], size_t *addr_num ) {
 	} else if( results == NULL ) {
 		/* Create and append a new item */
 		results = results_add( id, query );
+
+		/* Start DHT search */
+		dht_search( id, 0, gconf->af, dht_callback_func, NULL );
 		rc = 1;
 	} else {
 		rc = 0;
