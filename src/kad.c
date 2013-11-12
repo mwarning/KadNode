@@ -367,32 +367,44 @@ int kad_blacklist( const IP* addr ) {
 	return 0;
 }
 
+/* Export known nodes; the maximum is 200 nodes */
 int kad_export_nodes( IP addr_array[], size_t *num ) {
-	IP4 addr4[64];
-	IP6 addr6[64];
+	IP4 *addr4;
+	IP6 *addr6;
 	int num4;
 	int num6;
-	int i, count;
+	int i;
 
-	num6 = N_ELEMS( addr6 );
-	num4 = N_ELEMS( addr4 );
+	if( gconf->af == AF_INET6 ) {
+		num6 = (*num % 200);
+		addr6 = calloc( num6, sizeof(IP6) );
+		num4 = 0;
+		addr4 = NULL;
+	} else {
+		num6 = 0;
+		addr6 = NULL;
+		num4 = (*num % 200);
+		addr4 = calloc( num4, sizeof(IP4) );
+	}
 
 	dht_lock();
 	dht_get_nodes( addr4, &num4, addr6, &num6 );
 	dht_unlock();
 
-	count = 0;
-
-	for( i = 0; i < num6 && count < *num; ++i, ++count ) {
-		memcpy( &addr_array[i], &addr6[i], sizeof(IP6) );
-	}
-
-	for( i = 0; i < num4 && count < *num; ++i, ++count ) {
-		memcpy( &addr_array[i], &addr4[i], sizeof(IP4) );
+	if( gconf->af == AF_INET6 ) {
+		for( i = 0; i < num6; ++i ) {
+			memcpy( &addr_array[i], &addr6[i], sizeof(IP6) );
+		}
+		free( addr6 );
+	} else {
+		for( i = 0; i < num4; ++i ) {
+			memcpy( &addr_array[i], &addr4[i], sizeof(IP4) );
+		}
+		free( addr4 );
 	}
 
 	/* Store number of nodes we have actually found */
-	*num = count;
+	*num = i;
 
 	return 0;
 }

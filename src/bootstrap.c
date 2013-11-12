@@ -166,7 +166,7 @@ int parse_packet( const char *str ) {
 void bootstrap_export_peerfile( void ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	const char *filename;
-	IP addrs[32];
+	IP addrs[128];
 	size_t i, num;
 	FILE * fp;
 

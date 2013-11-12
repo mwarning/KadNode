@@ -144,12 +144,14 @@ int cmd_blacklist( REPLY *r, const char *addr_str ) {
 	}
 }
 
+/* Export up to 32 peer addresses - more would not fit into one UDP packet */
 int cmd_export( REPLY *r ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	IP addr_array[32];
-	size_t addr_num = N_ELEMS(addr_array);
+	size_t addr_num;
 	size_t i;
 
+	addr_num = N_ELEMS(addr_array);
 	if( kad_export_nodes( addr_array, &addr_num ) != 0 ) {
 		return 1;
 	}
