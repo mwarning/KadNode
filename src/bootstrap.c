@@ -309,7 +309,6 @@ void bootstrap_handle( int rc, int sock ) {
 			return;
 		}
 
-		packet_limit -= 1;
 		if( packet_limit < 0 ) {
 			/* Too much traffic - leave multicast group for now */
 			if( mcast_registered == 1 && multicast_leave( sock, &mcast_addr ) ) {
@@ -317,6 +316,8 @@ void bootstrap_handle( int rc, int sock ) {
 				mcast_registered = 0;
 			}
 			return;
+		} else {
+			packet_limit--;
 		}
 
 		if( rc_recv >= sizeof(buf) ) {
