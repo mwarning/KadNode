@@ -105,6 +105,7 @@ void results_debug( int fd ) {
 				dprintf( fd, "    challenges_send: %d\n", result->challenges_send );
 			}
 #endif
+			result_counter++;
 			result = result->next;
 		}
 		dprintf( fd, "  Found %d results.\n", result_counter );
