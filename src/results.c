@@ -91,15 +91,19 @@ void results_debug( int fd ) {
 		dprintf( fd, " id: %s\n", str_id( results->id, buf ) );
 		dprintf( fd, "  done: %d\n", results->done );
 #ifdef AUTH
-		dprintf( fd, "  pkey: %s\n", auth_str_pkey( buf, results->pkey ) );
+		if( results->pkey ) {
+			dprintf( fd, "  pkey: %s\n", auth_str_pkey( buf, results->pkey ) );
+		}
 #endif
 		result_counter = 0;
 		result = results->entries;
 		while( result ) {
 			dprintf( fd, "   addr: %s\n", str_addr( &result->addr, buf ) );
 #ifdef AUTH
-			dprintf( fd, "    challenge: %s\n", auth_str_challenge( buf, result->challenge ) );
-			dprintf( fd, "    challenges_send: %d\n", result->challenges_send );
+			if( results->pkey ) {
+				dprintf( fd, "    challenge: %s\n", auth_str_challenge( buf, result->challenge ) );
+				dprintf( fd, "    challenges_send: %d\n", result->challenges_send );
+			}
 #endif
 			result = result->next;
 		}
