@@ -95,12 +95,10 @@ install:
 	cp build/kadnode $(DESTDIR)/usr/bin/
 	-cp build/kadnode-ctl $(DESTDIR)/usr/bin/
 	-cp build/libnss_kadnode.so.2 $(DESTDIR)/lib/
-	-cp -f $(DESTDIR)/etc/nsswitch.conf $(DESTDIR)/etc/nsswitch.conf.dpkg-old
-	-sed -e 's/^hosts:\s*files \(kadnode\)\?\s*/hosts:          files kadnode /' $(DESTDIR)/etc/nsswitch.conf.dpkg-old > $(DESTDIR)/etc/nsswitch.conf
+	-sed -i -e 's/^hosts:\s*files \(kadnode\)\?\s*/hosts:          files kadnode /' $(DESTDIR)/etc/nsswitch.conf 2> /dev/null
 
 uninstall:
 	rm $(DESTDIR)/usr/bin/kadnode
 	-rm $(DESTDIR)/usr/bin/kadnode-ctl
 	-rm $(DESTDIR)/lib/libnss_kadnode.so.2
-	-cp -f $(DESTDIR)/etc/nsswitch.conf $(DESTDIR)/etc/nsswitch.conf.dpkg-old
-	-sed -e 's/^hosts:\s*files kadnode /hosts:          files /' $(DESTDIR)/etc/nsswitch.conf.dpkg-old > $(DESTDIR)/etc/nsswitch.conf
+	-sed -i -e 's/^hosts:\s*files kadnode /hosts:          files /' $(DESTDIR)/etc/nsswitch.conf 2> /dev/null
