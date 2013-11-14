@@ -239,6 +239,7 @@ void conf_free() {
 
 	free( gconf->user );
 	free( gconf->pidfile );
+	free( gconf->peerfile );
 	free( gconf->dht_port );
 	free( gconf->dht_ifce );
 	free( gconf->mcast_addr );
