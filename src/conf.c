@@ -182,6 +182,34 @@ void conf_check() {
 		}
 	}
 
+	if( port_parse( gconf->dht_port, -1 ) < 0 ) {
+		log_err( "CFG: Invalid DHT port '%s'.", gconf->dht_port );
+	}
+
+#ifdef CMD
+	if( port_parse( gconf->cmd_port, -1 ) < 0 ) {
+		log_err( "CFG: Invalid CMD port '%s'.", gconf->cmd_port );
+	}
+#endif
+
+#ifdef DNS
+	if( port_parse( gconf->dns_port, -1 ) < 0 ) {
+		log_err( "CFG: Invalid DNS port '%s'.", gconf->dns_port );
+	}
+#endif
+
+#ifdef NSS
+	if( port_parse( gconf->nss_port, -1 ) < 0 ) {
+		log_err( "CFG: Invalid NSS port '%s'.", gconf->nss_port );
+	}
+#endif
+
+#ifdef WEB
+	if( port_parse( gconf->web_port, -1 ) < 0 ) {
+		log_err( "CFG: Invalid WEB port '%s'.", gconf->web_port );
+	}
+#endif
+
 	/* Parse multicast address string */
 	if( addr_parse( &mcast_addr, gconf->mcast_addr, DHT_PORT_MCAST, gconf->af ) != 0 ) {
 		log_err( "CFG: Failed to parse IP address for '%s'.", gconf->mcast_addr );
@@ -257,7 +285,7 @@ void conf_add_value( char *var, char *val ) {
 	}
 
 	/* Split query and optional port */
-	port = chop_port( val, 1, -1 );
+	port = port_chop( val, 1, -1 );
 
 #ifdef AUTH
 	if( auth_is_skey( val ) ) {
@@ -331,6 +359,7 @@ void read_conf_file( const char *filename ) {
 		}
 		conf_handle( var, val );
 	}
+
 	fclose( file );
 }
 

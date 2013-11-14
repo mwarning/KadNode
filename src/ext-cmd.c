@@ -241,7 +241,7 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 		}
 
 		/* Split query and optional port */
-		port = chop_port( argv[1], 1, -1 );
+		port = port_chop( argv[1], 1, -1 );
 
 #ifdef AUTH
 		if( auth_is_skey( argv[1] ) ) {

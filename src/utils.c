@@ -19,31 +19,43 @@
 #include "utils.h"
 
 
-/* Extract port from '<string>:<port>' and set ':' to '\0' */
-int chop_port( char *str, int def, int err ) {
+/* Parse a port - treats 0 as valid port */
+int port_parse( const char *pstr, int err ) {
 	int port;
-	char *p;
 	size_t i;
 
-	p = strchr( str, ':' );
-	if( p == NULL ) {
-		return def;
-	}
-
 	port = 0;
-	for( i = 1; p[i] != '\0'; i++ ) {
-		if( p[i] < '0' || p[i] > '9' ) {
+	for( i = 0; pstr[i] != '\0'; i++ ) {
+		if( pstr[i] < '0' || pstr[i] > '9' ) {
 			return err;
 		}
 		port *= 10;
-		port += p[i] - '0';
+		port += pstr[i] - '0';
 	}
 
-	if( port < 1 || port > 65535 ) {
+	if( port < 0 || port > 65535 ) {
+		return err;
+	} else {
+		return port;
+	}
+}
+
+/* Extract port from '<string>:<port>' and set ':' to '\0' */
+int port_chop( char *str, int def, int err ) {
+	int port;
+	char *pstr;
+
+	pstr = strchr( str, ':' );
+	if( pstr == NULL ) {
+		return def;
+	}
+
+	port = port_parse( pstr + 1, err);
+	if( port < 1 ) {
 		return err;
 	}
 
-	*p = '\0';
+	*pstr = '\0';
 	return port;
 }
 
