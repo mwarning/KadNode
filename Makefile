@@ -2,7 +2,7 @@
 CC ?= gcc
 CFLAGS = -O2 -Wall -Wwrite-strings -pedantic -std=gnu99
 POST_LINKING =
-FEATURES ?= auth cmd dns natpmp nss upnp web #debug
+FEATURES ?= auth cmd natpmp nss upnp #dns debug web
 
 OBJS = build/main.o build/results.o build/kad.o build/log.o \
 	build/conf.o build/sha1.o build/unix.o build/net.o build/utils.o \
