@@ -2,3 +2,4 @@
 ./build/kadnode-ctl /usr/bin/
 ./build/libnss_kadnode.so.2 /lib/
 ./debian/peers.txt /etc/kadnode/
+./debian/kadnode.conf /etc/kadnode/

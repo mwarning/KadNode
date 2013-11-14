@@ -11,7 +11,7 @@
 # Author: Moritz Warning <moritzwarning@web.de>
 
 
-BOOTSTRAP_FILE="/etc/kadnode/peers.txt"
+CONFIG_FILE="/etc/kadnode/kadnode.conf"
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="P2P DNS service"
 NAME=kadnode
@@ -34,8 +34,6 @@ SCRIPTNAME=/etc/init.d/$NAME
 . /lib/lsb/init-functions
 
 
-# Append the hostname if set in /etc/default/kadnode
-
 do_start()
 {
 	# Return
@@ -46,9 +44,7 @@ do_start()
 	start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON --test > /dev/null \
 		|| return 1
 	start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON -- \
-		--daemon --pidfile "$PIDFILE" \
-		${hostname:+--value-id "$hostname"} \
-		${BOOTSTRAP_FILE:+--peerfile "$BOOTSTRAP_FILE"} \
+		--daemon --pidfile "$PIDFILE" ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
 		|| return 2
 }
 
