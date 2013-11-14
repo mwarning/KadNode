@@ -280,7 +280,11 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 
 	} else if( match( argv[0], "list" ) && argc == 2 ) {
 
-		if( match( argv[1], "blacklist" ) ) {
+		if( gconf->is_daemon == 1 ) {
+			r_printf( r ,"The 'list' command is not available while KadNode runs as daemon.\n" );
+			rc = 1;
+			goto end;
+		} else if( match( argv[1], "blacklist" ) ) {
 			kad_debug_blacklist( STDOUT_FILENO );
 			rc = 0;
 		} else if( match( argv[1], "buckets" ) ) {
@@ -323,7 +327,7 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 		rc = 1;
 	}
 
-end:
+	end:;
 	return rc;
 }
 
