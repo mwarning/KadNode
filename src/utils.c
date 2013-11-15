@@ -19,6 +19,16 @@
 #include "utils.h"
 
 
+int port_random( void ) {
+	unsigned short port;
+
+	do {
+		bytes_random( (UCHAR*) &port, sizeof(port) );
+	} while( port == 0 );
+
+	return port;
+}
+
 /* Parse a port - treats 0 as valid port */
 int port_parse( const char *pstr, int err ) {
 	int port;
@@ -33,30 +43,11 @@ int port_parse( const char *pstr, int err ) {
 		port += pstr[i] - '0';
 	}
 
-	if( port < 0 || port > 65535 ) {
+	if( i == 0 || port < 0 || port > 65535 ) {
 		return err;
 	} else {
 		return port;
 	}
-}
-
-/* Extract port from '<string>:<port>' and set ':' to '\0' */
-int port_chop( char *str, int def, int err ) {
-	int port;
-	char *pstr;
-
-	pstr = strchr( str, ':' );
-	if( pstr == NULL ) {
-		return def;
-	}
-
-	port = port_parse( pstr + 1, err);
-	if( port < 1 ) {
-		return err;
-	}
-
-	*pstr = '\0';
-	return port;
 }
 
 /* Fill buffer with random bytes */

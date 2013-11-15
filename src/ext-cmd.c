@@ -174,6 +174,7 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 	int minutes;
 	IP addrs[16];
 	int port;
+	char *p;
 	int rc = 0;
 
 	if( argc == 0 ) {
@@ -240,23 +241,38 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 			lifetime = (time_now_sec() + (minutes * 60));
 		}
 
-		/* Split query and optional port */
-		port = port_chop( argv[1], 1, -1 );
+		/* Find <id>:<port> delimiter */
+		p = strchr( argv[1], ':' );
+		if( p ) {
+			*p = '\0';
+		}
 
 #ifdef AUTH
 		if( auth_is_skey( argv[1] ) ) {
-			if( port == 1 ) {
-				port = atoi( gconf->dht_port );
-			} else {
+			if( p ) {
 				r_printf( r ,"No port expected. Auth requests will be expected on the DHT port.\n" );
 				rc = 1;
 				goto end;
+			} else {
+				port = atoi( gconf->dht_port );
 			}
+		} else {
+#endif
+			if( p ) {
+				port = port_parse( p + 1, -1 );
+			} else {
+				/* Preselect a random port */
+				port = port_random();
+			}
+#ifdef AUTH
 		}
 #endif
 
 		rc = values_add( argv[1], port, lifetime );
-		if( rc == 0 ) {
+		if( rc < 0 ) {
+			r_printf( r ,"Invalid port.\n" );
+			rc = 1;
+		} else {
 #ifdef FWD
 			forwardings_add( port, lifetime);
 #endif
@@ -265,9 +281,6 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 			} else {
 				r_printf( r ,"Announce value on port %d for %d minutes.\n", port, minutes );
 			}
-		} else {
-			r_printf( r ,"Invalid port.\n" );
-			rc = 1;
 		}
 
 	} else if( match( argv[0], "blacklist" ) && argc == 2 ) {

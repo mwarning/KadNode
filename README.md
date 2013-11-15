@@ -156,7 +156,7 @@ All these interfaces listen only for connections from localhost.
 
   * `announce` *id*[<i>:*port*</i>] [<i>*minutes*</i>]  
     Announce that this instance is associated with identifier  
-    and an optional port. The default port is 1 (0 is for announces).  
+    and an optional port. The default port is random (but not equal 0).  
     The announcement will happen only once unless a time  
     in minutes is given or -1 minutes for the entire runtime.
 

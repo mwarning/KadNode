@@ -182,7 +182,7 @@ void conf_check() {
 		}
 	}
 
-	if( port_parse( gconf->dht_port, -1 ) < 0 ) {
+	if( port_parse( gconf->dht_port, -1 ) < 1 ) {
 		log_err( "CFG: Invalid DHT port '%s'.", gconf->dht_port );
 	}
 
@@ -280,35 +280,48 @@ void conf_str( const char *var, char **dst, const char *src ) {
 
 void conf_add_value( char *var, char *val ) {
 	int port;
+	int rc;
+	char *p;
 
 	if( val == NULL ) {
 		conf_arg_expected( var );
 	}
 
-	/* Split query and optional port */
-	port = port_chop( val, 1, -1 );
+	/* Find <id>:<port> delimiter */
+	p = strchr( val, ':' );
+	if( p ) {
+		*p = '\0';
+	}
 
 #ifdef AUTH
 	if( auth_is_skey( val ) ) {
-		if( port == 1 ) {
-			port = atoi( gconf->dht_port );
-		} else {
+		if( p ) {
 			log_err( "No port expected. Auth requests will be expected on the DHT port." );
-			return;
+			exit( 1 );
+		} else {
+			port = atoi( gconf->dht_port );
 		}
+	} else {
+#endif
+		if( p ) {
+			port = port_parse( p + 1, -1 );
+		} else {
+			/* Preselect a random port */
+			port = port_random();
+		}
+#ifdef AUTH
 	}
 #endif
 
-	if( port <= 0 ) {
+	rc = values_add( val, port, LONG_MAX );
+	if( rc < 0 ) {
 		log_err( "CFG: Invalid port for value annoucement: %d", port );
-		return;
-	}
-
-	values_add( val, port, LONG_MAX );
-
+		exit( 1 );
+	} else {
 #ifdef FWD
-	forwardings_add( port, LONG_MAX );
+		forwardings_add( port, LONG_MAX );
 #endif
+	}
 }
 
 void read_conf_file( const char *filename ) {

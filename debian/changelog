@@ -10,6 +10,7 @@ kadnode (0.5) unstable; urgency=low
   * major code refactoring
   * less resource use due to more efficient logging
   * add --config to load a configuration file
+  * change default port for announces from 1 to random (!= 0)
 
  -- mwarning <moritzwarning@web.de>  Tue, 12 Nov 2013 02:31:57 +0100
 
