@@ -23,7 +23,7 @@ pkgver() {
 
 build() {
 	cd "$pkgname"
-	make FEATURES="cmd nss"
+	make FEATURES="auth cmd nss dns web"
 }
 
 package() {
@@ -32,9 +32,13 @@ package() {
 
 	mkdir -p "${pkgdir}/usr/bin"
 	mkdir -p "${pkgdir}/lib"
-	mkdir -p "${pkgdir}/etc"
+	mkdir -p "${pkgdir}/etc/kadnode"
+	mkdir -p "${pkgdir}/etc/systemd/system/multi-user.target.wants"
 
 	cp build/kadnode ${pkgdir}/usr/bin/
 	cp build/kadnode-ctl ${pkgdir}/usr/bin/
 	cp build/libnss_kadnode.so.2 ${pkgdir}/lib/
+	cp archlinux/kadnode.service ${pkgdir}/etc/systemd/system/multi-user.target.wants/
+	cp debian/kadnode.conf ${pkgdir}/etc/kadnode/
+	cp debian/peers.txt ${pkgdir}/etc/kadnode/
 }
