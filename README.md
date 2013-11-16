@@ -2,7 +2,7 @@
 
 ## SYNOPSIS
 
-`kadnode`  [--value-id hostname] [--port port] [--daemon] [...]
+`kadnode`  [--value-id identifier] [--port port] [--daemon] [...]
 
 `kadnode-ctl`  [...]
 
