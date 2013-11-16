@@ -1,5 +1,4 @@
-kadnode(1) - P2P name resolution daemon
-=======================================
+#kadnode(1) - P2P name resolution daemon
 
 ## SYNOPSIS
 
