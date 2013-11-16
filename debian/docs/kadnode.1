@@ -1,13 +1,13 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "KADNODE" "1" "October 2013" "" ""
+.TH "KADNODE" "1" "November 2013" "" ""
 .
 .SH "NAME"
 \fBkadnode\fR \- P2P name resolution daemon
 .
 .SH "SYNOPSIS"
-\fBkadnode\fR [\-\-id hostname] [\-\-port port] [\-\-daemon] [\.\.\.]
+\fBkadnode\fR [\-\-value\-id hostname] [\-\-port port] [\-\-daemon] [\.\.\.]
 .
 .P
 \fBkadnode\-ctl\fR [\.\.\.]
@@ -22,10 +22,13 @@ KadNode enables the user to announce any kind of resource by an identifier\. Thi
 By default, KadNode tries to send a ping to a multicast address on the local network to find nodes to bootstrap from\. This is done every five minutes when no other nodes are known\. The interactive remote shell \fBkadnode\-ctl\fR let the user import and export nodes, issue queries for identifiers and send announcements\.
 .
 .P
-As an usage example one would start \fBkadnode \-\-value\-id myname\.p2p\fR to let KadNode announce every 30 minutes, that the IP address of the running KadNode instance is associated with the identifier \'myname\.p2p\'\. A call as \fBkadnode\-ctl import bttracker\.debian\.org\fR can be used to help KadNode to bootstrap into an existing network\. Check \fBkadnode\-ctl status\fR to see the rising number of known nodes\. To announce an identifier just once, use \fBkadnode\-ctl announce myname\fR\. Any announcement will be dropped by other Kademlia DHT instances (such as Transmission) after 32 minutes and therefore need to be refreshed around every 30 minutes\.
+As an usage example start \fBkadnode\fR and enter \fBimport bttracker\.debian\.org\fR to help KadNode to bootstrap into an existing network\. The \fBstatus\fR command will let you see the rising number of known nodes\. To let KadNode announce to the network that the identifier \'myname\.p2p\' should resolve to your IP address, use \fBannounce myname\.p2p \-1\fR\. The second argument "\-1" is a special value and will cause Kadnode to keep the announcement alive for the entire runtime\. The same can be achieved using the \fB\-\-value\-id\fR argument at startup\. Any announcement will be dropped by other Kademlia DHT instances (such as Transmission) after 32 minutes and therefore need to be refreshed by KadNode around every 30 minutes\.
 .
 .P
-Please be aware that other people might use the same identifier\. It is strongly advised to do additional identification/authentification when an address is used that has been resolved by KadNode\. The DNS/NSS interfaces are only able to return one of these addresses\. In contrast, the web and console interface are able to return all known IP addresses associated with an identifier\.
+Values like \fBmyname\.p2p\fR can be resolved by using the command \fBlookup myname\.p2p\fR\. The NSS (Network Service Switch) support on many Posix systems (e\.g\. Ubuntu) can intercept requests for the \.p2p top level domain and allows the value to be used e\.g\. in the web browser\.
+.
+.P
+Please be aware that other people might use the same identifier\. It is strongly advised to do additional identification/authentication when an address is used that has been resolved by KadNode\. The DNS/NSS interfaces are only able to return one of these addresses\. In contrast, the web and console interface are able to return all known IP addresses associated with an identifier\.
 .
 .P
 Every entered identifier (e\.g\. \fBmyname\.p2p\fR) will have everything after and including the last dot ignored\. This is because the top level domain is often used to differentiate from classical domain names and to redirect requests to KadNode\. The rest of the string is converted to an 20 byte identifier using the SHA1 hashing algorithm\. As an alternative, the hash can be entered directly as a 40 character hexadecimal string\. The string \fBmyname\.p2p\fR is therefore eqivalent to \fBd13b93ea42804188d277c20f7d6e5be2732148b8\fR which is the result of SHA1(\'myname\')\. The use of the build\-in hashing algorithm can be entirely circumvented this way\.
@@ -94,6 +97,15 @@ Bind the DHT to this port\.
 Default: 6881
 .
 .IP "\(bu" 4
+\fB\-\-config\fR \fIfile\fR
+.
+.br
+Provide a configuration file with one command line
+.
+.br
+option on each line\. Comments start after \'#\'\.
+.
+.IP "\(bu" 4
 \fB\-\-ifce\fR \fIinterface\fR
 .
 .br
@@ -127,7 +139,7 @@ Disable multicast to discover local nodes\.
 Run in background\.
 .
 .IP "\(bu" 4
-\fB\-\-verbosity\fR
+\fB\-\-verbosity\fR \fIlevel\fR
 .
 .br
 Verbosity level: quiet, verbose or debug (Default: verbose)\.
@@ -163,6 +175,12 @@ Bind the "Network Service Switch" to this local port (Default: 4053)\.
 Bind the web server to this local port (Default: 8053)\.
 .
 .IP "\(bu" 4
+\fB\-\-auth\-gen\-keys\fR
+.
+.br
+Generate a secret/public key pair\. Use the public key to resolve the node announcing the secret key\.
+.
+.IP "\(bu" 4
 \fB\-\-mode\fR \fIprotocol\fR
 .
 .br
@@ -182,7 +200,7 @@ Print program version and included features\.
 .
 .IP "" 0
 .
-.SS "kadnode\-ctl"
+.SH "kadnode\-ctl"
 \fBkadnode\-ctl\fR allows to control KadNode from the command line\.
 .
 .IP "\(bu" 4
@@ -198,6 +216,8 @@ The port used to connect to the command line of a local KadNode instance (Defaul
 Print this help\.
 .
 .IP "" 0
+.
+.SS "KadNode Console Commands"
 .
 .IP "\(bu" 4
 \fBstatus\fR
@@ -215,13 +235,13 @@ Lookup the IP addresses of all nodes that claim to satisfy the identifier\.
 The first call will start the search\.
 .
 .IP "\(bu" 4
-\fBannounce\fR \fIid\fR [\fI\fIport\fR\fR] [\fI\fIminutes\fR\fR]
+\fBannounce\fR \fIid\fR[\fI:\fIport\fR\fR] [\fI\fIminutes\fR\fR]
 .
 .br
 Announce that this instance is associated with identifier
 .
 .br
-and an optional port\. The default port is 1 (0 is for announces)\.
+and an optional port\. The default port is random (but not equal 0)\.
 .
 .br
 The announcement will happen only once unless a time
@@ -242,10 +262,10 @@ Send a ping to another KadNode instance to establish a connection\.
 Print a few good nodes\.
 .
 .IP "\(bu" 4
-\fBlist\fR [\fBvalues\fR|\fBforwardings\fR]
+\fBlist\fR [\fBblacklist\fR|\fBbuckets\fR|\fBconstants\fR|\fBforwardings\fR|\fBresults\fR|\fBsearches\fR|\fBstorage\fR|\fBvalues\fR]
 .
 .br
-List announced value identifiers or UPnP/NAT\-PMP port forwardings via\.
+List various internal data structures\.
 .
 .IP "\(bu" 4
 \fBblacklist\fR \fIaddr\fR
@@ -261,8 +281,11 @@ Shutdown the daemon\.
 .
 .IP "" 0
 .
+.SH "Authentication"
+KadNode allows optional node authentication\. This means that you can lookup nodes using a public key and verify that those nodes are in posession of the corresponding secret key\. To generate a new key pair use \fBkadnode \-\-auth\-gen\-keys\fR\. Announce the secret key on a node e\.g\. via \fBkadnode \-\-value\-id <secret\-key>\fR and then lookup the nodes IP address on another computer using \fB<public\-key>\.p2p\fR in your browser or \fBkadnode\-ctl lookup <public\-key>\fR\.
+.
 .SH "Web Interface"
-The web interface allows queries of these forms:
+The optional web interface allows queries of these forms:
 .
 .IP "\(bu" 4
 \fBhttp://localhost:8053/lookup?foo\.p2p\fR
@@ -290,7 +313,7 @@ of the resolved IP addresses you trust\. Be random about the identifiers you ann
 IP addresses do not deliver/verify for you, then you should blacklist those IP addresses\.
 .
 .IP "\(bu" 4
-Blacklisted addreses are stored in a LRU cache of maximal 10 entries\.
+Blacklisted addresses are stored in a LRU cache of maximal 10 entries\.
 .
 .IP "" 0
 .

@@ -1,9 +1,9 @@
-kadnode(1) -- P2P name resolution daemon
+kadnode(1) - P2P name resolution daemon
 =======================================
 
 ## SYNOPSIS
 
-`kadnode`  [--id hostname] [--port port] [--daemon] [...]
+`kadnode`  [--value-id hostname] [--port port] [--daemon] [...]
 
 `kadnode-ctl`  [...]
 
