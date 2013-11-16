@@ -279,6 +279,7 @@ void conf_str( const char *var, char **dst, const char *src ) {
 }
 
 void conf_add_value( char *var, char *val ) {
+	int is_random_port;
 	int port;
 	int rc;
 	char *p;
@@ -286,6 +287,8 @@ void conf_add_value( char *var, char *val ) {
 	if( val == NULL ) {
 		conf_arg_expected( var );
 	}
+
+	is_random_port = 0;
 
 	/* Find <id>:<port> delimiter */
 	p = strchr( val, ':' );
@@ -308,6 +311,7 @@ void conf_add_value( char *var, char *val ) {
 		} else {
 			/* Preselect a random port */
 			port = port_random();
+			is_random_port = 1;
 		}
 #ifdef AUTH
 	}
@@ -319,7 +323,9 @@ void conf_add_value( char *var, char *val ) {
 		exit( 1 );
 	} else {
 #ifdef FWD
-		forwardings_add( port, LONG_MAX );
+		if( !is_random_port ) {
+			forwardings_add( port, LONG_MAX );
+		}
 #endif
 	}
 }

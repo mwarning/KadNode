@@ -171,6 +171,7 @@ int cmd_export( REPLY *r ) {
 int cmd_exec( REPLY *r, int argc, char **argv ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	time_t lifetime;
+	int is_random_port;
 	int minutes;
 	IP addrs[16];
 	int port;
@@ -241,6 +242,8 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 			lifetime = (time_now_sec() + (minutes * 60));
 		}
 
+		is_random_port = 0;
+
 		/* Find <id>:<port> delimiter */
 		p = strchr( argv[1], ':' );
 		if( p ) {
@@ -263,6 +266,7 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 			} else {
 				/* Preselect a random port */
 				port = port_random();
+				is_random_port = 1;
 			}
 #ifdef AUTH
 		}
@@ -274,7 +278,9 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 			rc = 1;
 		} else {
 #ifdef FWD
-			forwardings_add( port, lifetime);
+			if( !is_random_port ) {
+				forwardings_add( port, lifetime);
+			}
 #endif
 			if( minutes < 0 ) {
 				r_printf( r ,"Announce value on port %d for the entire run time.\n", port );
