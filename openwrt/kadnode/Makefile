@@ -73,7 +73,7 @@ define Package/kadnode/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/build/kadnode $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/build/kadnode-ctl $(1)/usr/bin/
 
-	$(INSTALL_DIR) $(1)/etc/init.d/
+	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) files/kadnode.init $(1)/etc/init.d/kadnode
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_CONF) files/kadnode.config $(1)/etc/config/kadnode

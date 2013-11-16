@@ -31,45 +31,6 @@ section_enabled() {
 	[ $enabled -gt 0 ]
 }
 
-load_nodes() {
-	local s="$1"
-	local port="1700"
-
-	config_get port "$s" "cmd_port"
-
-	load_node() {
-		kadnode-ctl -p $port import "$1" &> /dev/null
-	}
-
-	config_list_foreach "$s" "node" load_node
-}
-
-save_nodes() {
-	local s="$1"
-	local port="1700"
-	local node
-	local stored_nodes
-	local stored_nodes_n
-	local current_nodes
-	local current_nodes_n
-
-	config_get port "$s" "cmd_port"
-
-	config_get stored_nodes "$s" "node"
-	stored_nodes_n=`count $stored_nodes`
-
-	current_nodes=`kadnode-ctl -p $port export 2> /dev/null`
-	current_nodes_n=`count $current_nodes`
-
-	if [ $current_nodes_n -ge $stored_nodes_n ]; then
-		uci delete kadnode.$s.node
-		for node in $current_nodes; do
-			uci add_list kadnode.$s.node="$node"
-		done
-		uci commit kadnode
-	fi
-}
-
 start_instance() {
 	local s="$1"
 
@@ -78,10 +39,10 @@ start_instance() {
 	SERVICE_PID_FILE="/var/run/kadnode.$s.pid"
 	OPTS=""
 
-	append_opts "$s" id user port ifce cmd_port\
-		mcast_addr mode dns_port verbosity
+	append_opts "$s" node_id user port ifce cmd_port web_port\
+		mcast_addr mode dns_port verbosity peerfile config
 
-	append_opts_boolean "$s" disable_mcast
+	append_opts_boolean "$s" disable_multicast disable_forwarding
 
 	add_value_id() {
 		OPTS="$OPTS --value-id '$1'"
@@ -90,20 +51,10 @@ start_instance() {
 	config_list_foreach "$s" "value_id" add_value_id
 
 	eval service_start "'$KADNODE_BIN'" --daemon --pidfile "'$SERVICE_PID_FILE'" $OPTS
-
-	#import nodes to bootstrap from
-	load_nodes "$s"
 }
 
 stop_instance() {
 	local s="$1"
-	local save_nodes_enabled
-
-	#save good nodes
-	config_get_bool save_nodes_enabled "$s" 'save_nodes' 0
-	if [ $save_nodes_enabled -gt 0 ]; then
-		save_nodes "$s"
-	fi
 
 	SERVICE_PID_FILE="/var/run/kadnode.$s.pid"
 	service_stop "$KADNODE_BIN"
