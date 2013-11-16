@@ -78,6 +78,7 @@ void values_debug( int fd ) {
 		if( value->skey ) {
 			char sbuf[2*crypto_sign_SECRETKEYBYTES+1];
 			dprintf( fd, "  skey: %s\n", auth_str_skey( sbuf, value->skey ) );
+			dprintf( fd, "  (pkey: %s)\n", auth_str_pkey( sbuf, value->skey + crypto_sign_PUBLICKEYBYTES ) );
 		}
 #endif
 
