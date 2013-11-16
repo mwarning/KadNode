@@ -58,21 +58,22 @@ void forwardings_debug( int fd ) {
 	now = time_now_sec();
 	counter = 0;
 	fwd = g_forwardings_beg;
-	dprintf( fd, "port | refreshed ago [min] | lifetime remaining [min]\n");
 	while( fwd ) {
 		if( fwd->refreshed == 0 ) {
 			sprintf( refreshed, "never" );
 		} else {
-			sprintf( refreshed, "%ld", (now - fwd->refreshed) / 60 );
+			sprintf( refreshed, "%ld [min]", (now - fwd->refreshed) / 60 );
 		}
 
 		if( fwd->lifetime == LONG_MAX ) {
 			sprintf( lifetime, "infinite" );
 		} else {
-			sprintf( lifetime, "%ld", (fwd->lifetime -  now) / 60 );
+			sprintf( lifetime, "%ld [min]", (fwd->lifetime -  now) / 60 );
 		}
 
-		dprintf( fd, "%hu | %s | %s\n", fwd->port, refreshed, lifetime );
+		dprintf( fd, " port: %hu\n", fwd->port );
+		dprintf( fd, "  refreshed ago: %s\n", refreshed );
+		dprintf( fd, "  lifetime remaining: %s\n", lifetime );
 
 		counter++;
 		fwd = fwd->next;
