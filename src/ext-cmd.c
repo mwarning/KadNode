@@ -283,9 +283,9 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 			}
 #endif
 			if( minutes < 0 ) {
-				r_printf( r ,"Announce value on port %d for the entire run time.\n", port );
+				r_printf( r ,"Announce value for the entire run time (%sport %d).\n", (is_random_port ? "random " : ""), port );
 			} else {
-				r_printf( r ,"Announce value on port %d for %d minutes.\n", port, minutes );
+				r_printf( r ,"Announce value for %d minutes (%sport %d).\n", minutes, (is_random_port ? "random " : ""), port );
 			}
 		}
 
