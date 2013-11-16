@@ -10,9 +10,9 @@ cd openwrt
 ./scripts/feeds update -a
 ./scripts/feeds install -a
 
-git clone https://github.com/mwarning/kadnode.git
-cp -rf kadnode/openwrt/kadnode package/
-rm -rf kadnode/
+git clone https://github.com/mwarning/KadNode.git
+cp -rf KadNode/openwrt/kadnode package/
+rm -rf KadNode/
 
 make defconfig
 make menuconfig
