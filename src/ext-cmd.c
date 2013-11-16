@@ -277,7 +277,7 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 			forwardings_add( port, lifetime);
 #endif
 			if( minutes < 0 ) {
-				r_printf( r ,"Announce value on port %d for entire run time.\n", port );
+				r_printf( r ,"Announce value on port %d for the entire run time.\n", port );
 			} else {
 				r_printf( r ,"Announce value on port %d for %d minutes.\n", port, minutes );
 			}
