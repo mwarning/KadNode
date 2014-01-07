@@ -48,20 +48,19 @@ int main( int argc, char **argv ) {
 	conf_check();
 
     if( gconf->is_daemon == 1 ) {
+		gconf->use_syslog = 1;
 
-		/* Close pipes */
-		fclose( stderr );
-		fclose( stdout );
-		fclose( stdin );
+		/* Fork before any threads are started */
+		unix_fork();
 
 		if( chdir( "/" ) != 0 ) {
 			log_err( "UNX: Changing working directory to / failed: %s", strerror( errno ) );
 		}
 
-		gconf->use_syslog = 1;
-
-		/* Fork before any threads are started */
-		unix_fork();
+		/* Close pipes */
+		fclose( stderr );
+		fclose( stdout );
+		fclose( stdin );
 	}
 
 	/* Catch SIG INT */
