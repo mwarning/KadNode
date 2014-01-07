@@ -47,17 +47,22 @@ void unix_sig_term( int signo ) {
 
 void unix_fork( void ) {
 	pid_t pid;
+	pid_t sid;
 
 	pid = fork();
 
 	if( pid < 0 ) {
 		log_err( "UNX: Failed to fork." );
 	} else if( pid != 0 ) {
-	   exit( 0 );
+		/* Child process */
+		exit( 0 );
 	}
 
 	/* Become session leader */
-	setsid();
+	sid = setsid();
+	if( sid < 0 ) {
+		exit( 1);
+	}
 
 	/* Clear out the file mode creation mask */
 	umask( 0 );
