@@ -336,10 +336,14 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 		r_printf( r ,"\nOutput send to console.\n" );
 
 	} else if( match( argv[0], "shutdown" ) && argc == 1 ) {
+		if( gconf->is_daemon == 1 ) {
+			r_printf( r ,"The 'shutdown' command is not available while KadNode runs as daemon.\n" );
+			rc = 1;
+			goto end;
+		}
 
 		r_printf( r, "Shutting down ...\n" );
 		gconf->is_running = 0;
-
 	} else {
 		/* print usage */
 		r_printf( r, cmd_usage_str );
