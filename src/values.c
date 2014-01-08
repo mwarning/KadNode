@@ -16,6 +16,7 @@
 
 
 static time_t g_values_expire = 0;
+static time_t g_values_announce = 0;
 static struct value_t *g_values = NULL;
 
 struct value_t* values_get( void ) {
@@ -150,7 +151,7 @@ int values_add( const char query[], int port, time_t lifetime ) {
 	}
 
 	/* Trigger immediate handling */
-	g_values_expire = 0;
+	g_values_announce= 0;
 
 	return 0;
 }
@@ -229,10 +230,16 @@ void values_handle( int _rc, int _sock ) {
 	/* Expire search results */
 	if( g_values_expire <= time_now_sec() ) {
 		values_expire();
-		values_announce();
 
 		/* Try again in ~1 minute */
 		g_values_expire = time_add_min( 1 );
+	}
+
+	if( g_values_announce <= time_now_sec() && kad_count_nodes() != 0 ) {
+		values_announce();
+
+		/* Try again in ~1 minute */
+		g_values_announce = time_add_min( 1 );
 	}
 }
 
