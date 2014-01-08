@@ -1,3 +1,10 @@
+kadnode (0.6) UNRELEASED; urgency=low
+
+  * remove "shutdown" command from KadNode console
+  * wait for announcements until at least one other node is known
+
+ -- mwarning <moritzwarning@web.de>  Wed, 08 Jan 2014 19:14:45 +0100
+
 kadnode (0.5) unstable; urgency=low
 
   * add optional support for public/secret key
