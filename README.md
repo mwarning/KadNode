@@ -171,9 +171,6 @@ All these interfaces listen only for connections from localhost.
   * `blacklist` *addr*  
     Blacklist a specifc IP address.
 
-  * `shutdown`  
-    Shutdown the daemon.
-
 ## Authentication
 
 KadNode allows optional node authentication. This means that you can lookup nodes using

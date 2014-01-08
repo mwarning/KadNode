@@ -39,11 +39,10 @@ const char* cmd_usage_str =
 "	export\n"
 "	blacklist <addr>\n"
 #ifdef FWD
-"	list [blacklist|buckets|constants|forwardings|results|searches|storage|values]\n"
+"	list [blacklist|buckets|constants|forwardings|results|searches|storage|values]\n";
 #else
-"	list [blacklist|buckets|constants|results|searches|storage|values]\n"
+"	list [blacklist|buckets|constants|results|searches|storage|values]\n";
 #endif
-"	shutdown\n";
 
 void r_init( REPLY *r ) {
 	r->data[0] = '\0';
@@ -335,15 +334,6 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 		}
 		r_printf( r ,"\nOutput send to console.\n" );
 
-	} else if( match( argv[0], "shutdown" ) && argc == 1 ) {
-		if( gconf->is_daemon == 1 ) {
-			r_printf( r ,"The 'shutdown' command is not available while KadNode runs as daemon.\n" );
-			rc = 1;
-			goto end;
-		}
-
-		r_printf( r, "Shutting down ...\n" );
-		gconf->is_running = 0;
 	} else {
 		/* print usage */
 		r_printf( r, cmd_usage_str );
