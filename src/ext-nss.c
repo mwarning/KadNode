@@ -36,9 +36,9 @@ void nss_lookup( int sock, IP *clientaddr, const char *hostname ) {
 
 	/* Found address */
 	log_debug( "NSS: Send address %s to %s. Packet has %d bytes.",
-		str_addr( &addr, addrbuf1 ),
-		str_addr( clientaddr, addrbuf2 ),
-		sizeof(IP)
+	   str_addr( &addr, addrbuf1 ),
+	   str_addr( clientaddr, addrbuf2 ),
+	   sizeof(IP)
 	);
 
 	sendto( sock, (UCHAR *) &addr, sizeof(IP), 0, (const struct sockaddr *) clientaddr, sizeof(IP) );

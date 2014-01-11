@@ -48,20 +48,20 @@ void net_add_handler( int fd, net_callback *callback ) {
 }
 
 int net_set_nonblocking( int fd ) {
-    int rc;
+	int rc;
 	int nonblocking = 1;
 
-    rc = fcntl( fd, F_GETFL, 0 );
-    if( rc < 0 ) {
-        return -1;
+	rc = fcntl( fd, F_GETFL, 0 );
+	if( rc < 0 ) {
+		return -1;
 	}
 
-    rc = fcntl( fd, F_SETFL, nonblocking ? (rc | O_NONBLOCK) : (rc & ~O_NONBLOCK) );
-    if( rc < 0 ) {
-        return -1;
+	rc = fcntl( fd, F_SETFL, nonblocking ? (rc | O_NONBLOCK) : (rc & ~O_NONBLOCK) );
+	if( rc < 0 ) {
+		return -1;
 	}
 
-    return 0;
+	return 0;
 }
 
 int net_bind(
@@ -139,7 +139,7 @@ int net_bind(
 		return -1;
 	}
 
-	log_info( ifce ? "%s: Bind to %s, interface %s" : "%s: Bind to %s" ,
+	log_info( ifce ? "%s: Bind to %s, interface %s" : "%s: Bind to %s",
 		name, str_addr( &sockaddr, addrbuf ), ifce
 	);
 

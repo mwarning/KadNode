@@ -33,7 +33,7 @@ int kad_status( char *buf, int len );
 /* Count all nodes in the given bucket */
 int kad_count_nodes( void );
 
-/* 
+/*
 * Announce that the resource identified by id can
 * be served by this computer using the given port.
 */

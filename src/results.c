@@ -125,21 +125,21 @@ void results_expire( void ) {
 	pre = NULL;
 	next = NULL;
 	results = g_results;
-    while( results ) {
-        next = results->next;
-        if( results->start_time < (now - MAX_SEARCH_LIFETIME) ) {
-            if( pre ) {
-                pre->next = next;
-            } else {
-                g_results = next;
+	while( results ) {
+		next = results->next;
+		if( results->start_time < (now - MAX_SEARCH_LIFETIME) ) {
+			if( pre ) {
+				pre->next = next;
+			} else {
+				g_results = next;
 			}
 			results_free( results );
 			g_results_num--;
-        } else {
-            pre = results;
-        }
-        results = next;
-    }
+		} else {
+			pre = results;
+		}
+		results = next;
+	}
 }
 
 struct results_t* results_add( const UCHAR id[], const char query[] ) {

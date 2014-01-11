@@ -11,12 +11,12 @@
 
 int _log_check( int priority ) {
 	if( (gconf->verbosity == VERBOSITY_QUIET) &&
-		(priority == LOG_INFO || priority == LOG_DEBUG) ) {
+			(priority == LOG_INFO || priority == LOG_DEBUG) ) {
 		return 0;
 	}
 
 	if( (gconf->verbosity == VERBOSITY_VERBOSE) &&
-		(priority == LOG_DEBUG) ) {
+			(priority == LOG_DEBUG) ) {
 		return 0;
 	}
 

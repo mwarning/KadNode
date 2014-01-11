@@ -1,5 +1,5 @@
 
-#include <sys/stat.h> 
+#include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -151,8 +151,8 @@ int str_isHex( const char *string, size_t size ) {
 	for( i = 0; i < size; i++ ) {
 		const char c = string[i];
 		if( (c >= '0' && c <= '9')
-			|| (c >= 'A' && c <= 'F')
-			|| (c >= 'a' && c <= 'f') ) {
+				|| (c >= 'A' && c <= 'F')
+				|| (c >= 'a' && c <= 'f') ) {
 			continue;
 		} else {
 			return 0;
@@ -168,11 +168,11 @@ int str_isValidHostname( const char *hostname, size_t size ) {
 	for( i = 0; i < size; i++ ) {
 		const char c = hostname[i];
 		if( (c >= '0' && c <= '9')
-			|| (c >= 'A' && c <= 'Z')
-			|| (c >= 'a' && c <= 'z')
-			|| (c == '-')
-			|| (c == '.')
-			|| (c == '_') ) {
+				|| (c >= 'A' && c <= 'Z')
+				|| (c >= 'a' && c <= 'z')
+				|| (c == '-')
+				|| (c == '.')
+				|| (c == '_') ) {
 			continue;
 		} else {
 			return 0;
@@ -230,17 +230,23 @@ char *str_addr4( const IP4 *addr, char *addrbuf ) {
 
 int addr_port( const IP *addr ) {
 	switch( addr->ss_family ) {
-		case AF_INET: return ntohs( ((IP4 *)addr)->sin_port );
-		case AF_INET6: return ntohs( ((IP6 *)addr)->sin6_port );
-		default: return 0;
+		case AF_INET:
+			return ntohs( ((IP4 *)addr)->sin_port );
+		case AF_INET6:
+			return ntohs( ((IP6 *)addr)->sin6_port );
+		default:
+			return 0;
 	}
 }
 
 int addr_len( const IP *addr ) {
 	switch( addr->ss_family ) {
-		case AF_INET: return sizeof(IP4);
-		case AF_INET6: return sizeof(IP6);
-		default: return 0;
+		case AF_INET:
+			return sizeof(IP4);
+		case AF_INET6:
+			return sizeof(IP6);
+		default:
+			return 0;
 	}
 }
 

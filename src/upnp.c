@@ -11,9 +11,9 @@
 
 /* A cheap way to distinguish between miniupnp versions 1.5 and 1.6 */
 #ifdef UPNPDISCOVER_SUCCESS
-	#define HAVE_MINIUPNP_16
+#define HAVE_MINIUPNP_16
 #else
-	#define HAVE_MINIUPNP_15
+#define HAVE_MINIUPNP_15
 #endif
 
 enum {
@@ -187,6 +187,7 @@ int upnp_handler( struct upnp_handle_t *handle, unsigned short port, time_t life
 	}
 
 	error:;
+
 	handle->retry = now + 60;
 	handle->state = UPNP_STATE_ERROR;
 	return PF_ERROR;

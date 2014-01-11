@@ -146,7 +146,7 @@ void auth_send_challenges( int sock ) {
 				memcpy( buf, "AUTH", 4 );
 				memcpy( buf+4, results->id, SHA1_BIN_LENGTH );
 				memcpy( buf+4+SHA1_BIN_LENGTH, result->challenge, CHALLENGE_BIN_LENGTH );
-	
+
 				log_debug( "AUTH: Send challenge to %s", str_addr( &result->addr, addrbuf ) );
 				sendto( sock, buf, sizeof(buf), 0, (struct sockaddr*) &result->addr, sizeof(IP) );
 

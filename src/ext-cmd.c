@@ -27,21 +27,21 @@
 #include "ext-cmd.h"
 
 
-const char* cmd_usage_str = 
-"Usage:\n"
-"	status\n"
-"	lookup <id>\n"
+const char* cmd_usage_str =
+	"Usage:\n"
+	"	status\n"
+	"	lookup <id>\n"
 #if 0
-"	lookup_node <id>\n"
+	"	lookup_node <id>\n"
 #endif
-"	announce <id>[:<port>] [<minutes>]\n"
-"	import <addr>\n"
-"	export\n"
-"	blacklist <addr>\n"
+	"	announce <id>[:<port>] [<minutes>]\n"
+	"	import <addr>\n"
+	"	export\n"
+	"	blacklist <addr>\n"
 #ifdef FWD
-"	list [blacklist|buckets|constants|forwardings|results|searches|storage|values]\n";
+	"	list [blacklist|buckets|constants|forwardings|results|searches|storage|values]\n";
 #else
-"	list [blacklist|buckets|constants|results|searches|storage|values]\n";
+	"	list [blacklist|buckets|constants|results|searches|storage|values]\n";
 #endif
 
 void r_init( REPLY *r ) {
@@ -68,22 +68,22 @@ void r_printf( REPLY *r, const char *format, ... ) {
 
 /* Partition a string to the common argc/argv arguments */
 void cmd_to_args( char *str, int *argc, char **argv, int max_argv ) {
-    int len, i;
+	int len, i;
 
-    len = strlen(str);
-    *argc = 0;
+	len = strlen(str);
+	*argc = 0;
 
 	/* Zero out white/control characters  */
-    for( i = 0; i <= len; i++ ) {
+	for( i = 0; i <= len; i++ ) {
 		if( str[i] <= ' ') {
-            str[i] = '\0';
+			str[i] = '\0';
 		}
-    }
+	}
 
 	/* Record strings */
-    for( i = 0; i <= len; i++ ) {
+	for( i = 0; i <= len; i++ ) {
 
-        if( str[i] == '\0') {
+		if( str[i] == '\0') {
 			continue;
 		}
 
@@ -91,10 +91,10 @@ void cmd_to_args( char *str, int *argc, char **argv, int max_argv ) {
 			break;
 		}
 
-        argv[*argc] = &str[i];
-        *argc += 1;
-        i += strlen( &str[i] );
-    }
+		argv[*argc] = &str[i];
+		*argc += 1;
+		i += strlen( &str[i] );
+	}
 
 	argv[*argc] = NULL;
 }
@@ -192,9 +192,9 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 		/* Check searches for node */
 		rc = kad_lookup_node( argv[1, &addrs[0] );
 		if( rc == 0 ) {
-			r_printf( r, "%s\n", str_addr( &addrs[0], addrbuf ) );
+		r_printf( r, "%s\n", str_addr( &addrs[0], addrbuf ) );
 		} else if( rc == -1 ) {
-			r_printf( r ,"No search found.\n" );
+		r_printf( r ,"No search found.\n" );
 			rc = 1;
 		} else {
 			r_printf( r ,"No node found.\n" );
@@ -340,7 +340,8 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 		rc = 1;
 	}
 
-	end:;
+end:
+	;
 	return rc;
 }
 

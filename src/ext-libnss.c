@@ -4,7 +4,7 @@
 #include <string.h>
 #include <errno.h>
 #include <nss.h>
-#include <netdb.h> 
+#include <netdb.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
@@ -16,16 +16,16 @@
 
 
 enum nss_status _nss_kadnode_gethostbyname_r(const char *name,
-        struct hostent *result, char *buf, size_t buflen,
-        int *errnop, int *h_errnop ) {
+		struct hostent *result, char *buf, size_t buflen,
+		int *errnop, int *h_errnop ) {
 
 	return _nss_kadnode_gethostbyname_impl( name, AF_UNSPEC, result,
 		buf, buflen, errnop, h_errnop );
 }
 
 enum nss_status _nss_kadnode_gethostbyname2_r(const char *name, int af,
-        struct hostent *result, char *buf, size_t buflen,
-        int *errnop, int *h_errnop ) {
+		struct hostent *result, char *buf, size_t buflen,
+		int *errnop, int *h_errnop ) {
 
 	return _nss_kadnode_gethostbyname_impl( name, af, result,
 		buf, buflen, errnop, h_errnop );
@@ -116,11 +116,11 @@ int _nss_kadnode_valid_hostname( const char *hostname, int size ) {
 	for( i = 0; i < size; i++ ) {
 		const char c = hostname[i];
 		if( (c >= '0' && c <= '9')
-			|| (c >= 'A' && c <= 'Z')
-			|| (c >= 'a' && c <= 'z')
-			|| (c == '-')
-			|| (c == '_')
-			|| (c == '.') ) {
+				|| (c >= 'A' && c <= 'Z')
+				|| (c >= 'a' && c <= 'z')
+				|| (c == '-')
+				|| (c == '_')
+				|| (c == '.') ) {
 			continue;
 		} else {
 			return 0;

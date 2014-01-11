@@ -74,8 +74,8 @@ void dht_callback_func( void *closure, int event, UCHAR *info_hash, void *data, 
 /* Handle incoming packets and pass them to the DHT code */
 void dht_handler( int rc, int sock ) {
 	UCHAR buf[1500];
-    IP from;
-    socklen_t fromlen;
+	IP from;
+	socklen_t fromlen;
 	time_t time_wait = 0;
 
 	if( rc > 0 ) {
@@ -140,22 +140,22 @@ void dht_handler( int rc, int sock ) {
 */
 
 int dht_blacklisted( const struct sockaddr *sa, int salen ) {
-    return 0;
+	return 0;
 }
 
 /* Hashing for the DHT - implementation does not matter for interoperability */
 void dht_hash( void *hash_return, int hash_size,
-	const void *v1, int len1,
-	const void *v2, int len2,
-	const void *v3, int len3
-) {
-    SHA1_CTX ctx;
+		const void *v1, int len1,
+		const void *v2, int len2,
+		const void *v3, int len3 ) {
+	SHA1_CTX ctx;
 
-    SHA1_Init( &ctx );
-    if(v1) SHA1_Update( &ctx, v1, len1 );
+	SHA1_Init( &ctx );
+	if(v1) SHA1_Update( &ctx, v1, len1 );
 	if(v2) SHA1_Update( &ctx, v2, len2 );
 	if(v3) SHA1_Update( &ctx, v3, len3 );
-    SHA1_Final( &ctx, hash_return );
+
+	SHA1_Final( &ctx, hash_return );
 }
 
 int dht_random_bytes( void *buf, size_t size ) {
@@ -239,7 +239,7 @@ int kad_status( char *buf, int size ) {
 		(gconf->af == AF_INET) ? "0.0.0.0" : "[::1]",
 		gconf->dht_port,
 		(gconf->dht_ifce == NULL) ? "<any device>" : gconf->dht_ifce
-	);
+   );
 
 	bprintf( "Nodes: %d (%s)\n", kad_count_nodes(), (gconf->af == AF_INET) ? "IPv4" : "IPv6" );
 
@@ -340,7 +340,7 @@ int kad_lookup_node( const char query[], IP *addr_return ) {
 
 	rc = -1;
 	sr = searches;
-    while( sr ) {
+	while( sr ) {
 		if( sr->af == gconf->af && id_equal( sr->id, id ) ) {
 			for( i = 0; i < sr->numnodes; ++i ) {
 				if( id_equal( sr->nodes[i].id, id ) ) {
@@ -351,8 +351,8 @@ int kad_lookup_node( const char query[], IP *addr_return ) {
 			}
 			break;
 		}
-        sr = sr->next;
-    }
+		sr = sr->next;
+	}
 
 	done:;
 

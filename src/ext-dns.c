@@ -90,13 +90,28 @@ struct question {
 };
 
 union resource_data {
-	struct { char *txt_data; } txt_record;
-	struct { UCHAR addr[4]; } a_record;
-	struct { char *name; } name_server_record;
-	struct { char *name; } cname_record;
-	struct { char *name; } ptr_record;
-	struct { uint preference; char *exchange; } mx_record;
-	struct { UCHAR addr[16]; } aaaa_record;
+	struct {
+		char *txt_data;
+	} txt_record;
+	struct {
+		UCHAR addr[4];
+	} a_record;
+	struct {
+		char *name;
+	} name_server_record;
+	struct {
+		char *name;
+	} cname_record;
+	struct {
+		char *name;
+	} ptr_record;
+	struct {
+		uint preference;
+		char *exchange;
+	} mx_record;
+	struct {
+		UCHAR addr[16];
+	} aaaa_record;
 };
 
 /* Resource Record Section */
