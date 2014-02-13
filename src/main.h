@@ -5,7 +5,7 @@
 #include <signal.h>
 
 #define MAIN_SRVNAME "kadnode"
-#define MAIN_VERSION "0.5"
+#define MAIN_VERSION "0.6"
 #define SHA1_BIN_LENGTH 20
 
 /* Default addresses and ports */
