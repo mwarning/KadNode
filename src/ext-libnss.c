@@ -14,6 +14,8 @@
 #include "main.h"
 #include "ext-libnss.h"
 
+#define MAX_ADDRS 8
+
 
 enum nss_status _nss_kadnode_gethostbyname_r(const char *name,
 		struct hostent *result, char *buf, size_t buflen,
@@ -33,19 +35,22 @@ enum nss_status _nss_kadnode_gethostbyname2_r(const char *name, int af,
 
 enum nss_status _nss_kadnode_gethostbyname_impl(
 		const char *hostname, int af, struct hostent *result,
-		char *buffer, size_t buflen, int *errnop,
+		char *buf, size_t buflen, int *errnop,
 		int *h_errnop ) {
-	IP addr;
+	IP addrs[MAX_ADDRS];
 	char *p_addr;
 	char *p_name;
 	char *p_aliases;
 	char *p_addr_list;
 	char *p_idx;
 	int addrlen;
-	int size;
+	int hostlen;
+	int addrsnum;
+	int i;
 
-	size = strlen( hostname );
+	hostlen = strlen( hostname );
 	af = (af == AF_UNSPEC) ? AF_INET6 : af;
+	addrlen = (af == AF_INET6) ? sizeof(struct in6_addr) : sizeof(struct in_addr);
 
 	if( af != AF_INET6 && af != AF_INET ) {
 		*errnop = EAFNOSUPPORT;
@@ -53,67 +58,76 @@ enum nss_status _nss_kadnode_gethostbyname_impl(
 		return NSS_STATUS_UNAVAIL;
 	}
 
-	if( !_nss_kadnode_valid_hostname( hostname, size ) ) {
+	if( !_nss_kadnode_valid_hostname( hostname, hostlen ) ) {
 		*errnop = ENOENT;
 		*h_errnop = HOST_NOT_FOUND;
 		return NSS_STATUS_NOTFOUND;
 	}
 
-	if( !_nss_kadnode_valid_tld( hostname, size ) ) {
+	if( !_nss_kadnode_valid_tld( hostname, hostlen ) ) {
 		*errnop = ENOENT;
 		*h_errnop = HOST_NOT_FOUND;
 		return NSS_STATUS_NOTFOUND;
 	}
 
-	if( buflen < (size + 1 + sizeof(char*) + sizeof(struct in6_addr) + 2 * sizeof(char*)) ) {
+	if( (addrsnum = _nss_kadnode_lookup( hostname, hostlen, addrs )) <= 0 ) {
+		*errnop = ENOENT;
+		*h_errnop = HOST_NOT_FOUND;
+		return NSS_STATUS_NOTFOUND;
+	}
+
+	/* Check upper bound */
+	if( buflen < ((hostlen + 1) + sizeof(char*) + (addrsnum * sizeof(struct in6_addr)) + (addrsnum + 1) * sizeof(char*)) ) {
 		*errnop = ENOMEM;
 		*h_errnop = NO_RECOVERY;
 		return NSS_STATUS_TRYAGAIN;
 	}
 
-	if( !_nss_kadnode_lookup( hostname, size, &addr ) ) {
-		*errnop = ENOENT;
-		*h_errnop = HOST_NOT_FOUND;
-		return NSS_STATUS_NOTFOUND;
-	}
+	memset( buf, '\0', buflen );
 
-	memset( buffer, '\0', buflen );
-	p_name = buffer;
-	memcpy( p_name, hostname, size );
-	p_idx = p_name + size + 1;
+	/* Hostname */
+	p_name = buf;
+	memcpy( p_name, hostname, hostlen );
+	p_idx = p_name + hostlen + 1;
 
+	/* Alias */
 	p_aliases = p_idx;
 	*(char**) p_aliases = NULL;
 	p_idx += sizeof(char*);
 
+	/* Address data */
 	p_addr = p_idx;
-	if( addr.ss_family == AF_INET6 ) {
-		addrlen = sizeof(struct in6_addr);
-		memcpy( p_addr, &((IP6 *)&addr)->sin6_addr, addrlen );
-	} else {
-		addrlen = sizeof(struct in_addr);
-		memcpy( p_addr, &((IP4 *)&addr)->sin_addr, addrlen );
+	for( i = 0; i < addrsnum; i++ ) {
+		if( af == AF_INET6 ) {
+			memcpy( p_addr, &((IP6 *)&addrs[i])->sin6_addr, addrlen );
+		} else {
+			memcpy( p_addr, &((IP4 *)&addrs[i])->sin_addr, addrlen );
+		}
 	}
-	p_idx += addrlen;
+	p_idx += addrsnum * addrlen;
 
+	/* Address pointer */
 	p_addr_list = p_idx;
-	((char**) p_addr_list)[0] = p_addr;
-	((char**) p_addr_list)[1] = NULL;
-	p_idx += 2 * sizeof(char*);
+	p_idx = p_addr;
+	for( i = 0; i < addrsnum; i++ ) {
+		((char**) p_addr_list)[i] = p_idx;
+		p_idx += addrlen;
+	}
+	((char**) p_addr_list)[addrsnum] = NULL;
 
 	result->h_name = p_name;
 	result->h_aliases = (char**) p_aliases;
-	result->h_addrtype = addr.ss_family;
+	result->h_addrtype = af;
 	result->h_length = addrlen;
 	result->h_addr_list = (char**) p_addr_list;
 
 	return NSS_STATUS_SUCCESS;
 }
 
-int _nss_kadnode_valid_hostname( const char *hostname, int size ) {
+int _nss_kadnode_valid_hostname( const char *hostname, int hostlen ) {
 	int i;
 
-	for( i = 0; i < size; i++ ) {
+	for( i = 0; i < hostlen; i++ ) {
 		const char c = hostname[i];
 		if( (c >= '0' && c <= '9')
 				|| (c >= 'A' && c <= 'Z')
@@ -130,7 +144,7 @@ int _nss_kadnode_valid_hostname( const char *hostname, int size ) {
 	return 1;
 }
 
-int _nss_kadnode_valid_tld( const char *hostname, int size ) {
+int _nss_kadnode_valid_tld( const char *hostname, int hostlen ) {
 	int i;
 	char *tld;
 
@@ -152,17 +166,16 @@ int _nss_kadnode_valid_tld( const char *hostname, int size ) {
 	return 0;
 }
 
-int _nss_kadnode_lookup( const char *hostname, int size, IP *addr ) {
+int _nss_kadnode_lookup( const char *hostname, int hostlen, IP addrs[] ) {
 
 	IP6 sockaddr;
 	socklen_t addrlen;
-	char buffer[128];
-	int sockfd, n;
+	int sockfd, size;
 	struct timeval tv;
 
 	addrlen = sizeof(IP6);
 	memset( &sockaddr, '\0', addrlen );
-	memset( buffer, '\0', sizeof(buffer) );
+	memset( addrs, '\0', sizeof(addrs) );
 
 	/* Setup UDP */
 	sockfd = socket( AF_INET6, SOCK_DGRAM, 0 );
@@ -184,17 +197,16 @@ int _nss_kadnode_lookup( const char *hostname, int size, IP *addr ) {
 		return 0;
 	}
 
-	n = sendto( sockfd, hostname, size, 0, (struct sockaddr *)&sockaddr, addrlen );
-	if( n != size ) {
+	size = sendto( sockfd, hostname, hostlen, 0, (struct sockaddr *)&sockaddr, addrlen );
+	if( size != hostlen ) {
 		return 0;
 	}
 
-	n = recvfrom( sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&sockaddr, &addrlen );
+	size = recvfrom( sockfd, addrs, MAX_ADDRS * sizeof(IP), 0, (struct sockaddr *)&sockaddr, &addrlen );
 
-	if( n == sizeof(IP) ) {
-		/* Got result. */
-		memcpy( addr, buffer, sizeof(IP) );
-		return 1;
+	if( size > 0 && (size % sizeof(IP)) == 0 ) {
+		/* Return number of addresses */
+		return (size / sizeof(IP));
 	} else {
 		return 0;
 	}

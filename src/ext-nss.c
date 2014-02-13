@@ -22,26 +22,25 @@
 
 
 void nss_lookup( int sock, IP *clientaddr, const char *hostname ) {
-	char addrbuf1[FULL_ADDSTRLEN+1];
-	char addrbuf2[FULL_ADDSTRLEN+1];
-	IP addr;
-	size_t n;
+	char addrbuf[FULL_ADDSTRLEN+1];
+	IP addrs[8];
+	size_t num;
+
+	/* Return at most 8 addresses */
+	num = 8;
 
 	/* Lookup id. Starts search when not already started. */
-	n = 1;
-	if( kad_lookup_value( hostname, &addr, &n ) != 0 ) {
+	if( kad_lookup_value( hostname, addrs, &num ) != 0 ) {
 		log_debug( "NSS: Node not found; starting search." );
 		return;
 	}
 
-	/* Found address */
-	log_debug( "NSS: Send address %s to %s. Packet has %d bytes.",
-	   str_addr( &addr, addrbuf1 ),
-	   str_addr( clientaddr, addrbuf2 ),
-	   sizeof(IP)
+	/* Found addresses */
+	log_debug( "NSS: Send %lu addresses to %s. Packet has %d bytes.",
+	   num, str_addr( clientaddr, addrbuf ), sizeof(IP)
 	);
 
-	sendto( sock, (UCHAR *) &addr, sizeof(IP), 0, (const struct sockaddr *) clientaddr, sizeof(IP) );
+	sendto( sock, (UCHAR *) addrs, num * sizeof(IP), 0, (const struct sockaddr *) clientaddr, sizeof(IP) );
 }
 
 /*
