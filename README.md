@@ -123,7 +123,7 @@ All these interfaces listen only for connections from localhost.
 
   * `--auth-gen-keys`  
     Generate a secret/public key pair. Use the public key
-    to resolve the node announcing the secret key.
+    to resolve the node.
 
   * `--mode` *protocol*  
     Enable IPv4 or IPv6 mode for the DHT (Default: ipv4).
