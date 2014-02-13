@@ -3,6 +3,7 @@ kadnode (0.6) UNRELEASED; urgency=low
   * remove "shutdown" command from KadNode console
   * wait for announcements until at least one other node is known
   * support return of multiple answers via NSS
+  * fix infinite loop in value list
 
  -- mwarning <moritzwarning@web.de>  Wed, 08 Jan 2014 19:14:45 +0100
 

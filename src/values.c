@@ -129,13 +129,11 @@ int values_add( const char query[], int port, time_t lifetime ) {
 			cur->refresh = time_now_sec() - 1;
 			return 0;
 		}
-		if( cur->next == NULL ) {
-			break;
-		}
+
 		cur = cur->next;
 	}
 
-	/* Append new entry */
+	/* Prepend new entry */
 	new = (struct value_t*) calloc( 1, sizeof(struct value_t) );
 	memcpy( &new->id, id, SHA1_BIN_LENGTH );
 #ifdef AUTH
@@ -146,11 +144,7 @@ int values_add( const char query[], int port, time_t lifetime ) {
 	new->refresh = time_now_sec() - 1;
 	new->next = g_values;
 
-	if( cur ) {
-		cur->next = new;
-	} else {
-		g_values = new;
-	}
+	g_values = new;
 
 	/* Trigger immediate handling */
 	g_values_announce= 0;
