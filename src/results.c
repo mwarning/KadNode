@@ -159,7 +159,7 @@ struct results_t* results_add( const UCHAR id[], const char query[] ) {
 	memcpy( new->id, id, SHA1_BIN_LENGTH );
 	new->start_time = time_now_sec();
 #ifdef AUTH
-	new->pkey = auth_create_pkey( query );
+	new->pkey = auth_parse_pkey( query );
 #endif
 	g_results_num++;
 

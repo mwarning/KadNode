@@ -106,7 +106,7 @@ int values_add( const char query[], int port, time_t lifetime ) {
 		if( port != atoi( gconf->dht_port ) ) {
 			return -1;
 		}
-		skey = auth_create_skey( query );
+		skey = auth_parse_skey( query );
 		/*
 		* Since the ID is based on the sha1 hash of the public key,
 		* we need to convert the secret key to the public key in hex.

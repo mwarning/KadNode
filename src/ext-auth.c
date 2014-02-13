@@ -87,7 +87,7 @@ int auth_is_skey( const char query[] ) {
 	return str_isHex( query, size );
 }
 
-UCHAR *auth_create_pkey( const char query[] ) {
+UCHAR *auth_parse_pkey( const char query[] ) {
 	UCHAR *skey;
 
 	if( !auth_is_pkey( query ) ) {
@@ -97,18 +97,18 @@ UCHAR *auth_create_pkey( const char query[] ) {
 	skey = malloc( crypto_sign_PUBLICKEYBYTES );
 	bytes_from_hex( skey, query, 2*crypto_sign_PUBLICKEYBYTES );
 
-	log_debug( "AUTH: Add new public key from %s", query );
+	log_debug( "AUTH: Parse public key: %s", query );
 	return skey;
 }
 
-UCHAR *auth_create_skey( const char query[] ) {
+UCHAR *auth_parse_skey( const char query[] ) {
 	UCHAR *skey;
 
 	if( !auth_is_skey( query ) ) {
 		return NULL;
 	}
 
-	log_debug( "AUTH: Add new secret key: %s", query );
+	log_debug( "AUTH: Parse secret key: %s", query );
 
 	skey = malloc( crypto_sign_SECRETKEYBYTES );
 	bytes_from_hex( skey, query, 2*crypto_sign_SECRETKEYBYTES );
