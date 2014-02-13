@@ -17,26 +17,34 @@
 #define MAX_ADDRS 8
 
 
-enum nss_status _nss_kadnode_gethostbyname_r(const char *name,
+enum nss_status _nss_kadnode_gethostbyname_r(const char *hostname,
 		struct hostent *result, char *buf, size_t buflen,
 		int *errnop, int *h_errnop ) {
 
-	return _nss_kadnode_gethostbyname_impl( name, AF_UNSPEC, result,
-		buf, buflen, errnop, h_errnop );
+	return _nss_kadnode_gethostbyname_impl( hostname, AF_UNSPEC, result,
+		buf, buflen, errnop, h_errnop, NULL, NULL  );
 }
 
-enum nss_status _nss_kadnode_gethostbyname2_r(const char *name, int af,
+enum nss_status _nss_kadnode_gethostbyname2_r(const char *hostname, int af,
 		struct hostent *result, char *buf, size_t buflen,
 		int *errnop, int *h_errnop ) {
 
-	return _nss_kadnode_gethostbyname_impl( name, af, result,
-		buf, buflen, errnop, h_errnop );
+	return _nss_kadnode_gethostbyname_impl( hostname, af, result,
+		buf, buflen, errnop, h_errnop, NULL, NULL  );
+}
+
+enum nss_status _nss_kadnode_gethostbyname3_r( const char *hostname, int af,
+		struct hostent *host, char *buf, size_t buflen, int *errnop,
+		int *h_errnop, int32_t *ttlp, char **canonp ) {
+
+	return _nss_kadnode_gethostbyname_impl( hostname, af, host,
+		buf, buflen, errnop, h_errnop, ttlp, canonp );
 }
 
 enum nss_status _nss_kadnode_gethostbyname_impl(
 		const char *hostname, int af, struct hostent *result,
 		char *buf, size_t buflen, int *errnop,
-		int *h_errnop ) {
+		int *h_errnop, int32_t *ttlp, char **canonp ) {
 	IP addrs[MAX_ADDRS];
 	char *p_addr;
 	char *p_name;
@@ -121,6 +129,14 @@ enum nss_status _nss_kadnode_gethostbyname_impl(
 	result->h_addrtype = af;
 	result->h_length = addrlen;
 	result->h_addr_list = (char**) p_addr_list;
+
+	if( ttlp != NULL ) {
+		*ttlp = 0;
+	}
+
+	if( canonp != NULL ) {
+		*canonp = p_name;
+	}
 
 	return NSS_STATUS_SUCCESS;
 }

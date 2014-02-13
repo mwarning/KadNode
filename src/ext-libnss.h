@@ -31,14 +31,19 @@ enum nss_status _nss_kadnode_gethostbyname2_r(
 	char *buffer, size_t buflen, int *errnop,
 	int *h_errnop ) _public_;
 
+enum nss_status _nss_kadnode_gethostbyname3_r(
+	const char *hostname, int af, struct hostent *host,
+	char *buf, size_t buflen, int *errnop,
+	int *h_errnop, int32_t *ttlp, char **canonp ) _public_;
+
 enum nss_status _nss_kadnode_gethostbyname_impl(
 	const char *hostname, int af, struct hostent *host,
 	char *buffer, size_t buflen, int *errnop,
-	int *h_errnop ) _public_;
+	int *h_errnop, int32_t *ttlp, char **canonp ) _public_;
 
-int _nss_kadnode_valid_tld( const char *hostname, int size );
-int _nss_kadnode_valid_hostname( const char *hostname, int size );
+int _nss_kadnode_valid_tld( const char *hostname, int hostlen );
+int _nss_kadnode_valid_hostname( const char *hostname, int hostlen );
 
-int _nss_kadnode_lookup( const char *hostname, int size, IP *addr );
+int _nss_kadnode_lookup( const char *hostname, int size, IP addr[] );
 
 #endif /* _EXT_LIBNSS_H_ */
