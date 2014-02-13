@@ -25,7 +25,7 @@ ifeq ($(findstring cmd,$(FEATURES)),cmd)
 endif
 
 ifeq ($(findstring debug,$(FEATURES)),debug)
-  CFLAGS += -DDEBUG
+  CFLAGS += -g -DDEBUG
 endif
 
 ifeq ($(findstring dns,$(FEATURES)),dns)
