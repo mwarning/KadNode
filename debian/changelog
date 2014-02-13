@@ -1,11 +1,11 @@
-kadnode (0.6) UNRELEASED; urgency=low
+kadnode (0.6) unstable; urgency=low
 
   * remove "shutdown" command from KadNode console
   * wait for announcements until at least one other node is known
   * support return of multiple answers via NSS
   * fix infinite loop in value list
 
- -- mwarning <moritzwarning@web.de>  Wed, 08 Jan 2014 19:14:45 +0100
+ -- mwarning <moritzwarning@web.de>  Thu, 13 Feb 2014 15:29:11 +0100
 
 kadnode (0.5) unstable; urgency=low
 
