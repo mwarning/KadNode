@@ -121,6 +121,7 @@ int values_add( const char query[], int port, time_t lifetime ) {
 
 	log_debug( "VAL: Add value id %s:%hu.",  str_id( id, hexbuf ), port );
 
+	/* Update only if entry exists */
 	cur = g_values;
 	while( cur ) {
 		if( id_equal( cur->id, id ) && cur->port == port ) {
@@ -134,6 +135,7 @@ int values_add( const char query[], int port, time_t lifetime ) {
 		cur = cur->next;
 	}
 
+	/* Append new entry */
 	new = (struct value_t*) calloc( 1, sizeof(struct value_t) );
 	memcpy( &new->id, id, SHA1_BIN_LENGTH );
 #ifdef AUTH

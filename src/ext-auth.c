@@ -257,6 +257,10 @@ void auth_receive_challenge( int sock, UCHAR buf[], size_t buflen, IP *addr, tim
 	sendto( sock, outbuf, 4+SHA1_BIN_LENGTH+smlen, 0, (struct sockaddr*) addr, sizeof(IP) );
 }
 
+/*
+* Handle authorization packets. This function is hooked
+* up to the DHT socket and is called for every packet.
+*/
 int auth_handle_packet( int sock, UCHAR buf[], size_t buflen, IP *from ) {
 	time_t now;
 
@@ -269,8 +273,9 @@ int auth_handle_packet( int sock, UCHAR buf[], size_t buflen, IP *from ) {
 		g_send_challenges = now;
 	}
 
+	/* Detect authorization packets */
 	if( buflen < 4 || memcmp( buf, "AUTH", 4 ) != 0 ) {
-		/* The received packet was not meant for this extension */
+		/* The received packet is meant for the DHT */
 		return 1;
 	}
 
