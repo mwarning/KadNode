@@ -108,10 +108,11 @@ UCHAR *auth_create_skey( const char query[] ) {
 		return NULL;
 	}
 
+	log_debug( "AUTH: Add new secret key: %s", query );
+
 	skey = malloc( crypto_sign_SECRETKEYBYTES );
 	bytes_from_hex( skey, query, 2*crypto_sign_SECRETKEYBYTES );
 
-	log_debug( "AUTH: Add new secret key from %s", query );
 	return skey;
 }
 
