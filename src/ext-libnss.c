@@ -70,6 +70,7 @@ enum nss_status _nss_kadnode_gethostbyname_impl(
 		return NSS_STATUS_NOTFOUND;
 	}
 
+	memset( addrs, '\0', sizeof(addrs) );
 	if( (addrsnum = _nss_kadnode_lookup( hostname, hostlen, addrs )) <= 0 ) {
 		*errnop = ENOENT;
 		*h_errnop = HOST_NOT_FOUND;
@@ -175,7 +176,6 @@ int _nss_kadnode_lookup( const char *hostname, int hostlen, IP addrs[] ) {
 
 	addrlen = sizeof(IP6);
 	memset( &sockaddr, '\0', addrlen );
-	memset( addrs, '\0', sizeof(addrs) );
 
 	/* Setup UDP */
 	sockfd = socket( AF_INET6, SOCK_DGRAM, 0 );
