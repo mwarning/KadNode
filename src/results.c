@@ -163,20 +163,9 @@ struct results_t* results_add( const UCHAR id[], const char query[] ) {
 #endif
 	g_results_num++;
 
-	results = g_results;
-	while( results ) {
-		if( results->next == NULL ) {
-			break;
-		}
-		results = results->next;
-	}
-
-	/* Append new search */
-	if( results ) {
-		results->next = new;
-	} else {
-		g_results = new;
-	}
+	/* Prepend to list */
+	new->next = g_results;
+	g_results = new;
 
 	return new;
 }
