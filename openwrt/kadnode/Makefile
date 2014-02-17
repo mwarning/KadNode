@@ -67,6 +67,9 @@ endif
 
 MAKE_FLAGS += FEATURES="$(FEATURES)"
 
+define Package/kadnode/preinst
+	make strip
+endef
 
 define Package/kadnode/install
 	$(INSTALL_DIR) $(1)/usr/bin
