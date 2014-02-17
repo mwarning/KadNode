@@ -42,8 +42,8 @@ You might want to use your own source location and not the remote respository.
 To do this you need to checkout the repository yourself and commit your changes locally:
 
 <pre>
-git clone https://github.com/mwarning/kadnode.git
-cd kadnode
+git clone https://github.com/mwarning/KadNode.git
+cd KadNode
 ... apply your changes
 git commit -am "my change"
 </pre>
@@ -51,7 +51,7 @@ git commit -am "my change"
 Now create a symbolic link in the kadnode package folder using the abolute path:
 
 <pre>
-ln -s /my/own/project/folder/kadnode/.git openwrt/package/kadnode/git-src
+ln -s /my/own/project/folder/KadNode/.git openwrt/package/kadnode/git-src
 </pre>
 
 Also make sure to enable
