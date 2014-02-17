@@ -12,6 +12,7 @@
 #include <syslog.h>
 #include <errno.h>
 #include <signal.h>
+#include <arpa/inet.h>
 
 #include "main.h"
 

@@ -271,11 +271,7 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 		}
 #endif
 
-		rc = values_add( argv[1], port, lifetime );
-		if( rc < 0 ) {
-			r_printf( r ,"Invalid port.\n" );
-			rc = 1;
-		} else {
+		if( values_add( argv[1], port, lifetime ) ) {
 #ifdef FWD
 			if( !is_random_port ) {
 				forwardings_add( port, lifetime);
@@ -286,6 +282,9 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 			} else {
 				r_printf( r ,"Announce value for %d minutes (%sport %d).\n", minutes, (is_random_port ? "random " : ""), port );
 			}
+		} else {
+			r_printf( r ,"Invalid port.\n" );
+			rc = 1;
 		}
 
 	} else if( match( argv[0], "blacklist" ) && argc == 2 ) {

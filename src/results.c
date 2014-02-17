@@ -92,7 +92,7 @@ void results_debug( int fd ) {
 		dprintf( fd, "  done: %d\n", results->done );
 #ifdef AUTH
 		if( results->pkey ) {
-			dprintf( fd, "  pkey: %s\n", auth_str_pkey( buf, results->pkey ) );
+			dprintf( fd, "  pkey: %s\n", bytes_to_hex( buf, results->pkey, crypto_sign_PUBLICKEYBYTES ) );
 		}
 #endif
 		result_counter = 0;
@@ -101,7 +101,7 @@ void results_debug( int fd ) {
 			dprintf( fd, "   addr: %s\n", str_addr( &result->addr, buf ) );
 #ifdef AUTH
 			if( results->pkey ) {
-				dprintf( fd, "    challenge: %s\n", auth_str_challenge( buf, result->challenge ) );
+				dprintf( fd, "    challenge: %s\n",  result->challenge ? bytes_to_hex( buf, result->challenge, CHALLENGE_BIN_LENGTH ) : NULL );
 				dprintf( fd, "    challenges_send: %d\n", result->challenges_send );
 			}
 #endif
@@ -142,13 +142,23 @@ void results_expire( void ) {
 	}
 }
 
-struct results_t* results_add( const UCHAR id[], const char query[] ) {
+/* Add a new bucket to collect results */
+struct results_t* results_add( const char query[] ) {
+	char hexbuf[SHA1_HEX_LENGTH+1];
+	UCHAR id[SHA1_BIN_LENGTH];
 	struct results_t* new;
 	struct results_t* results;
 
 	if( g_results_num > MAX_SEARCHES ) {
 		return NULL;
 	}
+
+#ifdef AUTH
+	UCHAR pkey[crypto_sign_PUBLICKEYBYTES];
+	UCHAR *pkey_ptr = auth_handle_pkey( pkey, id, query );
+#else
+	id_compute( id, query );
+#endif
 
 	/* Search already exists */
 	if( (results = results_find( id )) != NULL ) {
@@ -157,15 +167,20 @@ struct results_t* results_add( const UCHAR id[], const char query[] ) {
 
 	new = calloc( 1, sizeof(struct results_t) );
 	memcpy( new->id, id, SHA1_BIN_LENGTH );
-	new->start_time = time_now_sec();
 #ifdef AUTH
-	new->pkey = auth_parse_pkey( query );
+	if( pkey_ptr ) {
+		new->pkey = memdup( pkey_ptr, crypto_sign_PUBLICKEYBYTES );
+	}
 #endif
-	g_results_num++;
+	new->start_time = time_now_sec();
+
+	log_debug( "Results: Add results bucket for query '%s', id '%s'.", query, str_id( id, hexbuf ) );
 
 	/* Prepend to list */
 	new->next = g_results;
 	g_results = new;
+
+	g_results_num++;
 
 	return new;
 }
@@ -247,7 +262,7 @@ int results_import( struct results_t *results, void *data, size_t data_length ) 
 		return 0;
 	}
 
-	if( gconf->af == AF_INET6) {
+	if( gconf->af == AF_INET6 ) {
 		dht_addr6_t *data6 = (dht_addr6_t *) data;
 		IP6 *a = (IP6 *)&addr;
 
@@ -277,6 +292,10 @@ int results_done( struct results_t *results, int done ) {
 int results_collect( struct results_t *results, IP addr_array[], size_t addr_num ) {
 	struct result_t *result;
 	size_t i;
+
+	if( results == NULL ) {
+		return 0;
+	}
 
 	i = 0;
 	result = results->entries;

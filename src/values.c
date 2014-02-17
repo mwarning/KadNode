@@ -78,8 +78,7 @@ void values_debug( int fd ) {
 #ifdef AUTH
 		if( value->skey ) {
 			char sbuf[2*crypto_sign_SECRETKEYBYTES+1];
-			dprintf( fd, "  skey: %s\n", auth_str_skey( sbuf, value->skey ) );
-			dprintf( fd, "  (pkey: %s)\n", auth_str_pkey( sbuf, value->skey + crypto_sign_PUBLICKEYBYTES ) );
+			dprintf( fd, "  skey: %s\n", bytes_to_hex( sbuf, value->skey, crypto_sign_SECRETKEYBYTES ) );
 		}
 #endif
 
@@ -90,66 +89,61 @@ void values_debug( int fd ) {
 	dprintf( fd, " Found %d values.\n", value_counter );
 }
 
-int values_add( const char query[], int port, time_t lifetime ) {
-	UCHAR id[SHA1_BIN_LENGTH];
+struct value_t *values_add( const char query[], int port, time_t lifetime ) {
 	char hexbuf[SHA1_HEX_LENGTH+1];
+	UCHAR id[SHA1_BIN_LENGTH];
 	struct value_t *cur;
 	struct value_t *new;
 
 	if( port < 1 || port > 65535 ) {
-		return -1;
+		return NULL;
 	}
 
 #ifdef AUTH
-	UCHAR *skey = NULL;
-	if( auth_is_skey( query ) ) {
-		if( port != atoi( gconf->dht_port ) ) {
-			return -1;
-		}
-		skey = auth_parse_skey( query );
-		/*
-		* Since the ID is based on the sha1 hash of the public key,
-		* we need to convert the secret key to the public key in hex.
-		* This is easy because the public key is in the second
-		* half of the secret key string for libsodium.
-		*/
-		query += 2*crypto_sign_PUBLICKEYBYTES;
-	}
+	UCHAR skey[crypto_sign_SECRETKEYBYTES];
+	UCHAR *skey_ptr = auth_handle_skey( skey, id, query );
+#else
+	id_compute( id, query );
 #endif
 
-	id_compute( id, query );
-
-	log_debug( "VAL: Add value id %s:%hu.",  str_id( id, hexbuf ), port );
-
-	/* Update only if entry exists */
-	cur = g_values;
-	while( cur ) {
-		if( id_equal( cur->id, id ) && cur->port == port ) {
-			cur->lifetime = lifetime;
-			cur->refresh = time_now_sec() - 1;
-			return 0;
-		}
-
-		cur = cur->next;
+	/* Value already exists - refresh */
+	if( (cur = values_find( id )) != NULL ) {
+		cur->lifetime = lifetime;
+		cur->refresh = time_now_sec() - 1;
+		return 0;
 	}
 
 	/* Prepend new entry */
 	new = (struct value_t*) calloc( 1, sizeof(struct value_t) );
-	memcpy( &new->id, id, SHA1_BIN_LENGTH );
+	memcpy( new->id, id, SHA1_BIN_LENGTH );
 #ifdef AUTH
-	new->skey = skey;
+	if( skey_ptr ) {
+		new->skey = memdup( skey_ptr, crypto_sign_SECRETKEYBYTES );
+	}
 #endif
 	new->port = port;
 	new->lifetime = lifetime;
 	new->refresh = time_now_sec() - 1;
-	new->next = g_values;
 
+	log_debug( "VAL: Add value id %s:%hu.",  str_id( id, hexbuf ), port );
+
+	/* Prepend to list */
+	new->next = g_values;
 	g_values = new;
 
 	/* Trigger immediate handling */
 	g_values_announce= 0;
 
 	return 0;
+}
+
+void free_value( struct value_t *value ) {
+#ifdef AUTH
+	/* Secure erase */
+	memset( value->skey, '\0', crypto_sign_SECRETKEYBYTES );
+	free( value->skey );
+#endif
+	free( value );
 }
 
 /* Remove an element from the list - internal use only */
@@ -166,10 +160,7 @@ void values_remove( struct value_t *value ) {
 			} else {
 				g_values = cur->next;
 			}
-#ifdef AUTH
-			free( cur->skey );
-#endif
-			free( cur );
+			free_value( cur );
 			return;
 		}
 		pre = cur;
@@ -192,10 +183,7 @@ void values_expire( void ) {
 			} else {
 				g_values = cur->next;
 			}
-#ifdef AUTH
-			free( cur->skey );
-#endif
-			free( cur );
+			free_value( cur );
 			return;
 		}
 		pre = cur;

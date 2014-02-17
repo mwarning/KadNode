@@ -23,30 +23,46 @@
 #define MAX_AUTH_CHALLENGE_SEND 10
 
 
+struct key_t {
+	char* pattern;
+	UCHAR* keybytes;
+	size_t keysize;
+	struct key_t *next;
+};
+
+static struct key_t *g_secret_keys = NULL;
+static struct key_t *g_public_keys = NULL;
+
 static time_t g_send_challenges = 0;
 static size_t g_request_counter = 0;
 static time_t g_request_counter_started = 0;
 
 
-char *auth_str_skey( char *buf, const UCHAR skey[] ) {
-	if( skey ) {
-		return bytes_to_hex( buf, skey, crypto_sign_SECRETKEYBYTES );
-	}
-	return NULL;
+/*
+* Use secret key to create the corresponding public key.
+*
+* The public key is the second half of the secret key
+* for the implemnetation used in libsodium.
+*/
+void auth_skey_to_pkey( const UCHAR skey[], UCHAR pkey[] ) {
+	memcpy( pkey, skey + crypto_sign_SECRETKEYBYTES - crypto_sign_PUBLICKEYBYTES, crypto_sign_PUBLICKEYBYTES );
 }
 
-char *auth_str_pkey( char *buf, const UCHAR pkey[] ) {
-	if( pkey ) {
-		return bytes_to_hex( buf, pkey, crypto_sign_PUBLICKEYBYTES );
-	}
-	return NULL;
-}
+/* Generate a new key pair and print it to stdout. */
+int auth_generate_key_pair( void ) {
+	UCHAR pk[crypto_sign_PUBLICKEYBYTES];
+	UCHAR sk[crypto_sign_SECRETKEYBYTES];
+	char pkhexbuf[2*crypto_sign_PUBLICKEYBYTES+1];
+	char skhexbuf[2*crypto_sign_SECRETKEYBYTES+1];
 
-char *auth_str_challenge( char *buf, const UCHAR challenge[] ) {
-	if( challenge ) {
-		return bytes_to_hex( buf, challenge, CHALLENGE_BIN_LENGTH );
+	if( crypto_sign_keypair( pk, sk ) == 0) {
+		fprintf( stdout, "public key: %s\n", bytes_to_hex( pkhexbuf, pk, sizeof(pk) ) );
+		fprintf( stdout, "secret key: %s\n", bytes_to_hex( skhexbuf, sk, sizeof(sk) ) );
+		return 0;
+	} else {
+		fprintf( stderr, "Failed to generate keys." );
+		return 1;
 	}
-	return NULL;
 }
 
 int auth_is_pkey( const char query[] ) {
@@ -87,48 +103,207 @@ int auth_is_skey( const char query[] ) {
 	return str_isHex( query, size );
 }
 
-UCHAR *auth_parse_pkey( const char query[] ) {
-	UCHAR *skey;
+void auth_debug_skeys( void ) {
+	const struct key_t *cur;
+	UCHAR pkey[crypto_sign_PUBLICKEYBYTES];
+	char skeyhex[2*crypto_sign_SECRETKEYBYTES+1];
+	char pkeyhex[2*crypto_sign_PUBLICKEYBYTES+1];
 
-	if( !auth_is_pkey( query ) ) {
-		return NULL;
+	printf( "All secret keys:\n" );
+	cur = g_secret_keys;
+	while( cur ) {
+		auth_skey_to_pkey( cur->keybytes, pkey );
+		bytes_to_hex( skeyhex, cur->keybytes, cur->keysize );
+		bytes_to_hex( pkeyhex, pkey, crypto_sign_PUBLICKEYBYTES );
+
+		printf( " pattern: %s\n", cur->pattern );
+		printf( " secret key: %s\n", skeyhex );
+		printf( " (public key: %s)\n", pkeyhex );
+
+		cur = cur->next;
 	}
-
-	skey = malloc( crypto_sign_PUBLICKEYBYTES );
-	bytes_from_hex( skey, query, 2*crypto_sign_PUBLICKEYBYTES );
-
-	log_debug( "AUTH: Parse public key: %s", query );
-	return skey;
 }
 
-UCHAR *auth_parse_skey( const char query[] ) {
-	UCHAR *skey;
+void auth_debug_pkeys( void ) {
+	const struct key_t *cur;
+	char pkeyhex[2*crypto_sign_PUBLICKEYBYTES+1];
 
-	if( !auth_is_skey( query ) ) {
-		return NULL;
+	printf( "All public keys:\n" );
+	cur = g_public_keys;
+	while( cur ) {
+		bytes_to_hex( pkeyhex, cur->keybytes, crypto_sign_PUBLICKEYBYTES );
+
+		printf( " pattern: %s\n", cur->pattern );
+		printf( " public key: %s\n", pkeyhex );
+
+		cur = cur->next;
 	}
-
-	log_debug( "AUTH: Parse secret key: %s", query );
-
-	skey = malloc( crypto_sign_SECRETKEYBYTES );
-	bytes_from_hex( skey, query, 2*crypto_sign_SECRETKEYBYTES );
-
-	return skey;
 }
 
-int auth_generate_key_pair( void ) {
-	UCHAR pk[crypto_sign_PUBLICKEYBYTES];
-	UCHAR sk[crypto_sign_SECRETKEYBYTES];
-	char pkhexbuf[2*crypto_sign_PUBLICKEYBYTES+1];
-	char skhexbuf[2*crypto_sign_SECRETKEYBYTES+1];
-
-	if( crypto_sign_keypair( pk, sk ) == 0) {
-		fprintf( stdout, "public key: %s\n", bytes_to_hex( pkhexbuf, pk, sizeof(pk) ) );
-		fprintf( stdout, "secret key: %s\n", bytes_to_hex( skhexbuf, sk, sizeof(sk) ) );
-		return 0;
+int is_pattern_conflict( const char p1[], const char p2[] ) {
+	if( p1[0] == '*' && p2[0] == '*' ) {
+		return (is_suffix( p1+1, p2+1 ) || is_suffix( p2+1, p1+1 ));
+	} else if( p1[0] == '*' ) {
+		return is_suffix( p2, p1+1 );
+	} else if( p2[0] == '*' ) {
+		return is_suffix( p1, p2+1 );
 	} else {
-		fprintf( stderr, "Failed to generate keys." );
-		return 1;
+		return (strcmp( p1, p2 ) == 0);
+	}
+}
+
+int auth_find_key( UCHAR key[], const char query[], const struct key_t *keys ) {
+	const struct key_t *cur;
+
+	cur = keys;
+	while(cur) {
+		/* Match query against pattern */
+		if( (query[0] == '*') && is_suffix( query, cur->pattern + 1 ) ) {
+			memcpy( key, cur->keybytes, cur->keysize );
+			return 1;
+		} else if( strcmp( query, cur->pattern ) == 0 ) {
+			memcpy( key, cur->keybytes, cur->keysize );
+			return 1;
+		}
+
+		cur = cur->next;
+	}
+
+	return 0;
+}
+
+void free_key( struct key_t *key ) {
+	/* Secure erase */
+	memset( key->keybytes, '\0', key->keysize );
+
+	free( key->keybytes );
+	free( key->pattern );
+	free( key );
+}
+
+/*
+* Create a [public|private] key from command line argument: "[<pattern>:]<hex-key>"
+*/
+void auth_parse_key( const char arg[], size_t keysize, struct key_t **g_key_list ) {
+	struct key_t* key;
+	const char* colon;
+	const char *pattern;
+	const char *hexkey;
+	size_t patternlen;
+	size_t hexkeylen;
+
+	/* Parse arg string into key string and pattern string */
+	colon = strchr( arg, ':' );
+	if( colon == NULL ) {
+		hexkey = arg;
+		hexkeylen = strlen( hexkey );
+		pattern = "*";
+		patternlen = 1;
+	} else {
+		hexkey = colon + 1;
+		hexkeylen = strlen( hexkey );
+		pattern = arg;
+		patternlen = colon - arg;
+	}
+
+	/* Validate key string format */
+	if( hexkeylen != 2*keysize ) {
+		log_err( "AUTH: Invalid key length." );
+		return;
+	}
+
+	if( !str_isHex( hexkey, hexkeylen ) ) {
+		log_err( "AUTH: Invalid key format." );
+		return;
+	}
+
+	/* Check for conflicting patterns */
+	key = *g_key_list;
+	while( key ) {
+		if( is_pattern_conflict( key->pattern, pattern ) ) {
+			log_err( "AUTH: conflicting patterns: %s %s", pattern, key->pattern );
+			return;
+		}
+		key = key->next;
+	}
+
+	/* Create key item */
+	key = (struct key_t*) calloc( 1, sizeof(struct key_t) );
+	key->pattern = strndup(pattern, patternlen);
+	key->keybytes = malloc( keysize );
+	key->keysize = keysize;
+	bytes_from_hex( key->keybytes, hexkey, hexkeylen );
+
+	/* Prepend to list */
+	key->next = *g_key_list;
+	*g_key_list = key;
+}
+
+void auth_add_pkey( const char arg[] ) {
+	auth_parse_key( arg, crypto_sign_PUBLICKEYBYTES, &g_public_keys );
+}
+
+void auth_add_skey( const char arg[] ) {
+	auth_parse_key( arg, crypto_sign_SECRETKEYBYTES, &g_secret_keys );
+}
+
+/*
+* Parse query (e.g. foo.p2p) and get the secret key if a match is found.
+* Also compute the identifier.
+*/
+UCHAR *auth_handle_skey( UCHAR skey[], UCHAR id[], const char *query ) {
+	char pkeyhex[2*crypto_sign_PUBLICKEYBYTES+1];
+	UCHAR pkey[crypto_sign_PUBLICKEYBYTES];
+
+	if( auth_is_skey( query ) ) {
+		/* The query to announce is a secret key */
+		bytes_from_hex( skey, query, 2*crypto_sign_SECRETKEYBYTES );
+		auth_skey_to_pkey( skey, pkey );
+		bytes_to_hex( pkeyhex, pkey, crypto_sign_PUBLICKEYBYTES );
+
+		id_compute( id, pkeyhex );
+		return skey;
+	} else if( auth_find_key( skey, query, g_secret_keys ) ) {
+		/* There is a secret key registered for this query */
+		auth_skey_to_pkey( skey, pkey );
+		bytes_to_hex( pkeyhex, pkey, crypto_sign_PUBLICKEYBYTES );
+
+		/* We use the public key as salt for the query */
+		char *str = malloc( strlen( pkeyhex ) + strlen( query ) );
+		sprintf( str, "%s%s", pkeyhex, query );
+		id_compute( id, str );
+		free( str );
+
+		return skey;
+	} else {
+		id_compute( id, query );
+		return NULL;
+	}
+}
+
+/*
+* Parse query (e.g. foo.p2p) and get the public key if a match is found.
+* Also compute the identifier.
+*/
+UCHAR *auth_handle_pkey( UCHAR pkey[], UCHAR id[], const char *query ) {
+	char pkeyhex[2*crypto_sign_PUBLICKEYBYTES+1];
+
+	if( auth_is_pkey( query ) ) {
+		bytes_from_hex( pkey, query, 2*crypto_sign_PUBLICKEYBYTES );
+		id_compute( id, query );
+		return pkey;
+	} else if( auth_find_key( pkey, query, g_public_keys ) ) {
+		bytes_to_hex( pkeyhex, pkey, crypto_sign_PUBLICKEYBYTES );
+
+		char *str = malloc( strlen( pkeyhex ) + strlen( query ) );
+		sprintf( str, "%s%s", pkeyhex, query );
+		id_compute( id, str );
+		free( str );
+
+		return pkey;
+	} else {
+		id_compute( id, query );
+		return NULL;
 	}
 }
 
@@ -293,10 +468,10 @@ int auth_handle_packet( int sock, UCHAR buf[], size_t buflen, IP *from ) {
 	}
 
 	if( buflen == (4+SHA1_BIN_LENGTH+CHALLENGE_BIN_LENGTH) ) {
-		/* Receive plaintext challenge */
+		/* Receive plaintext challenge / request */
 		auth_receive_challenge( sock, buf, buflen, from, now );
 	} else {
-		/* Receive encrypted challenge */
+		/* Receive encrypted challenge / reply */
 		auth_verify_challenge( sock, buf, buflen, from, now );
 	}
 

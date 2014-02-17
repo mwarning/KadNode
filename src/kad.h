@@ -6,7 +6,7 @@
 /* Setup the DHT */
 void kad_setup( void );
 
-/* Ping this node for bootstrapping */
+/* Ping this node to add it to the node table */
 int kad_ping( const IP *addr );
 
 /* Blacklist a specific address */

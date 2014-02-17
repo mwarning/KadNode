@@ -19,6 +19,29 @@
 #include "utils.h"
 
 
+/* Also matches on equality */
+int is_suffix( const char str[], const char suffix[] ) {
+	size_t suffix_len;
+	size_t str_len;
+
+	suffix_len = strlen( suffix );
+	str_len = strlen( str );
+	if( suffix_len > str_len ) {
+		return 0;
+	} else {
+		return (memcmp( str + str_len - suffix_len, suffix, suffix_len ) == 0);
+	}
+}
+
+UCHAR *memdup( const UCHAR *src, size_t size ) {
+	UCHAR *dst;
+
+	dst = (UCHAR*) malloc( size );
+	memcpy( dst, src, size );
+
+	return dst;
+}
+
 int port_random( void ) {
 	unsigned short port;
 

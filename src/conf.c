@@ -81,6 +81,12 @@ const char *usage = "KadNode - A P2P name resolution daemon (IPv4/IPv6)\n"
 "				Default: ipv4\n\n"
 #ifdef AUTH
 " --auth-gen-keys		Generate a new public/secret key pair and exit.\n\n"
+" --public-key [<pat>:]<pkey>	Assign a public key to all values that match the pattern.\n"
+"				It is used to verifiy that the other side has the secret\n"
+"				key when queries of the given pattern are requested.\n\n"
+" --secret-key [<pat>:]<skey>	Assign a secret key to all values that match the pattern.\n"
+"				It is used to prove that you own the domain provided\n"
+"				the other side knows the public key.\n\n"
 #endif
 #ifdef CMD
 " --cmd-port <port>		Bind the remote control interface to this local port.\n"
@@ -279,9 +285,9 @@ void conf_str( const char *var, char **dst, const char *src ) {
 }
 
 void conf_add_value( char *var, char *val ) {
+	struct value_t *value;
 	int is_random_port;
 	int port;
-	int rc;
 	char *p;
 
 	if( val == NULL ) {
@@ -317,8 +323,8 @@ void conf_add_value( char *var, char *val ) {
 	}
 #endif
 
-	rc = values_add( val, port, LONG_MAX );
-	if( rc < 0 ) {
+	value = values_add( val, port, LONG_MAX );
+	if( value == NULL ) {
 		log_err( "CFG: Invalid port for value annoucement: %d", port );
 		exit( 1 );
 	} else {
@@ -386,8 +392,13 @@ void read_conf_file( const char *filename ) {
 void conf_handle( char *var, char *val ) {
 
 	if( match( var, "--node-id" ) ) {
-		/* Compute node id */
-		id_compute( gconf->node_id, val );
+		if( val == NULL ) {
+			conf_arg_expected( var );
+		}
+		if( strlen( val ) != SHA1_HEX_LENGTH || !str_isHex( val, SHA1_HEX_LENGTH ) ) {
+			log_err( "CFG: Invalid hex string for --node-id." );
+		}
+		bytes_from_hex( gconf->node_id, val, SHA1_HEX_LENGTH );
 	} else if( match( var, "--value-id" ) ) {
 		conf_add_value( var, val );
 	} else if( match( var, "--pidfile" ) ) {
@@ -423,6 +434,22 @@ void conf_handle( char *var, char *val ) {
 #ifdef AUTH
 	} else if( match( var, "--auth-gen-keys" ) ) {
 		exit( auth_generate_key_pair() );
+	} else if( match( var, "--secret-key" ) ) {
+		if( val == NULL ) {
+			conf_arg_expected( var );
+		}
+		if( values_get() ) {
+			log_err( "CFG: --secret-key options need to be specifed before any --value-id option." );
+		}
+		auth_add_skey( val );
+	} else if( match( var, "--public-key" ) ) {
+		if( val == NULL ) {
+			conf_arg_expected( var );
+		}
+		if( values_get() ) {
+			log_err( "CFG: --public-key options need to be specifed before any --value-id option." );
+		}
+		auth_add_pkey( val );
 #endif
 	} else if( match( var, "--config" ) ) {
 		if( val == NULL ) {

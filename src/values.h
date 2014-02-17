@@ -35,7 +35,7 @@ void values_debug( int fd );
 int values_count( void );
 
 /* Add a value id / port that will be announced until lifetime is exceeded */
-int values_add( const char query[], int port, time_t lifetime );
+struct value_t *values_add( const char query[], int port, time_t lifetime );
 
 
 #endif /* _EXT_VALUES_H_ */

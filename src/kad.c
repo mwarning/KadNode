@@ -286,34 +286,29 @@ int kad_announce( const UCHAR *id, int port ) {
 */
 int kad_lookup_value( const char query[], IP addr_array[], size_t *addr_num ) {
 	struct results_t *results;
-	char hexbuf[SHA1_HEX_LENGTH+1];
-	UCHAR id[SHA1_BIN_LENGTH];
 	int rc;
 
-	/* Generate the id, e.g. id = sha1(query) */
-	id_compute( id, query );
-
-	log_debug( "KAD: Lookup string '%s' as id: %s", query, str_id( id, hexbuf ) );
+	log_debug( "KAD: Lookup string: %s", query );
 
 	dht_lock();
 
-	results = results_find( id );
+	/* Find existing or create new item */
+	results = results_add( query );
 
-	if( results && results->done ) {
-		/* Re-enable results bucket */
+	if( results == NULL ) {
+		/* Failed to create a new search */
+		rc = 3;
+	} else if( results->done ) {
+		/* Search done => restart search*/
 		results_done( results, 0 );
-
-		/* Start DHT search */
-		dht_search( id, 0, gconf->af, dht_callback_func, NULL );
+		dht_search( results->id, 0, gconf->af, dht_callback_func, NULL );
 		rc = 2;
-	} else if( results == NULL ) {
-		/* Create and append a new item */
-		results = results_add( id, query );
-
-		/* Start DHT search */
-		dht_search( id, 0, gconf->af, dht_callback_func, NULL );
+	} else if( results->start_time == time_now_sec() ) {
+		/* Search just created => start search */
+		dht_search( results->id, 0, gconf->af, dht_callback_func, NULL );
 		rc = 1;
 	} else {
+		/* Search is running => poll results */
 		rc = 0;
 	}
 
