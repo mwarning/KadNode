@@ -268,7 +268,7 @@ int kad_ping( const IP* addr ) {
 * Find nodes that are near the given id and announce to them
 * that this node can satisfy the given id on the given port
 */
-int kad_announce( const UCHAR *id, int port ) {
+int kad_announce_once( const UCHAR id[], int port ) {
 
 	if( port < 1 || port > 65535 ) {
 		return -1;
@@ -279,6 +279,10 @@ int kad_announce( const UCHAR *id, int port ) {
 	dht_unlock();
 
 	return 0;
+}
+
+int kad_announce( const char query[], int port, time_t lifetime ) {
+	return (values_add( query, port, lifetime ) == NULL);
 }
 
 /*

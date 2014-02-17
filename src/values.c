@@ -203,7 +203,7 @@ void values_announce( void ) {
 			char hexbuf[SHA1_HEX_LENGTH+1];
 			log_debug( "VAL: Announce %s:%hu",  str_id( value->id, hexbuf ), value->port );
 #endif
-			kad_announce( value->id, value->port );
+			kad_announce_once( value->id, value->port );
 			value->refresh = now + (25 * 60);
 		}
 		value = value->next;

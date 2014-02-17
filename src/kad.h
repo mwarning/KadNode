@@ -37,7 +37,8 @@ int kad_count_nodes( void );
 * Announce that the resource identified by id can
 * be served by this computer using the given port.
 */
-int kad_announce( const UCHAR *id, int port );
+int kad_announce_once( const UCHAR id[], int port );
+int kad_announce( const char query[], int port, time_t lifetime );
 
 /* Various debug functions */
 void kad_debug_buckets( int fd );

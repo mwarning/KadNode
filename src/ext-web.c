@@ -35,7 +35,7 @@ void handle_lookup( char *reply_buf, const char *params ) {
 /* handle 'GET /announce?foo.p2p' */
 void handle_announce( char *reply_buf, char *params ) {
 
-	values_add( params, 1, (time_now_sec() + 60) );
+	kad_announce( params, 1, (time_now_sec() + 60) );
 	sprintf( reply_buf , "done\n" );
 }
 

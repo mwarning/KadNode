@@ -15,6 +15,7 @@
 #include "utils.h"
 #include "conf.h"
 #include "values.h"
+#include "kad.h"
 #ifdef AUTH
 #include "ext-auth.h"
 #endif
@@ -285,9 +286,9 @@ void conf_str( const char *var, char **dst, const char *src ) {
 }
 
 void conf_add_value( char *var, char *val ) {
-	struct value_t *value;
 	int is_random_port;
 	int port;
+	int rc;
 	char *p;
 
 	if( val == NULL ) {
@@ -323,8 +324,8 @@ void conf_add_value( char *var, char *val ) {
 	}
 #endif
 
-	value = values_add( val, port, LONG_MAX );
-	if( value == NULL ) {
+	rc = kad_announce( val, port, LONG_MAX );
+	if( rc != 0 ) {
 		log_err( "CFG: Invalid port for value annoucement: %d", port );
 		exit( 1 );
 	} else {
