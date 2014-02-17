@@ -60,7 +60,12 @@ Also make sure to enable
 "Advanced configuration options" => "Enable package source tree override"
 </pre>
 
-in the menu when you do `make menuconfig`.
+in the menu when you do `make menuconfig` and use the "git add" command
+to add your local changes. Then build the entire image or just the KadNode package:
+
+<pre>
+make package/kadnode/{clean,compile} V=s
+</pre>
 
 ## Configuration Notes
 
