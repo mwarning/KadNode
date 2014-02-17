@@ -1,6 +1,7 @@
 
 CC ?= gcc
-CFLAGS = -O2 -Wall -Wwrite-strings -pedantic -std=gnu99
+CFLAGS ?= -O2 -Wall -Wwrite-strings -pedantic
+CFLAGS += -std=gnu99
 POST_LINKING =
 FEATURES ?= auth cmd natpmp nss upnp #dns debug web
 
@@ -72,7 +73,7 @@ libnss_kadnode.so.2:
 	$(CC) $(CFLAGS) -fPIC -shared -Wl,-soname,libnss_kadnode.so.2 -o build/libnss_kadnode.so.2 build/ext-libnss.o
 
 kadnode-ctl:
-	$(CC) src/kadnode-ctl.c -o build/kadnode-ctl
+	$(CC) $(CFLAGS) src/kadnode-ctl.c -o build/kadnode-ctl
 
 kadnode: $(OBJS) $(EXTRA)
 	$(CC) $(OBJS) -o build/kadnode $(POST_LINKING)
