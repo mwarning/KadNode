@@ -332,12 +332,15 @@ int kad_lookup_node( const char query[], IP *addr_return ) {
 	struct search *sr;
 	int i, rc;
 
-	/* That is the node id to lookup */
-	id_compute( id, query );
+	if( strlen( query ) != SHA1_HEX_LENGTH || !str_isHex( query, SHA1_HEX_LENGTH ) ) {
+		return 2;
+	}
+
+	bytes_from_hex( id, query, SHA1_HEX_LENGTH );
 
 	dht_lock();
 
-	rc = -1;
+	rc = 1;
 	sr = searches;
 	while( sr ) {
 		if( sr->af == gconf->af && id_equal( sr->id, id ) ) {

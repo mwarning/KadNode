@@ -190,14 +190,16 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 	} else if( match( argv[0], "lookup_node" ) && argc == 2 ) {
 
 		/* Check searches for node */
-		rc = kad_lookup_node( argv[1, &addrs[0] );
+		rc = kad_lookup_node( argv[1], &addrs[0] );
 		if( rc == 0 ) {
-		r_printf( r, "%s\n", str_addr( &addrs[0], addrbuf ) );
-		} else if( rc == -1 ) {
-		r_printf( r ,"No search found.\n" );
+			r_printf( r, "%s\n", str_addr( &addrs[0], addrbuf ) );
+		} else if( rc == 1 ) {
+			r_printf( r ,"No search found.\n" );
+			rc = 1;
+		} else if( rc == 2 ) {
+			r_printf( r ,"Invalid id format. 20 digit hex string expected.\n" );
 			rc = 1;
 		} else {
-			r_printf( r ,"No node found.\n" );
 			rc = 1;
 		}
 #endif
