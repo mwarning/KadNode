@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <stdarg.h>
 #include <limits.h>
+#include <stdbool.h>
 
 #include "main.h"
 #include "conf.h"
@@ -27,7 +28,7 @@
 #include "ext-cmd.h"
 
 
-const char* cmd_usage_str =
+const char* cmd_usage =
 	"Usage:\n"
 	"	status\n"
 	"	lookup <id>\n"
@@ -37,7 +38,9 @@ const char* cmd_usage_str =
 	"	announce <id>[:<port>] [<minutes>]\n"
 	"	import <addr>\n"
 	"	export\n"
-	"	blacklist <addr>\n"
+	"	blacklist <addr>\n";
+
+const char* cmd_usage_debug =
 	"	list [blacklist|buckets|constants|"
 #ifdef FWD
 	"forwardings|"
@@ -47,10 +50,17 @@ const char* cmd_usage_str =
 #endif
 	"results|searches|storage|values]\n";
 
+/* A UDP packet sized reply */
+typedef struct Reply {
+	char data[1472];
+	ssize_t size;
+	bool allow_debug;
+} REPLY;
 
-void r_init( REPLY *r ) {
+void r_init( REPLY *r, bool allow_debug ) {
 	r->data[0] = '\0';
 	r->size = 0;
+	r->allow_debug = allow_debug;
 }
 
 /* Append a formatted string to the packet buffer */
@@ -184,7 +194,10 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 	if( argc == 0 ) {
 
 		/* Print usage */
-		r_printf( r, cmd_usage_str );
+		r_printf( r, cmd_usage );
+		if( r->allow_debug ) {
+			r_printf( r, cmd_usage_debug );
+		}
 		rc = 1;
 
 	} else if( match( argv[0], "import" ) && argc == 2 ) {
@@ -301,7 +314,7 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 
 		rc = cmd_export( r );
 
-	} else if( match( argv[0], "list" ) && argc == 2 ) {
+	} else if( match( argv[0], "list" ) && argc == 2 && r->allow_debug ) {
 
 		if( gconf->is_daemon == 1 ) {
 			r_printf( r ,"The 'list' command is not available while KadNode runs as daemon.\n" );
@@ -349,7 +362,10 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 
 	} else {
 		/* print usage */
-		r_printf( r, cmd_usage_str );
+		r_printf( r, cmd_usage );
+		if( r->allow_debug ) {
+			r_printf( r, cmd_usage_debug );
+		}
 		rc = 1;
 	}
 
@@ -376,7 +392,7 @@ void cmd_remote_handler( int rc, int sock ) {
 	}
 
 	/* Initialize reply and reserve room for return status */
-	r_init( &reply );
+	r_init( &reply, false );
 	r_printf( &reply, "_" );
 
 	/* Split up the command line into an argument array */
@@ -413,7 +429,7 @@ void cmd_console_handler( int rc, int fd ) {
 	cmd_to_args( request, &argc, &argv[0], N_ELEMS(argv) );
 
 	/* Initialize reply */
-	r_init( &reply );
+	r_init( &reply, true );
 
 	/* Execute command line */
 	rc = cmd_exec( &reply, argc, argv );
