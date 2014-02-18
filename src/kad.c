@@ -312,11 +312,11 @@ int kad_announce( const char _query[], int port, time_t lifetime ) {
 	char query[QUERY_MAX_SIZE];
 
 	if( kad_query_sanitize( query, sizeof(query), _query ) != 0 ) {
-		return 1;
+		return -1;
 	}
 
 	/* Store query to call kad_announce_once() later/multiple times */
-	return (values_add( query, port, lifetime ) == NULL);
+	return values_add( query, port, lifetime ) ? -2 : 0;
 }
 
 /*

@@ -290,7 +290,7 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 		}
 #endif
 
-		if( kad_announce( argv[1], port, lifetime ) ) {
+		if( kad_announce( argv[1], port, lifetime ) == 0 ) {
 #ifdef FWD
 			if( !is_random_port ) {
 				forwardings_add( port, lifetime);

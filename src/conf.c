@@ -325,7 +325,7 @@ void conf_add_value( char *var, char *val ) {
 #endif
 
 	rc = kad_announce( val, port, LONG_MAX );
-	if( rc != 0 ) {
+	if( rc < 0 ) {
 		log_err( "CFG: Invalid port for value annoucement: %d", port );
 		exit( 1 );
 	} else {
