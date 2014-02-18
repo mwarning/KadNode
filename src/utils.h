@@ -29,13 +29,12 @@ int bytes_random( UCHAR buffer[], size_t size );
 void bytes_from_hex( UCHAR bin[], const char hex[], size_t length );
 char *bytes_to_hex( char hex[], const UCHAR bin[], size_t length );
 
-void id_compute( UCHAR *id, const char *str );
-int id_equal( const UCHAR *id1, const UCHAR *id2 );
+void id_compute( UCHAR id[], const char str[] );
+int id_equal( const UCHAR id1[], const UCHAR id2[] );
 
 int str_isHex( const char *string, size_t size );
 int str_isValidHostname( const char *hostname, size_t size );
 int str_isZero( const char* str );
-void str_toLower( char* str, size_t size );
 
 char *str_id( const UCHAR *in, char *idbuf );
 char *str_addr( const IP *addr, char *addrbuf );

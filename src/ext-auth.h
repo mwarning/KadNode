@@ -11,13 +11,13 @@ void auth_add_skey( const char arg[] );
 
 /*
 * Get key and id based on query.
-* Returns a pointer to key if a key was found.
+* Returns a pointer to the key - if found.
 */
-UCHAR *auth_handle_skey( UCHAR skey[], UCHAR id[], const char *query );
-UCHAR *auth_handle_pkey( UCHAR pkey[], UCHAR id[], const char *query );
+UCHAR *auth_handle_skey( UCHAR skey[], UCHAR id[], const char query[] );
+UCHAR *auth_handle_pkey( UCHAR pkey[], UCHAR id[], const char query[] );
 
 /*
-* Print secret/public keys to s.
+* Print secret/public keys to stdout.
 */
 void auth_debug_skeys( void );
 void auth_debug_pkeys( void );

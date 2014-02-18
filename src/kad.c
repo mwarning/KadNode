@@ -4,6 +4,7 @@
 #include <netdb.h>
 #include <net/if.h>
 #include <sys/time.h>
+#include <ctype.h>
 
 #include "log.h"
 #include "sha1.h"
@@ -23,6 +24,8 @@
 
 #include "dht.c"
 
+#define QUERY_OMIT_SUFFIX ".p2p"
+#define QUERY_MAX_SIZE 512
 
 /*
 The interface that is used to interact with the DHT.
@@ -162,6 +165,30 @@ int dht_random_bytes( void *buf, size_t size ) {
 	return bytes_random( buf, size );
 }
 
+int kad_query_sanitize( char buf[], size_t buflen, const char query[] ) {
+	size_t len;
+	size_t i;
+
+	len = strlen( query );
+
+	/* Remove .p2p suffix */
+	if( is_suffix( query, QUERY_OMIT_SUFFIX ) ) {
+		len -= 4;
+	}
+
+	if( (len+1) >= buflen ) {
+		return 1;
+	}
+
+	/* Convert to lower case */
+	for( i = 0; i < len; ++i ) {
+		buf[i] = tolower( query[i] );
+	}
+	buf[len] = '\0';
+
+	return 0;
+}
+
 void kad_setup( void ) {
 	int s4, s6;
 
@@ -281,16 +308,28 @@ int kad_announce_once( const UCHAR id[], int port ) {
 	return 0;
 }
 
-int kad_announce( const char query[], int port, time_t lifetime ) {
+int kad_announce( const char _query[], int port, time_t lifetime ) {
+	char query[QUERY_MAX_SIZE];
+
+	if( kad_query_sanitize( query, sizeof(query), _query ) != 0 ) {
+		return 1;
+	}
+
+	/* Store query to call kad_announce_once() later/multiple times */
 	return (values_add( query, port, lifetime ) == NULL);
 }
 
 /*
 * Lookup known nodes that are nearest to the given id.
 */
-int kad_lookup_value( const char query[], IP addr_array[], size_t *addr_num ) {
+int kad_lookup_value( const char _query[], IP addr_array[], size_t *addr_num ) {
+	char query[QUERY_MAX_SIZE];
 	struct results_t *results;
 	int rc;
+
+	if( kad_query_sanitize( query, sizeof(query), _query ) != 0 ) {
+		return 3;
+	}
 
 	log_debug( "KAD: Lookup string: %s", query );
 

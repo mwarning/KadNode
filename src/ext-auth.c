@@ -67,16 +67,8 @@ int auth_generate_key_pair( void ) {
 
 int auth_is_pkey( const char query[] ) {
 	size_t size;
-	char *end;
 
-	/* Find the first dot */
-	end = strchr( query, '.' );
-	if( end == NULL ) {
-		size = strlen( query );
-	} else {
-		size = end - query;
-	}
-
+	size = strlen( query );
 	if( size != 2*crypto_sign_PUBLICKEYBYTES ) {
 		return 0;
 	}
@@ -86,16 +78,8 @@ int auth_is_pkey( const char query[] ) {
 
 int auth_is_skey( const char query[] ) {
 	size_t size;
-	char *end;
 
-	/* Find the first dot */
-	end = strchr( query, '.' );
-	if( end == NULL ) {
-		size = strlen( query );
-	} else {
-		size = end - query;
-	}
-
+	size = strlen( query );
 	if( size != 2*crypto_sign_SECRETKEYBYTES ) {
 		return 0;
 	}
@@ -221,7 +205,7 @@ void auth_parse_key( const char arg[], size_t keysize, struct key_t **g_key_list
 	key = *g_key_list;
 	while( key ) {
 		if( is_pattern_conflict( key->pattern, pattern ) ) {
-			log_err( "AUTH: conflicting patterns: %s %s", pattern, key->pattern );
+			log_err( "AUTH: conflicting patterns: '%s' <=> '%s'", pattern, key->pattern );
 			return;
 		}
 		key = key->next;
@@ -251,7 +235,7 @@ void auth_add_skey( const char arg[] ) {
 * Parse query (e.g. foo.p2p) and get the secret key if a match is found.
 * Also compute the identifier.
 */
-UCHAR *auth_handle_skey( UCHAR skey[], UCHAR id[], const char *query ) {
+UCHAR *auth_handle_skey( UCHAR skey[], UCHAR id[], const char query[] ) {
 	char pkeyhex[2*crypto_sign_PUBLICKEYBYTES+1];
 	UCHAR pkey[crypto_sign_PUBLICKEYBYTES];
 
@@ -285,7 +269,7 @@ UCHAR *auth_handle_skey( UCHAR skey[], UCHAR id[], const char *query ) {
 * Parse query (e.g. foo.p2p) and get the public key if a match is found.
 * Also compute the identifier.
 */
-UCHAR *auth_handle_pkey( UCHAR pkey[], UCHAR id[], const char *query ) {
+UCHAR *auth_handle_pkey( UCHAR pkey[], UCHAR id[], const char query[] ) {
 	char pkeyhex[2*crypto_sign_PUBLICKEYBYTES+1];
 
 	if( auth_is_pkey( query ) ) {

@@ -11,7 +11,6 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netdb.h>
-#include <ctype.h>
 
 #include "log.h"
 #include "conf.h" /* For gconf->time_now */
@@ -129,41 +128,25 @@ char *bytes_to_hex( char hex[], const UCHAR bin[], size_t length ) {
 }
 
 /*
-* Compute the id of a string.
-* The character case and the top level domain is ignored.
-* If the string represent a sha1 hash in hex - then it is
-* converted explicitly instead of hashing.
+* Compute the id of a string using the sha1 digest.
+* In case of a 20 Byte hex string, the id converted directly.
 */
-void id_compute( UCHAR *id, const char *str ) {
+void id_compute( UCHAR id[], const char str[] ) {
 	SHA1_CTX ctx;
 	size_t size;
-	char *cpy;
-	char *tld;
 
-	/* Remove the top level domain */
-	tld = strrchr( str, '.' );
-	if( tld == NULL ) {
-		size = strlen( str );
-	} else {
-		size = tld - str;
-	}
-
+	size = strlen( str );
 	if( size == SHA1_HEX_LENGTH && str_isHex( str, SHA1_HEX_LENGTH ) ) {
-		/* Treat hostname as hex string and ignore any kind of suffix */
+		/* Treat hostname as hex string */
 		bytes_from_hex( id, str, SHA1_HEX_LENGTH );
 	} else {
-		cpy = strdup( str );
-		str_toLower( cpy, size );
-
 		SHA1_Init( &ctx );
-		SHA1_Update( &ctx, (const UCHAR *) cpy, size );
+		SHA1_Update( &ctx, (const UCHAR *) str, size);
 		SHA1_Final( &ctx, id );
-
-		free( cpy );
 	}
 }
 
-int id_equal( const UCHAR *id1, const UCHAR *id2 ) {
+int id_equal( const UCHAR id1[], const UCHAR id2[] ) {
 	return (memcmp( id1, id2, SHA1_BIN_LENGTH ) == 0);
 }
 
@@ -207,14 +190,6 @@ int str_isValidHostname( const char *hostname, size_t size ) {
 
 int str_isZero( const char* str ) {
 	return (str == NULL) || (strcmp( str, "0" ) == 0);
-}
-
-void str_toLower( char* str, size_t size ) {
-	size_t i;
-
-	for( i = 0; i < size; ++i ) {
-		str[i] = tolower( str[i] );
-	}
 }
 
 char *str_id( const UCHAR *in, char *buf ) {
