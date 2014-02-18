@@ -38,11 +38,15 @@ const char* cmd_usage_str =
 	"	import <addr>\n"
 	"	export\n"
 	"	blacklist <addr>\n"
+	"	list [blacklist|buckets|constants|"
 #ifdef FWD
-	"	list [blacklist|buckets|constants|forwardings|results|searches|storage|values]\n";
-#else
-	"	list [blacklist|buckets|constants|results|searches|storage|values]\n";
+	"forwardings|"
 #endif
+#ifdef AUTH
+	"skeys|pkeys|"
+#endif
+	"results|searches|storage|values]\n";
+
 
 void r_init( REPLY *r ) {
 	r->data[0] = '\0';
@@ -315,6 +319,14 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 #ifdef FWD
 		} else if( match( argv[1], "forwardings" ) ) {
 			forwardings_debug( STDOUT_FILENO );
+			rc = 0;
+#endif
+#ifdef AUTH
+		} else if( match( argv[1], "pkeys" ) ) {
+			auth_debug_pkeys( STDOUT_FILENO );
+			rc = 0;
+		} else if( match( argv[1], "skeys" ) ) {
+			auth_debug_skeys( STDOUT_FILENO );
 			rc = 0;
 #endif
 		} else if( match( argv[1], "results" ) ) {

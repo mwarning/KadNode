@@ -87,41 +87,50 @@ int auth_is_skey( const char query[] ) {
 	return str_isHex( query, size );
 }
 
-void auth_debug_skeys( void ) {
+void auth_debug_skeys( int fd ) {
 	const struct key_t *cur;
 	UCHAR pkey[crypto_sign_PUBLICKEYBYTES];
 	char skeyhex[2*crypto_sign_SECRETKEYBYTES+1];
 	char pkeyhex[2*crypto_sign_PUBLICKEYBYTES+1];
+	int count;
 
-	printf( "All secret keys:\n" );
+	dprintf( fd, "All secret keys:\n" );
+	count = 0;
 	cur = g_secret_keys;
 	while( cur ) {
 		auth_skey_to_pkey( cur->keybytes, pkey );
 		bytes_to_hex( skeyhex, cur->keybytes, cur->keysize );
 		bytes_to_hex( pkeyhex, pkey, crypto_sign_PUBLICKEYBYTES );
 
-		printf( " pattern: %s\n", cur->pattern );
-		printf( " secret key: %s\n", skeyhex );
-		printf( " (public key: %s)\n", pkeyhex );
+		dprintf( fd, " pattern: '%s'\n", cur->pattern );
+		dprintf( fd, " secret key: %s\n", skeyhex );
+		dprintf( fd, " (public key: %s)\n", pkeyhex );
 
+		count++;
 		cur = cur->next;
 	}
+
+	dprintf( fd, "Found %d secret keys.\n", count );
 }
 
-void auth_debug_pkeys( void ) {
+void auth_debug_pkeys( int fd ) {
 	const struct key_t *cur;
 	char pkeyhex[2*crypto_sign_PUBLICKEYBYTES+1];
+	int count;
 
-	printf( "All public keys:\n" );
+	dprintf( fd, "All public keys:\n" );
+	count = 0;
 	cur = g_public_keys;
 	while( cur ) {
 		bytes_to_hex( pkeyhex, cur->keybytes, crypto_sign_PUBLICKEYBYTES );
 
-		printf( " pattern: %s\n", cur->pattern );
-		printf( " public key: %s\n", pkeyhex );
+		dprintf( fd, " pattern: '%s'\n", cur->pattern );
+		dprintf( fd, " public key: %s\n", pkeyhex );
 
 		cur = cur->next;
 	}
+
+	dprintf( fd, "Found %d public keys.\n", count );
 }
 
 int is_pattern_conflict( const char p1[], const char p2[] ) {

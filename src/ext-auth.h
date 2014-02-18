@@ -19,8 +19,8 @@ UCHAR *auth_handle_pkey( UCHAR pkey[], UCHAR id[], const char query[] );
 /*
 * Print secret/public keys to stdout.
 */
-void auth_debug_skeys( void );
-void auth_debug_pkeys( void );
+void auth_debug_skeys( int );
+void auth_debug_pkeys( int );
 
 /* Check if a query has the secret/public key format */
 //int auth_is_pkey( const char query[] );
