@@ -180,33 +180,27 @@ void free_key( struct key_t *key ) {
 void auth_parse_key( const char arg[], size_t keysize, struct key_t **g_key_list ) {
 	struct key_t* key;
 	const char* colon;
-	const char *pattern;
-	const char *hexkey;
-	size_t patternlen;
-	size_t hexkeylen;
+	char pattern[512];
+	char hexkey[512];
 
 	/* Parse arg string into key string and pattern string */
 	colon = strchr( arg, ':' );
 	if( colon == NULL ) {
-		hexkey = arg;
-		hexkeylen = strlen( hexkey );
-		pattern = "*";
-		patternlen = 1;
+		snprintf( pattern, sizeof(pattern), "%s", "*" );
+		snprintf( hexkey, sizeof(hexkey), "%s", arg );
 	} else {
-		hexkey = colon + 1;
-		hexkeylen = strlen( hexkey );
-		pattern = arg;
-		patternlen = colon - arg;
+		snprintf( pattern, sizeof(pattern), "%.*s", (int) (colon - arg), arg );
+		snprintf( hexkey, sizeof(hexkey), "%s", colon + 1 );
 	}
 
 	/* Validate key string format */
-	if( hexkeylen != 2*keysize ) {
-		log_err( "AUTH: Invalid key length." );
+	if( strlen( hexkey ) != 2*keysize ) {
+		log_err( "AUTH: Invalid key length. %d hex characters expected: %s", 2*keysize, hexkey );
 		return;
 	}
 
-	if( !str_isHex( hexkey, hexkeylen ) ) {
-		log_err( "AUTH: Invalid key format." );
+	if( !str_isHex( hexkey, 2*keysize ) ) {
+		log_err( "AUTH: Invalid key format. Only hex characters expected: %s", hexkey );
 		return;
 	}
 
@@ -222,10 +216,10 @@ void auth_parse_key( const char arg[], size_t keysize, struct key_t **g_key_list
 
 	/* Create key item */
 	key = (struct key_t*) calloc( 1, sizeof(struct key_t) );
-	key->pattern = strndup(pattern, patternlen);
+	key->pattern = strdup( pattern );
 	key->keybytes = malloc( keysize );
 	key->keysize = keysize;
-	bytes_from_hex( key->keybytes, hexkey, hexkeylen );
+	bytes_from_hex( key->keybytes, hexkey, 2*keysize );
 
 	/* Prepend to list */
 	key->next = *g_key_list;
