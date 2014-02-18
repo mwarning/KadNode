@@ -150,9 +150,9 @@ int auth_find_key( UCHAR key[], const char query[], const struct key_t *keys ) {
 	const struct key_t *cur;
 
 	cur = keys;
-	while(cur) {
+	while( cur ) {
 		/* Match query against pattern */
-		if( (query[0] == '*') && is_suffix( query, cur->pattern + 1 ) ) {
+		if( (cur->pattern[0] == '*') && is_suffix( query, cur->pattern + 1 ) ) {
 			memcpy( key, cur->keybytes, cur->keysize );
 			return 1;
 		} else if( strcmp( query, cur->pattern ) == 0 ) {
