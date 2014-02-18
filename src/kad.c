@@ -173,7 +173,7 @@ int kad_query_sanitize( char buf[], size_t buflen, const char query[] ) {
 
 	/* Remove .p2p suffix */
 	if( is_suffix( query, QUERY_OMIT_SUFFIX ) ) {
-		len -= 4;
+		len -= strlen( QUERY_OMIT_SUFFIX );
 	}
 
 	if( (len+1) >= buflen ) {
