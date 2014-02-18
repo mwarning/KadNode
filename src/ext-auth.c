@@ -127,6 +127,7 @@ void auth_debug_pkeys( int fd ) {
 		dprintf( fd, " pattern: '%s'\n", cur->pattern );
 		dprintf( fd, " public key: %s\n", pkeyhex );
 
+		count++;
 		cur = cur->next;
 	}
 
