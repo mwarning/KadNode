@@ -82,10 +82,10 @@ const char *usage = "KadNode - A P2P name resolution daemon (IPv4/IPv6)\n"
 "				Default: ipv4\n\n"
 #ifdef AUTH
 " --auth-gen-keys		Generate a new public/secret key pair and exit.\n\n"
-" --public-key [<pat>:]<pkey>	Assign a public key to all values that match the pattern.\n"
+" --auth-add-pkey [<pat>:]<pkey>	Assign a public key to all values that match the pattern.\n"
 "				It is used to verifiy that the other side has the secret\n"
 "				key when queries of the given pattern are requested.\n\n"
-" --secret-key [<pat>:]<skey>	Assign a secret key to all values that match the pattern.\n"
+" --auth-add-skey [<pat>:]<skey>	Assign a secret key to all values that match the pattern.\n"
 "				It is used to prove that you own the domain provided\n"
 "				the other side knows the public key.\n\n"
 #endif
@@ -435,20 +435,20 @@ void conf_handle( char *var, char *val ) {
 #ifdef AUTH
 	} else if( match( var, "--auth-gen-keys" ) ) {
 		exit( auth_generate_key_pair() );
-	} else if( match( var, "--secret-key" ) ) {
+	} else if( match( var, "--auth-add-skey" ) ) {
 		if( val == NULL ) {
 			conf_arg_expected( var );
 		}
 		if( values_get() ) {
-			log_err( "CFG: --secret-key options need to be specifed before any --value-id option." );
+			log_err( "CFG: --auth-add-skey options need to be specifed before any --value-id option." );
 		}
 		auth_add_skey( val );
-	} else if( match( var, "--public-key" ) ) {
+	} else if( match( var, "--auth-add-pkey" ) ) {
 		if( val == NULL ) {
 			conf_arg_expected( var );
 		}
 		if( values_get() ) {
-			log_err( "CFG: --public-key options need to be specifed before any --value-id option." );
+			log_err( "CFG: --auth-add-pkey options need to be specifed before any --value-id option." );
 		}
 		auth_add_pkey( val );
 #endif

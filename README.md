@@ -122,8 +122,17 @@ All these interfaces listen only for connections from localhost.
     Bind the web server to this local port (Default: 8053).
 
   * `--auth-gen-keys`  
-    Generate a secret/public key pair. Use the public key
-    to resolve the node.
+    Generate a secret/public key pair.
+
+  * `--auth-add-pkey` *[<pat>:]<pkey>*  
+    Associate a public key with any value id that matches the pattern.
+    Used to verify that the other side has the secret key.
+    This option can occur multiple times.
+
+  * `--auth-add-skey` *[<pat>:]<skey>*  
+    Associate a secret key with any value id that matches the pattern.
+    Used to prove the ownership of the domain.
+    This option can occur multiple times.
 
   * `--mode` *protocol*  
     Enable IPv4 or IPv6 mode for the DHT (Default: ipv4).
