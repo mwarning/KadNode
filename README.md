@@ -19,7 +19,7 @@ Features:
 * UPnP/NAT-PMP support
 * local peer discovery
 * small size 75KB-125KB
-* public/secret key authentification
+* public/secret key authentication
 * command line interface (kadnode-ctl)
 * NSS support through /etc/nsswitch.conf.
 * buildin simplified DNS server
@@ -28,20 +28,20 @@ Features:
 Most features are optional and can be left out to reduce the binary size.
 
 
-##Join the a swarm
+## JOIN THE SWARM
 
-If KadNode cannot join a swarm (empty peerfile and no other peer on the local network)
-you need to provide node address to boostrap from. To do this, insert bttracker.debian.org into an empty
-file and provide it to KadNode:
+If KadNode cannot join a swarm (empty peerfile and no other peer on the local network),
+then a node address is needed to boostrap from. To do this, insert bttracker.debian.org
+into an empty file and provide it to KadNode:
 
 ```
 kadnode --peerfile peers.txt
 ```
 
-If boostrapping is successful then good peers will be written to the peer file on KadNode shutdown
+If boostrapping is successful, then good peers will be written to the peer file on KadNode shutdown
 and after at least 5 minutes of running time. This ensures successful boostrapping on the next startup.
 
-##Authentification
+## AUTHENTICATION
 
 You first need to create a secret/public key pair somewhere:
 
@@ -53,7 +53,7 @@ secret key: <secret-key>
 
 The keys are not displayed here for convenience.
 
-###Example 1
+### EXAMPLE 1
 
 For a typical use case of reaching a computer (Node1) from another (Node2).
 
@@ -71,7 +71,7 @@ $kadnode --auth-add-pkey "node1.p2p:<public-key>"
 On Node2, we now can enter node1.p2p into the browser to reach Node1.
 This may take ~8 seconds on the first try.
 
-###Example 2
+### EXAMPLE 2
 
 Instead of just one name, it is possible ot use wildcards in front of the patterns:
 
@@ -97,7 +97,7 @@ Multiple --auth-add-key and --value-id arguments are possible.
 Pattern conflicts will result in an error message on startup.
 Command line options can also be loaded from file (see --config <file>).
 
-##Identifiers
+## IDENTIFIERS
 
 Identifiers are what you use to lookup IP addresses (e.g. domain names).
 They will reduced to 20 Byte hexadecimal representations (digest) that
@@ -249,7 +249,7 @@ In case the IPv6 entry for localhost is not used or missing, try `[::1]` instead
 ## NOTES
 
   * .p2p at the end of a identifier is ignored by KadNode. It is used to filter requests and divert them to KadNode.
-  * At least one other Node is needed to resolve any, even own, announced values.
+  * At least one other Node is needed to resolve any, even the own, announced values.
 
 ## LICENSE
 
