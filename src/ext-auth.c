@@ -102,15 +102,15 @@ void auth_debug_skeys( int fd ) {
 		bytes_to_hex( skeyhex, cur->keybytes, cur->keysize );
 		bytes_to_hex( pkeyhex, pkey, crypto_sign_PUBLICKEYBYTES );
 
-		dprintf( fd, " pattern: '%s'\n", cur->pattern );
-		dprintf( fd, " secret key: %s\n", skeyhex );
-		dprintf( fd, " (public key: %s)\n", pkeyhex );
+		dprintf( fd, "  pattern: '%s'\n", cur->pattern );
+		dprintf( fd, "   secret key: %s\n", skeyhex );
+		dprintf( fd, "   public key: %s\n", pkeyhex );
 
 		count++;
 		cur = cur->next;
 	}
 
-	dprintf( fd, "Found %d secret keys.\n", count );
+	dprintf( fd, " Found %d secret keys.\n", count );
 }
 
 void auth_debug_pkeys( int fd ) {
@@ -124,14 +124,14 @@ void auth_debug_pkeys( int fd ) {
 	while( cur ) {
 		bytes_to_hex( pkeyhex, cur->keybytes, crypto_sign_PUBLICKEYBYTES );
 
-		dprintf( fd, " pattern: '%s'\n", cur->pattern );
-		dprintf( fd, " public key: %s\n", pkeyhex );
+		dprintf( fd, "  pattern: '%s'\n", cur->pattern );
+		dprintf( fd, "   public key: %s\n", pkeyhex );
 
 		count++;
 		cur = cur->next;
 	}
 
-	dprintf( fd, "Found %d public keys.\n", count );
+	dprintf( fd, " Found %d public keys.\n", count );
 }
 
 int is_pattern_conflict( const char p1[], const char p2[] ) {
