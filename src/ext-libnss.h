@@ -10,11 +10,11 @@
 
 /*
 * For a domain name to be handled by the KadNode NSS module
-* it must have one of the top level domains (TLDs) listed below.
+* it must have the .p2p top level domains.
 *
 * KadNode itself will ignore any top level domain.
-* A request for 'http://me.name.p2p' will result in
-* KadNode to try to resolve the sha1 hash of 'me.name'.
+* A request for 'http://my.name.p2p' will result in
+* KadNode to try to resolve the identifier 'my.name'.
 */
 
 /* Accepted TLDs */
@@ -36,14 +36,22 @@ enum nss_status _nss_kadnode_gethostbyname3_r(
 	char *buf, size_t buflen, int *errnop,
 	int *h_errnop, int32_t *ttlp, char **canonp ) _public_;
 
-enum nss_status _nss_kadnode_gethostbyname_impl(
-	const char *hostname, int af, struct hostent *host,
+enum nss_status _nss_kadnode_gethostbyname4_r(
+	const char *hostname, struct gaih_addrtuple **pat,
 	char *buffer, size_t buflen, int *errnop,
-	int *h_errnop, int32_t *ttlp, char **canonp ) _public_;
+	int *h_errnop, int32_t *ttlp ) _public_;
+
+enum nss_status _nss_kadnode_gaih_addrtuple(
+	const char *hostname, int hostlen, struct gaih_addrtuple **pat,
+	char *buf, size_t buflen, int *errnop, int *h_errnop, int32_t *ttlp );
+
+enum nss_status _nss_kadnode_hostent(
+	const char *hostname, int af, struct hostent *host,
+	char *buf, size_t buflen, int *errnop,
+	int *h_errnop, int32_t *ttlp, char **canonp );
 
 int _nss_kadnode_valid_tld( const char *hostname, int hostlen );
 int _nss_kadnode_valid_hostname( const char *hostname, int hostlen );
-
 int _nss_kadnode_lookup( const char *hostname, int size, IP addr[] );
 
 #endif /* _EXT_LIBNSS_H_ */
