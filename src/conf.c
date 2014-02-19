@@ -267,32 +267,32 @@ void conf_free() {
 	free( gconf );
 }
 
-void conf_arg_expected( const char *var ) {
-	log_err( "CFG: Argument expected for option %s.", var );
+void conf_arg_expected( const char *opt ) {
+	log_err( "CFG: Argument expected for option %s.", opt );
 }
 
-void conf_no_arg_expected( const char *var ) {
-	log_err( "CFG: No argument expected for option %s.", var );
+void conf_no_arg_expected( const char *opt ) {
+	log_err( "CFG: No argument expected for option %s.", opt );
 }
 
 /* Free the old string and set the new */
-void conf_str( const char *var, char **dst, const char *src ) {
+void conf_str( const char *opt, char **dst, const char *src ) {
 	if( src == NULL ) {
-		conf_arg_expected( var );
+		conf_arg_expected( opt );
 	}
 
 	free( *dst );
 	*dst = strdup( src );
 }
 
-void conf_add_value( char *var, char *val ) {
+void conf_add_value( char *opt, char *val ) {
 	int is_random_port;
 	int port;
 	int rc;
 	char *p;
 
 	if( val == NULL ) {
-		conf_arg_expected( var );
+		conf_arg_expected( opt );
 	}
 
 	is_random_port = 0;
@@ -341,8 +341,8 @@ void read_conf_file( const char *filename ) {
 	char line[1000];
 	size_t n;
 	FILE *file;
-	char *var;
-	char *val;
+	char *option;
+	char *value;
 	char *p;
 
 	n = 0;
@@ -354,59 +354,59 @@ void read_conf_file( const char *filename ) {
 
 	while( fgets( line, sizeof(line), file ) != NULL ) {
 		n++;
-		var = NULL;
-		val = NULL;
+		option = NULL;
+		value = NULL;
 
 		/* End line early at '#' */
 		if( (p = strchr( line, '#' )) != NULL ) {
 			*p =  '\0';
 		}
 
+		/* Parse "--option [<value>]" */
 		char *pch = strtok( line," \t\n" );
 		while( pch != NULL ) {
-			if( var == NULL ) {
-				var = pch;
-			} else if( val == NULL ) {
-				val = pch;
+			if( option == NULL ) {
+				option = pch;
+			} else if( value == NULL ) {
+				value = pch;
 			} else {
 				fclose( file );
 				log_err( "CFG: Too many arguments in line %ld.", n );
-				exit( 1 );
 			}
 			pch = strtok( NULL, " \t\n" );
 		}
 
-		if( var == NULL  ) {
+		if( option == NULL  ) {
 			continue;
 		}
 
-		if( strcmp( var, "--config" ) == 0 ) {
+		if( strcmp( option, "--config" ) == 0 ) {
 			log_err( "CFG: Recursive configuration in line %ld.", n );
 			exit( 1 );
 		}
-		conf_handle( var, val );
+		conf_handle( option, value );
 	}
 
 	fclose( file );
 }
 
-void conf_handle( char *var, char *val ) {
+void conf_handle( char *opt, char *val ) {
 
-	if( match( var, "--node-id" ) ) {
+	if( match( opt, "--node-id" ) ) {
 		if( val == NULL ) {
-			conf_arg_expected( var );
+			conf_arg_expected( opt );
 		}
 		if( strlen( val ) != SHA1_HEX_LENGTH || !str_isHex( val, SHA1_HEX_LENGTH ) ) {
 			log_err( "CFG: Invalid hex string for --node-id." );
 		}
 		bytes_from_hex( gconf->node_id, val, SHA1_HEX_LENGTH );
-	} else if( match( var, "--value-id" ) ) {
-		conf_add_value( var, val );
-	} else if( match( var, "--pidfile" ) ) {
-		conf_str( var, &gconf->pidfile, val );
-	} else if( match( var, "--peerfile" ) ) {
-		conf_str( var, &gconf->peerfile, val );
-	} else if( match( var, "--verbosity" ) ) {
+	} else if( match( opt, "--value-id" ) ) {
+		conf_add_value( opt, val );
+	} else if( match( opt, "--pidfile" ) ) {
+		conf_str( opt, &gconf->pidfile, val );
+	} else if( match( opt, "--peerfile" ) ) {
+		conf_str( opt, &gconf->peerfile, val );
+	} else if( match( opt, "--verbosity" ) ) {
 		if( match( val, "quiet" ) ) {
 			gconf->verbosity = VERBOSITY_QUIET;
 		} else if( match( val, "verbose" ) ) {
@@ -414,91 +414,91 @@ void conf_handle( char *var, char *val ) {
 		} else if( match( val, "debug" ) ) {
 			gconf->verbosity = VERBOSITY_DEBUG;
 		} else {
-			log_err( "CFG: Invalid argument for %s.", var );
+			log_err( "CFG: Invalid argument for %s.", opt );
 		}
 #ifdef CMD
-	} else if( match( var, "--cmd-port" ) ) {
-		conf_str( var, &gconf->cmd_port, val );
+	} else if( match( opt, "--cmd-port" ) ) {
+		conf_str( opt, &gconf->cmd_port, val );
 #endif
 #ifdef DNS
-	} else if( match( var, "--dns-port" ) ) {
-		conf_str( var, &gconf->dns_port, val );
+	} else if( match( opt, "--dns-port" ) ) {
+		conf_str( opt, &gconf->dns_port, val );
 #endif
 #ifdef NSS
-	} else if( match( var, "--nss-port" ) ) {
-		conf_str( var, &gconf->nss_port, val );
+	} else if( match( opt, "--nss-port" ) ) {
+		conf_str( opt, &gconf->nss_port, val );
 #endif
 #ifdef WEB
-	} else if( match( var, "--web-port" ) ) {
-		conf_str( var, &gconf->web_port, val );
+	} else if( match( opt, "--web-port" ) ) {
+		conf_str( opt, &gconf->web_port, val );
 #endif
 #ifdef AUTH
-	} else if( match( var, "--auth-gen-keys" ) ) {
+	} else if( match( opt, "--auth-gen-keys" ) ) {
 		exit( auth_generate_key_pair() );
-	} else if( match( var, "--auth-add-skey" ) ) {
+	} else if( match( opt, "--auth-add-skey" ) ) {
 		if( val == NULL ) {
-			conf_arg_expected( var );
+			conf_arg_expected( opt );
 		}
 		if( values_get() ) {
 			log_err( "CFG: --auth-add-skey options need to be specifed before any --value-id option." );
 		}
 		auth_add_skey( val );
-	} else if( match( var, "--auth-add-pkey" ) ) {
+	} else if( match( opt, "--auth-add-pkey" ) ) {
 		if( val == NULL ) {
-			conf_arg_expected( var );
+			conf_arg_expected( opt );
 		}
 		if( values_get() ) {
 			log_err( "CFG: --auth-add-pkey options need to be specifed before any --value-id option." );
 		}
 		auth_add_pkey( val );
 #endif
-	} else if( match( var, "--config" ) ) {
+	} else if( match( opt, "--config" ) ) {
 		if( val == NULL ) {
-			conf_arg_expected( var );
+			conf_arg_expected( opt );
 		}
 		read_conf_file( val );
-	} else if( match( var, "--mode" ) ) {
+	} else if( match( opt, "--mode" ) ) {
 		if( val && match( val, "ipv4" ) ) {
 			gconf->af = AF_INET;
 		} else if( val && match( val, "ipv6" ) ) {
 			gconf->af = AF_INET6;
 		} else {
-			log_err("CFG: Invalid argument for %s. Use 'ipv4' or 'ipv6'.", var );
+			log_err("CFG: Invalid argument for %s. Use 'ipv4' or 'ipv6'.", opt );
 		}
-	} else if( match( var, "--port" ) ) {
-		conf_str( var, &gconf->dht_port, val );
-	} else if( match( var, "--mcast-addr" ) ) {
-		conf_str( var, &gconf->mcast_addr, val );
-	} else if( match( var, "--disable-multicast" ) ) {
+	} else if( match( opt, "--port" ) ) {
+		conf_str( opt, &gconf->dht_port, val );
+	} else if( match( opt, "--mcast-addr" ) ) {
+		conf_str( opt, &gconf->mcast_addr, val );
+	} else if( match( opt, "--disable-multicast" ) ) {
 		if( val != NULL ) {
-			conf_no_arg_expected( var );
+			conf_no_arg_expected( opt );
 		} else {
 			gconf->disable_multicast = 1;
 		}
-	} else if( match( var, "--disable-forwarding" ) ) {
+	} else if( match( opt, "--disable-forwarding" ) ) {
 		if( val != NULL ) {
-			conf_no_arg_expected( var );
+			conf_no_arg_expected( opt );
 		} else {
 			gconf->disable_forwarding = 1;
 		}
-	} else if( match( var, "--ifce" ) ) {
-		conf_str( var, &gconf->dht_ifce, val );
-	} else if( match( var, "--user" ) ) {
-		conf_str( var, &gconf->user, val );
-	} else if( match( var, "--daemon" ) ) {
+	} else if( match( opt, "--ifce" ) ) {
+		conf_str( opt, &gconf->dht_ifce, val );
+	} else if( match( opt, "--user" ) ) {
+		conf_str( opt, &gconf->user, val );
+	} else if( match( opt, "--daemon" ) ) {
 		if( val != NULL ) {
-			conf_no_arg_expected( var );
+			conf_no_arg_expected( opt );
 		} else {
 			gconf->is_daemon = 1;
 		}
-	} else if( match( var, "-h" ) || match( var, "--help" ) ) {
+	} else if( match( opt, "-h" ) || match( opt, "--help" ) ) {
 		printf( "%s", usage );
 		exit( 0 );
-	} else if( match( var, "-v" ) || match( var, "--version" ) ) {
+	} else if( match( opt, "-v" ) || match( opt, "--version" ) ) {
 		printf( "%s", version );
 		exit( 0 );
 	} else {
-		log_err( "CFG: Unknown command line option '%s'", var ? var : val );
+		log_err( "CFG: Unknown command line option '%s'", opt ? opt : val );
 	}
 }
 
