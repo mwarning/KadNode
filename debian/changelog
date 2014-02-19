@@ -1,3 +1,11 @@
+kadnode (0.7) UNRELEASED; urgency=low
+
+  * add support for domain specific secret/public keys using
+    --auth-add-skey and --auth-add-pkey options
+  * limit list command to local console for privacy issues
+
+ -- mwarning <mwarning@wal>  Wed, 19 Feb 2014 01:36:50 +0100
+
 kadnode (0.6) unstable; urgency=low
 
   * remove "shutdown" command from KadNode console
