@@ -362,6 +362,10 @@ void read_conf_file( const char *filename ) {
 			*p =  '\0';
 		}
 
+		if( strchr( line, '\"' ) || strchr( line, '\"' ) ) {
+			log_err( "CFG: Quotation marks cannot be used in configuration file, line %ld.", n );
+		}
+
 		/* Parse "--option [<value>]" */
 		char *pch = strtok( line," \t\n" );
 		while( pch != NULL ) {
