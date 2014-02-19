@@ -11,6 +11,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <ctype.h>
 
 #include "log.h"
 #include "conf.h" /* For gconf->time_now */
@@ -151,11 +152,11 @@ int id_equal( const UCHAR id1[], const UCHAR id2[] ) {
 }
 
 /* Check if string consist of hexdecimal characters */
-int str_isHex( const char *string, size_t size ) {
+int str_isHex( const char str[], size_t size ) {
 	size_t i = 0;
 
 	for( i = 0; i < size; i++ ) {
-		const char c = string[i];
+		const char c = str[i];
 		if( (c >= '0' && c <= '9')
 				|| (c >= 'A' && c <= 'F')
 				|| (c >= 'a' && c <= 'f') ) {
@@ -168,7 +169,7 @@ int str_isHex( const char *string, size_t size ) {
 	return 1;
 }
 
-int str_isValidHostname( const char *hostname, size_t size ) {
+int str_isValidHostname( const char hostname[], size_t size ) {
 	size_t i;
 
 	for( i = 0; i < size; i++ ) {
@@ -188,15 +189,15 @@ int str_isValidHostname( const char *hostname, size_t size ) {
 	return 1;
 }
 
-int str_isZero( const char* str ) {
+int str_isZero( const char str[] ) {
 	return (str == NULL) || (strcmp( str, "0" ) == 0);
 }
 
-char *str_id( const UCHAR *in, char *buf ) {
-	return bytes_to_hex( buf, in, SHA1_BIN_LENGTH );
+char *str_id( const UCHAR id[], char buf[] ) {
+	return bytes_to_hex( buf, id, SHA1_BIN_LENGTH );
 }
 
-char *str_addr( const IP *addr, char *addrbuf ) {
+char *str_addr( const IP *addr, char addrbuf[] ) {
 	char buf[INET6_ADDRSTRLEN+1];
 	unsigned short port;
 
@@ -218,11 +219,11 @@ char *str_addr( const IP *addr, char *addrbuf ) {
 	return addrbuf;
 }
 
-char *str_addr6( const IP6 *addr, char *addrbuf ) {
+char *str_addr6( const IP6 *addr, char addrbuf[] ) {
 	return str_addr( (const IP *)addr, addrbuf );
 }
 
-char *str_addr4( const IP4 *addr, char *addrbuf ) {
+char *str_addr4( const IP4 *addr, char addrbuf[] ) {
 	return str_addr( (const IP *)addr, addrbuf );
 }
 
@@ -252,7 +253,7 @@ int addr_len( const IP *addr ) {
 * Parse/Resolve an IP address.
 * The port must be specified separately.
 */
-int addr_parse( IP *addr, const char *addr_str, const char *port_str, int af ) {
+int addr_parse( IP *addr, const char addr_str[], const char port_str[], int af ) {
 	struct addrinfo hints;
 	struct addrinfo *info = NULL;
 	struct addrinfo *p = NULL;
@@ -294,7 +295,7 @@ int addr_parse( IP *addr, const char *addr_str, const char *port_str, int af ) {
 * "[<address>]"
 * "[<address>]:<port>"
 */
-int addr_parse_full( IP *addr, const char *full_addr_str, const char* default_port, int af ) {
+int addr_parse_full( IP *addr, const char full_addr_str[], const char default_port[], int af ) {
 	char addr_buf[256];
 
 	char *addr_beg, *addr_tmp;
