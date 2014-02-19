@@ -8,60 +8,114 @@
 
 ## DESCRIPTION
 
-**KadNode** is a small P2P name/resource resolution daemon for IPv4/IPv6 based
-on a distributed hash table (DHT). The implementation is identical to the one used
-for the Transmission Bittorrent client.
+**KadNode** is a small P2P name/resource resolution daemon based
+on the distributed hash table (DHT) identical to the one used in the
+Transmission Bittorrent client. It can be used as a personal and
+decentralized DynDNS service that intercepts and resolves DNS requests.
 
-KadNode enables the user to announce any kind of resource by an identifier.
-This can be used e.g. to resolve a hostname to an IP address.
-It is also small in size (~75KB) and uses only one thread to save resources.
-Join any existing swarm to be able to find your node globally.
+Features:
 
-By default, KadNode tries to send a ping to a multicast address on the local network
-to find nodes to bootstrap from. This is done every five minutes when no other nodes are known.
-The interactive remote shell `kadnode-ctl` let the user import and export nodes, issue queries for
-identifiers and send announcements.
+* IPv4/IPv6 support
+* UPnP/NAT-PMP support
+* local peer discovery
+* small size 75KB-125KB
+* public/secret key authentification
+* command line interface (kadnode-ctl)
+* NSS support through /etc/nsswitch.conf.
+* buildin simplified DNS server
+* packages for Debian/ArchLinux/OpenWrt
 
-As an usage example start `kadnode` and enter `import bttracker.debian.org`
-to help KadNode to bootstrap into an existing network. The `status` command
-will let you see the rising number of known nodes.
-To let KadNode announce to the network that the identifier 'myname.p2p' should resolve to your
-IP address, use `announce myname.p2p -1`.
-The second argument "-1" is a special value and will cause Kadnode to keep the announcement
-alive for the entire runtime. The same can be achieved using the `--value-id` argument at startup.
-Any announcement will be dropped by other Kademlia DHT instances (such as Transmission)
-after 32 minutes and therefore need to be refreshed by KadNode around every 30 minutes.
-
-Values like `myname.p2p ` can be resolved by using the command `lookup myname.p2p`.
-The NSS (Network Service Switch) support on many Posix systems (e.g. Ubuntu) can intercept
-requests for the .p2p top level domain and allows the value to be used e.g. in the web browser.
-
-Please be aware that other people might use the same identifier.
-It is strongly advised to do additional identification/authentication
-when an address is used that has been resolved by KadNode.
-The DNS/NSS interfaces are only able to return one of these addresses.
-In contrast, the web and console interface are able to return all known
-IP addresses associated with an identifier.
-
-Every entered identifier (e.g. `myname.p2p`) will have everything after and including the last dot ignored.
-This is because the top level domain is often used to differentiate from classical domain names
-and to redirect requests to KadNode.
-The rest of the string is converted to an 20 byte identifier using the SHA1 hashing algorithm.
-As an alternative, the hash can be entered directly as a 40 character hexadecimal string.
-The string `myname.p2p` is therefore eqivalent to `d13b93ea42804188d277c20f7d6e5be2732148b8`
-which is the result of SHA1('myname'). The use of the build-in hashing algorithm can be entirely
-circumvented this way.
+Most features are optional and can be left out to reduce the binary size.
 
 
-## INTERFACES
+##Join the a swarm
 
-  * An interactive shell to issue queries and manage the DHT. Useful for shell scripts:
-  `kadnode-ctl lookup myname.p2p`
-  * Name Service Switch (NSS) support through /etc/nsswitch.conf.
-  * A simple DNS server interface that can be used like a local upstream DNS server.
-  * A simple web server interface to resolve queries: `http://localhost:8053/lookup?foo.p2p`
+If KadNode cannot join a swarm (empty peerfile and no other peer on the local network)
+you need to provide node address to boostrap from. To do this, insert bttracker.debian.org into an empty
+file and provide it to KadNode:
 
-All these interfaces listen only for connections from localhost.
+```
+kadnode --peerfile peers.txt
+```
+
+If boostrapping is successful then good peers will be written to the peer file on KadNode shutdown
+and after at least 5 minutes of running time. This ensures successful boostrapping on the next startup.
+
+##Authentification
+
+You first need to create a secret/public key pair somewhere:
+
+```
+$kadnode --auth-genkey
+public key: <public-key>
+secret key: <secret-key>
+```
+
+The keys are not displayed here for convenience.
+
+###Example 1
+
+For a typical use case of reaching a computer (Node1) from another (Node2).
+
+On Node1, well tell Kadnode to announce that we have node1.p2p
+using the matching secret key.
+```
+$kadnode --auth-add-skey "node1.p2p:<secret-key>" --value-id node1.p2p
+```
+
+On Node2, we tell the node to use the public key to verfiy requests for node1.p2p.
+```
+$kadnode --auth-add-pkey "node1.p2p:<public-key>"
+```
+
+On Node2, we now can enter node1.p2p into the browser to reach Node1.
+This may take ~8 seconds on the first try.
+
+###Example 2
+
+Instead of just one name, it is possible ot use wildcards in front of the patterns:
+
+Node1 will be reachable using node1.p2p and foobar.p2p.
+```
+$kadnode --auth-add-skey "*.p2p:<secret-key>" --value-id node1.p2p --value-id foobar.p2p
+```
+
+Node2 can be reached by node2.p2p and foobar.p2p as well.
+```
+$kadnode --auth-add-skey "*.p2p:<secret-key>" --value-id node2.p2p --value-id foobar.p2p
+```
+
+On Node3, resolving "node1.p2p", "node2.p2p" and "foobar.p2p" to its IP address should now work.
+```
+$kadnode --auth-add-pkey "*.p2p:<public-key>"
+</pre>
+```
+Since foobar.p2p is given twice, KadNode will give both IP addresses.
+Almost all programs will just use the first address they get.
+
+Multiple --auth-add-key and --value-id arguments are possible.
+Pattern conflicts will result in an error message on startup.
+Command line options can also be loaded from file (see --config <file>).
+
+##Identifiers
+
+Identifiers are what you use to lookup IP addresses (e.g. domain names).
+They will reduced to 20 Byte hexadecimal representations (digest) that
+will be used in the actual lookup process. KadNode allows four types of identifiers:
+
+* Raw identifiers are 20 Byte hex strings that will be translated to the 20 Byte info hash used in the DHT.
+* Raw public key identifiers are 32 Byte hex strings and will be interpreted as a public key.
+  * The sha1 digest of the key string respresentation is used to locate nodes.
+  * The public key is used to verify if the nodes found have the corresponding secret key.
+* Plain identifiers are just strings that have no key associated to them.
+  * The sha1 digest is used to find nodes.
+* Plain identifiers that match a given pattern and have a public key assigned to them.
+  * The sha1 digest of the string and public key is ued to find nodes.
+  * The public key is used to verify if the nodes found have the corresponding secret key.
+
+All identifiers are converted to lowercase and therefore case insensitive.
+A ".p2p" at the end of every identifier is ignored because it is used to direct requests to KadNode.
+
 
 ## OPTIONS
   * `--node-id` *id*  
@@ -180,15 +234,6 @@ All these interfaces listen only for connections from localhost.
   * `blacklist` *addr*  
     Blacklist a specifc IP address.
 
-## Authentication
-
-KadNode allows optional node authentication. This means that you can lookup nodes using
-a public key and verify that those nodes are in posession of the corresponding secret key.
-To generate a new key pair use `kadnode --auth-gen-keys`.
-Announce the secret key on a node e.g. via `kadnode --value-id <secret-key>` and then
-lookup the nodes IP address on another computer using `<public-key>.p2p` in your browser
-or `kadnode-ctl lookup <public-key>`.
-
 ## Web Interface
 
 The optional web interface allows queries of these forms:
@@ -203,11 +248,8 @@ In case the IPv6 entry for localhost is not used or missing, try `[::1]` instead
 
 ## NOTES
 
-  * This is not about traditional DNS. Everybody can announce everything. You need to decide which  
-  of the resolved IP addresses you trust. Be random about the identifiers you announce. When retrieved  
-  IP addresses do not deliver/verify for you, then you should blacklist those IP addresses.
-
-  * Blacklisted addresses are stored in a LRU cache of maximal 10 entries.
+  * .p2p at the end of a identifier is ignored by KadNode. It is used to filter requests and divert them to KadNode.
+  * At least one other Node is needed to resolve any, even own, announced values.
 
 ## LICENSE
 
