@@ -190,6 +190,10 @@ int results_add_addr( struct results_t *results, const IP *addr ) {
 	struct result_t *result;
 	struct result_t *new;
 
+	if( results->done == 1 ) {
+		return -1;
+	}
+
 	if( results_count( results ) > MAX_RESULTS_PER_SEARCH ) {
 		return -1;
 	}
@@ -226,59 +230,6 @@ int results_add_addr( struct results_t *results, const IP *addr ) {
 	return 0;
 }
 
-typedef struct {
-	unsigned char addr[16];
-	unsigned short port;
-} dht_addr6_t;
-
-typedef struct {
-	unsigned char addr[4];
-	unsigned short port;
-} dht_addr4_t;
-
-int results_import( struct results_t *results, void *data, size_t data_length ) {
-	IP addr;
-	size_t i;
-
-	if( results->done == 1 ) {
-		return -1;
-	}
-
-	if( results_count( results ) > MAX_RESULTS_PER_SEARCH ) {
-		return -1;
-	}
-
-	if( gconf->af == AF_INET ) {
-		dht_addr4_t *data4 = (dht_addr4_t *) data;
-		IP4 *a = (IP4 *)&addr;
-
-		for( i = 0; i < (data_length / sizeof(dht_addr4_t)); i++ ) {
-			memset( &addr, '\0', sizeof(IP) );
-			a->sin_family = AF_INET;
-			a->sin_port = data4[i].port;
-			memcpy( &a->sin_addr, &data4[i].addr, 4 );
-			results_add_addr( results, &addr );
-		}
-		return 0;
-	}
-
-	if( gconf->af == AF_INET6 ) {
-		dht_addr6_t *data6 = (dht_addr6_t *) data;
-		IP6 *a = (IP6 *)&addr;
-
-		for( i = 0; i < (data_length / sizeof(dht_addr6_t)); i++ ) {
-			memset( &addr, '\0', sizeof(IP) );
-			a->sin6_family = AF_INET6;
-			a->sin6_port = data6[i].port;
-			memcpy( &a->sin6_addr, &data6[i].addr, 16 );
-			results_add_addr( results, &addr );
-		}
-		return 0;
-	}
-
-	return -1;
-}
-
 int results_done( struct results_t *results, int done ) {
 	if( done ) {
 		results->done = 1;
@@ -301,7 +252,7 @@ int results_collect( struct results_t *results, IP addr_array[], size_t addr_num
 	result = results->entries;
 	while( result && i < addr_num ) {
 #ifdef AUTH
-		/* If there is a challenge - then the address is not verified */
+		/* If there is a challenge - then the address is not verified yet */
 		if( results->pkey && result->challenge ) {
 			result = result->next;
 			continue;

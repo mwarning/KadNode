@@ -4,7 +4,6 @@
 #include <netdb.h>
 #include <net/if.h>
 #include <sys/time.h>
-#include <ctype.h>
 
 #include "log.h"
 #include "sha1.h"
@@ -24,8 +23,6 @@
 
 #include "dht.c"
 
-#define QUERY_OMIT_SUFFIX ".p2p"
-#define QUERY_MAX_SIZE 512
 
 /*
 The interface that is used to interact with the DHT.
@@ -53,9 +50,23 @@ void dht_unlock( void ) {
 #endif
 }
 
+typedef struct {
+	unsigned char addr[16];
+	unsigned short port;
+} dht_addr6_t;
+
+typedef struct {
+	unsigned char addr[4];
+	unsigned short port;
+} dht_addr4_t;
+
+
 /* This callback is called when a search result arrives or a search completes */
 void dht_callback_func( void *closure, int event, UCHAR *info_hash, void *data, size_t data_len ) {
 	struct results_t *results;
+	struct search *search;
+	IP addr;
+	size_t i;
 
 	results = results_find( info_hash );
 	if( results == NULL ) {
@@ -64,11 +75,46 @@ void dht_callback_func( void *closure, int event, UCHAR *info_hash, void *data, 
 
 	switch( event ) {
 		case DHT_EVENT_VALUES:
+			if( gconf->af == AF_INET ) {
+				dht_addr4_t *data4 = (dht_addr4_t *) data;
+				IP4 *a = (IP4 *)&addr;
+
+				for( i = 0; i < (data_len / sizeof(dht_addr4_t)); i++ ) {
+					memset( &addr, '\0', sizeof(IP) );
+					a->sin_family = AF_INET;
+					a->sin_port = data4[i].port;
+					memcpy( &a->sin_addr, &data4[i].addr, 4 );
+					results_add_addr( results, &addr );
+				}
+			}
+			break;
 		case DHT_EVENT_VALUES6:
-			results_import( results, data, data_len );
+			if( gconf->af == AF_INET6 ) {
+				dht_addr6_t *data6 = (dht_addr6_t *) data;
+				IP6 *a = (IP6 *)&addr;
+
+				for( i = 0; i < (data_len / sizeof(dht_addr6_t)); i++ ) {
+					memset( &addr, '\0', sizeof(IP) );
+					a->sin6_family = AF_INET6;
+					a->sin6_port = data6[i].port;
+					memcpy( &a->sin6_addr, &data6[i].addr, 16 );
+					results_add_addr( results, &addr );
+				}
+			}
 			break;
 		case DHT_EVENT_SEARCH_DONE:
 		case DHT_EVENT_SEARCH_DONE6:
+			search = searches;
+			while( search ) {
+				if( search->af == gconf->af && id_equal( search->id, info_hash ) ) {
+					for( i = 0; i < search->numnodes; ++i ) {
+						results_add_addr( results, &search->nodes[i].ss );
+					}
+					break;
+				}
+				search = search->next;
+			}
+
 			results_done( results, 1 );
 			break;
 	}
@@ -163,30 +209,6 @@ void dht_hash( void *hash_return, int hash_size,
 
 int dht_random_bytes( void *buf, size_t size ) {
 	return bytes_random( buf, size );
-}
-
-int kad_query_sanitize( char buf[], size_t buflen, const char query[] ) {
-	size_t len;
-	size_t i;
-
-	len = strlen( query );
-
-	/* Remove .p2p suffix */
-	if( is_suffix( query, QUERY_OMIT_SUFFIX ) ) {
-		len -= strlen( QUERY_OMIT_SUFFIX );
-	}
-
-	if( (len+1) >= buflen ) {
-		return 1;
-	}
-
-	/* Convert to lower case */
-	for( i = 0; i < len; ++i ) {
-		buf[i] = tolower( query[i] );
-	}
-	buf[len] = '\0';
-
-	return 0;
 }
 
 void kad_setup( void ) {
@@ -311,7 +333,7 @@ int kad_announce_once( const UCHAR id[], int port ) {
 int kad_announce( const char _query[], int port, time_t lifetime ) {
 	char query[QUERY_MAX_SIZE];
 
-	if( kad_query_sanitize( query, sizeof(query), _query ) != 0 ) {
+	if( query_sanitize( query, sizeof(query), _query ) != 0 ) {
 		return -1;
 	}
 
@@ -327,7 +349,7 @@ int kad_lookup_value( const char _query[], IP addr_array[], size_t *addr_num ) {
 	struct results_t *results;
 	int rc;
 
-	if( kad_query_sanitize( query, sizeof(query), _query ) != 0 ) {
+	if( query_sanitize( query, sizeof(query), _query ) != 0 ) {
 		return 3;
 	}
 
@@ -340,15 +362,15 @@ int kad_lookup_value( const char _query[], IP addr_array[], size_t *addr_num ) {
 
 	if( results == NULL ) {
 		/* Failed to create a new search */
-		rc = 3;
+		rc = -1;
 	} else if( results->done ) {
 		/* Search done => restart search*/
 		results_done( results, 0 );
-		dht_search( results->id, 0, gconf->af, dht_callback_func, NULL );
+		rc = dht_search( results->id, 0, gconf->af, dht_callback_func, NULL );
 		rc = 2;
 	} else if( results->start_time == time_now_sec() ) {
 		/* Search just created => start search */
-		dht_search( results->id, 0, gconf->af, dht_callback_func, NULL );
+		rc = dht_search( results->id, 0, gconf->af, dht_callback_func, NULL );
 		rc = 1;
 	} else {
 		/* Search is running => poll results */
@@ -372,7 +394,7 @@ int kad_lookup_node( const char query[], IP *addr_return ) {
 	int i, rc;
 
 	if( strlen( query ) != SHA1_HEX_LENGTH || !str_isHex( query, SHA1_HEX_LENGTH ) ) {
-		return 2;
+		return -1;
 	}
 
 	bytes_from_hex( id, query, SHA1_HEX_LENGTH );

@@ -42,6 +42,34 @@ UCHAR *memdup( const UCHAR *src, size_t size ) {
 	return dst;
 }
 
+/*
+* Remove .p2p suffix and convert to lowercase.
+*/
+int query_sanitize( char buf[], size_t buflen, const char query[] ) {
+	size_t len;
+	size_t i;
+
+	len = strlen( query );
+
+	/* Remove .p2p suffix */
+	if( is_suffix( query, QUERY_OMIT_SUFFIX ) ) {
+		len -= strlen( QUERY_OMIT_SUFFIX );
+	}
+
+	if( (len+1) >= buflen ) {
+		return 1;
+	}
+
+	/* Convert to lower case */
+	for( i = 0; i < len; ++i ) {
+		buf[i] = tolower( query[i] );
+	}
+	buf[len] = '\0';
+
+	return 0;
+}
+
+/* Create a random port != 0 */
 int port_random( void ) {
 	unsigned short port;
 

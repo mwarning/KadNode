@@ -2,6 +2,11 @@
 #ifndef _KAD_H_
 #define _KAD_H_
 
+/*
+* Interface to interact with the DHT implementation.
+* Negative return values indicate an error, success otherwise.
+*/
+
 
 /* Setup the DHT */
 void kad_setup( void );

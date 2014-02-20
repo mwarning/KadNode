@@ -194,6 +194,9 @@ void auth_parse_key( const char arg[], size_t keysize, struct key_t **g_key_list
 		snprintf( hexkey, sizeof(hexkey), "%s", colon + 1 );
 	}
 
+	/* Lower case query and cut of .p2p  */
+	query_sanitize( pattern, sizeof( pattern ), pattern );
+
 	/* Validate key string format */
 	if( strlen( hexkey ) != 2*keysize ) {
 		log_err( "AUTH: Invalid key length. %d hex characters expected: %s", 2*keysize, hexkey );

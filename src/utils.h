@@ -21,6 +21,7 @@
 
 int is_suffix( const char str[], const char suffix[] );
 UCHAR *memdup( const UCHAR src[], size_t size );
+int query_sanitize( char buf[], size_t buflen, const char query[] );
 
 int port_random( void );
 int port_parse( const char pstr[], int err );
