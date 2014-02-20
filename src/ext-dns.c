@@ -353,16 +353,16 @@ UCHAR *dns_code_response( struct message *msg, UCHAR *buffer ) {
 	return buffer;
 }
 
-int dns_lookup( const char *hostname, IP *node_addr ) {
-	size_t n;
+int dns_lookup( const char *hostname, IP *addr ) {
+	size_t num;
 
 	/* Start lookup for one address */
-	n = 1;
-	if( kad_lookup_value( hostname, node_addr, &n ) == 0 ) {
+	num = 1;
+	if( kad_lookup_value( hostname, addr, &num ) >= 0 && num > 0 ) {
 		return 0;
+	} else {
+		return 1;
 	}
-
-	return 1;
 }
 
 void dns_reply_msg( struct message *msg, IP *nodeaddr ) {

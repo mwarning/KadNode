@@ -30,17 +30,14 @@ void nss_lookup( int sock, IP *clientaddr, const char *hostname ) {
 	num = 8;
 
 	/* Lookup id. Starts search when not already started. */
-	if( kad_lookup_value( hostname, addrs, &num ) != 0 ) {
-		log_debug( "NSS: Node not found; starting search." );
-		return;
+	if( kad_lookup_value( hostname, addrs, &num ) >= 0 && num > 0 ) {
+		/* Found addresses */
+		log_debug( "NSS: Send %lu addresses to %s. Packet has %d bytes.",
+		   num, str_addr( clientaddr, addrbuf ), sizeof(IP)
+		);
+
+		sendto( sock, (UCHAR *) addrs, num * sizeof(IP), 0, (const struct sockaddr *) clientaddr, sizeof(IP) );
 	}
-
-	/* Found addresses */
-	log_debug( "NSS: Send %lu addresses to %s. Packet has %d bytes.",
-	   num, str_addr( clientaddr, addrbuf ), sizeof(IP)
-	);
-
-	sendto( sock, (UCHAR *) addrs, num * sizeof(IP), 0, (const struct sockaddr *) clientaddr, sizeof(IP) );
 }
 
 /*

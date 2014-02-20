@@ -222,21 +222,24 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 #endif
 	} else if( match( argv[0], "lookup" ) && argc == 2 ) {
 
-		size_t addrs_n = N_ELEMS(addrs);
+		size_t num = N_ELEMS(addrs);
 		size_t i;
 
 		/* Check searches for node */
-		rc = kad_lookup_value( argv[1], addrs, &addrs_n );
-		if( rc > 0 ) {
-			r_printf( r ,"Search started - try again.\n" );
-			rc = 1;
-		} else if( addrs_n == 0 ) {
-			r_printf( r ,"No nodes found.\n" );
-			rc = 1;
-		} else {
-			for( i = 0; i < addrs_n; ++i ) {
+		rc = kad_lookup_value( argv[1], addrs, &num );
+
+		if( rc >= 0 && num > 0 ) {
+			for( i = 0; i < num; ++i ) {
 				r_printf( r, "%s\n", str_addr( &addrs[i], addrbuf ) );
 			}
+		} else if( rc < 0 ) {
+			r_printf( r ,"Some error occured.\n" );
+			rc = 1;
+		} else if( rc == 0 ) {
+			r_printf( r ,"Search in progress.\n" );
+		} else {
+			r_printf( r ,"Search started.\n" );
+			rc = 1;
 		}
 	} else if( match( argv[0], "status" ) && argc == 1 ) {
 

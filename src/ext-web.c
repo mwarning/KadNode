@@ -20,13 +20,13 @@
 void handle_lookup( char *reply_buf, const char *params ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	IP addrs[16];
-	size_t addrsnum;
+	size_t num;
 	size_t i, n;
 
 	/* Lookup id - starts search when not already done */
-	addrsnum = N_ELEMS(addrs);
-	if( kad_lookup_value( params, addrs, &addrsnum ) == 0 ) {
-		for( n = 0, i = 0; i < addrsnum; i++ ) {
+	num = N_ELEMS(addrs);
+	if( kad_lookup_value( params, addrs, &num ) >= 0 && num > 0 ) {
+		for( n = 0, i = 0; i < num; i++ ) {
 			n += sprintf( reply_buf + n, "%s\n", str_addr( &addrs[i], addrbuf ) );
 		}
 	}
