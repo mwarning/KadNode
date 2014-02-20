@@ -38,7 +38,8 @@ package() {
 	cp build/kadnode ${pkgdir}/usr/bin/
 	cp build/kadnode-ctl ${pkgdir}/usr/bin/
 	cp build/libnss_kadnode.so.2 ${pkgdir}/lib/
-	cp archlinux/kadnode.service ${pkgdir}/etc/systemd/system/multi-user.target.wants/
+	cp archlinux/kadnode.service ${pkgdir}/etc/systemd/system/
 	cp debian/kadnode.conf ${pkgdir}/etc/kadnode/
 	cp debian/peers.txt ${pkgdir}/etc/kadnode/
+	systemctl enable kadnode
 }
