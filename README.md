@@ -9,9 +9,9 @@
 ## DESCRIPTION
 
 **KadNode** is a small P2P name/resource resolution daemon based
-on the distributed hash table (DHT) identical to the one used in the
-Transmission Bittorrent client. It can be used as a personal and
+on a Distributed Hash Table (DHT). It can be used as a personal and
 decentralized DynDNS service that intercepts and resolves DNS requests.
+The DHT is identical to the one used in the Transmission Bittorrent client.
 
 Features:
 
@@ -21,8 +21,8 @@ Features:
 * small size 75KB-125KB
 * public/secret key authentication
 * command line interface (kadnode-ctl)
-* NSS support through /etc/nsswitch.conf.
-* buildin simplified DNS server
+* NSS support through /etc/nsswitch.conf
+* integrated simplified DNS server
 * packages for Debian/ArchLinux/OpenWrt
 
 Most features are optional and can be left out to reduce the binary size.
@@ -30,7 +30,7 @@ Most features are optional and can be left out to reduce the binary size.
 
 ## JOIN THE SWARM
 
-If KadNode cannot join a swarm (empty peerfile and no other peer on the local network),
+If KadNode cannot join a swarm (an empty peerfile and no other peer on the local network),
 then a node address is needed to boostrap from. To do this, insert bttracker.debian.org
 into an empty file and provide it to KadNode:
 
@@ -51,36 +51,36 @@ public key: <public-key>
 secret key: <secret-key>
 ```
 
-The keys are not displayed here for convenience.
+(The keys are not displayed for convenience.)
 
 ### EXAMPLE 1
 
-For a typical use case of reaching a computer (Node1) from another (Node2).
+A typical use case would be to reach a computer (Node1) from another (Node2).
 
-On Node1, well tell Kadnode to announce that we have node1.p2p
-using the matching secret key.
+On Node1, well tell Kadnode to announce that we have node1.p2p using the secret key.
 ```
 $kadnode --auth-add-skey "node1.p2p:<secret-key>" --value-id node1.p2p
 ```
 
-On Node2, we tell the node to use the public key to verfiy requests for node1.p2p.
+On Node2, we tell the node to use the public key to verifiy requests for node1.p2p.
 ```
 $kadnode --auth-add-pkey "node1.p2p:<public-key>"
 ```
 
-On Node2, we now can enter node1.p2p into the browser to reach Node1.
+On Node2, we now can enter node1.p2p into the browser or try to ping node1.p2p to see
+if the address is resolved successfully.
 This may take ~8 seconds on the first try.
 
 ### EXAMPLE 2
 
-Instead of just one name, it is possible ot use wildcards in front of the patterns:
+Instead of just one name, it is possible to use patterns with a wildcard in front:
 
 Node1 will be reachable using node1.p2p and foobar.p2p.
 ```
 $kadnode --auth-add-skey "*.p2p:<secret-key>" --value-id node1.p2p --value-id foobar.p2p
 ```
 
-Node2 can be reached by node2.p2p and foobar.p2p as well.
+Node2 will be reachable using node2.p2p and foobar.p2p as well.
 ```
 $kadnode --auth-add-skey "*.p2p:<secret-key>" --value-id node2.p2p --value-id foobar.p2p
 ```
@@ -88,33 +88,41 @@ $kadnode --auth-add-skey "*.p2p:<secret-key>" --value-id node2.p2p --value-id fo
 On Node3, resolving "node1.p2p", "node2.p2p" and "foobar.p2p" to its IP address should now work.
 ```
 $kadnode --auth-add-pkey "*.p2p:<public-key>"
-</pre>
 ```
-Since foobar.p2p is given twice, KadNode will give both IP addresses.
-Almost all programs will just use the first address they get.
+Since foobar.p2p is used twice, KadNode will give both IP addresses.
+But almost all programs will just use the first address they get,
+which is the first that will be successfully verified.
 
-Multiple --auth-add-key and --value-id arguments are possible.
+Multiple --auth-add-key and --value-id arguments are also possible.
 Pattern conflicts will result in an error message on startup.
-Command line options can also be loaded from file (see --config <file>).
+Command line options can also be put inside a configuration file (see --config *file*).
 
 ## IDENTIFIERS
 
-Identifiers are what you use to lookup IP addresses (e.g. domain names).
-They will reduced to 20 Byte hexadecimal representations (digest) that
-will be used in the actual lookup process. KadNode allows four types of identifiers:
+Identifiers are what you use to lookup IP addresses (e.g. "foo.p2p").
+They will reduced to 20 Byte representations based on the SHA-1 message digest algorithm.
+The digest is what will be then used in the actual lookup process.
+KadNode allows four types of identifiers:
 
-* Raw identifiers are 20 Byte hex strings that will be translated to the 20 Byte info hash used in the DHT.
-* Raw public key identifiers are 32 Byte hex strings and will be interpreted as a public key.
-  * The sha1 digest of the key string respresentation is used to locate nodes.
-  * The public key is used to verify if the nodes found have the corresponding secret key.
+* Raw identifiers are 20 Byte identifiers written as hex strings. No digest will be applied.
+  *  E.g: `<40_hex_characters>.p2p`
+
+* Raw public key identifiers are 32 Byte hex strings. They will be interpreted as a public key.
+  * The SHA-1 digest of the key string respresentation is used to locate nodes.
+  * The public key is used to verify that the found nodes have the corresponding secret key.
+  * E.g.: `<64_hex_characters>.p2p`
+
 * Plain identifiers are just strings that have no key associated to them.
-  * The sha1 digest is used to find nodes.
-* Plain identifiers that match a given pattern and have a public key assigned to them.
-  * The sha1 digest of the string and public key is ued to find nodes.
-  * The public key is used to verify if the nodes found have the corresponding secret key.
+  * The SHA-1 digest of the string is used to find nodes.
+  * E.g.:  `example.p2p`
 
-All identifiers are converted to lowercase and therefore case insensitive.
-A ".p2p" at the end of every identifier is ignored because it is used to direct requests to KadNode.
+* Plain identifiers that match a given pattern and have a public key assigned to them.
+  * The SHA-1 digest of the string and public key is ued to find nodes.
+  * The public key is used to verify if the nodes found have the corresponding secret key.
+  * E.g.:  `foo.p2p`
+
+All identifiers are converted to lowercase and are therefore case insensitive.
+A ".p2p" at the end of every identifier is ignored. It is used to direct requests to KadNode.
 
 
 ## OPTIONS
@@ -178,14 +186,14 @@ A ".p2p" at the end of every identifier is ignored because it is used to direct 
   * `--auth-gen-keys`  
     Generate a secret/public key pair.
 
-  * `--auth-add-pkey` *[<pat>:]<pkey>*  
-    Associate a public key with any value id that matches the pattern.
-    Used to verify that the other side has the secret key.
+  * `--auth-add-pkey` [*pattern*:]*public-key*  
+    Associate a public key with any value id that matches the pattern.  
+    Used to verify that the other side has the secret key.  
     This option can occur multiple times.
 
-  * `--auth-add-skey` *[<pat>:]<skey>*  
-    Associate a secret key with any value id that matches the pattern.
-    Used to prove the ownership of the domain.
+  * `--auth-add-skey` [*pattern*:]*secret-key*  
+    Associate a secret key with any value id that matches the pattern.  
+    Used to prove the ownership of the domain.  
     This option can occur multiple times.
 
   * `--mode` *protocol*  
@@ -259,4 +267,4 @@ In case the IPv6 entry for localhost is not used or missing, try `[::1]` instead
 
   * KadNode: Moritz Warning (http://github.com/mwarning)
   * Kademlia: Juliusz Chroboczek
-  * SHA1: Steve Reid
+  * SHA-1: Steve Reid
