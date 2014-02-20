@@ -264,15 +264,16 @@ int _nss_kadnode_valid_hostname( const char *hostname, int hostlen ) {
 }
 
 int _nss_kadnode_valid_tld( const char *hostname, int hostlen ) {
-	int i;
 	char *tld;
+	size_t i;
+
+	/* Accepted TLDs */
+	const char *domains[] = { ".p2p" };
 
 	/* Get the last '.' */
 	tld = strrchr( hostname, '.' );
 	if( tld == NULL ) {
 		return 0;
-	} else {
-		tld++;
 	}
 
 	for( i = 0; i < (sizeof(domains) / sizeof(char*)); ++i ) {

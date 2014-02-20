@@ -17,10 +17,6 @@
 * KadNode to try to resolve the identifier 'my.name'.
 */
 
-/* Accepted TLDs */
-const char *domains[] = { "p2p" };
-
-
 enum nss_status _nss_kadnode_gethostbyname_r(
 	const char *hostname, struct hostent *host,
 	char *buffer, size_t buflen, int *errnop,
