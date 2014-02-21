@@ -42,7 +42,7 @@ struct results_t *results_find( const UCHAR id[] );
 void results_setup( void );
 
 /* Create and append a new results item */
-struct results_t *results_add( const char query[] );
+struct results_t *results_add( const char query[], int *is_new );
 
 /* Add an address to a result bucket */
 int results_add_addr( struct results_t *results, const IP *addr );

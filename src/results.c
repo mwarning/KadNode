@@ -143,7 +143,7 @@ void results_expire( void ) {
 }
 
 /* Add a new bucket to collect results */
-struct results_t* results_add( const char query[] ) {
+struct results_t* results_add( const char query[], int *is_new ) {
 	char hexbuf[SHA1_HEX_LENGTH+1];
 	UCHAR id[SHA1_BIN_LENGTH];
 	struct results_t* new;
@@ -162,7 +162,10 @@ struct results_t* results_add( const char query[] ) {
 
 	/* Search already exists */
 	if( (results = results_find( id )) != NULL ) {
+		*is_new = 0;
 		return results;
+	} else {
+		*is_new = 1;
 	}
 
 	new = calloc( 1, sizeof(struct results_t) );
