@@ -218,6 +218,11 @@ void auth_parse_key( const char arg[], size_t keysize, struct key_t **g_key_list
 		key = key->next;
 	}
 
+	if( strchr( pattern+1, '*' ) ) {
+		log_err( "AUTH: The '*' is only allowed at the front of a pattern: '%s'", pattern );
+		return;
+	}
+
 	/* Create key item */
 	key = (struct key_t*) calloc( 1, sizeof(struct key_t) );
 	key->pattern = strdup( pattern );
