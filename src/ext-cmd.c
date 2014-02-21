@@ -184,7 +184,6 @@ int cmd_export( REPLY *r ) {
 int cmd_exec( REPLY *r, int argc, char **argv ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	time_t lifetime;
-	int is_random_port;
 	int minutes;
 	IP addrs[16];
 	int port;
@@ -263,37 +262,25 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 			lifetime = (time_now_sec() + (minutes * 60));
 		}
 
-		is_random_port = 0;
+#ifdef FWD
+		int is_random_port = 0;
+#endif
 
 		/* Find <id>:<port> delimiter */
 		p = strchr( argv[1], ':' );
+
 		if( p ) {
 			*p = '\0';
-		}
-
-#ifdef AUTH
-		if( auth_is_skey( argv[1] ) ) {
-			if( p ) {
-				r_printf( r ,"No port expected. Auth requests will be expected on the DHT port.\n" );
-				rc = 1;
-				goto end;
-			} else {
-				port = atoi( gconf->dht_port );
-			}
+			port = port_parse( p + 1, -1 );
 		} else {
+			/* Preselect a random port */
+			port = port_random();
+#ifdef FWD
+			is_random_port = 1;
 #endif
-			if( p ) {
-				port = port_parse( p + 1, -1 );
-			} else {
-				/* Preselect a random port */
-				port = port_random();
-				is_random_port = 1;
-			}
-#ifdef AUTH
 		}
-#endif
 
-		if( kad_announce( argv[1], port, lifetime ) == 0 ) {
+		if( kad_announce( argv[1], port, lifetime ) >= 0 ) {
 #ifdef FWD
 			if( !is_random_port ) {
 				forwardings_add( port, lifetime);

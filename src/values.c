@@ -119,6 +119,11 @@ struct value_t *values_add( const char query[], int port, time_t lifetime ) {
 #ifdef AUTH
 	if( skey_ptr ) {
 		new->skey = memdup( skey_ptr, crypto_sign_SECRETKEYBYTES );
+		/*
+		* Set port to DHT port - this is the only port we
+		* know that can be used to reach the other node.
+		*/
+		port = atoi( gconf->dht_port );
 	}
 #endif
 	new->port = port;

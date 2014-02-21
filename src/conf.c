@@ -286,7 +286,6 @@ void conf_str( const char *opt, char **dst, const char *src ) {
 }
 
 void conf_add_value( char *opt, char *val ) {
-	int is_random_port;
 	int port;
 	int rc;
 	char *p;
@@ -295,34 +294,23 @@ void conf_add_value( char *opt, char *val ) {
 		conf_arg_expected( opt );
 	}
 
-	is_random_port = 0;
+#ifdef FWD
+	int is_random_port = 0;
+#endif
 
 	/* Find <id>:<port> delimiter */
 	p = strchr( val, ':' );
+
 	if( p ) {
 		*p = '\0';
-	}
-
-#ifdef AUTH
-	if( auth_is_skey( val ) ) {
-		if( p ) {
-			log_err( "No port expected. Auth requests will be expected on the DHT port." );
-			exit( 1 );
-		} else {
-			port = atoi( gconf->dht_port );
-		}
+		port = port_parse( p + 1, -1 );
 	} else {
+		/* Preselect a random port */
+		port = port_random();
+#ifdef FWD
+		is_random_port = 1;
 #endif
-		if( p ) {
-			port = port_parse( p + 1, -1 );
-		} else {
-			/* Preselect a random port */
-			port = port_random();
-			is_random_port = 1;
-		}
-#ifdef AUTH
 	}
-#endif
 
 	rc = kad_announce( val, port, LONG_MAX );
 	if( rc < 0 ) {
