@@ -24,6 +24,7 @@ Features:
 * NSS support through /etc/nsswitch.conf
 * integrated simplified DNS server
 * packages for Debian/ArchLinux/OpenWrt
+* peer file import/export on startup/shutdown
 
 Most features are optional and can be left out to reduce the binary size.
 
