@@ -50,6 +50,24 @@ void dht_unlock( void ) {
 #endif
 }
 
+void to_addr( IP *addr, const UCHAR ip[], size_t len, size_t port ) {
+	memset( addr, '\0', sizeof(IP) );
+
+	if( len == 4 ) {
+		IP4 *a = (IP4 *) addr;
+		a->sin_family = AF_INET;
+		a->sin_port = htons( port );
+		memcpy( &a->sin_addr, ip, 4 );
+	}
+
+	if( len == 16 ) {
+		IP6 *a = (IP6 *) addr;
+		a->sin6_family = AF_INET6;
+		a->sin6_port = htons( port );
+		memcpy( &a->sin6_addr, ip, 16 );
+	}
+}
+
 typedef struct {
 	unsigned char addr[16];
 	unsigned short port;
@@ -64,7 +82,6 @@ typedef struct {
 /* This callback is called when a search result arrives or a search completes */
 void dht_callback_func( void *closure, int event, UCHAR *info_hash, void *data, size_t data_len ) {
 	struct results_t *results;
-	struct search *search;
 	IP addr;
 	size_t i;
 
@@ -77,13 +94,8 @@ void dht_callback_func( void *closure, int event, UCHAR *info_hash, void *data, 
 		case DHT_EVENT_VALUES:
 			if( gconf->af == AF_INET ) {
 				dht_addr4_t *data4 = (dht_addr4_t *) data;
-				IP4 *a = (IP4 *)&addr;
-
 				for( i = 0; i < (data_len / sizeof(dht_addr4_t)); i++ ) {
-					memset( &addr, '\0', sizeof(IP) );
-					a->sin_family = AF_INET;
-					a->sin_port = data4[i].port;
-					memcpy( &a->sin_addr, &data4[i].addr, 4 );
+					to_addr( &addr, &data4[i].addr[0], 4, data4[i].port );
 					results_add_addr( results, &addr );
 				}
 			}
@@ -91,30 +103,14 @@ void dht_callback_func( void *closure, int event, UCHAR *info_hash, void *data, 
 		case DHT_EVENT_VALUES6:
 			if( gconf->af == AF_INET6 ) {
 				dht_addr6_t *data6 = (dht_addr6_t *) data;
-				IP6 *a = (IP6 *)&addr;
-
 				for( i = 0; i < (data_len / sizeof(dht_addr6_t)); i++ ) {
-					memset( &addr, '\0', sizeof(IP) );
-					a->sin6_family = AF_INET6;
-					a->sin6_port = data6[i].port;
-					memcpy( &a->sin6_addr, &data6[i].addr, 16 );
+					to_addr( &addr, &data6[i].addr[0], 16, data6[i].port);
 					results_add_addr( results, &addr );
 				}
 			}
 			break;
 		case DHT_EVENT_SEARCH_DONE:
 		case DHT_EVENT_SEARCH_DONE6:
-			search = searches;
-			while( search ) {
-				if( search->af == gconf->af && id_equal( search->id, info_hash ) ) {
-					for( i = 0; i < search->numnodes; ++i ) {
-						results_add_addr( results, &search->nodes[i].ss );
-					}
-					break;
-				}
-				search = search->next;
-			}
-
 			results_done( results, 1 );
 			break;
 	}
@@ -347,6 +343,7 @@ int kad_announce( const char _query[], int port, time_t lifetime ) {
 int kad_lookup_value( const char _query[], IP addr_array[], size_t *addr_num ) {
 	char query[QUERY_MAX_SIZE];
 	struct results_t *results;
+	int is_new;
 	int rc;
 
 	if( query_sanitize( query, sizeof(query), _query ) != 0 ) {
@@ -358,18 +355,18 @@ int kad_lookup_value( const char _query[], IP addr_array[], size_t *addr_num ) {
 	dht_lock();
 
 	/* Find existing or create new item */
-	results = results_add( query );
+	results = results_add( query, &is_new );
 
 	if( results == NULL ) {
 		/* Failed to create a new search */
 		rc = -1;
 	} else if( results->done ) {
-		/* Search done => restart search*/
+		/* Search is done => restart search*/
 		results_done( results, 0 );
 		rc = dht_search( results->id, 0, gconf->af, dht_callback_func, NULL );
 		rc = 2;
-	} else if( results->start_time == time_now_sec() ) {
-		/* Search just created => start search */
+	} else if( is_new ) {
+		/* Search is new => start search */
 		rc = dht_search( results->id, 0, gconf->af, dht_callback_func, NULL );
 		rc = 1;
 	} else {
@@ -538,27 +535,19 @@ void kad_debug_searches( int fd ) {
 void kad_debug_storage( int fd ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	char hexbuf[SHA1_HEX_LENGTH+1];
-	struct storage *s = storage;
+	struct storage *s;
+	struct peer* p;
 	IP addr;
 	int i, j;
 
 	dht_lock();
 
+	s = storage;
 	for( j = 0; s != NULL; ++j ) {
 		dprintf( fd, "Id: %s\n", str_id(s->id, hexbuf ));
 		for( i = 0; i < s->numpeers; ++i ) {
-			struct peer* p = &s->peers[i];
-			if( p->len == 16 ) {
-				IP6 *a = (IP6 *) &addr;
-				a->sin6_family = AF_INET6;
-				a->sin6_port = htons( p->port );
-				memcpy( &a->sin6_addr, p->ip, 16 );
-			} else {
-				IP4 *a = (IP4 *) &addr;
-				a->sin_family = AF_INET;
-				a->sin_port = htons( p->port );
-				memcpy( &a->sin_addr, p->ip, 4 );
-			}
+			p = &s->peers[i];
+			to_addr( &addr, &p->ip[0], p->len, p->port );
 			dprintf( fd, "  Peer: %s\n", str_addr( &addr, addrbuf)  );
 		}
 		dprintf( fd, " Found %d peers.\n", i );
