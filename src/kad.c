@@ -329,12 +329,16 @@ int kad_announce_once( const UCHAR id[], int port ) {
 int kad_announce( const char _query[], int port, time_t lifetime ) {
 	char query[QUERY_MAX_SIZE];
 
-	if( query_sanitize( query, sizeof(query), _query ) != 0 ) {
+	if( port < 1 || port > 65535 ) {
 		return -1;
 	}
 
+	if( query_sanitize( query, sizeof(query), _query ) != 0 ) {
+		return -2;
+	}
+
 	/* Store query to call kad_announce_once() later/multiple times */
-	return values_add( query, port, lifetime ) ? -2 : 0;
+	return values_add( query, port, lifetime ) ? -3 : 0;
 }
 
 /*
@@ -347,7 +351,7 @@ int kad_lookup_value( const char _query[], IP addr_array[], size_t *addr_num ) {
 	int rc;
 
 	if( query_sanitize( query, sizeof(query), _query ) != 0 ) {
-		return 3;
+		return -2;
 	}
 
 	log_debug( "KAD: Lookup string: %s", query );
