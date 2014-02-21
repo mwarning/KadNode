@@ -56,6 +56,7 @@ int query_sanitize( char buf[], size_t buflen, const char query[] ) {
 		len -= strlen( QUERY_OMIT_SUFFIX );
 	}
 
+	/* Buffer too small */
 	if( (len+1) >= buflen ) {
 		return 1;
 	}
