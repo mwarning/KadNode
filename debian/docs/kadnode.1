@@ -13,44 +13,149 @@
 \fBkadnode\-ctl\fR [\.\.\.]
 .
 .SH "DESCRIPTION"
-\fBKadNode\fR is a small P2P name/resource resolution daemon for IPv4/IPv6 based on a distributed hash table (DHT)\. The implementation is identical to the one used for the Transmission Bittorrent client\.
+\fBKadNode\fR is a small P2P name/resource resolution daemon based on a Distributed Hash Table (DHT)\. It can be used as a personal and decentralized DynDNS service that intercepts and resolves DNS requests\. The DHT is identical to the one used in the Transmission Bittorrent client\.
 .
 .P
-KadNode enables the user to announce any kind of resource by an identifier\. This can be used e\.g\. to resolve a hostname to an IP address\. It is also small in size (~75KB) and uses only one thread to save resources\. Join any existing swarm to be able to find your node globally\.
-.
-.P
-By default, KadNode tries to send a ping to a multicast address on the local network to find nodes to bootstrap from\. This is done every five minutes when no other nodes are known\. The interactive remote shell \fBkadnode\-ctl\fR let the user import and export nodes, issue queries for identifiers and send announcements\.
-.
-.P
-As an usage example start \fBkadnode\fR and enter \fBimport bttracker\.debian\.org\fR to help KadNode to bootstrap into an existing network\. The \fBstatus\fR command will let you see the rising number of known nodes\. To let KadNode announce to the network that the identifier \'myname\.p2p\' should resolve to your IP address, use \fBannounce myname\.p2p \-1\fR\. The second argument "\-1" is a special value and will cause Kadnode to keep the announcement alive for the entire runtime\. The same can be achieved using the \fB\-\-value\-id\fR argument at startup\. Any announcement will be dropped by other Kademlia DHT instances (such as Transmission) after 32 minutes and therefore need to be refreshed by KadNode around every 30 minutes\.
-.
-.P
-Values like \fBmyname\.p2p\fR can be resolved by using the command \fBlookup myname\.p2p\fR\. The NSS (Network Service Switch) support on many Posix systems (e\.g\. Ubuntu) can intercept requests for the \.p2p top level domain and allows the value to be used e\.g\. in the web browser\.
-.
-.P
-Please be aware that other people might use the same identifier\. It is strongly advised to do additional identification/authentication when an address is used that has been resolved by KadNode\. The DNS/NSS interfaces are only able to return one of these addresses\. In contrast, the web and console interface are able to return all known IP addresses associated with an identifier\.
-.
-.P
-Every entered identifier (e\.g\. \fBmyname\.p2p\fR) will have everything after and including the last dot ignored\. This is because the top level domain is often used to differentiate from classical domain names and to redirect requests to KadNode\. The rest of the string is converted to an 20 byte identifier using the SHA1 hashing algorithm\. As an alternative, the hash can be entered directly as a 40 character hexadecimal string\. The string \fBmyname\.p2p\fR is therefore eqivalent to \fBd13b93ea42804188d277c20f7d6e5be2732148b8\fR which is the result of SHA1(\'myname\')\. The use of the build\-in hashing algorithm can be entirely circumvented this way\.
-.
-.SH "INTERFACES"
+Features:
 .
 .IP "\(bu" 4
-An interactive shell to issue queries and manage the DHT\. Useful for shell scripts: \fBkadnode\-ctl lookup myname\.p2p\fR
+IPv4/IPv6 support
 .
 .IP "\(bu" 4
-Name Service Switch (NSS) support through /etc/nsswitch\.conf\.
+UPnP/NAT\-PMP support
 .
 .IP "\(bu" 4
-A simple DNS server interface that can be used like a local upstream DNS server\.
+local peer discovery
 .
 .IP "\(bu" 4
-A simple web server interface to resolve queries: \fBhttp://localhost:8053/lookup?foo\.p2p\fR
+small size 75KB\-125KB
+.
+.IP "\(bu" 4
+public/secret key authentication
+.
+.IP "\(bu" 4
+command line interface (kadnode\-ctl)
+.
+.IP "\(bu" 4
+NSS support through /etc/nsswitch\.conf
+.
+.IP "\(bu" 4
+integrated simplified DNS server
+.
+.IP "\(bu" 4
+packages for Debian/ArchLinux/OpenWrt
+.
+.IP "\(bu" 4
+peer file import/export on startup/shutdown
 .
 .IP "" 0
 .
 .P
-All these interfaces listen only for connections from localhost\.
+Most features are optional and can be left out to reduce the binary size\.
+.
+.SH "JOIN THE SWARM"
+If KadNode cannot join a swarm (an empty peerfile and no other peer on the local network), then a node address is needed to boostrap from\. To do this, insert bttracker\.debian\.org into an empty file and provide it to KadNode:
+.
+.P
+\fBkadnode \-\-peerfile peers\.txt\fR
+.
+.P
+If boostrapping is successful, then good peers will be written to the peer file on KadNode shutdown and after at least 5 minutes of running time\. This ensures successful boostrapping on the next startup\.
+.
+.SH "AUTHENTICATION"
+You first need to create a secret/public key pair somewhere:
+.
+.P
+\fB$kadnode \-\-auth\-genkey public key: <public\-key> secret key: <secret\-key>\fR
+.
+.P
+(The keys are not displayed for convenience\.)
+.
+.SS "EXAMPLE 1"
+A typical use case would be to reach a computer (Node1) from another (Node2)\.
+.
+.P
+On Node1, well tell Kadnode to announce that we have node1\.p2p using the secret key\. \fB$kadnode \-\-auth\-add\-skey "node1\.p2p:<secret\-key>" \-\-value\-id node1\.p2p\fR
+.
+.P
+On Node2, we tell the node to use the public key to verifiy requests for node1\.p2p\. \fB$kadnode \-\-auth\-add\-pkey "node1\.p2p:<public\-key>"\fR
+.
+.P
+On Node2, we now can enter node1\.p2p into the browser or try to ping node1\.p2p to see if the address is resolved successfully\. This may take ~8 seconds on the first try\.
+.
+.SS "EXAMPLE 2"
+Instead of just one name, it is possible to use patterns with a wildcard in front:
+.
+.P
+Node1 will be reachable using node1\.p2p and foobar\.p2p\. \fB$kadnode \-\-auth\-add\-skey "*\.p2p:<secret\-key>" \-\-value\-id node1\.p2p \-\-value\-id foobar\.p2p\fR
+.
+.P
+Node2 will be reachable using node2\.p2p and foobar\.p2p as well\. \fB$kadnode \-\-auth\-add\-skey "*\.p2p:<secret\-key>" \-\-value\-id node2\.p2p \-\-value\-id foobar\.p2p\fR
+.
+.P
+On Node3, resolving "node1\.p2p", "node2\.p2p" and "foobar\.p2p" to its IP address should now work\. \fB$kadnode \-\-auth\-add\-pkey "*\.p2p:<public\-key>"\fR Since foobar\.p2p is used twice, KadNode will give both IP addresses\. But almost all programs will just use the first address they get, which is the first that will be successfully verified\.
+.
+.P
+Multiple \-\-auth\-add\-key and \-\-value\-id arguments are also possible\. Pattern conflicts will result in an error message on startup\. Command line options can also be put inside a configuration file (see \-\-config \fIfile\fR)\.
+.
+.SH "IDENTIFIERS"
+Identifiers are what you use to lookup IP addresses (e\.g\. "foo\.p2p")\. They will reduced to 20 Byte representations based on the SHA\-1 message digest algorithm\. The digest is what will be then used in the actual lookup process\. KadNode allows four types of identifiers:
+.
+.IP "\(bu" 4
+Raw identifiers are 20 Byte identifiers written as hex strings\. No digest will be applied\.
+.
+.IP "\(bu" 4
+E\.g: \fB<40_hex_characters>\.p2p\fR
+.
+.IP "" 0
+
+.
+.IP "\(bu" 4
+Raw public key identifiers are 32 Byte hex strings\. They will be interpreted as a public key\.
+.
+.IP "\(bu" 4
+The SHA\-1 digest of the key string respresentation is used to locate nodes\.
+.
+.IP "\(bu" 4
+The public key is used to verify that the found nodes have the corresponding secret key\.
+.
+.IP "\(bu" 4
+E\.g\.: \fB<64_hex_characters>\.p2p\fR
+.
+.IP "" 0
+
+.
+.IP "\(bu" 4
+Plain identifiers are just strings that have no key associated to them\.
+.
+.IP "\(bu" 4
+The SHA\-1 digest of the string is used to find nodes\.
+.
+.IP "\(bu" 4
+E\.g\.: \fBexample\.p2p\fR
+.
+.IP "" 0
+
+.
+.IP "\(bu" 4
+Plain identifiers that match a given pattern and have a public key assigned to them\.
+.
+.IP "\(bu" 4
+The SHA\-1 digest of the string and public key is ued to find nodes\.
+.
+.IP "\(bu" 4
+The public key is used to verify if the nodes found have the corresponding secret key\.
+.
+.IP "\(bu" 4
+E\.g\.: \fBfoo\.p2p\fR
+.
+.IP "" 0
+
+.
+.IP "" 0
+.
+.P
+All identifiers are converted to lowercase and are therefore case insensitive\. A "\.p2p" at the end of every identifier is ignored\. It is used to direct requests to KadNode\.
 .
 .SH "OPTIONS"
 .
@@ -178,7 +283,31 @@ Bind the web server to this local port (Default: 8053)\.
 \fB\-\-auth\-gen\-keys\fR
 .
 .br
-Generate a secret/public key pair\. Use the public key to resolve the node\.
+Generate a secret/public key pair\.
+.
+.IP "\(bu" 4
+\fB\-\-auth\-add\-pkey\fR [\fIpattern\fR:]\fIpublic\-key\fR
+.
+.br
+Associate a public key with any value id that matches the pattern\.
+.
+.br
+Used to verify that the other side has the secret key\.
+.
+.br
+This option can occur multiple times\.
+.
+.IP "\(bu" 4
+\fB\-\-auth\-add\-skey\fR [\fIpattern\fR:]\fIsecret\-key\fR
+.
+.br
+Associate a secret key with any value id that matches the pattern\.
+.
+.br
+Used to prove the ownership of the domain\.
+.
+.br
+This option can occur multiple times\.
 .
 .IP "\(bu" 4
 \fB\-\-mode\fR \fIprotocol\fR
@@ -275,9 +404,6 @@ Blacklist a specifc IP address\.
 .
 .IP "" 0
 .
-.SH "Authentication"
-KadNode allows optional node authentication\. This means that you can lookup nodes using a public key and verify that those nodes are in posession of the corresponding secret key\. To generate a new key pair use \fBkadnode \-\-auth\-gen\-keys\fR\. Announce the secret key on a node e\.g\. via \fBkadnode \-\-value\-id <secret\-key>\fR and then lookup the nodes IP address on another computer using \fB<public\-key>\.p2p\fR in your browser or \fBkadnode\-ctl lookup <public\-key>\fR\.
-.
 .SH "Web Interface"
 The optional web interface allows queries of these forms:
 .
@@ -295,19 +421,16 @@ The optional web interface allows queries of these forms:
 .P
 If the interface cannot be reached then the interface might be disabled (port set to 0) or not compiled in (check \fBkadnode \-\-version\fR)\. In case the IPv6 entry for localhost is not used or missing, try \fB[::1]\fR instead of \fBlocalhost\fR\.
 .
+.SH "PORT FORWARDINGS"
+If KadNode runs on a computer in a private network, it will try to establish a port forwarding for the DHT port\. Port forwarding only works if UPnP/NAT\-PMP is compiled into KadNode and is supported by the gateway/router\. Also, ports attached to announcement values (e\.g\. \fB\-\-value\-id foo\.p2p:80\fR) will result in additional port forwardings\. This is useful to make a local service (e\.g\. web server) reachable from the Internet\.
+.
 .SH "NOTES"
 .
 .IP "\(bu" 4
-This is not about traditional DNS\. Everybody can announce everything\. You need to decide which
-.
-.br
-of the resolved IP addresses you trust\. Be random about the identifiers you announce\. When retrieved
-.
-.br
-IP addresses do not deliver/verify for you, then you should blacklist those IP addresses\.
+\&\.p2p at the end of a identifier is ignored by KadNode\. It is used to filter requests and divert them to KadNode\.
 .
 .IP "\(bu" 4
-Blacklisted addresses are stored in a LRU cache of maximal 10 entries\.
+At least one other Node is needed to resolve any, even the own, announced values\.
 .
 .IP "" 0
 .
@@ -323,7 +446,7 @@ KadNode: Moritz Warning (http://github\.com/mwarning)
 Kademlia: Juliusz Chroboczek
 .
 .IP "\(bu" 4
-SHA1: Steve Reid
+SHA\-1: Steve Reid
 .
 .IP "" 0
 
