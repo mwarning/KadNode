@@ -116,6 +116,30 @@ void dht_callback_func( void *closure, int event, UCHAR *info_hash, void *data, 
 	}
 }
 
+/*
+* Lookup the local DHT storage for announcements
+* Useful for very small networks.
+*/
+void kad_lookup_storage( struct results_t *results ) {
+	struct storage *s;
+	struct peer* p;
+	IP addr;
+	size_t i;
+
+	s = storage;
+	while( s ) {
+		if( id_equal( s->id,  results->id ) ) {
+			for( i = 0; i < s->numpeers; ++i ) {
+				p = &s->peers[i];
+				to_addr( &addr, &p->ip[0], p->len, p->port );
+				results_add_addr( results, &addr );
+			}
+			break;
+		}
+		s = s->next;
+	}
+}
+
 /* Handle incoming packets and pass them to the DHT code */
 void dht_handler( int rc, int sock ) {
 	UCHAR buf[1500];
@@ -372,6 +396,9 @@ int kad_lookup_value( const char _query[], IP addr_array[], size_t *addr_num ) {
 	} else if( is_new ) {
 		/* Search is new => start search */
 		rc = dht_search( results->id, 0, gconf->af, dht_callback_func, NULL );
+
+		/* Search local storage as well */
+		kad_lookup_storage( results );
 		rc = 1;
 	} else {
 		/* Search is running => poll results */
