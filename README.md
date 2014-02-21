@@ -254,6 +254,13 @@ If the interface cannot be reached then the interface might be disabled (port se
 or not compiled in (check `kadnode --version`).
 In case the IPv6 entry for localhost is not used or missing, try `[::1]` instead of `localhost`.
 
+## PORT FORWARDINGS
+
+If KadNode runs on a computer in a private network, it will try to establish a port forwarding for the DHT port.
+Port forwarding only works if UPnP/NAT-PMP is compiled into KadNode and is supported by the gateway/router.
+Also, ports attached to announcement values (e.g. `--value-id foo.p2p:80`) will result in additional port forwardings.
+This is useful to make a local service (e.g. web server) reachable from the Internet.
+
 ## NOTES
 
   * .p2p at the end of a identifier is ignored by KadNode. It is used to filter requests and divert them to KadNode.
