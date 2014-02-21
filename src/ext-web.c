@@ -35,8 +35,11 @@ void handle_lookup( char *reply_buf, const char *params ) {
 /* handle 'GET /announce?foo.p2p' */
 void handle_announce( char *reply_buf, char *params ) {
 
-	kad_announce( params, 1, (time_now_sec() + 60) );
-	sprintf( reply_buf , "done\n" );
+	if( kad_announce( params, 1, (time_now_sec() + 60) ) >= 0 ) {
+		sprintf( reply_buf , "done\n" );
+	} else {
+		sprintf( reply_buf , "failed\n" );
+	}
 }
 
 /* handle 'GET /blacklist?1.2.3.4' */
