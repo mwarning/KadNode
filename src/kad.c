@@ -173,7 +173,7 @@ void dht_handler( int rc, int sock ) {
 
 		if( rc < 0 && errno != EINTR ) {
 			if( rc == EINVAL || rc == EFAULT ) {
-				log_err( "DHT: Error calling dht_periodic." );
+				log_err( "KAD: Error calling dht_periodic." );
 			}
 			g_dht_maintenance = time_now_sec() + 1;
 		} else {
@@ -187,7 +187,7 @@ void dht_handler( int rc, int sock ) {
 
 		/* Wait for the next maintenance call */
 		g_dht_maintenance = time_now_sec() + time_wait;
-		log_debug( "DHT: Next maintenance call in %u seconds.", (unsigned int) time_wait );
+		log_debug( "KAD: Next maintenance call in %u seconds.", (unsigned int) time_wait );
 	} else {
 		rc = 0;
 	}
@@ -196,7 +196,7 @@ void dht_handler( int rc, int sock ) {
 		if( errno == EINTR ) {
 			return;
 		} else if( rc == EINVAL || rc == EFAULT ) {
-			log_err( "DHT: Error using select: %s", strerror( errno ) );
+			log_err( "KAD: Error using select: %s", strerror( errno ) );
 			return;
 		} else {
 			g_dht_maintenance = time_now_sec() + 1;
@@ -245,16 +245,16 @@ void kad_setup( void ) {
 	dht_lock_init();
 
 	if( gconf->af == AF_INET ) {
-		s4 = net_bind( "DHT", DHT_ADDR4, gconf->dht_port, gconf->dht_ifce, IPPROTO_UDP, AF_INET );
+		s4 = net_bind( "KAD", DHT_ADDR4, gconf->dht_port, gconf->dht_ifce, IPPROTO_UDP, AF_INET );
 		net_add_handler( s4, &dht_handler );
 	} else {
-		s6 = net_bind( "DHT", DHT_ADDR6, gconf->dht_port, gconf->dht_ifce, IPPROTO_UDP, AF_INET6 );
+		s6 = net_bind( "KAD", DHT_ADDR6, gconf->dht_port, gconf->dht_ifce, IPPROTO_UDP, AF_INET6 );
 		net_add_handler( s6, &dht_handler );
 	}
 
 	/* Init the DHT.  Also set the sockets into non-blocking mode. */
 	if( dht_init( s4, s6, gconf->node_id, (UCHAR*) "KN\0\0") < 0 ) {
-		log_err( "DHT: Failed to initialize the DHT." );
+		log_err( "KAD: Failed to initialize the DHT." );
 	}
 }
 
@@ -310,15 +310,15 @@ int kad_status( char *buf, int size ) {
 		(gconf->dht_ifce == NULL) ? "<any device>" : gconf->dht_ifce
    );
 
-	bprintf( "Nodes: %d (%s)\n", kad_count_nodes(), (gconf->af == AF_INET) ? "IPv4" : "IPv6" );
+	bprintf( "DHT Nodes: %d (%s)\n", kad_count_nodes(), (gconf->af == AF_INET) ? "IPv4" : "IPv6" );
 
-	bprintf( "Storage: %d (max %d), %d peers (max %d per storage)\n",
+	bprintf( "DHT Storage: %d (max %d), %d peers (max %d per storage)\n",
 		numstorage, DHT_MAX_HASHES, numstorage_peers, DHT_MAX_PEERS );
-	bprintf( "Searches: %d active, %d completed (max %d)\n",
+	bprintf( "DHT Searches: %d active, %d completed (max %d)\n",
 		numsearches_active, numsearches_done, DHT_MAX_SEARCHES );
-	bprintf( "Blacklist: %d (max %d)\n",
+	bprintf( "DHT Blacklist: %d (max %d)\n",
 		(next_blacklisted % DHT_MAX_BLACKLISTED), DHT_MAX_BLACKLISTED );
-	bprintf( "Values to announce: %d\n", numvalues );
+	bprintf( "DHT Values to announce: %d\n", numvalues );
 
 	return written;
 }
