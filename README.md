@@ -265,7 +265,6 @@ This is useful to make a local service (e.g. web server) reachable from the Inte
 ## NOTES
 
   * .p2p at the end of a identifier is ignored by KadNode. It is used to filter requests and divert them to KadNode.
-  * At least one other Node is needed to resolve any, even the own, announced values.
 
 ## LICENSE
 
