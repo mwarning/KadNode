@@ -40,7 +40,8 @@ start_instance() {
 	OPTS=""
 
 	append_opts "$s" node_id user port ifce cmd_port web_port\
-		mcast_addr mode dns_port verbosity peerfile config
+		mcast_addr mode dns_port verbosity peerfile config \
+		auth_add_pkey auth_add_skey
 
 	append_opts_boolean "$s" disable_multicast disable_forwarding
 
