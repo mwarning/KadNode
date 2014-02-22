@@ -262,9 +262,7 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 			lifetime = (time_now_sec() + (minutes * 60));
 		}
 
-#ifdef FWD
 		int is_random_port = 0;
-#endif
 
 		/* Find <id>:<port> delimiter */
 		p = strchr( argv[1], ':' );
@@ -275,9 +273,7 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 		} else {
 			/* Preselect a random port */
 			port = port_random();
-#ifdef FWD
 			is_random_port = 1;
-#endif
 		}
 
 		if( kad_announce( argv[1], port, lifetime ) >= 0 ) {
