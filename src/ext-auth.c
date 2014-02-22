@@ -251,6 +251,10 @@ void auth_add_skey( const char arg[] ) {
 
 	if( auth_parse_key( pattern, sizeof(pattern), skey, sizeof(skey), arg ) == 0 ) {
 		auth_add_key( pattern, skey, sizeof(skey), &g_secret_keys );
+
+		/* Also add public key entry for each secret key */
+		auth_skey_to_pkey( skey, pkey );
+		auth_add_key( pattern, pkey, sizeof(pkey), &g_public_keys );
 	}
 }
 
