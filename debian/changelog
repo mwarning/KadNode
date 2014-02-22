@@ -6,7 +6,8 @@ kadnode (0.7) UNRELEASED; urgency=low
   * do not ignore every every TLD  when computing an identifier, only .p2p
   * collect addresses when a search has finished,
     do not wait for another nodes reply
-  * also search local storage, useful for small networks
+  * also search locally stored own and foreign announcements,
+    useful for very small networks and faster lookup
 
  -- mwarning <mwarning@wal>  Wed, 19 Feb 2014 01:36:50 +0100
 

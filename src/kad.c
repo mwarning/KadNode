@@ -117,10 +117,38 @@ void dht_callback_func( void *closure, int event, UCHAR *info_hash, void *data, 
 }
 
 /*
-* Lookup the local DHT storage for announcements
-* Useful for very small networks.
+* Lookup in values we announce ourselves.
+* Useful for networks of only one node, also faster.
 */
-void kad_lookup_storage( struct results_t *results ) {
+void kad_lookup_local_values( struct results_t *results ) {
+	struct value_t* value;
+	IP addr;
+
+	/* 127.0.0.1 */
+	static unsigned long inaddr_loopback = 0x0100007F;
+
+	value = values_find( results->id );
+	if( value ) {
+		if( gconf->af == AF_INET6 ) {
+			IP6 *a = (IP6 *) &addr;
+			a->sin6_family = AF_INET6;
+			a->sin6_port = htons( value->port );
+			memcpy( &a->sin6_addr, &in6addr_loopback, 16 ); // ::1
+		} else {
+			IP4 *a = (IP4 *) &addr;
+			a->sin_family = AF_INET;
+			a->sin_port = htons( value->port );
+			memcpy( &a->sin_addr, &inaddr_loopback, 4 ); // 127.0.0.1
+		}
+		results_add_addr( results, &addr );
+	}
+}
+
+/*
+* Lookup the DHT storage of treceived announcements.
+* Useful for networks of only two nodes, also faster.
+*/
+void kad_lookup_local_storage( struct results_t *results ) {
 	struct storage *s;
 	struct peer* p;
 	IP addr;
@@ -397,8 +425,11 @@ int kad_lookup_value( const char _query[], IP addr_array[], size_t *addr_num ) {
 		/* Search is new => start search */
 		rc = dht_search( results->id, 0, gconf->af, dht_callback_func, NULL );
 
-		/* Search local storage as well */
-		kad_lookup_storage( results );
+		/* Search own announced values */
+		kad_lookup_local_values( results );
+
+		/* Search foreign stored announced */
+		kad_lookup_local_storage( results );
 		rc = 1;
 	} else {
 		/* Search is running => poll results */
