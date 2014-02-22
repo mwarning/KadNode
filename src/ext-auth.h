@@ -22,10 +22,6 @@ UCHAR *auth_handle_pkey( UCHAR pkey[], UCHAR id[], const char query[] );
 void auth_debug_skeys( int );
 void auth_debug_pkeys( int );
 
-/* Check if a query has the secret/public key format */
-//int auth_is_pkey( const char query[] );
-int auth_is_skey( const char query[] );
-
 /* Function that is hooked up the DHT socket */
 int auth_handle_packet( int sock, UCHAR buf[], size_t buflen, IP *from );
 
