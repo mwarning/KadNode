@@ -1,10 +1,7 @@
 #!/usr/bin/make -f
 
-include /usr/share/hardening-includes/hardening.make
-export CFLAGS=$(shell dpkg-buildflags --get CFLAGS)
-export LDFLAGS=$(shell dpkg-buildflags --get LDFLAGS)
-CFLAGS += $(HARDENING_CFLAGS)
-LDFLAGS += $(HARDENING_LDFLAGS)
+export DEB_BUILD_HARDENING=1
+
 export FEATURES = auth cmd dns nss web upnp natpmp
 
 %:
