@@ -65,46 +65,41 @@ int auth_generate_key_pair( void ) {
 	}
 }
 
-int auth_is_pkey( const char query[] ) {
+int auth_is_pkey( const char str[] ) {
 	size_t size;
 
-	size = strlen( query );
+	size = strlen( str );
 	if( size != 2*crypto_sign_PUBLICKEYBYTES ) {
 		return 0;
 	}
 
-	return str_isHex( query, size );
+	return str_isHex( str, size );
 }
 
-int auth_is_skey( const char query[] ) {
+int auth_is_skey( const char str[] ) {
 	size_t size;
 
-	size = strlen( query );
+	size = strlen( str );
 	if( size != 2*crypto_sign_SECRETKEYBYTES ) {
 		return 0;
 	}
 
-	return str_isHex( query, size );
+	return str_isHex( str, size );
 }
 
 void auth_debug_skeys( int fd ) {
 	const struct key_t *cur;
-	UCHAR pkey[crypto_sign_PUBLICKEYBYTES];
 	char skeyhex[2*crypto_sign_SECRETKEYBYTES+1];
-	char pkeyhex[2*crypto_sign_PUBLICKEYBYTES+1];
 	int count;
 
 	dprintf( fd, "All secret keys:\n" );
 	count = 0;
 	cur = g_secret_keys;
 	while( cur ) {
-		auth_skey_to_pkey( cur->keybytes, pkey );
 		bytes_to_hex( skeyhex, cur->keybytes, cur->keysize );
-		bytes_to_hex( pkeyhex, pkey, crypto_sign_PUBLICKEYBYTES );
 
 		dprintf( fd, "  pattern: '%s'\n", cur->pattern );
 		dprintf( fd, "   secret key: %s\n", skeyhex );
-		dprintf( fd, "   public key: %s\n", pkeyhex );
 
 		count++;
 		cur = cur->next;
@@ -176,71 +171,87 @@ void free_key( struct key_t *key ) {
 }
 
 /*
-* Create a [public|private] key from command line argument: "[<pattern>:]<hex-key>"
+* Parse "[<pattern>:]<hex-key>" from the command line.
 */
-void auth_parse_key( const char arg[], size_t keysize, struct key_t **g_key_list ) {
-	struct key_t* key;
+int auth_parse_key( char pattern[], size_t patternsize, UCHAR key[], size_t keysize, const char arg[] ) {
 	const char* colon;
-	char pattern[512];
 	char hexkey[512];
 
 	/* Parse arg string into key string and pattern string */
 	colon = strchr( arg, ':' );
 	if( colon == NULL ) {
-		snprintf( pattern, sizeof(pattern), "%s", "*" );
+		snprintf( pattern, patternsize, "%s", "*" );
 		snprintf( hexkey, sizeof(hexkey), "%s", arg );
 	} else {
-		snprintf( pattern, sizeof(pattern), "%.*s", (int) (colon - arg), arg );
+		snprintf( pattern, patternsize, "%.*s", (int) (colon - arg), arg );
 		snprintf( hexkey, sizeof(hexkey), "%s", colon + 1 );
 	}
 
 	/* Lower case query and cut off .p2p  */
-	query_sanitize( pattern, sizeof( pattern ), pattern );
+	query_sanitize( pattern, patternsize, pattern );
 
 	/* Validate key string format */
 	if( strlen( hexkey ) != 2*keysize ) {
 		log_err( "AUTH: Invalid key length. %d hex characters expected: %s", 2*keysize, hexkey );
-		return;
+		return 1;
 	}
 
 	if( !str_isHex( hexkey, 2*keysize ) ) {
 		log_err( "AUTH: Invalid key format. Only hex characters expected: %s", hexkey );
-		return;
-	}
-
-	/* Check for conflicting patterns */
-	key = *g_key_list;
-	while( key ) {
-		if( is_pattern_conflict( key->pattern, pattern ) ) {
-			log_err( "AUTH: conflicting patterns: '%s' <=> '%s'", pattern, key->pattern );
-			return;
-		}
-		key = key->next;
+		return 1;
 	}
 
 	if( strchr( pattern+1, '*' ) ) {
 		log_err( "AUTH: The '*' is only allowed at the front of a pattern: '%s'", pattern );
-		return;
+		return 1;
+	}
+
+	bytes_from_hex( key, hexkey, strlen( hexkey ) );
+
+	return 0;
+}
+
+void auth_add_key( const char pattern[], const UCHAR key[], size_t keysize, struct key_t **g_key_list ) {
+	struct key_t* item;
+
+	/* Check for conflicting patterns */
+	item = *g_key_list;
+	while( item ) {
+		if( is_pattern_conflict( item->pattern, pattern ) ) {
+			log_err( "AUTH: conflicting patterns: '%s' <=> '%s'", pattern, item->pattern );
+			return;
+		}
+		item = item->next;
 	}
 
 	/* Create key item */
-	key = (struct key_t*) calloc( 1, sizeof(struct key_t) );
-	key->pattern = strdup( pattern );
-	key->keybytes = malloc( keysize );
-	key->keysize = keysize;
-	bytes_from_hex( key->keybytes, hexkey, 2*keysize );
+	item = (struct key_t*) calloc( 1, sizeof(struct key_t) );
+	item->pattern = strdup( pattern );
+	item->keybytes = memdup( key, keysize );
+	item->keysize = keysize;
 
 	/* Prepend to list */
-	key->next = *g_key_list;
-	*g_key_list = key;
+	item->next = *g_key_list;
+	*g_key_list = item;
 }
 
 void auth_add_pkey( const char arg[] ) {
-	auth_parse_key( arg, crypto_sign_PUBLICKEYBYTES, &g_public_keys );
+	UCHAR pkey[crypto_sign_PUBLICKEYBYTES];
+	char pattern[512];
+
+	if( auth_parse_key( pattern, sizeof(pattern), pkey, sizeof(pkey), arg ) == 0 ) {
+		auth_add_key( pattern, pkey, sizeof(pkey), &g_public_keys );
+	}
 }
 
 void auth_add_skey( const char arg[] ) {
-	auth_parse_key( arg, crypto_sign_SECRETKEYBYTES, &g_secret_keys );
+	UCHAR skey[crypto_sign_SECRETKEYBYTES];
+	UCHAR pkey[crypto_sign_PUBLICKEYBYTES];
+	char pattern[512];
+
+	if( auth_parse_key( pattern, sizeof(pattern), skey, sizeof(skey), arg ) == 0 ) {
+		auth_add_key( pattern, skey, sizeof(skey), &g_secret_keys );
+	}
 }
 
 /*
