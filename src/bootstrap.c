@@ -226,7 +226,7 @@ void bootstrap_import_peerfile( void ) {
 	fp = fopen( filename, "r" );
 	if( fp == NULL ) {
 		log_warn( "BOOT: Cannot open file '%s' for peer import: %s", filename, strerror( errno ) );
-		goto end;
+		return;
 	}
 
 	num = 0;
