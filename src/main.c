@@ -61,6 +61,8 @@ int main( int argc, char **argv ) {
 		fclose( stderr );
 		fclose( stdout );
 		fclose( stdin );
+	} else {
+		conf_info();
 	}
 
 	/* Catch SIG INT */

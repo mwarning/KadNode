@@ -112,7 +112,7 @@ const char *usage = "KadNode - A P2P name resolution daemon (IPv4/IPv6)\n"
 " -h, --help			Print this help.\n\n"
 " -v, --version			Print program version.\n\n";
 
-void conf_init() {
+void conf_init( void ) {
 	gconf = (struct gconf_t *) malloc( sizeof(struct gconf_t) );
 
 	memset( gconf, '\0', sizeof(struct gconf_t) );
@@ -148,37 +148,10 @@ void conf_init() {
 #endif
 }
 
-void conf_check() {
-	char hexbuf[SHA1_HEX_LENGTH+1];
+void conf_check( void ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	IP mcast_addr;
 	UCHAR octet;
-
-	log_info( "Starting KadNode v"MAIN_VERSION );
-	log_info( "Own ID: %s", str_id( gconf->node_id, hexbuf ) );
-	log_info( "Kademlia mode: %s", (gconf->af == AF_INET) ? "IPv4" : "IPv6");
-
-	if( gconf->is_daemon ) {
-		log_info( "Mode: Daemon" );
-	} else {
-		log_info( "Mode: Foreground" );
-	}
-
-	switch( gconf->verbosity ) {
-		case VERBOSITY_QUIET:
-			log_info( "Verbosity: Quiet" );
-			break;
-		case VERBOSITY_VERBOSE:
-			log_info( "Verbosity: Verbose" );
-			break;
-		case VERBOSITY_DEBUG:
-			log_info( "Verbosity: Debug" );
-			break;
-		default:
-			log_err( "Invalid verbosity level." );
-	}
-
-	log_info( "Peerfile: %s", gconf->peerfile ? gconf->peerfile : "None" );
 
 	if( gconf->mcast_addr == NULL ) {
 		/* Set default multicast address string */
@@ -235,14 +208,43 @@ void conf_check() {
 		}
 	}
 
-	log_info("Multicast: %s", (gconf->disable_multicast == 0) ? str_addr( &mcast_addr, addrbuf ) : "Disabled" );
-
 	/* Store startup time */
 	gettimeofday( &gconf->time_now, NULL );
 	gconf->startup_time = time_now_sec();
 }
 
-void conf_free() {
+void conf_info( void ) {
+	char hexbuf[SHA1_HEX_LENGTH+1];
+
+	log_info( "Starting KadNode v"MAIN_VERSION );
+	log_info( "Own ID: %s", str_id( gconf->node_id, hexbuf ) );
+	log_info( "Kademlia mode: %s", (gconf->af == AF_INET) ? "IPv4" : "IPv6");
+
+	if( gconf->is_daemon ) {
+		log_info( "Mode: Daemon" );
+	} else {
+		log_info( "Mode: Foreground" );
+	}
+
+	switch( gconf->verbosity ) {
+		case VERBOSITY_QUIET:
+			log_info( "Verbosity: Quiet" );
+			break;
+		case VERBOSITY_VERBOSE:
+			log_info( "Verbosity: Verbose" );
+			break;
+		case VERBOSITY_DEBUG:
+			log_info( "Verbosity: Debug" );
+			break;
+		default:
+			log_err( "Invalid verbosity level." );
+	}
+
+	log_info( "Peerfile: %s", gconf->peerfile ? gconf->peerfile : "None" );
+	log_info( "Multicast: %s", (gconf->disable_multicast == 0) ? gconf->mcast_addr : "Disabled" );
+}
+
+void conf_free( void ) {
 
 	free( gconf->user );
 	free( gconf->pidfile );
