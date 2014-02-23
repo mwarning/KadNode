@@ -334,7 +334,7 @@ void auth_send_challenges( int sock ) {
 				memcpy( buf+4, results->id, SHA1_BIN_LENGTH );
 				memcpy( buf+4+SHA1_BIN_LENGTH, result->challenge, CHALLENGE_BIN_LENGTH );
 
-				log_debug( "AUTH: Send challenge to %s", str_addr( &result->addr, addrbuf ) );
+				log_debug( "AUTH: Send challenge to %s.", str_addr( &result->addr, addrbuf ) );
 				sendto( sock, buf, sizeof(buf), 0, (struct sockaddr*) &result->addr, sizeof(IP) );
 
 				result->challenges_send++;
@@ -379,27 +379,27 @@ void auth_verify_challenge( int sock, UCHAR buf[], size_t buflen, IP *addr, time
 	}
 
 	if( result == NULL ) {
-		log_debug( "AUTH: No result entry found." );
+		log_debug( "AUTH: Unknown source address for challenge response." );
 		return;
 	}
 
 	if( result->challenge == NULL ) {
-		log_debug( "AUTH: Challenge was not set or already solved." );
+		log_debug( "AUTH: No challenge response expected from source address." );
 		return;
 	}
 
 	if( crypto_sign_open( m, &mlen, sm, smlen, results->pkey ) != 0 ) {
-		log_debug(  "AUTH: Signature does not verify for %s", str_addr( addr, addrbuf ) );
+		log_debug(  "AUTH: Challenge response does not verify for %s.", str_addr( addr, addrbuf ) );
 		return;
 	}
 
 	/* Check challenge */
 	if( mlen != CHALLENGE_BIN_LENGTH || memcmp( m, result->challenge, CHALLENGE_BIN_LENGTH ) != 0 ) {
-		log_debug(  "AUTH: Challenge does not match for %s", str_addr( addr, addrbuf ) );
+		log_debug(  "AUTH: Challenge response from %s is invalid.", str_addr( addr, addrbuf ) );
 		return;
 	}
 
-	log_debug( "AUTH: Verified encrypted challenge send back by %s", str_addr(addr, addrbuf ) );
+	log_debug( "AUTH: Challenge response from %s is valid.", str_addr(addr, addrbuf ) );
 
 	/* Mark result as verified (no challenge set) */
 	free( result->challenge );
@@ -408,6 +408,7 @@ void auth_verify_challenge( int sock, UCHAR buf[], size_t buflen, IP *addr, time
 
 /* Receive a challenge and solve it using a secret key */
 void auth_receive_challenge( int sock, UCHAR buf[], size_t buflen, IP *addr, time_t now ) {
+	char addrbuf[FULL_ADDSTRLEN+1];
 	UCHAR outbuf[1500];
 	UCHAR sm[CHALLENGE_BIN_LENGTH+crypto_sign_BYTES];
 	UCHAR *m;
@@ -427,7 +428,7 @@ void auth_receive_challenge( int sock, UCHAR buf[], size_t buflen, IP *addr, tim
 
 	value = values_find( id );
 	if( value == NULL || value->skey == NULL ) {
-		log_debug( "AUTH: No value or secret key found." );
+		log_debug( "AUTH: No value or secret key found for received challenge." );
 		return;
 	}
 
@@ -440,6 +441,7 @@ void auth_receive_challenge( int sock, UCHAR buf[], size_t buflen, IP *addr, tim
 	memcpy( outbuf+4, id, SHA1_BIN_LENGTH );
 	memcpy( outbuf+4+SHA1_BIN_LENGTH, sm, smlen );
 
+	log_debug( "AUTH: Received challenge from %s and send back response.", str_addr(addr, addrbuf ) );
 	sendto( sock, outbuf, 4+SHA1_BIN_LENGTH+smlen, 0, (struct sockaddr*) addr, sizeof(IP) );
 }
 
