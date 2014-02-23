@@ -121,6 +121,7 @@ void dht_callback_func( void *closure, int event, UCHAR *info_hash, void *data, 
 * Useful for networks of only one node, also faster.
 */
 void kad_lookup_local_values( struct results_t *results ) {
+	char addrbuf[FULL_ADDSTRLEN+1];
 	struct value_t* value;
 	IP addr;
 
@@ -140,6 +141,7 @@ void kad_lookup_local_values( struct results_t *results ) {
 			a->sin_port = htons( value->port );
 			memcpy( &a->sin_addr, &inaddr_loopback, 4 ); // 127.0.0.1
 		}
+		log_debug( "KAD: Address found in local values: %s\n", str_addr( &addr, addrbuf ) );
 		results_add_addr( results, &addr );
 	}
 }
@@ -149,6 +151,7 @@ void kad_lookup_local_values( struct results_t *results ) {
 * Useful for networks of only two nodes, also faster.
 */
 void kad_lookup_local_storage( struct results_t *results ) {
+	char addrbuf[FULL_ADDSTRLEN+1];
 	struct storage *s;
 	struct peer* p;
 	IP addr;
@@ -160,6 +163,7 @@ void kad_lookup_local_storage( struct results_t *results ) {
 			for( i = 0; i < s->numpeers; ++i ) {
 				p = &s->peers[i];
 				to_addr( &addr, &p->ip[0], p->len, p->port );
+				log_debug( "KAD: Address found in local storage: %s\n", str_addr( &addr, addrbuf ) );
 				results_add_addr( results, &addr );
 			}
 			break;
