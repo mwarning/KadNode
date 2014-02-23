@@ -2,7 +2,7 @@
 
 export DEB_BUILD_HARDENING=1
 
-export FEATURES = auth cmd dns nss web upnp natpmp
+export FEATURES = auth cmd nss upnp natpmp
 
 %:
 	dh $@ 
