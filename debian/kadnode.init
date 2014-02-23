@@ -18,6 +18,7 @@ NAME=kadnode
 PIDFILE=/var/run/$NAME.pid
 DAEMON=/usr/bin/$NAME
 SCRIPTNAME=/etc/init.d/$NAME
+VERBOSE="yes"
 
 # Exit if the package is not installed
 [ -x "$DAEMON" ] || exit 0
@@ -25,8 +26,6 @@ SCRIPTNAME=/etc/init.d/$NAME
 # Read configuration variable file if it is present
 [ -r /etc/default/$NAME ] && . /etc/default/$NAME
 
-# Load the VERBOSE setting and other rcS variables
-. /lib/init/vars.sh
 
 # Define LSB log_* functions.
 # Depend on lsb-base (>= 3.2-14) to ensure that this file is present
@@ -90,7 +89,8 @@ case "$1" in
 			[ "$VERBOSE" != no ] && log_end_msg 0
 			exit 0
 		;;
-		2) [ "$VERBOSE" != no ] && log_end_msg 1
+		2)
+			[ "$VERBOSE" != no ] && log_end_msg 1
 			exit 1
 		;;
 	esac
