@@ -99,13 +99,6 @@ int net_bind(
 		return -1;
 	}
 
-	val = 1;
-	if ( setsockopt( sock, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val) ) < 0 ) {
-		close( sock );
-		log_err( "NET: Failed to set socket option SO_REUSEADDR: %s", strerror( errno ));
-		return -1;
-	}
-
 	if( ifce && setsockopt( sock, SOL_SOCKET, SO_BINDTODEVICE, ifce, strlen( ifce ) ) ) {
 		close( sock );
 		log_err( "NET: Unable to bind to device '%s': %s", ifce, strerror( errno ) );
