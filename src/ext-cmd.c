@@ -236,6 +236,7 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 			rc = 1;
 		} else if( rc == 0 ) {
 			r_printf( r ,"Search in progress.\n" );
+			rc = 1;
 		} else {
 			r_printf( r ,"Search started.\n" );
 			rc = 1;
