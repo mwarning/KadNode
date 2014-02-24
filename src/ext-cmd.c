@@ -249,17 +249,17 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 
 		if( argc == 3 ) {
 			minutes = atoi( argv[2] );
+			if( minutes < 0 ) {
+				minutes = 0;
+				lifetime = LONG_MAX;
+			} else {
+				/* Round up to multiple of 30 minutes */
+				minutes = (30 * (minutes/30 + 1));
+				lifetime = (time_now_sec() + (minutes * 60));
+			}
 		} else {
 			minutes = 0;
-		}
-
-		/* round up to multiple of 30 minutes */
-		if( minutes < 0 ) {
-			minutes = -1;
-			lifetime = LONG_MAX;
-		} else {
-			minutes = (30 * (minutes/30 + 1));
-			lifetime = (time_now_sec() + (minutes * 60));
+			lifetime = 0;
 		}
 
 		int is_random_port = 0;
@@ -282,7 +282,9 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 				forwardings_add( port, lifetime);
 			}
 #endif
-			if( minutes < 0 ) {
+			if( lifetime == 0 ) {
+				r_printf( r ,"Send single announcement now.\n" );
+			} else if( lifetime == LONG_MAX ) {
 				r_printf( r ,"Announce value for the entire run time (%sport %d).\n", (is_random_port ? "random " : ""), port );
 			} else {
 				r_printf( r ,"Announce value for %d minutes (%sport %d).\n", minutes, (is_random_port ? "random " : ""), port );

@@ -94,6 +94,7 @@ struct value_t *values_add( const char query[], int port, time_t lifetime ) {
 	UCHAR id[SHA1_BIN_LENGTH];
 	struct value_t *cur;
 	struct value_t *new;
+	time_t now;
 
 	if( port < 1 || port > 65535 ) {
 		return NULL;
@@ -106,10 +107,19 @@ struct value_t *values_add( const char query[], int port, time_t lifetime ) {
 	id_compute( id, query );
 #endif
 
+	now = time_now_sec();
+
 	/* Value already exists - refresh */
 	if( (cur = values_find( id )) != NULL ) {
-		cur->lifetime = lifetime;
-		cur->refresh = time_now_sec() - 1;
+		cur->refresh = now - 1;
+
+		if( lifetime > now ) {
+			cur->lifetime = lifetime;
+		}
+
+		/* Trigger immediate handling */
+		g_values_announce= 0;
+
 		return 0;
 	}
 
@@ -127,8 +137,8 @@ struct value_t *values_add( const char query[], int port, time_t lifetime ) {
 	}
 #endif
 	new->port = port;
-	new->lifetime = lifetime;
-	new->refresh = time_now_sec() - 1;
+	new->refresh = now - 1;
+	new->lifetime = (lifetime > now) ? lifetime : (now + 100);
 
 	log_debug( "VAL: Add value id %s:%hu.",  str_id( id, hexbuf ), port );
 

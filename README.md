@@ -228,8 +228,8 @@ A ".p2p" at the end of every identifier is ignored. It is used to direct request
   * `announce` *id*[<i>:*port*</i>] [<i>*minutes*</i>]  
     Announce that this instance is associated with identifier  
     and an optional port. The default port is random (but not equal 0).  
-    The announcement will happen only once unless a time  
-    in minutes is given or -1 minutes for the entire runtime.
+    No *minutes* trigger a single announcement. Negative *minutes*  
+    last for the entire runtime. Otherwise the lifetime is set *minutes* into the future.
 
   * `import` *addr*  
     Send a ping to another KadNode instance to establish a connection.
