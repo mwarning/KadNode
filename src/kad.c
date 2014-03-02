@@ -95,7 +95,7 @@ void dht_callback_func( void *closure, int event, UCHAR *info_hash, void *data, 
 			if( gconf->af == AF_INET ) {
 				dht_addr4_t *data4 = (dht_addr4_t *) data;
 				for( i = 0; i < (data_len / sizeof(dht_addr4_t)); i++ ) {
-					to_addr( &addr, &data4[i].addr[0], 4, data4[i].port );
+					to_addr( &addr, &data4[i].addr[0], 4, ntohs( data4[i].port ) );
 					results_add_addr( results, &addr );
 				}
 			}
@@ -104,7 +104,7 @@ void dht_callback_func( void *closure, int event, UCHAR *info_hash, void *data, 
 			if( gconf->af == AF_INET6 ) {
 				dht_addr6_t *data6 = (dht_addr6_t *) data;
 				for( i = 0; i < (data_len / sizeof(dht_addr6_t)); i++ ) {
-					to_addr( &addr, &data6[i].addr[0], 16, data6[i].port);
+					to_addr( &addr, &data6[i].addr[0], 16, ntohs( data6[i].port ) );
 					results_add_addr( results, &addr );
 				}
 			}
