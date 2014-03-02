@@ -141,7 +141,7 @@ void kad_lookup_local_values( struct results_t *results ) {
 }
 
 /*
-* Lookup the DHT storage of treceived announcements.
+* Lookup the DHT storage of received announcements.
 * Useful for networks of only two nodes, also faster.
 */
 void kad_lookup_local_storage( struct results_t *results ) {
