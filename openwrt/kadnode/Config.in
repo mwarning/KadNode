@@ -12,7 +12,7 @@ config KADNODE_ENABLE_WEB
 	default n
 
 config KADNODE_ENABLE_AUTH
-	bool "Enable authentification support"
+	bool "Enable authentication support"
 	depends on PACKAGE_kadnode
 	select PACKAGE_libsodium
 	default n
