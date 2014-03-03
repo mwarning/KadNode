@@ -3,7 +3,8 @@ kadnode (0.7) unstable; urgency=low
   * add support for domain specific secret/public keys using
     --auth-add-skey / --auth-add-pkey options and wild card matching
   * limit list command to local console for security reasons
-  * do not ignore every every TLD  when computing an identifier, only .p2p
+  * do not ignore every top level domain when
+    computing an identifier, only .p2p
   * collect addresses when a search has finished,
     do not wait for another nodes reply
   * also search locally stored own and foreign announcements,
