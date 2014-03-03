@@ -57,14 +57,14 @@ void to_addr( IP *addr, const void *ip, size_t len, unsigned int port ) {
 		IP4 *a = (IP4 *) addr;
 		a->sin_family = AF_INET;
 		a->sin_port = htons( port );
-		memcpy( &a->sin_addr, ip, 4 );
+		memcpy( &a->sin_addr.s_addr, ip, 4 );
 	}
 
 	if( len == 16 ) {
 		IP6 *a = (IP6 *) addr;
 		a->sin6_family = AF_INET6;
 		a->sin6_port = htons( port );
-		memcpy( &a->sin6_addr, ip, 16 );
+		memcpy( &a->sin6_addr.s6_addr, ip, 16 );
 	}
 }
 
