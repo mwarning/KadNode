@@ -3,7 +3,7 @@ Description=P2P DNS service
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/kadnode --daemon --peerfile /etc/kadnode/peers.txt --config /etc/kadnode/kadnode.conf
+ExecStart=/usr/bin/kadnode --daemon --config /etc/kadnode/kadnode.conf
 Type=forking
 
 [Install]

@@ -34,6 +34,9 @@ const char *version = "KadNode v"MAIN_VERSION" ( "
 #ifdef CMD
 " cmd"
 #endif
+#ifdef NSS
+" nss"
+#endif
 #ifdef DEBUG
 " debug"
 #endif
@@ -42,9 +45,6 @@ const char *version = "KadNode v"MAIN_VERSION" ( "
 #endif
 #ifdef FWD_NATPMP
 " natpmp"
-#endif
-#ifdef NSS
-" nss"
 #endif
 #ifdef FWD_UPNP
 " upnp"

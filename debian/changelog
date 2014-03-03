@@ -1,4 +1,4 @@
-kadnode (0.7) UNRELEASED; urgency=low
+kadnode (0.7) unstable; urgency=low
 
   * add support for domain specific secret/public keys using
     --auth-add-skey / --auth-add-pkey options and wild card matching
@@ -10,7 +10,7 @@ kadnode (0.7) UNRELEASED; urgency=low
     useful for very small networks and faster lookup
   * quiet startup in daemon mode
 
- -- mwarning <mwarning@wal>  Wed, 19 Feb 2014 01:36:50 +0100
+ -- mwarning <moritzwarning@web.de>  Mon, 03 Mar 2014 02:45:29 +0100
 
 kadnode (0.6) unstable; urgency=low
 

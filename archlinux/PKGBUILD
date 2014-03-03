@@ -23,7 +23,7 @@ pkgver() {
 
 build() {
 	cd "$pkgname"
-	make FEATURES="auth cmd nss dns web"
+	make FEATURES="auth cmd nss"
 }
 
 package() {
