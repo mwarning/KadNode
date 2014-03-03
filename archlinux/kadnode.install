@@ -1,5 +1,7 @@
 
 post_install() {
+	printf "To enable service KadNode: systemctl enable kadnode\n"
+
 	#add kadnode entry to NSS config file
 	sed -i -e 's/^hosts:\s*files \(kadnode\)\?\s*/hosts:          files kadnode /' "${DESTDIR}/etc/nsswitch.conf" 2> /dev/null
 }
