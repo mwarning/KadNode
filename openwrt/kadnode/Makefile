@@ -16,7 +16,7 @@ PKG_SOURCE_URL:=git://github.com/mwarning/KadNode.git
 PKG_SOURCE_VERSION:=master
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_BUILD_PARALLEL:=1
-
+PKG_BUILD_DEPENDS:=libsodium
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -42,7 +42,6 @@ FEATURES = cmd
 
 ifeq ($(CONFIG_KADNODE_ENABLE_AUTH),y)
 FEATURES += auth
-DEPENDS += +libsodium
 endif
 
 ifeq ($(CONFIG_KADNODE_ENABLE_DNS),y)
@@ -66,10 +65,6 @@ FEATURES += debug
 endif
 
 MAKE_FLAGS += FEATURES="$(FEATURES)"
-
-define Package/kadnode/preinst
-	make strip
-endef
 
 define Package/kadnode/install
 	$(INSTALL_DIR) $(1)/usr/bin
