@@ -138,7 +138,7 @@ enum nss_status _nss_kadnode_gaih_addrtuple(
 	return NSS_STATUS_SUCCESS;
 }
 
-enum nss_status _nss_kadnode_host(
+enum nss_status _nss_kadnode_hostent(
 		const char *hostname, int af, struct hostent *host,
 		char *buf, size_t buflen, int *errnop,
 		int *h_errnop, int32_t *ttlp, char **canonp ) {
