@@ -1,10 +1,12 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "KADNODE" "1" "February 2014" "" ""
+.TH "README" "" "March 2014" "" ""
 .
 .SH "NAME"
-\fBkadnode\fR \- P2P name resolution daemon
+\fBREADME\fR
+.
+.SH "kadnode(1) \- P2P name resolution daemon"
 .
 .SH "SYNOPSIS"
 \fBkadnode\fR [\-\-value\-id identifier] [\-\-port port] [\-\-daemon] [\.\.\.]
@@ -54,7 +56,7 @@ peer file import/export on startup/shutdown
 Most features are optional and can be left out to reduce the binary size\.
 .
 .SH "JOIN THE SWARM"
-If KadNode cannot join a swarm (an empty peerfile and no other peer on the local network), then a node address is needed to boostrap from\. To do this, insert bttracker\.debian\.org into an empty file and provide it to KadNode:
+If KadNode cannot join a swarm (an empty peerfile and no other peer on the local network), then a node address is needed to boostrap from\. To do this, insert \fIbttracker\.debian\.org\fR into an empty file and provide it to KadNode:
 .
 .P
 \fBkadnode \-\-peerfile peers\.txt\fR
@@ -373,10 +375,10 @@ Announce that this instance is associated with identifier
 and an optional port\. The default port is random (but not equal 0)\.
 .
 .br
-The announcement will happen only once unless a time
+No \fIminutes\fR trigger a single announcement\. Negative \fIminutes\fR
 .
 .br
-in minutes is given or \-1 minutes for the entire runtime\.
+last for the entire runtime\. Otherwise the lifetime is set \fIminutes\fR into the future\.
 .
 .IP "\(bu" 4
 \fBimport\fR \fIaddr\fR
@@ -428,9 +430,6 @@ If KadNode runs on a computer in a private network, it will try to establish a p
 .
 .IP "\(bu" 4
 \&\.p2p at the end of a identifier is ignored by KadNode\. It is used to filter requests and divert them to KadNode\.
-.
-.IP "\(bu" 4
-At least one other Node is needed to resolve any, even the own, announced values\.
 .
 .IP "" 0
 .
