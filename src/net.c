@@ -73,9 +73,14 @@ int net_bind(
 	char addrbuf[FULL_ADDSTRLEN+1];
 	int sock;
 	int val;
+	socklen_t addrlen;
 	IP sockaddr;
 
-	if( af != AF_INET && af != AF_INET6 ) {
+	if( af == AF_INET ) {
+		addrlen = sizeof(IP4);
+	} else if( af == AF_INET6 ) {
+		addrlen = sizeof(IP6);
+	} else {
 		log_err( "NET: Unknown address family value." );
 		return -1;
 	}
@@ -113,7 +118,7 @@ int net_bind(
 		}
 	}
 
-	if( bind( sock, (struct sockaddr*) &sockaddr, sizeof(IP) ) < 0 ) {
+	if( bind( sock, (struct sockaddr*) &sockaddr, addrlen ) < 0 ) {
 		close( sock );
 		log_err( "NET: Failed to bind socket to address: '%s'", strerror( errno ) );
 		return -1;
