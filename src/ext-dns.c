@@ -283,7 +283,8 @@ void dns_code_header( struct message *msg, UCHAR** buffer ) {
 }
 
 int dns_decode_query( struct message *msg, const UCHAR *buffer, int size ) {
-	size_t i, n;
+	ssize_t n;
+	size_t i;
 
 	if( (n = dns_decode_header( msg, &buffer, size )) < 0 ) {
 		return -1;
