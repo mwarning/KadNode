@@ -179,7 +179,7 @@ A ".p2p" at the end of every identifier is ignored. It is used to direct request
     Bind the DNS server to this local port (Default: 5353).
 
   * `--nss-port` *port*  
-    Bind the "Network Service Switch" to this local port (Default: 4053).
+    Bind the "Name Service Switch" to this local port (Default: 4053).
 
   * `--web-port` *port*  
     Bind the web server to this local port (Default: 8053).
