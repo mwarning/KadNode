@@ -155,8 +155,10 @@ struct value_t *values_add( const char query[], int port, time_t lifetime ) {
 void free_value( struct value_t *value ) {
 #ifdef AUTH
 	/* Secure erase */
-	memset( value->skey, '\0', crypto_sign_SECRETKEYBYTES );
-	free( value->skey );
+	if( value->skey ) {
+		memset( value->skey, '\0', crypto_sign_SECRETKEYBYTES );
+		free( value->skey );
+	}
 #endif
 	free( value );
 }
