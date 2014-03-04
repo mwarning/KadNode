@@ -9,7 +9,6 @@
 #include <semaphore.h>
 #include <signal.h>
 #include <netdb.h>
-#include <sys/epoll.h>
 #include <unistd.h>
 
 #include "main.h"

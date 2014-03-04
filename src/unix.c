@@ -8,7 +8,6 @@
 #include <signal.h>
 #include <unistd.h>
 #include <sys/resource.h>
-#include <sys/epoll.h>
 #include <errno.h>
 #include <pwd.h>
 #include <fcntl.h>
