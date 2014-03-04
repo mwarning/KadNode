@@ -23,6 +23,7 @@
 
 void nss_lookup( int sock, IP *clientaddr, const char *hostname ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
+	socklen_t addrlen;
 	IP addrs[8];
 	size_t num;
 
@@ -36,7 +37,8 @@ void nss_lookup( int sock, IP *clientaddr, const char *hostname ) {
 		   num, str_addr( clientaddr, addrbuf ), sizeof(IP)
 		);
 
-		sendto( sock, (UCHAR *) addrs, num * sizeof(IP), 0, (const struct sockaddr *) clientaddr, sizeof(IP) );
+		addrlen = addr_len( clientaddr );
+		sendto( sock, (UCHAR *) addrs, num * sizeof(IP), 0, (const struct sockaddr *) clientaddr, addrlen );
 	}
 }
 

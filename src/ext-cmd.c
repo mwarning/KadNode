@@ -369,6 +369,7 @@ void cmd_remote_handler( int rc, int sock ) {
 
 	IP clientaddr;
 	socklen_t addrlen_ret;
+	socklen_t addrlen;
 	char request[1500];
 	REPLY reply;
 
@@ -393,7 +394,8 @@ void cmd_remote_handler( int rc, int sock ) {
 	/* Insert return code */
 	reply.data[0] = (rc == 0) ? '0' : '1';
 
-	rc = sendto( sock, reply.data, reply.size, 0, (struct sockaddr *)&clientaddr, sizeof(IP) );
+	addrlen = addr_len( &clientaddr );
+	rc = sendto( sock, reply.data, reply.size, 0, (struct sockaddr *)&clientaddr, addrlen );
 }
 
 void cmd_console_handler( int rc, int fd ) {
