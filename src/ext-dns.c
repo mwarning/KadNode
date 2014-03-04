@@ -160,13 +160,13 @@ int get16bits( const UCHAR** buffer ) {
 	return value;
 }
 
-void put16bits( UCHAR** buffer, uint value ) {
+void put16bits( UCHAR** buffer, unsigned int value ) {
 	(*buffer)[0] = (value & 0xFF00) >> 8;
 	(*buffer)[1] = value & 0xFF;
 	(*buffer) += 2;
 }
 
-void put32bits( UCHAR** buffer, ulong value ) {
+void put32bits( UCHAR** buffer, unsigned long long value ) {
 	(*buffer)[0] = (value & 0xFF000000) >> 24;
 	(*buffer)[1] = (value & 0xFF0000) >> 16;
 	(*buffer)[2] = (value & 0xFF00) >> 16;
