@@ -264,7 +264,8 @@ This is useful to make a local service (e.g. web server) reachable from the Inte
 
 ## NOTES
 
-  * .p2p at the end of a identifier is ignored by KadNode. It is used to filter requests and divert them to KadNode.
+  * *.p2p* at the end of a identifier is ignored by KadNode. It is used to filter requests and divert them to KadNode.
+  * The interfaces (NSS, DNS, command line) may return the localhost address if the node itself announced a value.
 
 ## LICENSE
 
