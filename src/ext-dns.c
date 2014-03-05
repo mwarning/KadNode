@@ -24,13 +24,13 @@
 * DNS-Server interface for KadNode.
 */
 
-static const uint QR_MASK = 0x8000;
-static const uint OPCODE_MASK = 0x7800;
-static const uint AA_MASK = 0x0400;
-static const uint TC_MASK = 0x0200;
-static const uint RD_MASK = 0x0100;
-static const uint RA_MASK = 0x8000;
-static const uint RCODE_MASK = 0x000F;
+static const unsigned int QR_MASK = 0x8000;
+static const unsigned int OPCODE_MASK = 0x7800;
+static const unsigned int AA_MASK = 0x0400;
+static const unsigned int TC_MASK = 0x0200;
+static const unsigned int RD_MASK = 0x0100;
+static const unsigned int RA_MASK = 0x8000;
+static const unsigned int RCODE_MASK = 0x000F;
 
 
 /* Response Type */
@@ -84,8 +84,8 @@ enum {
 /* Question Section */
 struct question {
 	char *qName;
-	uint qType;
-	uint qClass;
+	unsigned int qType;
+	unsigned int qClass;
 };
 
 union resource_data {
@@ -105,7 +105,7 @@ union resource_data {
 		char *name;
 	} ptr_record;
 	struct {
-		uint preference;
+		unsigned int preference;
 		char *exchange;
 	} mx_record;
 	struct {
@@ -116,29 +116,29 @@ union resource_data {
 /* Resource Record Section */
 struct ResourceRecord {
 	char *name;
-	uint type;
-	uint class;
-	uint ttl;
-	uint rd_length;
+	unsigned int type;
+	unsigned int class;
+	unsigned int ttl;
+	unsigned int rd_length;
 	union resource_data rd_data;
 };
 
 struct message {
-	uint id; /* Identifier */
+	unsigned int id; /* Identifier */
 
 	/* flags */
-	uint qr; /* Query/Response Flag */
-	uint opcode; /* Operation Code */
-	uint aa; /* Authoritative Answer Flag */
-	uint tc; /* Truncation Flag */
-	uint rd; /* Recursion Desired */
-	uint ra; /* Recursion Available */
-	uint rcode; /* Response Code */
+	unsigned int qr; /* Query/Response Flag */
+	unsigned int opcode; /* Operation Code */
+	unsigned int aa; /* Authoritative Answer Flag */
+	unsigned int tc; /* Truncation Flag */
+	unsigned int rd; /* Recursion Desired */
+	unsigned int ra; /* Recursion Available */
+	unsigned int rcode; /* Response Code */
 
-	uint qdCount; /* Question Count */
-	uint anCount; /* Answer Record Count */
-	uint nsCount; /* Authority Record Count */
-	uint arCount; /* Additional Record Count */
+	unsigned int qdCount; /* Question Count */
+	unsigned int anCount; /* Answer Record Count */
+	unsigned int nsCount; /* Authority Record Count */
+	unsigned int arCount; /* Additional Record Count */
 
 	/* We only handle one question and one answers */
 	struct question question;
@@ -245,7 +245,7 @@ void dns_code_domain( UCHAR** buffer, const char *domain ) {
 }
 
 int dns_decode_header( struct message *msg, const UCHAR** buffer, int size ) {
-	uint fields;
+	unsigned int fields;
 
 	if( size < 12 ) {
 		return -1;
