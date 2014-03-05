@@ -103,11 +103,19 @@ int net_bind(
 		return -1;
 	}
 
+#if __APPLE__
+	if( ifce ) {
+		close( sock );
+		log_err( "NET: Bind to device not supported on Mac OS." );
+		return -1;
+	}
+#else
 	if( ifce && setsockopt( sock, SOL_SOCKET, SO_BINDTODEVICE, ifce, strlen( ifce ) ) ) {
 		close( sock );
 		log_err( "NET: Unable to bind to device '%s': %s", ifce, strerror( errno ) );
 		return -1;
 	}
+#endif
 
 	if( af == AF_INET6 ) {
 		val = 1;
