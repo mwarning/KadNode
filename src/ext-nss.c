@@ -10,7 +10,6 @@
 #include <signal.h>
 #include <netdb.h>
 #include <unistd.h>
-#include <sys/epoll.h>
 
 #include "main.h"
 #include "conf.h"
