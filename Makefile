@@ -9,7 +9,8 @@ OBJS = build/main.o build/results.o build/kad.o build/log.o \
 	build/conf.o build/sha1.o build/unix.o build/net.o build/utils.o \
 	build/values.o build/bootstrap.o
 
-.PHONY: all clean strip install kadnode kadnode-ctl libnss_kadnode.so.2 deb install uninstall
+.PHONY: all clean strip install kadnode kadnode-ctl libnss_kadnode.so.2 \
+	arch-pkg deb-pkg osx-pkg install uninstall
 
 all: kadnode
 
@@ -80,18 +81,23 @@ kadnode: $(OBJS) $(EXTRA)
 	$(CC) $(OBJS) -o build/kadnode $(POST_LINKING)
 
 clean:
-	rm -f build/*.o
-	rm -f build/kadnode
-	rm -f build/kadnode-ctl
-	rm -f build/libnss_kadnode.so.2
+	rm -rf build/*
 
 strip:
 	strip build/kadnode
-	-strip build/kadnode-ctl
-	-strip build/libnss_kadnode.so.2
+	-strip build/kadnode-ctl 2> /dev/null
+	-strip build/libnss_kadnode.so.2 2> /dev/null
 
-deb:
+arch-pkg:
+	cd archlinux/
+	makepkg
+
+deb-pkg:
 	dpkg-buildpackage -us -uc
+
+osx-pkg:
+	cd macosx
+	./build.sh
 
 install:
 	cp build/kadnode $(DESTDIR)/usr/bin/
