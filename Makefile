@@ -16,7 +16,8 @@ all: kadnode
 ifeq ($(findstring auth,$(FEATURES)),auth)
   OBJS += build/ext-auth.o
   CFLAGS += -DAUTH
-  POST_LINKING += -lsodium
+#  POST_LINKING += -lsodium
+  POST_LINKING += /usr/local/lib/libsodium.a
 endif
 
 ifeq ($(findstring cmd,$(FEATURES)),cmd)
