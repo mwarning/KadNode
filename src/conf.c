@@ -118,7 +118,6 @@ void conf_init( void ) {
 	memset( gconf, '\0', sizeof(struct gconf_t) );
 
 	gconf->is_running = 1;
-	gconf->af = AF_INET;
 
 #ifdef DEBUG
 	gconf->verbosity = VERBOSITY_DEBUG;
@@ -134,6 +133,10 @@ void conf_check( void ) {
 	char hexbuf[SHA1_HEX_LENGTH+1];
 	IP mcast_addr;
 	UCHAR octet;
+
+	if( gconf->af == 0 ) {
+		gconf->af = AF_INET;
+	}
 
 	if( gconf->node_id_str == NULL ) {
 		bytes_random( node_id, SHA1_BIN_LENGTH );
@@ -474,7 +477,9 @@ void conf_handle( char *opt, char *val ) {
 		}
 		read_conf_file( val );
 	} else if( match( opt, "--mode" ) ) {
-		if( val && match( val, "ipv4" ) ) {
+		if( gconf->af != 0 ) {
+			conf_duplicate_option( opt );
+		} else if( val && match( val, "ipv4" ) ) {
 			gconf->af = AF_INET;
 		} else if( val && match( val, "ipv6" ) ) {
 			gconf->af = AF_INET6;
