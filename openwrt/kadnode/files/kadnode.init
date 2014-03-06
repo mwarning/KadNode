@@ -11,10 +11,16 @@ count() {
 }
 
 append_opts() {
-	local p; local v; local s="$1"; shift
+	local p; local vl; local v; local s="$1"; shift
 	for p in $*; do
-		config_get v "$s" "$p"
-		[ -n "$v" ] && OPTS="$OPTS --${p//_/-} '${v//'/\\'}'"
+		config_get vl "$s" "$p"
+		local IFS_OLD="$IFS"; IFS="
+"
+		for v in $vl; do
+			[ -n "$v" ] && OPTS="$OPTS
+--${p//_/-} ${v//'/\\'}"
+		done
+		IFS="$IFS_OLD"
 	done
 }
 
@@ -22,7 +28,8 @@ append_opts_boolean() {
   local p; local v; local s="$1"; shift
   for p in $*; do
         config_get_bool v "$s" "$p"  0
-        [ $v -gt 0  ] && OPTS="$OPTS --${p//_/-}"
+        [ $v -gt 0  ] && OPTS="$OPTS
+--${p//_/-}"
   done
 }
 
@@ -37,21 +44,18 @@ start_instance() {
 	section_enabled "$s" || return
 
 	SERVICE_PID_FILE="/var/run/kadnode.$s.pid"
+	CONFIG_FILE="/tmp/kadnode.$s.conf"
 	OPTS=""
 
 	append_opts "$s" node_id user port ifce cmd_port web_port\
 		mcast_addr mode dns_port verbosity peerfile config \
-		auth_add_pkey auth_add_skey
+		auth_add_pkey auth_add_skey value_id
 
 	append_opts_boolean "$s" disable_multicast disable_forwarding
 
-	add_value_id() {
-		OPTS="$OPTS --value-id '$1'"
-	}
+	echo "$OPTS" > $CONFIG_FILE
 
-	config_list_foreach "$s" "value_id" add_value_id
-
-	eval service_start "'$KADNODE_BIN'" --daemon --pidfile "'$SERVICE_PID_FILE'" $OPTS
+	eval service_start "'$KADNODE_BIN'" --daemon --pidfile "'$SERVICE_PID_FILE'" --config "'$CONFIG_FILE'"
 }
 
 stop_instance() {
@@ -61,6 +65,7 @@ stop_instance() {
 	service_stop "$KADNODE_BIN"
 
 	rm -f "$SERVICE_PID_FILE"
+	rm -f "$CONFIG_FILE"
 }
 
 start() {
