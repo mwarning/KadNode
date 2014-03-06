@@ -26,7 +26,7 @@
 /* Global object variables */
 struct gconf_t *gconf = NULL;
 
-const char *version = "KadNode v"MAIN_VERSION" ( "
+const char *kadnode_version_str = "KadNode v"MAIN_VERSION" ( "
 "Features:"
 #ifdef AUTH
 " auth"
@@ -516,7 +516,7 @@ void conf_handle( char *opt, char *val ) {
 		printf( "%s", usage );
 		exit( 0 );
 	} else if( match( opt, "-v" ) || match( opt, "--version" ) ) {
-		printf( "%s", version );
+		printf( "%s", kadnode_version_str );
 		exit( 0 );
 	} else {
 		log_err( "CFG: Unknown command line option '%s'", opt ? opt : val );

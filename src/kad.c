@@ -332,6 +332,7 @@ int kad_status( char *buf, int size ) {
 
 	numvalues = values_count();
 
+	bprintf( "Version: %s\n", kadnode_version_str );
 	bprintf( "Node id: %s\n", str_id( myid, hexbuf ) );
 	bprintf( "Bound to: %s:%s / %s\n",
 		(gconf->af == AF_INET) ? "0.0.0.0" : "[::1]",

@@ -2,6 +2,8 @@
 #ifndef _CONF_H_
 #define _CONF_H_
 
+extern const char *kadnode_version_str;
+
 void conf_init( void );
 void conf_load( int argc, char **argv );
 void conf_check( void );
