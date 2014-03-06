@@ -9,7 +9,7 @@ arch=('x86_64' 'i686')
 url='http://github.com/mwarning/KadNode'
 license=('MIT')
 
-depends=('libsodium')
+#depends=('libsodium')
 makedepends=('git')
 
 backup=('etc/kadnode.conf' 'etc/peers.txt')
