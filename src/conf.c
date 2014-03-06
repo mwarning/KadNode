@@ -117,41 +117,57 @@ void conf_init( void ) {
 
 	memset( gconf, '\0', sizeof(struct gconf_t) );
 
-	bytes_random( gconf->node_id, SHA1_BIN_LENGTH );
-
-	gconf->mcast_addr = NULL;
 	gconf->is_running = 1;
+	gconf->af = AF_INET;
 
 #ifdef DEBUG
 	gconf->verbosity = VERBOSITY_DEBUG;
 #else
 	gconf->verbosity = VERBOSITY_VERBOSE;
 #endif
+}
 
-	gconf->af = AF_INET;
-	gconf->dht_port = strdup( DHT_PORT );
+/* Set default if setting was not set and validate settings */
+void conf_check( void ) {
+	char addrbuf[FULL_ADDSTRLEN+1];
+	UCHAR node_id[SHA1_BIN_LENGTH];
+	char hexbuf[SHA1_HEX_LENGTH+1];
+	IP mcast_addr;
+	UCHAR octet;
+
+	if( gconf->node_id_str == NULL ) {
+		bytes_random( node_id, SHA1_BIN_LENGTH );
+		str_id( node_id, hexbuf );
+		gconf->node_id_str = strdup( hexbuf );
+	}
+
+	if( gconf->dht_port == NULL ) {
+		gconf->dht_port = strdup( DHT_PORT );
+	}
 
 #ifdef CMD
-	gconf->cmd_port = strdup( CMD_PORT );
+	if( gconf->cmd_port == NULL )  {
+		gconf->cmd_port = strdup( CMD_PORT );
+	}
 #endif
 
 #ifdef DNS
-	gconf->dns_port = strdup( DNS_PORT );
+	if( gconf->dns_port == NULL ) {
+		gconf->dns_port = strdup( DNS_PORT );
+	}
 #endif
 
 #ifdef NSS
-	gconf->nss_port = strdup( NSS_PORT );
+	if( gconf->nss_port == NULL ) {
+		gconf->nss_port = strdup( NSS_PORT );
+	}
 #endif
 
 #ifdef WEB
-	gconf->web_port = strdup( WEB_PORT );
+	if( gconf->web_port == NULL ) {
+		gconf->web_port = strdup( WEB_PORT );
+	}
 #endif
-}
-
-void conf_check( void ) {
-	char addrbuf[FULL_ADDSTRLEN+1];
-	IP mcast_addr;
-	UCHAR octet;
 
 	if( gconf->mcast_addr == NULL ) {
 		/* Set default multicast address string */
@@ -214,10 +230,8 @@ void conf_check( void ) {
 }
 
 void conf_info( void ) {
-	char hexbuf[SHA1_HEX_LENGTH+1];
-
 	log_info( "Starting KadNode v"MAIN_VERSION );
-	log_info( "Own ID: %s", str_id( gconf->node_id, hexbuf ) );
+	log_info( "Own ID: %s", gconf->node_id_str );
 	log_info( "Kademlia mode: %s", (gconf->af == AF_INET) ? "IPv4" : "IPv6");
 
 	if( gconf->is_daemon ) {
@@ -246,6 +260,7 @@ void conf_info( void ) {
 
 void conf_free( void ) {
 
+	free( gconf->node_id_str );
 	free( gconf->user );
 	free( gconf->pidfile );
 	free( gconf->peerfile );
@@ -270,20 +285,27 @@ void conf_free( void ) {
 }
 
 void conf_arg_expected( const char *opt ) {
-	log_err( "CFG: Argument expected for option %s.", opt );
+	log_err( "CFG: Argument expected for option: %s", opt );
 }
 
 void conf_no_arg_expected( const char *opt ) {
-	log_err( "CFG: No argument expected for option %s.", opt );
+	log_err( "CFG: No argument expected for option: %s", opt );
 }
 
-/* Free the old string and set the new */
+void conf_duplicate_option( const char *opt ) {
+	log_err( "CFG: Option was already set: %s", opt );
+}
+
+/* Set a string once - error when already set */
 void conf_str( const char *opt, char **dst, const char *src ) {
 	if( src == NULL ) {
 		conf_arg_expected( opt );
 	}
 
-	free( *dst );
+	if( *dst ) {
+		conf_duplicate_option( opt );
+	}
+
 	*dst = strdup( src );
 }
 
@@ -375,7 +397,7 @@ void read_conf_file( const char *filename ) {
 		}
 
 		if( strcmp( option, "--config" ) == 0 ) {
-			log_err( "CFG: Recursive configuration in line %ld.", n );
+			log_err( "CFG: Option '--config' not allowed inside a configuration file, line %ld.", n );
 			exit( 1 );
 		}
 		conf_handle( option, value );
@@ -393,7 +415,7 @@ void conf_handle( char *opt, char *val ) {
 		if( strlen( val ) != SHA1_HEX_LENGTH || !str_isHex( val, SHA1_HEX_LENGTH ) ) {
 			log_err( "CFG: Invalid hex string for --node-id." );
 		}
-		bytes_from_hex( gconf->node_id, val, SHA1_HEX_LENGTH );
+		conf_str( opt, &gconf->node_id_str, val );
 	} else if( match( opt, "--value-id" ) ) {
 		conf_add_value( opt, val );
 	} else if( match( opt, "--pidfile" ) ) {

@@ -258,6 +258,7 @@ int dht_random_bytes( void *buf, size_t size ) {
 }
 
 void kad_setup( void ) {
+	UCHAR node_id[SHA1_BIN_LENGTH];
 	int s4, s6;
 
 	s4 = -1;
@@ -267,6 +268,8 @@ void kad_setup( void ) {
 	if( gconf->verbosity == VERBOSITY_DEBUG ) {
 		dht_debug = stdout;
 	}
+
+	bytes_from_hex( node_id, gconf->node_id_str, strlen( gconf->node_id_str ) );
 
 	dht_lock_init();
 
@@ -279,7 +282,7 @@ void kad_setup( void ) {
 	}
 
 	/* Init the DHT.  Also set the sockets into non-blocking mode. */
-	if( dht_init( s4, s6, gconf->node_id, (UCHAR*) "KN\0\0") < 0 ) {
+	if( dht_init( s4, s6, node_id, (UCHAR*) "KN\0\0") < 0 ) {
 		log_err( "KAD: Failed to initialize the DHT." );
 	}
 }

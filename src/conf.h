@@ -22,8 +22,8 @@ struct gconf_t {
 	/* Current time */
 	struct timeval time_now;
 
-	/* Identifier of this instance */
-	UCHAR node_id[SHA1_BIN_LENGTH];
+	/* Node identifier as hex string */
+	char *node_id_str;
 
 	/* Drop privileges to user */
 	char *user;
