@@ -1,3 +1,13 @@
+kadnode (0.8) unstable; urgency=low
+
+  * fix segfault in the key handling routines
+  * static linking for libsodium
+  * check for duplicate options (except --verbosity)
+  * add support for Mac OSX
+  * fix OpenWrt init script
+
+ -- mwarning <moritzwarning@web.de>  Thu, 06 Mar 2014 01:14:54 +0100
+
 kadnode (0.7) unstable; urgency=low
 
   * add support for domain specific secret/public keys using
