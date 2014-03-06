@@ -198,9 +198,11 @@ int str_isHex( const char str[], size_t size ) {
 	return 1;
 }
 
-int str_isValidHostname( const char hostname[], size_t size ) {
+int str_isValidHostname( const char hostname[] ) {
+	size_t size;
 	size_t i;
 
+	size = strlen( hostname );
 	for( i = 0; i < size; i++ ) {
 		const char c = hostname[i];
 		if( (c >= '0' && c <= '9')

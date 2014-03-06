@@ -34,7 +34,7 @@ void id_compute( UCHAR id[], const char str[] );
 int id_equal( const UCHAR id1[], const UCHAR id2[] );
 
 int str_isHex( const char str[], size_t size );
-int str_isValidHostname( const char hostname[], size_t size );
+int str_isValidHostname( const char hostname[] );
 int str_isZero( const char str[] );
 
 char *str_id( const UCHAR id[], char idbuf[] );

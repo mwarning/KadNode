@@ -434,7 +434,7 @@ void dns_handler( int rc, int sock ) {
 	hostname = msg.question.qName;
 
 	/* Validate hostname */
-	if ( hostname == NULL || !str_isValidHostname( (char*) hostname, strlen( hostname ) ) ) {
+	if ( hostname == NULL || !str_isValidHostname( (char*) hostname ) ) {
 		log_warn( "DNS: Invalid hostname for lookup: '%s'", hostname );
 		return;
 	}

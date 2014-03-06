@@ -64,7 +64,7 @@ void nss_handler( int rc, int sock ) {
 	hostname[rc] = '\0';
 
 	/* Validate hostname */
-	if ( !str_isValidHostname( (char*) hostname, strlen( hostname ) ) ) {
+	if ( !str_isValidHostname( (char*) hostname ) ) {
 		log_warn( "NSS: Invalid hostname for lookup: '%s'", hostname );
 		return;
 	}
