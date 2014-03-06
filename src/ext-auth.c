@@ -280,7 +280,7 @@ UCHAR *auth_handle_skey( UCHAR skey[], UCHAR id[], const char query[] ) {
 		bytes_to_hex( pkeyhex, pkey, crypto_sign_PUBLICKEYBYTES );
 
 		/* We use the public key as salt for the query */
-		char *str = malloc( strlen( pkeyhex ) + strlen( query ) );
+		char *str = malloc( strlen( pkeyhex ) + strlen( query ) +1 );
 		sprintf( str, "%s%s", pkeyhex, query );
 		id_compute( id, str );
 		free( str );
@@ -306,7 +306,7 @@ UCHAR *auth_handle_pkey( UCHAR pkey[], UCHAR id[], const char query[] ) {
 	} else if( auth_find_key( pkey, query, g_public_keys ) ) {
 		bytes_to_hex( pkeyhex, pkey, crypto_sign_PUBLICKEYBYTES );
 
-		char *str = malloc( strlen( pkeyhex ) + strlen( query ) );
+		char *str = malloc( strlen( pkeyhex ) + strlen( query ) + 1 );
 		sprintf( str, "%s%s", pkeyhex, query );
 		id_compute( id, str );
 		free( str );
