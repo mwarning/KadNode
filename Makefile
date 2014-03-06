@@ -89,15 +89,13 @@ strip:
 	-strip build/libnss_kadnode.so.2 2> /dev/null
 
 arch-pkg:
-	cd archlinux/
-	makepkg
+	cd archlinux && makepkg
 
 deb-pkg:
 	dpkg-buildpackage -us -uc
 
 osx-pkg:
-	cd macosx
-	./build.sh
+	cd macosx && ./build.sh
 
 install:
 	cp build/kadnode $(DESTDIR)/usr/bin/
