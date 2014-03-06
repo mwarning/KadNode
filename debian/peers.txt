@@ -1,1 +1,3 @@
-bttracker.debian.org
+bttracker.debian.org:6881
+router.bittorrent.com:6881
+router.utorrent.com:6881
