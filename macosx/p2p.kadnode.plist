@@ -8,7 +8,8 @@
 	<array>
 		<string>/usr/sbin/kadnode</string>
 		<string>--daemon</string>
-		<string>--config /etc/kadnode/kadnode.conf</string>
+		<string>--config</string>
+		<string>/etc/kadnode/kadnode.conf</string>
 	</array>
 	<key>RunAtLoad</key>
 	<true/>
