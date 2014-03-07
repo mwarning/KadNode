@@ -82,9 +82,9 @@ void r_printf( REPLY *r, const char *format, ... ) {
 
 /* Partition a string to the common argc/argv arguments */
 void cmd_to_args( char *str, int *argc, char **argv, int max_argv ) {
-	int len, i;
+	size_t len, i;
 
-	len = strlen(str);
+	len = strlen( str );
 	*argc = 0;
 
 	/* Zero out white/control characters  */
@@ -444,7 +444,7 @@ void cmd_setup( void ) {
 
 	if( gconf->is_daemon == 0 ) {
 		/* Wait for other messages to be displayed */
-		sleep(1);
+		sleep( 1 );
 
 		fprintf( stdout, "Press Enter for help.\n" );
 		net_add_handler( STDIN_FILENO, &cmd_console_handler );

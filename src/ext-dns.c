@@ -291,7 +291,7 @@ int dns_decode_query( struct message *msg, const UCHAR *buffer, int size ) {
 	}
 	size -= n;
 
-	if(( msg->anCount+msg->nsCount+msg->arCount) != 0 ) {
+	if( (msg->anCount + msg->nsCount + msg->arCount) != 0 ) {
 		log_warn( "DNS: Only questions expected." );
 		return -1;
 	}
