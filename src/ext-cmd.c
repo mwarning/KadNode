@@ -442,7 +442,7 @@ void cmd_setup( void ) {
 	sock = net_bind( "CMD", "::1", gconf->cmd_port, NULL, IPPROTO_UDP, AF_INET6 );
 	net_add_handler( sock, &cmd_remote_handler );
 
-	if( gconf->is_daemon == 0 ) {
+	if( gconf->is_daemon == 0 && gconf->cmd_disable_stdin == 0 ) {
 		/* Wait for other messages to be displayed */
 		sleep( 1 );
 

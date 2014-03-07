@@ -7,7 +7,7 @@
 	<key>ProgramArguments</key>
 	<array>
 		<string>/usr/sbin/kadnode</string>
-		<string>--daemon</string>
+		<string>--cmd-disable-stdin</string>
 		<string>--config</string>
 		<string>/etc/kadnode/kadnode.conf</string>
 	</array>

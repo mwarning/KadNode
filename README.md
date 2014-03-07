@@ -172,6 +172,9 @@ A ".p2p" at the end of every identifier is ignored. It is used to direct request
   * `--pidfile` *file-path*  
     Write process pid to a file.
 
+  * `--cmd-disable-stdin`  
+    Disable the local control interface.
+
   * `--cmd-port` *port*  
     Bind the remote control interface to this local port (Default: 1700).
 

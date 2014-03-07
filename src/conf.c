@@ -89,6 +89,7 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon (IPv4/IP
 "				the other side knows the public key.\n\n"
 #endif
 #ifdef CMD
+" --cmd-disable-stdin		Disable the local control interface.\n\n"
 " --cmd-port <port>		Bind the remote control interface to this local port.\n"
 "				Default: "CMD_PORT"\n\n"
 #endif
@@ -435,6 +436,12 @@ void conf_handle( char *opt, char *val ) {
 			log_err( "CFG: Invalid argument for %s.", opt );
 		}
 #ifdef CMD
+	} else if( match( opt, "--cmd-disable-stdin" ) ) {
+		if( val != NULL ) {
+			conf_no_arg_expected( opt );
+		} else {
+			gconf->cmd_disable_stdin = 1;
+		}
 	} else if( match( opt, "--cmd-port" ) ) {
 		conf_str( opt, &gconf->cmd_port, val );
 #endif

@@ -71,6 +71,7 @@ struct gconf_t {
 
 #ifdef CMD
 	char *cmd_port;
+	int cmd_disable_stdin;
 #endif
 
 #ifdef DNS
