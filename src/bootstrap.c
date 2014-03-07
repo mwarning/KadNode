@@ -286,7 +286,8 @@ void bootstrap_handle_mcast( int rc, int sock ) {
 			if( mcast_registered == 1 ) {
 				snprintf( buf, sizeof(buf), msg_fmt, atoi(gconf->dht_port) );
 
-				rc_send = sendto( sock, buf, strlen(buf), 0, (struct sockaddr*) &mcast_addr, sizeof(IP) );
+				addrlen = addr_len( &mcast_addr );
+				rc_send = sendto( sock, buf, strlen(buf), 0, (struct sockaddr*) &mcast_addr, addrlen );
 				if( rc_send < 0 ) {
 					log_warn( "BOOT: Cannot send multicast message: %s", strerror( errno ) );
 				} else {
