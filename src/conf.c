@@ -519,7 +519,7 @@ void conf_handle( char *opt, char *val ) {
 		printf( "%s", kadnode_version_str );
 		exit( 0 );
 	} else {
-		log_err( "CFG: Unknown command line option '%s'", opt ? opt : val );
+		log_err( "CFG: Unknown command line argument: '%s'", opt ? opt : val );
 	}
 }
 
