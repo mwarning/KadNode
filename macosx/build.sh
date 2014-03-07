@@ -10,12 +10,12 @@ make FEATURES="auth cmd dns"
 make strip
 
 mkdir -p build/osx-root/private/etc/kadnode/
-mkdir -p build/osx-root/usr/sbin/
+mkdir -p build/osx-root/usr/bin/
 mkdir -p build/osx-root/Library/LaunchDaemons/
 mkdir -p build/osx-root/usr/share/man/man1/
 
-install -m 755 build/kadnode build/osx-root/usr/sbin/
-install -m 755 build/kadnode-ctl build/osx-root/usr/sbin/
+install -m 755 build/kadnode build/osx-root/usr/bin/
+install -m 755 build/kadnode-ctl build/osx-root/usr/bin/
 install -m 644 debian/kadnode.conf build/osx-root/private/etc/kadnode/
 install -m 644 debian/peers.txt build/osx-root/private/etc/kadnode/
 install -m 644 debian/docs/kadnode.1 build/osx-root/usr/share/man/man1/

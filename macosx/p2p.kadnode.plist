@@ -6,7 +6,7 @@
 	<string>p2p.kadnode</string>
 	<key>ProgramArguments</key>
 	<array>
-		<string>/usr/sbin/kadnode</string>
+		<string>/usr/bin/kadnode</string>
 		<string>--cmd-disable-stdin</string>
 		<string>--config</string>
 		<string>/etc/kadnode/kadnode.conf</string>
