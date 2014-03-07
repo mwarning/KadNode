@@ -26,8 +26,7 @@
 /* Global object variables */
 struct gconf_t *gconf = NULL;
 
-const char *kadnode_version_str = "KadNode v"MAIN_VERSION" ( "
-"Features:"
+const char *kadnode_version_str = "KadNode v"MAIN_VERSION" ("
 #ifdef AUTH
 " auth"
 #endif
@@ -52,9 +51,9 @@ const char *kadnode_version_str = "KadNode v"MAIN_VERSION" ( "
 #ifdef WEB
 " web"
 #endif
-" )\n";
+" )";
 
-const char *usage = "KadNode - A P2P name resolution daemon (IPv4/IPv6)\n"
+const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon (IPv4/IPv6)\n"
 "A Wrapper for the Kademlia implementation of a Distributed Hash Table (DHT)\n"
 "with several optional interfaces (check -v).\n"
 "\n"
@@ -110,7 +109,7 @@ const char *usage = "KadNode - A P2P name resolution daemon (IPv4/IPv6)\n"
 #endif
 " --disable-multicast		Disable multicast to discover local nodes.\n\n"
 " -h, --help			Print this help.\n\n"
-" -v, --version			Print program version.\n\n";
+" -v, --version			Print program version.\n";
 
 void conf_init( void ) {
 	gconf = (struct gconf_t *) malloc( sizeof(struct gconf_t) );
@@ -233,7 +232,7 @@ void conf_check( void ) {
 }
 
 void conf_info( void ) {
-	log_info( "Starting KadNode v"MAIN_VERSION );
+	log_info( "Starting %s", kadnode_version_str );
 	log_info( "Own ID: %s", gconf->node_id_str );
 	log_info( "Kademlia mode: %s", (gconf->af == AF_INET) ? "IPv4" : "IPv6");
 
@@ -513,10 +512,10 @@ void conf_handle( char *opt, char *val ) {
 			gconf->is_daemon = 1;
 		}
 	} else if( match( opt, "-h" ) || match( opt, "--help" ) ) {
-		printf( "%s", usage );
+		printf( "%s\n", kadnode_usage_str );
 		exit( 0 );
 	} else if( match( opt, "-v" ) || match( opt, "--version" ) ) {
-		printf( "%s", kadnode_version_str );
+		printf( "%s\n", kadnode_version_str );
 		exit( 0 );
 	} else {
 		log_err( "CFG: Unknown command line argument: '%s'", opt ? opt : val );
