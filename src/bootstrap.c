@@ -217,6 +217,7 @@ void bootstrap_import_peerfile( void ) {
 	const char *filename;
 	FILE *fp;
 	int num;
+	int rc;
 	IP addr;
 
 	filename = gconf->peerfile;
@@ -238,13 +239,16 @@ void bootstrap_import_peerfile( void ) {
 			continue;
 		}
 
-		if( addr_parse_full( &addr, linebuf, DHT_PORT, gconf->af ) == ADDR_PARSE_SUCCESS ) {
+		rc = addr_parse_full( &addr, linebuf, DHT_PORT, gconf->af );
+		if( rc == ADDR_PARSE_SUCCESS ) {
 			if( kad_ping( &addr ) == 0 ) {
 				num++;
 			} else {
 				log_warn( "BOOT: Cannot ping address '%s': %s", linebuf, strerror( errno ) );
 				goto end;
 			}
+		} else if( rc == ADDR_PARSE_CANNOT_RESOLVE ) {
+			log_warn( "BOOT: Cannot resolve address: '%s'", linebuf );
 		} else {
 			log_warn( "BOOT: Cannot parse address: '%s'", linebuf );
 		}
