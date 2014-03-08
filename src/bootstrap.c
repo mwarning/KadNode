@@ -369,7 +369,7 @@ void bootstrap_setup( void ) {
 		return;
 	}
 
-	sock = net_bind( "BOOT", gconf->mcast_addr, DHT_PORT_MCAST, NULL, IPPROTO_UDP, gconf->af );
+	sock = net_bind( "BOOT", gconf->mcast_addr, DHT_PORT_MCAST, gconf->dht_ifce, IPPROTO_UDP, gconf->af );
 
 	net_add_handler( sock , &bootstrap_handle_mcast );
 }
