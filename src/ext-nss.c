@@ -63,8 +63,12 @@ void nss_handler( int rc, int sock ) {
 	/* Add missing null terminator */
 	hostname[rc] = '\0';
 
+	if( !is_suffix( hostname, QUERY_OMIT_SUFFIX ) ) {
+		return;
+	}
+
 	/* Validate hostname */
-	if ( !str_isValidHostname( (char*) hostname ) ) {
+	if( !str_isValidHostname( hostname ) ) {
 		log_warn( "NSS: Invalid hostname for lookup: '%s'", hostname );
 		return;
 	}

@@ -433,8 +433,17 @@ void dns_handler( int rc, int sock ) {
 
 	hostname = msg.question.qName;
 
+	if ( hostname == NULL ) {
+		log_warn( "DNS: Missing hostname in lookup." );
+		return;
+	}
+
+	if( !is_suffix( hostname, QUERY_OMIT_SUFFIX ) ) {
+		return;
+	}
+
 	/* Validate hostname */
-	if ( hostname == NULL || !str_isValidHostname( (char*) hostname ) ) {
+	if ( !str_isValidHostname( hostname ) ) {
 		log_warn( "DNS: Invalid hostname for lookup: '%s'", hostname );
 		return;
 	}
