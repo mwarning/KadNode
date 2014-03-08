@@ -25,7 +25,7 @@ const char msg_fmt[] =
 
 enum { PACKET_LIMIT_MAX =  20 }; /* Packets per minute to be handled */
 static int packet_limit = 0;
-static IP mcast_addr;
+static IP mcast_addr = {0};
 static int mcast_registered = 0; /* Indicates if the multicast addresses has been registered */
 static time_t mcast_time = 0; /* Next time to perform a multicast ping */
 static time_t peerfile_time = 0; /* Next time to import peers from peer file */
@@ -189,7 +189,7 @@ void bootstrap_export_peerfile( void ) {
 		return;
 	}
 
-	if( time_now_sec() - gconf->startup_time < (5 * 60) ) {
+	if( (time_now_sec() - gconf->startup_time) < (5 * 60) ) {
 		log_info( "BOOT: No peers exported. KadNode needs to run at least 5 minutes." );
 		return;
 	}
@@ -288,10 +288,10 @@ void bootstrap_handle_mcast( int rc, int sock ) {
 			}
 
 			if( mcast_registered == 1 ) {
-				snprintf( buf, sizeof(buf), msg_fmt, atoi(gconf->dht_port) );
+				snprintf( buf, sizeof(buf), msg_fmt, atoi( gconf->dht_port ) );
 
 				addrlen = addr_len( &mcast_addr );
-				rc_send = sendto( sock, buf, strlen(buf), 0, (struct sockaddr*) &mcast_addr, addrlen );
+				rc_send = sendto( sock, buf, strlen( buf ), 0, (struct sockaddr*) &mcast_addr, addrlen );
 				if( rc_send < 0 ) {
 					log_warn( "BOOT: Cannot send multicast message: %s", strerror( errno ) );
 				} else {
