@@ -1,4 +1,24 @@
 #!/bin/sh
 
 set -e
+
+#a helper function
+contains() {
+  local x; local n="$1"; shift;
+  for x in $@; do
+    [ "$x" = "$n" ] && return 0
+  done
+  return 1
+}
+
+#add localhost to DNS server list for every device
+localhost="::1"
+for device in $(networksetup listallnetworkservices | tail -n+2 | tr '*\n' ' '); do
+  { servers=$(networksetup -getdnsservers $device); } || continue
+  servers=$(echo $servers | tr '\n' ' ')
+  contains $localhost $servers && continue
+  networksetup -setdnsservers "$device" $servers $localhost
+done
+
+#launch KadNode
 /bin/launchctl load "/Library/LaunchDaemons/p2p.kadnode.plist"
