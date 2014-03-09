@@ -1,6 +1,6 @@
 # Maintainer: Moritz Warning <moritzwarning@web.de>
 
-pkgname=kadnode-git
+pkgname=kadnode
 pkgver=0.8
 pkgrel=1
 
@@ -9,29 +9,21 @@ arch=('x86_64' 'i686')
 url='http://github.com/mwarning/KadNode'
 license=('MIT')
 
-#depends=('libsodium')
-makedepends=('git')
-
 backup=('etc/kadnode.conf' 'etc/peers.txt')
 
-source=('git://github.com/mwarning/KadNode.git')
+source=(https://github.com/mwarning/KadNode/archive/v${pkgver}.tar.gz)
 
 md5sums=('SKIP')
 
 install="kadnode.install"
 
-pkgver() {
-	cd KadNode
-	git describe | sed 's/^v//; s/-/.r/; s/-/./'
-}
-
 build() {
-	cd KadNode
+	cd KadNode-${pkgver}
 	make FEATURES="auth cmd nss"
 }
 
 package() {
-	cd KadNode
+	cd KadNode-${pkgver}
 
 	install -Dm755 build/kadnode "$pkgdir"/usr/bin/kadnode
 	install -Dm755 build/kadnode-ctl "$pkgdir"/usr/bin/kadnode-ctl
