@@ -14,6 +14,11 @@ git clone https://github.com/mwarning/KadNode.git
 cp -rf KadNode/openwrt/kadnode package/
 rm -rf KadNode/
 
+#Satisfy dependency in case authentication support is selected
+git clone https://github.com/mwarning/libsodium-openwrt.git
+cp -r libsodium-openwrt/libsodium package/
+rm -rf libsodium-openwrt
+
 make defconfig
 make menuconfig
 </pre>
