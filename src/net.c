@@ -65,9 +65,9 @@ int net_set_nonblocking( int fd ) {
 
 int net_bind(
 	const char *name,
-	const char* addr,
-	const char* port,
-	const char* ifce,
+	const char *addr,
+	const char *port,
+	const char *ifce,
 	int protocol, int af
 ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
