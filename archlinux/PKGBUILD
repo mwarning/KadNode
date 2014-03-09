@@ -1,7 +1,7 @@
 # Maintainer: Moritz Warning <moritzwarning@web.de>
 
 pkgname=kadnode-git
-pkgver=1
+pkgver=0.8
 pkgrel=1
 
 pkgdesc='A P2P based DNS service using the Kademlia Distributed Hash Table (DHT)'
