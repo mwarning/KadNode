@@ -17,8 +17,7 @@ all: kadnode
 ifeq ($(findstring auth,$(FEATURES)),auth)
   OBJS += build/ext-auth.o
   CFLAGS += -DAUTH
-#  POST_LINKING += -lsodium
-  POST_LINKING += /usr/local/lib/libsodium.a
+  POST_LINKING += -Wl,-Bstatic -lsodium -Wl,-Bdynamic
 endif
 
 ifeq ($(findstring cmd,$(FEATURES)),cmd)
@@ -50,14 +49,14 @@ endif
 ifeq ($(findstring upnp,$(FEATURES)),upnp)
   OBJS += build/upnp.o
   CFLAGS += -DFWD_UPNP
-  POST_LINKING += -lminiupnpc
+  POST_LINKING += -Wl,-Bdynamic -lminiupnpc
   ENABLE_FORWARDING = 1
 endif
 
 ifeq ($(findstring natpmp,$(FEATURES)),natpmp)
   OBJS += build/natpmp.o
   CFLAGS += -DFWD_NATPMP
-  POST_LINKING += -lnatpmp
+  POST_LINKING += -Wl,-Bdynamic -lnatpmp
   ENABLE_FORWARDING = 1
 endif
 
