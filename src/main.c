@@ -118,6 +118,7 @@ int main( int argc, char **argv ) {
 	/* Export peers if a file is provided */
 	peerfile_export();
 
+	lpd_free();
 	conf_free();
 
 	return 0;

@@ -14,4 +14,6 @@
 /* Setup callbacks */
 void lpd_setup( void );
 
+void lpd_free( void );
+
 #endif /* _LPD_H */
