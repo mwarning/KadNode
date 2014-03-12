@@ -19,7 +19,8 @@
 #include "net.h"
 #include "values.h"
 #include "results.h"
-#include "bootstrap.h"
+#include "peerfile.h"
+#include "lpd.h"
 
 #ifdef AUTH
 #include "ext-auth.h"
@@ -88,8 +89,11 @@ int main( int argc, char **argv ) {
 	/* Setup handler to expire results */
 	results_setup();
 
-	/* Setup handler to find nodes for bootstrapping */
-	bootstrap_setup();
+	/* Setup import of peerfile  */
+	peerfile_setup();
+
+	/* Setup local peer discovery */
+	lpd_setup();
 
 	/* Setup extensions */
 #ifdef AUTH
@@ -112,7 +116,7 @@ int main( int argc, char **argv ) {
 	net_loop();
 
 	/* Export peers if a file is provided */
-	bootstrap_export_peerfile();
+	peerfile_export();
 
 	conf_free();
 

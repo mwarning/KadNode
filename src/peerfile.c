@@ -1,0 +1,128 @@
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+
+#include "main.h"
+#include "conf.h"
+#include "log.h"
+#include "utils.h"
+#include "net.h"
+#include "kad.h"
+#include "peerfile.h"
+
+
+static time_t peerfile_time = 0; /* Next time to import peers from peer file */
+
+
+void peerfile_export( void ) {
+	char addrbuf[FULL_ADDSTRLEN+1];
+	const char *filename;
+	IP addrs[128];
+	size_t i, num;
+	FILE * fp;
+
+	filename = gconf->peerfile;
+	if( filename == NULL ) {
+		return;
+	}
+
+	num = N_ELEMS(addrs);
+	if( kad_export_nodes( addrs, &num ) != 0 ) {
+		log_warn("PEERFILE: Failed to export nodes.");
+		return;
+	}
+
+	/* No peers to export */
+	if( num == 0 ) {
+		log_info( "PEERFILE: No peers to export." );
+		return;
+	}
+
+	if( (time_now_sec() - gconf->startup_time) < (5 * 60) ) {
+		log_info( "PEERFILE: No peers exported. KadNode needs to run at least 5 minutes." );
+		return;
+	}
+
+	fp = fopen( filename, "w" );
+	if( fp == NULL ) {
+		log_warn( "PEERFILE: Cannot open file '%s' for peer export: %s", filename, strerror( errno ) );
+		return;
+	}
+
+	/* Write peers to file */
+	for( i = 0; i < num; ++i ) {
+		if( fprintf( fp, "%s\n", str_addr( &addrs[i], addrbuf ) ) < 0 ) {
+			break;
+		}
+	}
+
+	fclose( fp );
+
+	log_info( "PEERFILE: Exported %d peers to: %s", i, filename );
+}
+
+void peerfile_import( void ) {
+	char linebuf[256];
+	const char *filename;
+	FILE *fp;
+	int num;
+	int rc;
+	IP addr;
+
+	filename = gconf->peerfile;
+	if( filename == NULL ) {
+		return;
+	}
+
+	fp = fopen( filename, "r" );
+	if( fp == NULL ) {
+		log_warn( "PEERFILE: Cannot open file '%s' for peer import: %s", filename, strerror( errno ) );
+		return;
+	}
+
+	num = 0;
+	while( fgets( linebuf, sizeof(linebuf), fp ) != NULL ) {
+		linebuf[strcspn( linebuf, "\n" )] = '\0';
+
+		if( linebuf[0] == '\0' || linebuf[0] == '#' ) {
+			continue;
+		}
+
+		rc = addr_parse_full( &addr, linebuf, DHT_PORT, gconf->af );
+		if( rc == ADDR_PARSE_SUCCESS ) {
+			if( kad_ping( &addr ) == 0 ) {
+				num++;
+			} else {
+				log_warn( "PEERFILE: Cannot ping address '%s': %s", linebuf, strerror( errno ) );
+				goto end;
+			}
+		} else if( rc == ADDR_PARSE_CANNOT_RESOLVE ) {
+			log_warn( "PEERFILE: Cannot resolve address: '%s'", linebuf );
+		} else {
+			log_warn( "PEERFILE: Cannot parse address: '%s'", linebuf );
+		}
+	}
+
+	log_info( "PEERFILE: Imported %d peers from: %s", num, filename );
+
+	end:;
+	fclose( fp );
+}
+
+void peerfile_handle_peerfile( int _rc, int _sock ) {
+
+	if( peerfile_time <= time_now_sec() && kad_count_nodes() == 0 ) {
+		/* Ping peers from peerfile, if present */
+		peerfile_import();
+
+		/* Try again in ~5 minutes */
+		peerfile_time = time_add_min( 5 );
+	}
+}
+
+void peerfile_setup( void ) {
+	peerfile_time = time_now_sec() + 10;
+	net_add_handler( -1 , &peerfile_handle_peerfile );
+}

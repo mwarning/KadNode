@@ -7,7 +7,7 @@ FEATURES ?= auth cmd nss natpmp upnp #dns debug web
 
 OBJS = build/main.o build/results.o build/kad.o build/log.o \
 	build/conf.o build/sha1.o build/unix.o build/net.o build/utils.o \
-	build/values.o build/bootstrap.o
+	build/values.o build/lpd.o build/peerfile.o
 
 .PHONY: all clean strip install kadnode kadnode-ctl libnss_kadnode.so.2 \
 	arch-pkg deb-pkg osx-pkg install uninstall

@@ -11,7 +11,7 @@
 #include "utils.h"
 #include "net.h"
 #include "kad.h"
-#include "bootstrap.h"
+#include "lpd.h"
 
 
 /* Multicast message format - inspired by, but not compatible to the BitTorrent Local Peer Discovery (LPD) */
@@ -28,7 +28,6 @@ static int packet_limit = 0;
 static IP mcast_addr = {0};
 static int mcast_registered = 0; /* Indicates if the multicast addresses has been registered */
 static time_t mcast_time = 0; /* Next time to perform a multicast ping */
-static time_t peerfile_time = 0; /* Next time to import peers from peer file */
 
 
 /* Try to join/leave multicast group */
@@ -165,101 +164,6 @@ int parse_packet( const char *str ) {
 	return port;
 }
 
-void bootstrap_export_peerfile( void ) {
-	char addrbuf[FULL_ADDSTRLEN+1];
-	const char *filename;
-	IP addrs[128];
-	size_t i, num;
-	FILE * fp;
-
-	filename = gconf->peerfile;
-	if( filename == NULL ) {
-		return;
-	}
-
-	num = N_ELEMS(addrs);
-	if( kad_export_nodes( addrs, &num ) != 0 ) {
-		log_warn("BOOT: Failed to export nodes.");
-		return;
-	}
-
-	/* No peers to export */
-	if( num == 0 ) {
-		log_info( "BOOT: No peers to export." );
-		return;
-	}
-
-	if( (time_now_sec() - gconf->startup_time) < (5 * 60) ) {
-		log_info( "BOOT: No peers exported. KadNode needs to run at least 5 minutes." );
-		return;
-	}
-
-	fp = fopen( filename, "w" );
-	if( fp == NULL ) {
-		log_warn( "BOOT: Cannot open file '%s' for peer export: %s", filename, strerror( errno ) );
-		return;
-	}
-
-	/* Write peers to file */
-	for( i = 0; i < num; ++i ) {
-		if( fprintf( fp, "%s\n", str_addr( &addrs[i], addrbuf ) ) < 0 ) {
-			break;
-		}
-	}
-
-	fclose( fp );
-
-	log_info( "BOOT: Exported %d peers to: %s", i, filename );
-}
-
-void bootstrap_import_peerfile( void ) {
-	char linebuf[256];
-	const char *filename;
-	FILE *fp;
-	int num;
-	int rc;
-	IP addr;
-
-	filename = gconf->peerfile;
-	if( filename == NULL ) {
-		return;
-	}
-
-	fp = fopen( filename, "r" );
-	if( fp == NULL ) {
-		log_warn( "BOOT: Cannot open file '%s' for peer import: %s", filename, strerror( errno ) );
-		return;
-	}
-
-	num = 0;
-	while( fgets( linebuf, sizeof(linebuf), fp ) != NULL ) {
-		linebuf[strcspn( linebuf, "\n" )] = '\0';
-
-		if( linebuf[0] == '\0' || linebuf[0] == '#' ) {
-			continue;
-		}
-
-		rc = addr_parse_full( &addr, linebuf, DHT_PORT, gconf->af );
-		if( rc == ADDR_PARSE_SUCCESS ) {
-			if( kad_ping( &addr ) == 0 ) {
-				num++;
-			} else {
-				log_warn( "BOOT: Cannot ping address '%s': %s", linebuf, strerror( errno ) );
-				goto end;
-			}
-		} else if( rc == ADDR_PARSE_CANNOT_RESOLVE ) {
-			log_warn( "BOOT: Cannot resolve address: '%s'", linebuf );
-		} else {
-			log_warn( "BOOT: Cannot parse address: '%s'", linebuf );
-		}
-	}
-
-	log_info( "BOOT: Imported %d peers from: %s", num, filename );
-
-	end:;
-	fclose( fp );
-}
-
 int set_port( IP *addr, unsigned short port ) {
 	if( addr->ss_family == AF_INET ) {
 		((IP4 *)addr)->sin_port = htons( port );
@@ -344,21 +248,8 @@ void bootstrap_handle_mcast( int rc, int sock ) {
 	}
 }
 
-void bootstrap_handle_peerfile( int rc, int sock ) {
-	if( peerfile_time <= time_now_sec() && kad_count_nodes() == 0 ) {
-		/* Ping peers from peerfile, if present */
-		bootstrap_import_peerfile();
-
-		/* Try again in ~5 minutes */
-		peerfile_time = time_add_min( 5 );
-	}
-}
-
-void bootstrap_setup( void ) {
+void lpd_setup( void ) {
 	int sock;
-
-	peerfile_time = time_now_sec() + 10;
-	net_add_handler( -1 , &bootstrap_handle_peerfile );
 
 	packet_limit = PACKET_LIMIT_MAX;
 	if( addr_parse( &mcast_addr, gconf->mcast_addr, DHT_PORT_MCAST, gconf->af ) != 0 ) {
