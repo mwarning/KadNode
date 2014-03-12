@@ -12,7 +12,6 @@
 * For a domain name to be handled by the KadNode NSS module
 * it must have the .p2p top level domains.
 *
-* KadNode itself will ignore any top level domain.
 * A request for 'http://my.name.p2p' will result in
 * KadNode to try to resolve the identifier 'my.name'.
 */
