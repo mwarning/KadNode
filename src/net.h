@@ -13,6 +13,9 @@ int net_bind(
 	int protocol, int af
 );
 
+/* Set a socket non-blocking */
+int net_set_nonblocking( int fd );
+
 /* Add a socket to the file descriptor set */
 void net_add_handler( int fd, net_callback *callback );
 
