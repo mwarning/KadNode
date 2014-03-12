@@ -268,7 +268,7 @@ int _nss_kadnode_valid_tld( const char *hostname, int hostlen ) {
 	size_t i;
 
 	/* Accepted TLDs */
-	const char *domains[] = { ".p2p" };
+	const char *domains[] = { QUERY_OMIT_SUFFIX };
 
 	/* Get the last '.' */
 	tld = strrchr( hostname, '.' );
