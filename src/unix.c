@@ -74,17 +74,24 @@ void unix_write_pidfile( pid_t pid ) {
 		return;
 	}
 
+	file = fopen( gconf->pidfile, "r" );
+	if( file ) {
+		fclose( file );
+		log_err( "UNX: PID file already exists: %s", gconf->pidfile );
+		return;
+	}
+
 	file = fopen( gconf->pidfile, "w" );
 	if( file == NULL ) {
-		log_err( "UNX: Failed to open pid file." );
+		log_err( "UNX: Failed to open PID file." );
 	}
 
 	if( fprintf( file, "%i", pid ) < 0 ) {
-		log_err( "UNX: Failed to write pid file." );
+		log_err( "UNX: Failed to write PID file." );
 	}
 
 	if( fclose( file ) < 0 ) {
-		log_err( "UNX: Failed to close pid file." );
+		log_err( "UNX: Failed to close PID file." );
 	}
 }
 
