@@ -25,12 +25,12 @@ const char msg_fmt[] =
 	"\r\n";
 
 enum { PACKET_LIMIT_MAX =  20 }; /* Packets per minute to be handled */
-static int packet_limit = 0;
-static IP mcast_addr = {0};
-static int mcast_registered = 0; /* Indicates if the multicast addresses has been registered */
-static time_t mcast_time = 0; /* Next time to perform a multicast ping */
-static int sock_recv = -1;
-static int sock_send = -1;
+static int g_packet_limit = 0;
+static IP g_mcast_addr = {0};
+static int g_mcast_registered = 0; /* Indicates if the multicast addresses has been registered */
+static time_t g_mcast_time = 0; /* Next time to perform a multicast ping */
+static int g_sock_recv = -1;
+static int g_sock_send = -1;
 
 
 /* Try to join/leave multicast group */
@@ -171,19 +171,19 @@ void bootstrap_handle_mcast( int rc, int sock_recv ) {
 	int rc_send;
 	int rc_recv;
 
-	if( mcast_time <= time_now_sec() ) {
+	if( g_mcast_time <= time_now_sec() ) {
 		if( kad_count_nodes() == 0 ) {
 			/* Join multicast group if possible */
-			if( mcast_registered == 0 && multicast_join_group( sock_recv, &mcast_addr ) == 0 ) {
+			if( g_mcast_registered == 0 && multicast_join_group( g_sock_recv, &g_mcast_addr ) == 0 ) {
 				log_info( "LPD: No peers known. Joined multicast group." );
-				mcast_registered = 1;
+				g_mcast_registered = 1;
 			}
 
-			if( mcast_registered == 1 ) {
+			if( g_mcast_registered == 1 ) {
 				snprintf( buf, sizeof(buf), msg_fmt, atoi( gconf->dht_port ) );
 
-				addrlen = addr_len( &mcast_addr );
-				rc_send = sendto( sock_send, buf, strlen( buf ), 0, (struct sockaddr*) &mcast_addr, addrlen );
+				addrlen = addr_len( &g_mcast_addr );
+				rc_send = sendto( g_sock_send, buf, strlen( buf ), 0, (struct sockaddr*) &g_mcast_addr, addrlen );
 				if( rc_send < 0 ) {
 					log_warn( "LPD: Cannot send multicast message: %s", strerror( errno ) );
 				} else {
@@ -193,10 +193,10 @@ void bootstrap_handle_mcast( int rc, int sock_recv ) {
 		}
 
 		/* Cap number of received packets to 10 per minute */
-		packet_limit = 5 * PACKET_LIMIT_MAX;
+		g_packet_limit = 5 * PACKET_LIMIT_MAX;
 
 		/* Try again in ~5 minutes */
-		mcast_time = time_add_min( 5 );
+		g_mcast_time = time_add_min( 5 );
 	}
 
 	if( rc <= 0 ) {
@@ -205,21 +205,21 @@ void bootstrap_handle_mcast( int rc, int sock_recv ) {
 
 	/* Reveice multicast ping */
 	addrlen = sizeof(IP);
-	rc_recv = recvfrom( sock_recv, buf, sizeof(buf), 0, (struct sockaddr*) &c_addr, (socklen_t*) &addrlen );
+	rc_recv = recvfrom( g_sock_recv, buf, sizeof(buf), 0, (struct sockaddr*) &c_addr, (socklen_t*) &addrlen );
 	if( rc_recv < 0 ) {
 		log_warn( "LPD: Cannot receive multicast message: %s", strerror( errno ) );
 		return;
 	}
 
-	if( packet_limit < 0 ) {
+	if( g_packet_limit < 0 ) {
 		/* Too much traffic - leave multicast group for now */
-		if( mcast_registered == 1 && multicast_leave_group( sock_recv, &mcast_addr ) == 0 ) {
+		if( g_mcast_registered == 1 && multicast_leave_group( g_sock_recv, &g_mcast_addr ) == 0 ) {
 			log_warn( "LPD: Too much traffic. Left multicast group." );
-			mcast_registered = 0;
+			g_mcast_registered = 0;
 		}
 		return;
 	} else {
-		packet_limit--;
+		g_packet_limit--;
 	}
 
 	if( rc_recv >= sizeof(buf) ) {
@@ -300,8 +300,8 @@ int create_receive_socket( void ) {
 
 void lpd_setup( void ) {
 
-	packet_limit = PACKET_LIMIT_MAX;
-	if( addr_parse( &mcast_addr, gconf->mcast_addr, DHT_PORT_MCAST, gconf->af ) != 0 ) {
+	g_packet_limit = PACKET_LIMIT_MAX;
+	if( addr_parse( &g_mcast_addr, gconf->mcast_addr, DHT_PORT_MCAST, gconf->af ) != 0 ) {
 		log_err( "BOOT: Failed to parse IP address for '%s'.", gconf->mcast_addr );
 	}
 
@@ -313,13 +313,13 @@ void lpd_setup( void ) {
 	* Use different sockets for sending and receiving because
 	* MacOSX does not seem to allow it to be the same.
 	*/
-	sock_send = create_send_socket();
-	sock_recv = create_receive_socket();
+	g_sock_send = create_send_socket();
+	g_sock_recv = create_receive_socket();
 
-	net_add_handler( sock_recv, &bootstrap_handle_mcast );
+	net_add_handler( g_sock_recv, &bootstrap_handle_mcast );
 }
 
 void lpd_free( void ) {
-	close( sock_send );
-	close( sock_recv );
+	close( g_sock_send );
+	close( g_sock_recv );
 }
