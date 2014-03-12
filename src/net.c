@@ -9,8 +9,7 @@
 #include <semaphore.h>
 #include <signal.h>
 #include <netdb.h>
-#include <unistd.h>
-#include <netdb.h>
+#include <unistd.h> /* close */
 #include <net/if.h>
 #include <sys/time.h>
 #include <arpa/inet.h>
@@ -71,8 +70,8 @@ int net_bind(
 	int protocol, int af
 ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
+	const int opt_on = 1;
 	int sock;
-	int val;
 	socklen_t addrlen;
 	IP sockaddr;
 
@@ -118,8 +117,7 @@ int net_bind(
 #endif
 
 	if( af == AF_INET6 ) {
-		val = 1;
-		if( setsockopt( sock, IPPROTO_IPV6, IPV6_V6ONLY, &val, sizeof(val) ) < 0 ) {
+		if( setsockopt( sock, IPPROTO_IPV6, IPV6_V6ONLY, &opt_on, sizeof(opt_on) ) < 0 ) {
 			close( sock );
 			log_err( "NET: Failed to set socket option IPV6_V6ONLY: %s", strerror( errno ));
 			return -1;
