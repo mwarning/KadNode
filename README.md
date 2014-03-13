@@ -19,7 +19,7 @@ Features:
 * UPnP/NAT-PMP support
 * local peer discovery
 * small size 75KB-125KB
-* public/secret key authentication
+* public/secret key authentication ([libsodium](https://github.com/jedisct1/libsodium))
 * command line interface (kadnode-ctl)
 * NSS support through /etc/nsswitch.conf
 * integrated simplified DNS server
