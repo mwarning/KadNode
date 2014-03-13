@@ -1,3 +1,9 @@
+kadnode (0.9) UNRELEASED; urgency=low
+
+  * fix local peer discovery on MacOSX
+
+ -- mwarning <moritzwarning@web.de>  Wed, 12 Mar 2014 13:55:45 +0100
+
 kadnode (0.8) unstable; urgency=low
 
   * fix segfault in the key handling routines
