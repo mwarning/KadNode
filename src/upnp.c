@@ -9,7 +9,7 @@
 #include "upnp.h"
 
 
-/* A cheap way to distinguish between miniupnp versions 1.5 and 1.6 */
+/* A cheap way to distinguish between miniupnp versions 1.5 and newer versions */
 #ifdef UPNPDISCOVER_SUCCESS
 #define HAVE_MINIUPNP_16
 #else
