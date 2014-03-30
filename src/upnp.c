@@ -63,7 +63,7 @@ int upnpGetSpecificPortMappingEntry( struct upnp_handle_t *handle, const char *p
 	*intPort = '\0';
 
 #if defined HAVE_MINIUPNP_16
-	return UPNP_GetSpecificPortMappingEntry( handle->urls.controlURL, handle->data.first.servicetype, extPort, proto, intClient, intPort, NULL, NULL, NULL );
+	return UPNP_GetSpecificPortMappingEntry( handle->urls.controlURL, handle->data.first.servicetype, extPort, proto, NULL, intClient, intPort, NULL, NULL, NULL );
 #elif defined HAVE_MINIUPNP_15
 	return UPNP_GetSpecificPortMappingEntry( handle->urls.controlURL, handle->data.first.servicetype, extPort, proto, intClient, intPort );
 #else
