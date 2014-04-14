@@ -228,11 +228,12 @@ A ".p2p" at the end of every identifier is ignored. It is used to direct request
     Lookup the IP addresses of all nodes that claim to satisfy the identifier.  
 	The first call will start the search.
 
-  * `announce` *id*[<i>:*port*</i>] [<i>*minutes*</i>]  
-    Announce that this instance is associated with identifier  
+  * `announce` [*id*[<i>:*port*</i>] [<i>*minutes*</i>]]  
+    Announce that this instance is associated with identifier id  
     and an optional port. The default port is random (but not equal 0).  
     No *minutes* trigger a single announcement. Negative *minutes*  
-    last for the entire runtime. Otherwise the lifetime is set *minutes* into the future.
+    last for the entire runtime. Otherwise the lifetime is set *minutes* into the future.  
+    No arguments will announce all identifiers at once.
 
   * `import` *addr*  
     Send a ping to another KadNode instance to establish a connection.

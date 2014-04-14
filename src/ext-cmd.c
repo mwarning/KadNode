@@ -35,7 +35,7 @@ const char* cmd_usage =
 #if 0
 	"	lookup_node <id>\n"
 #endif
-	"	announce <id>[:<port>] [<minutes>]\n"
+	"	announce [<id>[:<port>] [<minutes>]]\n"
 	"	import <addr>\n"
 	"	export\n"
 	"	blacklist <addr>\n";
@@ -187,6 +187,8 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 	int minutes;
 	IP addrs[16];
 	int port;
+	int count;
+	static struct value_t *value;
 	char *p;
 	int rc = 0;
 
@@ -246,9 +248,24 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 		/* Print node id and statistics */
 		cmd_print_status( r );
 
-	} else if( match( argv[0], "announce" ) && (argc == 2 || argc == 3) ) {
+	} else if( match( argv[0], "announce" ) && (argc == 1 || argc == 2 || argc == 3) ) {
 
-		if( argc == 3 ) {
+		if( argc == 1 ) {
+			/* Announce all values; does not update value.refreshed */
+			count = 0;
+			value = values_get();
+			while( value ) {
+				kad_announce_once( value->id, value->port );
+				count++;
+				value = value->next;
+			}
+			r_printf( r ,"Announced %d values.\n", count );
+			rc = 0;
+			goto end;
+		} else if( argc == 2 ) {
+			minutes = 0;
+			lifetime = 0;
+		} else if( argc == 3 ) {
 			minutes = atoi( argv[2] );
 			if( minutes < 0 ) {
 				minutes = 0;
@@ -258,9 +275,6 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 				minutes = (30 * (minutes/30 + 1));
 				lifetime = (time_now_sec() + (minutes * 60));
 			}
-		} else {
-			minutes = 0;
-			lifetime = 0;
 		}
 
 		int is_random_port = 0;
