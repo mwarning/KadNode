@@ -36,6 +36,9 @@ struct gconf_t {
 	/* Import/Export peers from this file */
 	char *peerfile;
 
+	/* Path to configuration file */
+	char *configfile;
+
 	/* Foreground / Background */
 	int is_daemon;
 

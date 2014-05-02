@@ -243,6 +243,10 @@ void conf_info( void ) {
 		log_info( "Mode: Foreground" );
 	}
 
+	if( gconf->configfile ) {
+		log_info( "Configuration File: %s", gconf->configfile );
+	}
+
 	switch( gconf->verbosity ) {
 		case VERBOSITY_QUIET:
 			log_info( "Verbosity: Quiet" );
@@ -270,6 +274,7 @@ void conf_free( void ) {
 	free( gconf->dht_port );
 	free( gconf->dht_ifce );
 	free( gconf->mcast_addr );
+	free( gconf->configfile );
 
 #ifdef CMD
 	free( gconf->cmd_port );
@@ -355,13 +360,19 @@ void conf_add_value( char *opt, char *val ) {
 void read_conf_file( const char *filename ) {
 	char line[1000];
 	size_t n;
+	struct stat s;
 	FILE *file;
 	char *option;
 	char *value;
 	char *p;
 
+	if( stat( filename, &s ) == 0 && !(s.st_mode & S_IFREG) ) {
+		log_err( "CFG: File expected: %s\n", filename );
+		exit( 1 );
+	}
+
 	n = 0;
-	file = fopen( filename, "rt" );
+	file = fopen( filename, "r" );
 	if( file == NULL ) {
 		log_err( "CFG: Cannot open file '%s': %s\n", filename, strerror( errno ) );
 		exit( 1 );
@@ -400,6 +411,7 @@ void read_conf_file( const char *filename ) {
 		}
 
 		if( strcmp( option, "--config" ) == 0 ) {
+			fclose( file );
 			log_err( "CFG: Option '--config' not allowed inside a configuration file, line %ld.", n );
 			exit( 1 );
 		}
@@ -482,6 +494,7 @@ void conf_handle( char *opt, char *val ) {
 			conf_arg_expected( opt );
 		}
 		read_conf_file( val );
+		conf_str( opt, &gconf->configfile, val );
 	} else if( match( opt, "--mode" ) ) {
 		if( gconf->af != 0 ) {
 			conf_duplicate_option( opt );
