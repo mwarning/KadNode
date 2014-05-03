@@ -365,7 +365,7 @@ int kad_ping( const IP* addr ) {
 
 /*
 * Find nodes that are near the given id and announce to them
-* that this node can satisfy the given id on the given port
+* that this node can satisfy the given id on the given port.
 */
 int kad_announce_once( const UCHAR id[], int port ) {
 
@@ -380,6 +380,9 @@ int kad_announce_once( const UCHAR id[], int port ) {
 	return 0;
 }
 
+/*
+* Add a new value to the announcement list or refresh an announcement.
+*/
 int kad_announce( const char _query[], int port, time_t lifetime ) {
 	char query[QUERY_MAX_SIZE];
 

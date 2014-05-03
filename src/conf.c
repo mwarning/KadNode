@@ -55,7 +55,7 @@ const char *kadnode_version_str = "KadNode v"MAIN_VERSION" ("
 
 const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon (IPv4/IPv6)\n"
 "A Wrapper for the Kademlia implementation of a Distributed Hash Table (DHT)\n"
-"with several optional interfaces (check -v).\n"
+"with several optional interfaces (check --version).\n"
 "\n"
 "Usage: kadnode [OPTIONS]*\n"
 "\n"
@@ -63,13 +63,13 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon (IPv4/IP
 "				Default: <random>\n\n"
 " --value-id <id>[:<port>]	Add a value to be announced every 30 minutes.\n"
 "				This option can occur multiple times.\n\n"
-" --peerfile <file>		Import/Export files from and to a file.\n\n"
+" --peerfile <file>		Import/Export peers from and to a file.\n\n"
 " --user <user>			Change the UUID after start.\n\n"
 " --port	<port>			Bind to this port.\n"
 "				Default: "DHT_PORT"\n\n"
 " --config <file>		Provide a configuration file with one command line\n"
 "				option on each line. Comments start after '#'.\n\n"
-" --mcast-addr <addr>		Use multicast address for bootstrapping.\n"
+" --mcast-addr <addr>		Set multicast address for local peer discovery.\n"
 "				Default: "DHT_ADDR4_MCAST" / "DHT_ADDR6_MCAST"\n\n"
 " --ifce <interface>		Bind to this interface.\n"
 "				Default: <any>\n\n"
@@ -234,13 +234,13 @@ void conf_check( void ) {
 
 void conf_info( void ) {
 	log_info( "Starting %s", kadnode_version_str );
-	log_info( "Own ID: %s", gconf->node_id_str );
+	log_info( "Node ID: %s", gconf->node_id_str );
 	log_info( "Kademlia Mode: %s", (gconf->af == AF_INET) ? "IPv4" : "IPv6");
 
 	if( gconf->is_daemon ) {
-		log_info( "Mode: Daemon" );
+		log_info( "Run Mode: Daemon" );
 	} else {
-		log_info( "Mode: Foreground" );
+		log_info( "Run Mode: Foreground" );
 	}
 
 	if( gconf->configfile ) {
@@ -261,8 +261,8 @@ void conf_info( void ) {
 			log_err( "Invalid verbosity level." );
 	}
 
-	log_info( "Peerfile: %s", gconf->peerfile ? gconf->peerfile : "None" );
-	log_info( "Multicast: %s", (gconf->disable_multicast == 0) ? gconf->mcast_addr : "Disabled" );
+	log_info( "Peer File: %s", gconf->peerfile ? gconf->peerfile : "None" );
+	log_info( "Multicast Address: %s", (gconf->disable_multicast == 0) ? gconf->mcast_addr : "Disabled" );
 }
 
 void conf_free( void ) {

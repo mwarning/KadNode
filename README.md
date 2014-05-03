@@ -31,7 +31,7 @@ Most features are optional and can be left out to reduce the binary size.
 
 ## JOIN THE SWARM
 
-If KadNode cannot join a swarm (an empty peerfile and no other peer on the local network),
+If KadNode cannot join a swarm (an empty peer file and no other peer on the local network),
 then a node address is needed to boostrap from. To do this, insert *bttracker.debian.org*
 into an empty file and provide it to KadNode:
 
