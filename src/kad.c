@@ -80,7 +80,7 @@ typedef struct {
 
 
 /* This callback is called when a search result arrives or a search completes */
-void dht_callback_func( void *closure, int event, UCHAR *info_hash, void *data, size_t data_len ) {
+void dht_callback_func( void *closure, int event, const UCHAR *info_hash, const void *data, size_t data_len ) {
 	struct results_t *results;
 	IP addr;
 	size_t i;
@@ -137,32 +137,6 @@ void kad_lookup_local_values( struct results_t *results ) {
 		}
 		log_debug( "KAD: Address found in local values: %s\n", str_addr( &addr, addrbuf ) );
 		results_add_addr( results, &addr );
-	}
-}
-
-/*
-* Lookup the DHT storage of received announcements.
-* Useful for networks of only two nodes, also faster.
-*/
-void kad_lookup_local_storage( struct results_t *results ) {
-	char addrbuf[FULL_ADDSTRLEN+1];
-	struct storage *s;
-	struct peer* p;
-	IP addr;
-	size_t i;
-
-	s = storage;
-	while( s ) {
-		if( id_equal( s->id,  results->id ) ) {
-			for( i = 0; i < s->numpeers; ++i ) {
-				p = &s->peers[i];
-				to_addr( &addr, &p->ip, p->len, p->port );
-				log_debug( "KAD: Address found in local storage: %s\n", str_addr( &addr, addrbuf ) );
-				results_add_addr( results, &addr );
-			}
-			break;
-		}
-		s = s->next;
 	}
 }
 
@@ -433,9 +407,6 @@ int kad_lookup_value( const char _query[], IP addr_array[], size_t *addr_num ) {
 
 		/* Search own announced values */
 		kad_lookup_local_values( results );
-
-		/* Search foreign stored announced */
-		kad_lookup_local_storage( results );
 		rc = 1;
 	} else {
 		/* Search is running => poll results */
