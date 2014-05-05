@@ -99,7 +99,7 @@ void forwardings_add( int port, time_t lifetime ) {
 		cur = cur->next;
 	}
 
-	new = (struct forwarding_t*) malloc( sizeof(struct forwarding_t) );
+	new = (struct forwarding_t*) calloc( 1, sizeof(struct forwarding_t) );
 	new->port = port;
 	new->lifetime = lifetime;
 	new->refreshed = 0;

@@ -122,9 +122,7 @@ struct tmp_value_t *g_values = NULL;
 
 
 void conf_init( void ) {
-	gconf = (struct gconf_t *) malloc( sizeof(struct gconf_t) );
-
-	memset( gconf, '\0', sizeof(struct gconf_t) );
+	gconf = (struct gconf_t *) calloc( 1, sizeof(struct gconf_t) );
 
 	gconf->is_running = 1;
 

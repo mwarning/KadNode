@@ -365,6 +365,7 @@ int kad_announce( const char _query[], int port, time_t lifetime ) {
 		return -1;
 	}
 
+	/* Remove .p2p suffix and convert to lowercase */
 	if( query_sanitize( query, sizeof(query), _query ) != 0 ) {
 		return -2;
 	}
@@ -583,13 +584,13 @@ void kad_debug_storage( int fd ) {
 
 	s = storage;
 	for( j = 0; s != NULL; ++j ) {
-		dprintf( fd, "Id: %s\n", str_id(s->id, hexbuf ));
+		dprintf( fd, " ID: %s\n", str_id(s->id, hexbuf ));
 		for( i = 0; i < s->numpeers; ++i ) {
 			p = &s->peers[i];
 			to_addr( &addr, &p->ip, p->len, p->port );
-			dprintf( fd, "  Peer: %s\n", str_addr( &addr, addrbuf)  );
+			dprintf( fd, "   Peer: %s\n", str_addr( &addr, addrbuf)  );
 		}
-		dprintf( fd, " Found %d peers.\n", i );
+		dprintf( fd, "  Found %d peers.\n", i );
 		s = s->next;
 	}
 	dprintf( fd, " Found %d stored hashes from received announcements.\n", j );
