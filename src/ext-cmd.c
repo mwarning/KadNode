@@ -286,8 +286,8 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 			*p = '\0';
 			port = port_parse( p + 1, -1 );
 		} else {
-			/* Preselect a random port */
-			port = port_random();
+			/* A valid port will be choosen inside kad_announce() */
+			port = 0;
 			is_random_port = 1;
 		}
 

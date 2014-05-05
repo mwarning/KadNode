@@ -386,7 +386,8 @@ int kad_announce_once( const UCHAR id[], int port ) {
 int kad_announce( const char _query[], int port, time_t lifetime ) {
 	char query[QUERY_MAX_SIZE];
 
-	if( port < 1 || port > 65535 ) {
+	/* Port 0 refers to an arbitrary port */
+	if( port < 0 || port > 65535 ) {
 		return -1;
 	}
 

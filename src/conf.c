@@ -112,6 +112,15 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon (IPv4/IP
 " -h, --help			Print this help.\n\n"
 " -v, --version			Print program version.\n";
 
+struct tmp_value_t {
+	char *value;
+	struct tmp_value_t *next;
+};
+
+/* Temporary storage for delayed ading of values IDs */
+struct tmp_value_t *g_values = NULL;
+
+
 void conf_init( void ) {
 	gconf = (struct gconf_t *) malloc( sizeof(struct gconf_t) );
 
@@ -317,14 +326,10 @@ void conf_str( const char *opt, char **dst, const char *src ) {
 	*dst = strdup( src );
 }
 
-void conf_add_value( char *opt, char *val ) {
+void conf_apply_value( char *val ) {
 	int port;
 	int rc;
 	char *p;
-
-	if( val == NULL ) {
-		conf_arg_expected( opt );
-	}
 
 #ifdef FWD
 	int is_random_port = 0;
@@ -337,8 +342,8 @@ void conf_add_value( char *opt, char *val ) {
 		*p = '\0';
 		port = port_parse( p + 1, -1 );
 	} else {
-		/* Preselect a random port */
-		port = port_random();
+		/* A valid port will be choosen inside kad_announce() */
+		port = 0;
 #ifdef FWD
 		is_random_port = 1;
 #endif
@@ -355,6 +360,28 @@ void conf_add_value( char *opt, char *val ) {
 		}
 #endif
 	}
+}
+
+/* Remove from temporary storage and apply values */
+void conf_apply_values( void ) {
+	struct tmp_value_t *v, *n;
+
+	v = g_values;
+	while( v ) {
+		conf_apply_value( v->value );
+		n = v->next;
+		free( v );
+		v = n;
+	}
+	g_values = NULL;
+}
+
+/* Add to temporary storage */
+void conf_add_value( char *val ) {
+	struct tmp_value_t *next = g_values;
+	g_values = calloc( 1, sizeof(struct tmp_value_t) );
+	g_values->value = val;
+	g_values->next = next;
 }
 
 void read_conf_file( const char *filename ) {
@@ -432,7 +459,10 @@ void conf_handle( char *opt, char *val ) {
 		}
 		conf_str( opt, &gconf->node_id_str, val );
 	} else if( match( opt, "--value-id" ) ) {
-		conf_add_value( opt, val );
+		if( val == NULL ) {
+			conf_arg_expected( opt );
+		}
+		conf_add_value( val );
 	} else if( match( opt, "--pidfile" ) ) {
 		conf_str( opt, &gconf->pidfile, val );
 	} else if( match( opt, "--peerfile" ) ) {
@@ -476,16 +506,10 @@ void conf_handle( char *opt, char *val ) {
 		if( val == NULL ) {
 			conf_arg_expected( opt );
 		}
-		if( values_get() ) {
-			log_err( "CFG: --auth-add-skey options need to be specifed before any --value-id option." );
-		}
 		auth_add_skey( val );
 	} else if( match( opt, "--auth-add-pkey" ) ) {
 		if( val == NULL ) {
 			conf_arg_expected( opt );
-		}
-		if( values_get() ) {
-			log_err( "CFG: --auth-add-pkey options need to be specifed before any --value-id option." );
 		}
 		auth_add_pkey( val );
 #endif

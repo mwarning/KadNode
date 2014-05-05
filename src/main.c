@@ -48,6 +48,9 @@ int main( int argc, char **argv ) {
 	conf_load( argc, argv );
 	conf_check();
 
+	/* Add value IDs after all other options have been processed */
+	conf_apply_values();
+
 	if( gconf->is_daemon == 1 ) {
 		gconf->use_syslog = 1;
 

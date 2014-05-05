@@ -96,16 +96,29 @@ struct value_t *values_add( const char query[], int port, time_t lifetime ) {
 	struct value_t *new;
 	time_t now;
 
-	if( port < 1 || port > 65535 ) {
-		return NULL;
-	}
-
 #ifdef AUTH
 	UCHAR skey[crypto_sign_SECRETKEYBYTES];
 	UCHAR *skey_ptr = auth_handle_skey( skey, id, query );
+
+	if( skey_ptr ) {
+		if( port == 0 ) {
+			/* Authenticationis is done over the DHT port */
+			port = atoi( gconf->dht_port );
+		} else {
+			return NULL;
+		}
+	}
 #else
 	id_compute( id, query );
 #endif
+
+	if( port == 0 ) {
+		port = port_random();
+	}
+
+	if( port < 1 || port > 65535 ) {
+		return NULL;
+	}
 
 	now = time_now_sec();
 
@@ -129,11 +142,6 @@ struct value_t *values_add( const char query[], int port, time_t lifetime ) {
 #ifdef AUTH
 	if( skey_ptr ) {
 		new->skey = memdup( skey_ptr, crypto_sign_SECRETKEYBYTES );
-		/*
-		* Set port to DHT port - this is the only port we
-		* know that can be used to reach the other node.
-		*/
-		port = atoi( gconf->dht_port );
 	}
 #endif
 	new->port = port;
