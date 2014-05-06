@@ -259,7 +259,7 @@ void auth_add_skey( const char arg[] ) {
 }
 
 /*
-* Parse query (e.g. foo.p2p) and get the secret key if a match is found.
+* Parse a sanitized query (e.g. foo) and get the secret key if a match is found.
 * Also compute the identifier.
 */
 UCHAR *auth_handle_skey( UCHAR skey[], UCHAR id[], const char query[] ) {
@@ -293,8 +293,8 @@ UCHAR *auth_handle_skey( UCHAR skey[], UCHAR id[], const char query[] ) {
 }
 
 /*
-* Parse query (e.g. foo.p2p) and get the public key if a match is found.
-* Also compute the identifier.
+* Parse a sanitized query and get the public key if a match is found.
+* Also computes the identifier.
 */
 UCHAR *auth_handle_pkey( UCHAR pkey[], UCHAR id[], const char query[] ) {
 	char pkeyhex[2*crypto_sign_PUBLICKEYBYTES+1];
