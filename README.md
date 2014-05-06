@@ -44,7 +44,7 @@ to the peer file on KadNode shutdown. This ensures successful boostrapping on th
 
 ## AUTHENTICATION
 
-You first need to create a secret/public key pair somewhere:
+For most use cases you first need to create a secret/public key pair:
 
 ```
 $kadnode --auth-genkey
@@ -57,22 +57,50 @@ secret key: <secret-key>
 ### EXAMPLE 1
 
 A typical use case would be to reach a computer (Node1) from another (Node2).
+On Node 1 we announce an identifier (`sha1(myname)`):
+```
+$kadnode --value-id myname.p2p
+```
+
+On other computers running KadNode, we can use myname.p2p to resolve
+the IP address of Node1 (e.g. in the Browser). It may take ~8 seconds on the first try.
+But others peers could also announce the same identifier. This would result in multiple
+IP addresses to be found and used. Using secret/public key pairs helps.
+See the next examples.
+
+### EXAMPLE 2
+
+Now we want to reach a computer (Node1) from another (Node2) using cryptographic keys.
+We tell KadNode on Node1 to *announce* its secret key.
+```
+$kadnode --value-id <secret-key>.p2p
+```
+What is actually announced is the SHA1 hash of the derived public key (`sha1(<public-key>)`),
+not the secret key itself.
+
+On Node2, we can now resolve `<public-key>.p2p`.
+
+### EXAMPLE 3
+
+Instead of using keys directly as in example 1, we can also use domains.
 
 On Node1, well tell Kadnode to announce that we have node1.p2p using the secret key.
 ```
 $kadnode --auth-add-skey "node1.p2p:<secret-key>" --value-id node1.p2p
 ```
+The announced identifier here is `sha1(<public-key>+"node1")`.
 
 On Node2, we tell the node to use the public key to verifiy requests for node1.p2p.
 ```
 $kadnode --auth-add-pkey "node1.p2p:<public-key>"
 ```
+The identifier that is searched for is `sha1(<public-key>+"node1")`.
 
 On Node2, we now can enter node1.p2p into the browser or try to ping node1.p2p to see
-if the address is resolved successfully.
-This may take ~8 seconds on the first try.
+if the address is resolved successfully. The authentication step uses the public key
+to filter out all nodes that do not know the secret key.
 
-### EXAMPLE 2
+### EXAMPLE 4
 
 Instead of just one name, it is possible to use patterns with a wildcard in front:
 
@@ -94,7 +122,7 @@ Since foobar.p2p is used twice, KadNode will give both IP addresses.
 But almost all programs will just use the first address they get,
 which is the first that will be successfully verified.
 
-Multiple --auth-add-key and --value-id arguments are also possible.
+Multiple --auth-add-key and multiple --value-id arguments are possible.
 Pattern conflicts will result in an error message on startup.
 Command line options can also be put inside a configuration file (see --config *file*).
 
