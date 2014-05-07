@@ -17,7 +17,11 @@ all: kadnode
 ifeq ($(findstring auth,$(FEATURES)),auth)
   OBJS += build/ext-auth.o
   CFLAGS += -DAUTH
-  POST_LINKING += -Wl,-Bstatic -lsodium -Wl,-Bdynamic
+  ifeq ($(findstring gcc,$(shell cc --version)),gcc)
+    POST_LINKING += -Wl,-Bstatic -lsodium -Wl,-Bdynamic
+  else
+    POST_LINKING += /usr/local/lib/libsodium.a
+  endif
 endif
 
 ifeq ($(findstring cmd,$(FEATURES)),cmd)
