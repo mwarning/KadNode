@@ -120,6 +120,66 @@ struct tmp_value_t {
 /* Temporary storage for delayed ading of values IDs */
 struct tmp_value_t *g_values = NULL;
 
+void conf_apply_value( const char *val ) {
+	int port;
+	int rc;
+	char *p;
+
+#ifdef FWD
+	int is_random_port = 0;
+#endif
+
+	/* Find <id>:<port> delimiter */
+	p = strchr( val, ':' );
+
+	if( p ) {
+		*p = '\0';
+		port = port_parse( p + 1, -1 );
+	} else {
+		/* A valid port will be choosen inside kad_announce() */
+		port = 0;
+#ifdef FWD
+		is_random_port = 1;
+#endif
+	}
+
+	rc = kad_announce( val, port, LONG_MAX );
+	if( rc < 0 ) {
+		log_err( "CFG: Invalid port for value annoucement: %d", port );
+		exit( 1 );
+	} else {
+#ifdef FWD
+		if( !is_random_port ) {
+			forwardings_add( port, LONG_MAX );
+		}
+#endif
+	}
+}
+
+/* Remove from temporary storage and apply values */
+void conf_apply_values( void ) {
+	struct tmp_value_t *v, *n;
+
+	v = g_values;
+	while( v ) {
+		conf_apply_value( v->value );
+		n = v->next;
+		free( v->value );
+		free( v );
+		v = n;
+	}
+	g_values = NULL;
+}
+
+/* Add to temporary storage */
+void conf_add_value( char *val ) {
+	struct tmp_value_t *next;
+
+	next = g_values;
+	g_values = calloc( 1, sizeof(struct tmp_value_t) );
+	g_values->value = strdup( val );
+	g_values->next = next;
+}
 
 void conf_init( void ) {
 	gconf = (struct gconf_t *) calloc( 1, sizeof(struct gconf_t) );
@@ -237,6 +297,9 @@ void conf_check( void ) {
 	/* Store startup time */
 	gettimeofday( &gconf->time_now, NULL );
 	gconf->startup_time = time_now_sec();
+
+	/* Add value IDs after all other options have been processed */
+	conf_apply_values();
 }
 
 void conf_info( void ) {
@@ -324,131 +387,6 @@ void conf_str( const char *opt, char **dst, const char *src ) {
 	*dst = strdup( src );
 }
 
-void conf_apply_value( char *val ) {
-	int port;
-	int rc;
-	char *p;
-
-#ifdef FWD
-	int is_random_port = 0;
-#endif
-
-	/* Find <id>:<port> delimiter */
-	p = strchr( val, ':' );
-
-	if( p ) {
-		*p = '\0';
-		port = port_parse( p + 1, -1 );
-	} else {
-		/* A valid port will be choosen inside kad_announce() */
-		port = 0;
-#ifdef FWD
-		is_random_port = 1;
-#endif
-	}
-
-	rc = kad_announce( val, port, LONG_MAX );
-	if( rc < 0 ) {
-		log_err( "CFG: Invalid port for value annoucement: %d", port );
-		exit( 1 );
-	} else {
-#ifdef FWD
-		if( !is_random_port ) {
-			forwardings_add( port, LONG_MAX );
-		}
-#endif
-	}
-}
-
-/* Remove from temporary storage and apply values */
-void conf_apply_values( void ) {
-	struct tmp_value_t *v, *n;
-
-	v = g_values;
-	while( v ) {
-		conf_apply_value( v->value );
-		n = v->next;
-		free( v->value );
-		free( v );
-		v = n;
-	}
-	g_values = NULL;
-}
-
-/* Add to temporary storage */
-void conf_add_value( char *val ) {
-	struct tmp_value_t *next;
-
-	next = g_values;
-	g_values = calloc( 1, sizeof(struct tmp_value_t) );
-	g_values->value = strdup( val );
-	g_values->next = next;
-}
-
-void read_conf_file( const char *filename ) {
-	char line[1000];
-	size_t n;
-	struct stat s;
-	FILE *file;
-	char *option;
-	char *value;
-	char *p;
-
-	if( stat( filename, &s ) == 0 && !(s.st_mode & S_IFREG) ) {
-		log_err( "CFG: File expected: %s\n", filename );
-		exit( 1 );
-	}
-
-	n = 0;
-	file = fopen( filename, "r" );
-	if( file == NULL ) {
-		log_err( "CFG: Cannot open file '%s': %s\n", filename, strerror( errno ) );
-		exit( 1 );
-	}
-
-	while( fgets( line, sizeof(line), file ) != NULL ) {
-		n++;
-		option = NULL;
-		value = NULL;
-
-		/* End line early at '#' */
-		if( (p = strchr( line, '#' )) != NULL ) {
-			*p =  '\0';
-		}
-
-		if( strchr( line, '\"' ) || strchr( line, '\"' ) ) {
-			log_err( "CFG: Quotation marks cannot be used in configuration file, line %ld.", n );
-		}
-
-		/* Parse "--option [<value>]" */
-		char *pch = strtok( line," \t\n" );
-		while( pch != NULL ) {
-			if( option == NULL ) {
-				option = pch;
-			} else if( value == NULL ) {
-				value = pch;
-			} else {
-				fclose( file );
-				log_err( "CFG: Too many arguments in line %ld.", n );
-			}
-			pch = strtok( NULL, " \t\n" );
-		}
-
-		if( option == NULL  ) {
-			continue;
-		}
-
-		if( strcmp( option, "--config" ) == 0 ) {
-			fclose( file );
-			log_err( "CFG: Option '--config' not allowed inside a configuration file, line %ld.", n );
-			exit( 1 );
-		}
-		conf_handle( option, value );
-	}
-
-	fclose( file );
-}
-
 void conf_handle( char *opt, char *val ) {
 
 	if( match( opt, "--node-id" ) ) {
@@ -518,7 +456,7 @@ void conf_handle( char *opt, char *val ) {
 		if( val == NULL ) {
 			conf_arg_expected( opt );
 		}
-		read_conf_file( val );
+		conf_load_file( val );
 		conf_str( opt, &gconf->configfile, val );
 	} else if( match( opt, "--mode" ) ) {
 		if( gconf->af != 0 ) {
@@ -567,7 +505,71 @@ void conf_handle( char *opt, char *val ) {
 	}
 }
 
-void conf_load( int argc, char **argv ) {
+void conf_load_file( const char *filename ) {
+	char line[1000];
+	size_t n;
+	struct stat s;
+	FILE *file;
+	char *option;
+	char *value;
+	char *p;
+
+	if( stat( filename, &s ) == 0 && !(s.st_mode & S_IFREG) ) {
+		log_err( "CFG: File expected: %s\n", filename );
+		exit( 1 );
+	}
+
+	n = 0;
+	file = fopen( filename, "r" );
+	if( file == NULL ) {
+		log_err( "CFG: Cannot open file '%s': %s\n", filename, strerror( errno ) );
+		exit( 1 );
+	}
+
+	while( fgets( line, sizeof(line), file ) != NULL ) {
+		n++;
+		option = NULL;
+		value = NULL;
+
+		/* End line early at '#' */
+		if( (p = strchr( line, '#' )) != NULL ) {
+			*p =  '\0';
+		}
+
+		if( strchr( line, '\"' ) || strchr( line, '\"' ) ) {
+			log_err( "CFG: Quotation marks cannot be used in configuration file, line %ld.", n );
+		}
+
+		/* Parse "--option [<value>]" */
+		char *pch = strtok( line," \t\n" );
+		while( pch != NULL ) {
+			if( option == NULL ) {
+				option = pch;
+			} else if( value == NULL ) {
+				value = pch;
+			} else {
+				fclose( file );
+				log_err( "CFG: Too many arguments in line %ld.", n );
+			}
+			pch = strtok( NULL, " \t\n" );
+		}
+
+		if( option == NULL  ) {
+			continue;
+		}
+
+		if( strcmp( option, "--config" ) == 0 ) {
+			fclose( file );
+			log_err( "CFG: Option '--config' not allowed inside a configuration file, line %ld.", n );
+			exit( 1 );
+		}
+		conf_handle( option, value );
+	}
+
+	fclose( file );
+}
+
+void conf_load_args( int argc, char **argv ) {
 	unsigned int i;
 
 	if( argv == NULL ) {
