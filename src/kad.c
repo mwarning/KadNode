@@ -360,18 +360,13 @@ int kad_announce_once( const UCHAR id[], int port ) {
 int kad_announce( const char _query[], int port, time_t lifetime ) {
 	char query[QUERY_MAX_SIZE];
 
-	/* Port 0 refers to an arbitrary port */
-	if( port < 0 || port > 65535 ) {
+	/* Remove .p2p suffix and convert to lowercase */
+	if( query_sanitize( query, sizeof(query), _query ) != 0 ) {
 		return -1;
 	}
 
-	/* Remove .p2p suffix and convert to lowercase */
-	if( query_sanitize( query, sizeof(query), _query ) != 0 ) {
-		return -2;
-	}
-
 	/* Store query to call kad_announce_once() later/multiple times */
-	return values_add( query, port, lifetime ) ? 0 : -3;
+	return values_add( query, port, lifetime ) ? 0 : -2;
 }
 
 /*
