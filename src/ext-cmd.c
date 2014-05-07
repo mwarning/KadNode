@@ -275,6 +275,9 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 				minutes = (30 * (minutes/30 + 1));
 				lifetime = (time_now_sec() + (minutes * 60));
 			}
+		} else {
+			/* Make compilers happy */
+			exit( 1 );
 		}
 
 		int is_random_port = 0;
