@@ -259,7 +259,7 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 				count++;
 				value = value->next;
 			}
-			r_printf( r ,"Announced %d values.\n", count );
+			r_printf( r ,"%d announcements started.\n", count );
 			rc = 0;
 			goto end;
 		} else if( argc == 2 ) {
@@ -298,11 +298,11 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 			}
 #endif
 			if( lifetime == 0 ) {
-				r_printf( r ,"Send single announcement now.\n" );
+				r_printf( r ,"Start single announcement now.\n" );
 			} else if( lifetime == LONG_MAX ) {
-				r_printf( r ,"Announce value for the entire run time (%sport %d).\n", (is_random_port ? "random " : ""), port );
+				r_printf( r ,"Start regular announcements for the entire run time (%sport %d).\n", (is_random_port ? "random " : ""), port );
 			} else {
-				r_printf( r ,"Announce value for %d minutes (%sport %d).\n", minutes, (is_random_port ? "random " : ""), port );
+				r_printf( r ,"Start regular announcements for %d minutes (%sport %d).\n", minutes, (is_random_port ? "random " : ""), port );
 			}
 		} else {
 			r_printf( r ,"Invalid port.\n" );
