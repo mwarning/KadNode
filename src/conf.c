@@ -368,6 +368,7 @@ void conf_apply_values( void ) {
 	while( v ) {
 		conf_apply_value( v->value );
 		n = v->next;
+		free( v->value );
 		free( v );
 		v = n;
 	}
@@ -380,7 +381,7 @@ void conf_add_value( char *val ) {
 
 	next = g_values;
 	g_values = calloc( 1, sizeof(struct tmp_value_t) );
-	g_values->value = val;
+	g_values->value = strdup( val );
 	g_values->next = next;
 }
 
