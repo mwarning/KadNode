@@ -371,7 +371,7 @@ int kad_announce( const char _query[], int port, time_t lifetime ) {
 	}
 
 	/* Store query to call kad_announce_once() later/multiple times */
-	return values_add( query, port, lifetime ) ? -3 : 0;
+	return values_add( query, port, lifetime ) ? 0 : -3;
 }
 
 /*

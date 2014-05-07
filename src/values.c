@@ -133,7 +133,7 @@ struct value_t *values_add( const char query[], int port, time_t lifetime ) {
 		/* Trigger immediate handling */
 		g_values_announce= 0;
 
-		return 0;
+		return cur;
 	}
 
 	/* Prepend new entry */
@@ -157,7 +157,7 @@ struct value_t *values_add( const char query[], int port, time_t lifetime ) {
 	/* Trigger immediate handling */
 	g_values_announce= 0;
 
-	return 0;
+	return new;
 }
 
 void free_value( struct value_t *value ) {
