@@ -305,7 +305,7 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 				r_printf( r ,"Start regular announcements for %d minutes (%sport %d).\n", minutes, (is_random_port ? "random " : ""), port );
 			}
 		} else {
-			r_printf( r ,"Invalid port.\n" );
+			r_printf( r ,"Invalid port or query too long.\n" );
 			rc = 1;
 		}
 
