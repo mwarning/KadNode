@@ -1,10 +1,11 @@
-kadnode (0.9) UNRELEASED; urgency=low
+kadnode (0.9) unstable; urgency=low
 
   * fix local peer discovery on MacOSX
   * update DHT to dht-0.22
   * fix crash when adding value IDs at program start
+  * improve some messages
 
- -- mwarning <moritzwarning@web.de>  Wed, 12 Mar 2014 13:55:45 +0100
+ -- mwarning <moritzwarning@web.de>  Wed, 07 May 2014 15:22:26 +0200
 
 kadnode (0.8) unstable; urgency=low
 
