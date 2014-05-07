@@ -101,7 +101,7 @@ void results_debug( int fd ) {
 			dprintf( fd, "   addr: %s\n", str_addr( &result->addr, buf ) );
 #ifdef AUTH
 			if( results->pkey ) {
-				dprintf( fd, "    challenge: %s\n",  result->challenge ? bytes_to_hex( buf, result->challenge, CHALLENGE_BIN_LENGTH ) : NULL );
+				dprintf( fd, "    challenge: %s\n",  result->challenge ? bytes_to_hex( buf, result->challenge, CHALLENGE_BIN_LENGTH ) : "done" );
 				dprintf( fd, "    challenges_send: %d\n", result->challenges_send );
 			}
 #endif
