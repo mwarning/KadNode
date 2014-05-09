@@ -1,5 +1,5 @@
 /*
-Kademlia dht-0.22 (Transmission 2.77 uses 0.21)
+Kademlia dht-0.22 as used in Transmission
 Source: https://github.com/jech/dht
 */
 /*
