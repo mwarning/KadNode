@@ -1,11 +1,6 @@
 
 #include <string.h>
-#include <signal.h>
-#include <stdio.h>
 #include <unistd.h>
-#include <netdb.h>
-#include <stdlib.h>
-#include <sys/un.h>
 #include <errno.h>
 #include <stdarg.h>
 #include <limits.h>

@@ -1,8 +1,6 @@
 
 #define _GNU_SOURCE
 
-#include <netdb.h>
-#include <net/if.h>
 #include <sys/time.h>
 
 #include "log.h"

@@ -1,13 +1,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/stat.h>
-#include <semaphore.h>
-#include <netinet/in.h>
-#include <signal.h>
 #include <unistd.h>
-#include <sys/resource.h>
 #include <errno.h>
 #include <pwd.h>
 #include <fcntl.h>

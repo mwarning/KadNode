@@ -3,10 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <semaphore.h>
 #include <signal.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <limits.h>
 #include <errno.h>
 
