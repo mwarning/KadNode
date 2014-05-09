@@ -2,6 +2,8 @@
 #ifndef _CONF_H_
 #define _CONF_H_
 
+#include <sys/time.h>
+
 extern const char *kadnode_version_str;
 
 void conf_init( void );

@@ -99,7 +99,7 @@ int net_bind(
 		return -1;
 	}
 
-#if __APPLE__
+#if defined(__APPLE__) || defined(__CYGWIN__)
 	if( ifce ) {
 		close( sock );
 		log_err( "NET: Bind to device not supported on Mac OS." );

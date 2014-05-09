@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <sys/socket.h>
 
 #include "main.h"
 #include "conf.h"

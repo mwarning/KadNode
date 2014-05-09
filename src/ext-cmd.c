@@ -5,6 +5,7 @@
 #include <stdarg.h>
 #include <limits.h>
 #include <stdbool.h>
+#include <sys/socket.h>
 
 #include "main.h"
 #include "conf.h"
