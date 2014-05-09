@@ -59,7 +59,7 @@ int query_sanitize( char buf[], size_t buflen, const char query[] ) {
 
 	/* Convert to lower case */
 	for( i = 0; i < len; ++i ) {
-		buf[i] = tolower( query[i] );
+		buf[i] = tolower( (unsigned char) query[i] );
 	}
 	buf[len] = '\0';
 
