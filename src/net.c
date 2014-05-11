@@ -77,12 +77,12 @@ int net_bind(
 	} else if( af == AF_INET6 ) {
 		addrlen = sizeof(IP6);
 	} else {
-		log_err( "NET: Unknown address family value." );
+		log_err( "%s: Unknown address family value.", name );
 		return -1;
 	}
 
 	if( addr_parse( &sockaddr, addr, port, af ) != 0 ) {
-		log_err( "NET: Failed to parse IP address '%s' and port '%s'.", addr, port );
+		log_err( "%s: Failed to parse IP address '%s' and port '%s'.", name, addr, port );
 		return -1;
 	}
 
@@ -95,20 +95,20 @@ int net_bind(
 	}
 
 	if( sock < 0 ) {
-		log_err( "NET: Failed to create socket: %s", strerror( errno ) );
+		log_err( "%s: Failed to create socket: %s", name, strerror( errno ) );
 		return -1;
 	}
 
 #if defined(__APPLE__) || defined(__CYGWIN__)
 	if( ifce ) {
 		close( sock );
-		log_err( "NET: Bind to device not supported on Mac OS." );
+		log_err( "%s: Bind to device not supported on Mac OS.", name );
 		return -1;
 	}
 #else
 	if( ifce && setsockopt( sock, SOL_SOCKET, SO_BINDTODEVICE, ifce, strlen( ifce ) ) ) {
 		close( sock );
-		log_err( "NET: Unable to bind to device '%s': %s", ifce, strerror( errno ) );
+		log_err( "%s: Unable to bind to device '%s': %s", name, ifce, strerror( errno ) );
 		return -1;
 	}
 #endif
@@ -116,26 +116,26 @@ int net_bind(
 	if( af == AF_INET6 ) {
 		if( setsockopt( sock, IPPROTO_IPV6, IPV6_V6ONLY, &opt_on, sizeof(opt_on) ) < 0 ) {
 			close( sock );
-			log_err( "NET: Failed to set socket option IPV6_V6ONLY: %s", strerror( errno ));
+			log_err( "%s: Failed to set socket option IPV6_V6ONLY: %s", name, strerror( errno ));
 			return -1;
 		}
 	}
 
 	if( bind( sock, (struct sockaddr*) &sockaddr, addrlen ) < 0 ) {
 		close( sock );
-		log_err( "NET: Failed to bind socket to address: '%s'", strerror( errno ) );
+		log_err( "%s: Failed to bind socket to address: '%s'", name, strerror( errno ) );
 		return -1;
 	}
 
 	if( net_set_nonblocking( sock ) < 0 ) {
 		close( sock );
-		log_err( "NET: Failed to make socket nonblocking: '%s'", strerror( errno ) );
+		log_err( "%s: Failed to make socket nonblocking: '%s'", name, strerror( errno ) );
 		return -1;
 	}
 
 	if( protocol == IPPROTO_TCP && listen( sock, 5 ) < 0 ) {
 		close( sock );
-		log_err( "NET: Failed to listen on socket: '%s'", strerror( errno ) );
+		log_err( "%s: Failed to listen on socket: '%s'", name, strerror( errno ) );
 		return -1;
 	}
 
