@@ -302,7 +302,7 @@ void conf_check( void ) {
 void conf_info( void ) {
 	log_info( "Starting %s", kadnode_version_str );
 	log_info( "Node ID: %s", gconf->node_id_str );
-	log_info( "Kademlia Mode: %s", (gconf->af == AF_INET) ? "IPv4" : "IPv6");
+	log_info( "IP Mode: %s", (gconf->af == AF_INET) ? "IPv4" : "IPv6");
 
 	if( gconf->is_daemon ) {
 		log_info( "Run Mode: Daemon" );
