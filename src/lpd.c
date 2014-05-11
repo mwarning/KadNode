@@ -256,7 +256,7 @@ int create_send_socket( void ) {
 	const int scope = 1;
 	int sock_send;
 
-	sock_send = socket( gconf->af, SOCK_DGRAM, 0 );
+	sock_send = socket( gconf->af, SOCK_DGRAM, IPPROTO_UDP );
 
 	if( sock_send < 0 ) {
 		log_err( "LPD: Failed to create sending socket: %s", strerror( errno ));
