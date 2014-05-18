@@ -9,7 +9,7 @@
 
 #define MAX_RESULTS_PER_SEARCH 16
 #define MAX_SEARCHES 64
-#define MAX_SEARCH_LIFETIME (5*60)
+#define MAX_SEARCH_LIFETIME (20*60)
 
 /* An address that was received as a result of an id search */
 struct result_t {
