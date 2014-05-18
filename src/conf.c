@@ -76,6 +76,8 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon (IPv4/IP
 " --pidfile <file>		Write process pid to a file.\n\n"
 " --mode <ipv4|ipv6>		Enable IPv4 or IPv6 mode for the DHT.\n"
 "				Default: ipv4\n\n"
+" --query-tld <domain>		Top level domain to be handled by KadNode.\n"
+"				Default: "QUERY_TLD_DEFAULT"\n\n"
 #ifdef AUTH
 " --auth-gen-keys		Generate a new public/secret key pair and exit.\n\n"
 " --auth-add-pkey [<pat>:]<pkey>	Assign a public key to all values that match the pattern.\n"
@@ -200,6 +202,10 @@ void conf_check( void ) {
 
 	if( gconf->af == 0 ) {
 		gconf->af = AF_INET;
+	}
+
+	if( gconf->query_tld == NULL ) {
+		gconf->query_tld = strdup( QUERY_TLD_DEFAULT );
 	}
 
 	if( gconf->node_id_str == NULL ) {
@@ -328,12 +334,14 @@ void conf_info( void ) {
 			log_err( "Invalid verbosity level." );
 	}
 
+	log_info( "Query TLD: %s", gconf->query_tld );
 	log_info( "Peer File: %s", gconf->peerfile ? gconf->peerfile : "None" );
 	log_info( "Multicast Address: %s", (gconf->disable_multicast == 0) ? gconf->mcast_addr : "Disabled" );
 }
 
 void conf_free( void ) {
 
+	free( gconf->query_tld );
 	free( gconf->node_id_str );
 	free( gconf->user );
 	free( gconf->pidfile );
@@ -399,6 +407,8 @@ void conf_handle( char *opt, char *val ) {
 			conf_arg_expected( opt );
 		}
 		conf_add_value( val );
+	} else if( match( opt, "--query-tld" ) ) {
+		conf_str( opt, &gconf->query_tld, val );
 	} else if( match( opt, "--pidfile" ) ) {
 		conf_str( opt, &gconf->pidfile, val );
 	} else if( match( opt, "--peerfile" ) ) {

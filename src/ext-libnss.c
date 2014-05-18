@@ -72,12 +72,6 @@ enum nss_status _nss_kadnode_gaih_addrtuple(
 		return NSS_STATUS_NOTFOUND;
 	}
 
-	if( !_nss_kadnode_valid_tld( hostname, hostlen ) ) {
-		*errnop = ENOENT;
-		*h_errnop = HOST_NOT_FOUND;
-		return NSS_STATUS_NOTFOUND;
-	}
-
 	memset( addrs, '\0', sizeof(addrs) );
 	if( (addrsnum = _nss_kadnode_lookup( hostname, hostlen, addrs )) <= 0 ) {
 		*errnop = ENOENT;
@@ -163,12 +157,6 @@ enum nss_status _nss_kadnode_hostent(
 	}
 
 	if( !_nss_kadnode_valid_hostname( hostname, hostlen ) ) {
-		*errnop = ENOENT;
-		*h_errnop = HOST_NOT_FOUND;
-		return NSS_STATUS_NOTFOUND;
-	}
-
-	if( !_nss_kadnode_valid_tld( hostname, hostlen ) ) {
 		*errnop = ENOENT;
 		*h_errnop = HOST_NOT_FOUND;
 		return NSS_STATUS_NOTFOUND;
@@ -263,29 +251,6 @@ int _nss_kadnode_valid_hostname( const char *hostname, int hostlen ) {
 	return 1;
 }
 
-int _nss_kadnode_valid_tld( const char *hostname, int hostlen ) {
-	char *tld;
-	size_t i;
-
-	/* Accepted TLDs */
-	const char *domains[] = { QUERY_OMIT_SUFFIX };
-
-	/* Get the last '.' */
-	tld = strrchr( hostname, '.' );
-	if( tld == NULL ) {
-		return 0;
-	}
-
-	for( i = 0; i < (sizeof(domains) / sizeof(char*)); ++i ) {
-		/* Check if the TLD is listed */
-		if( strcmp( tld, domains[i] ) == 0 ) {
-			return 1;
-		}
-	}
-
-	return 0;
-}
-
 int _nss_kadnode_lookup( const char *hostname, int hostlen, IP addrs[] ) {
 
 	IP6 sockaddr;
@@ -302,9 +267,9 @@ int _nss_kadnode_lookup( const char *hostname, int hostlen, IP addrs[] ) {
 		return 0;
 	}
 
-	/* Set receive timeout to 0.5 seconds */
+	/* Set receive timeout to 0.1 seconds */
 	tv.tv_sec = 0;
-	tv.tv_usec = 500000;
+	tv.tv_usec = 100000;
 	if( setsockopt( sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(struct timeval) ) < 0 ) {
 		return 0;
 	}

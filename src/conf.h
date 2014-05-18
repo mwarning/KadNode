@@ -32,6 +32,9 @@ struct gconf_t {
 	/* Drop privileges to user */
 	char *user;
 
+	/* Top level domain used by KadNode (e.g. ".p2p") */
+	char *query_tld;
+
 	/* Write a pid file if set */
 	char *pidfile;
 

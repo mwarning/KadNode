@@ -1,3 +1,10 @@
+kadnode (1.0) UNRELEASED; urgency=low
+
+  * add --query-tld option to configure the top level domain
+    used to divert DNS queries to KadNode (default is .p2p)
+
+ -- mwarning <moritzwarning@web.de>  Sun, 18 May 2014 16:51:22 +0200
+
 kadnode (0.9) unstable; urgency=low
 
   * fix local peer discovery on MacOSX

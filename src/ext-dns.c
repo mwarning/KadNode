@@ -432,7 +432,7 @@ void dns_handler( int rc, int sock ) {
 		return;
 	}
 
-	if( !is_suffix( hostname, QUERY_OMIT_SUFFIX ) ) {
+	if( !is_suffix( hostname, gconf->query_tld ) ) {
 		return;
 	}
 

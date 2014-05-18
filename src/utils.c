@@ -48,8 +48,8 @@ int query_sanitize( char buf[], size_t buflen, const char query[] ) {
 	len = strlen( query );
 
 	/* Remove .p2p suffix */
-	if( is_suffix( query, QUERY_OMIT_SUFFIX ) ) {
-		len -= strlen( QUERY_OMIT_SUFFIX );
+	if( is_suffix( query, gconf->query_tld ) ) {
+		len -= strlen( gconf->query_tld );
 	}
 
 	/* Buffer too small */

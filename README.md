@@ -194,6 +194,9 @@ A ".p2p" at the end of every identifier is ignored. It is used to direct request
   * `--daemon`  
     Run in background.
 
+  * `--query-tld` *domain*  
+    Top level domain used to filter queries to be resolved by KadNode. (Default: ".p2p")
+
   * `--verbosity` *level*  
     Verbosity level: quiet, verbose or debug (Default: verbose).
 
@@ -296,7 +299,7 @@ This is useful to make a local service (e.g. web server) reachable from the Inte
 
 ## NOTES
 
-  * *.p2p* at the end of a identifier is ignored by KadNode. It is used to filter requests and divert them to KadNode.
+  * *.p2p* at the end of an identifier (or set by --query-tld) is ignored by KadNode. It is used to filter requests and divert them to KadNode.
   * The interfaces (NSS, DNS, command line) may return the localhost address if the node itself announced a value.
 
 ## LICENSE

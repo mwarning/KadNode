@@ -21,7 +21,7 @@
 #define NSS_PORT "4053"
 #define WEB_PORT "8053"
 
-#define QUERY_OMIT_SUFFIX ".p2p"
+#define QUERY_TLD_DEFAULT ".p2p"
 #define QUERY_MAX_SIZE 512
 
 #include <netinet/in.h>
