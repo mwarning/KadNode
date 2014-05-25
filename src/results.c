@@ -56,6 +56,27 @@ int results_count( struct results_t *results ) {
 	return count;
 }
 
+int results_entries_count( struct results_t *result ) {
+	struct result_t *entry;
+	int count;
+
+	count = 0;
+	entry = result->entries;
+	while( entry ) {
+#ifdef AUTH
+		/* Omit unverified results */
+		if( entry->challenge ) {
+			entry = entry->next;
+			continue;
+		}
+#endif
+		count++;
+		entry = entry->next;
+	}
+
+	return count;
+}
+
 /* Free a results_t item and all its result_t entries */
 void results_free( struct results_t *results ) {
 	struct result_t *cur;

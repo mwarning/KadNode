@@ -53,6 +53,9 @@ int results_collect( struct results_t *results, IP addr_array[], size_t addr_num
 /* Mark as done */
 int results_done( struct results_t *results, int done );
 
+/* Count (valid) result entries */
+int results_entries_count( struct results_t *result );
+
 void results_debug( int fd );
 
 #endif /* _EXT_RESULTS_H_ */

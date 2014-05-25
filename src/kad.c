@@ -396,23 +396,33 @@ int kad_lookup_value( const char _query[], IP addr_array[], size_t *addr_num ) {
 	/* Find existing or create new item */
 	results = results_add( query, &is_new );
 
+	if( results && is_new ) {
+		/* Search own announced values */
+		kad_lookup_local_values( results );
+	}
+
 	if( results == NULL ) {
 		/* Failed to create a new search */
 		rc = -1;
 	} else if( results->done ) {
-		/* Search is done => restart search*/
-		results_done( results, 0 );
-		rc = dht_search( results->id, 0, gconf->af, dht_callback_func, NULL );
+		/*
+		* Restart finished search when no results have been found
+		* or more than half of the search results lifetime has expired.
+		*/
+		if( results_entries_count( results ) == 0 ||
+			(time_now_sec() - results->start_time) > (MAX_SEARCH_LIFETIME / 2)
+		) {
+			/* Restart search finished search */
+			results_done( results, 0 );
+			dht_search( results->id, 0, gconf->af, dht_callback_func, NULL );
+		}
 		rc = 2;
 	} else if( is_new ) {
-		/* Search is new => start search */
-		rc = dht_search( results->id, 0, gconf->af, dht_callback_func, NULL );
-
-		/* Search own announced values */
-		kad_lookup_local_values( results );
+		/* A new search was started */
+		dht_search( results->id, 0, gconf->af, dht_callback_func, NULL );
 		rc = 1;
 	} else {
-		/* Search is running => poll results */
+		/* Search is still running */
 		rc = 0;
 	}
 
