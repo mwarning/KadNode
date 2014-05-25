@@ -165,7 +165,8 @@ A ".p2p" at the end of every identifier is ignored. It is used to direct request
     This option can occur multiple times.
 
   * `--peerfile` *file-path*  
-    Import peers for bootstrapping and write good peers to this file on shutdown.
+    Import peers for bootstrapping and write good peers  
+	to this file every 24 hours and on shutdown.
 
   * `--user` *name*  
     Change the UUID after start.
