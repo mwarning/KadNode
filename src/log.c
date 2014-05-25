@@ -55,7 +55,7 @@ void _log_print( int priority, const char *format, ... ) {
 
 	if( gconf->use_syslog ) {
 		/* Write messages to e.g. /var/log/syslog */
-		openlog( MAIN_SRVNAME, LOG_PID|LOG_CONS, LOG_USER|LOG_PERROR );
+		openlog( MAIN_SRVNAME, LOG_PID | LOG_CONS, LOG_USER | LOG_PERROR );
 		syslog( priority, "%s %s", prefix, buffer );
 		closelog();
 	} else {

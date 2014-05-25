@@ -22,7 +22,10 @@
 #define log_debug(...) if(_log_check(LOG_DEBUG)) {_log_print(LOG_DEBUG, __VA_ARGS__);}
 
 
+/* Check if the log message is going to be printed */
 int _log_check( int priority );
+
+/* Print a log message */
 void _log_print( int priority, const char *format, ... );
 
 #endif /* _LOG_H_ */
