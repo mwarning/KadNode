@@ -256,17 +256,7 @@ int create_send_socket( void ) {
 	const int scope = 1;
 	int sock_send;
 
-	sock_send = socket( gconf->af, SOCK_DGRAM, IPPROTO_UDP );
-
-	if( sock_send < 0 ) {
-		log_err( "LPD: Failed to create sending socket: %s", strerror( errno ));
-		goto fail;
-	}
-
-	if( net_set_nonblocking( sock_send ) < 0 ) {
-		log_err( "LPD: Failed to set sending socket nonblocking: %s", strerror( errno ));
-		goto fail;
-	}
+	sock_send = net_socket( "LPD", gconf->dht_ifce, IPPROTO_UDP, gconf->af );
 
 	if( setsockopt( sock_send, IPPROTO_IP, IP_MULTICAST_TTL, &scope, sizeof(scope) ) < 0 ) {
 		log_err( "LPD: Failed to set IP_MULTICAST_TTL for sending socket: %s", strerror( errno ));

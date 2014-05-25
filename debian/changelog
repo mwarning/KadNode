@@ -6,6 +6,7 @@ kadnode (1.0) UNRELEASED; urgency=low
   * restart a search only if there are no valid results or more
     than half of the search results lifetime has expired.
   * export peers not only at program exit, but every 24 hours
+  * listen for local peer discovery packets on DHT interface (--ifce)
 
  -- mwarning <moritzwarning@web.de>  Sun, 18 May 2014 16:51:22 +0200
 

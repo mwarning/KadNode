@@ -42,21 +42,61 @@ void net_add_handler( int fd, net_callback *callback ) {
 	numtasks++;
 }
 
-int net_set_nonblocking( int fd ) {
+/* Set a socket non-blocking */
+int net_set_nonblocking( int sock ) {
 	int rc;
 	int nonblocking = 1;
 
-	rc = fcntl( fd, F_GETFL, 0 );
+	rc = fcntl( sock, F_GETFL, 0 );
 	if( rc < 0 ) {
 		return -1;
 	}
 
-	rc = fcntl( fd, F_SETFL, nonblocking ? (rc | O_NONBLOCK) : (rc & ~O_NONBLOCK) );
+	rc = fcntl( sock, F_SETFL, nonblocking ? (rc | O_NONBLOCK) : (rc & ~O_NONBLOCK) );
 	if( rc < 0 ) {
 		return -1;
 	}
 
 	return 0;
+}
+
+int net_socket( const char *name, const char *ifce, int protocol, int af ) {
+	int sock;
+
+	if( protocol == IPPROTO_TCP ) {
+		sock = socket( af, SOCK_STREAM, IPPROTO_TCP );
+	} else if( protocol == IPPROTO_UDP ) {
+		sock = socket( af, SOCK_DGRAM, IPPROTO_UDP );
+	} else {
+		sock = -1;
+	}
+
+	if( sock < 0 ) {
+		log_err( "%s: Failed to create socket: %s", name, strerror( errno ) );
+		return -1;
+	}
+
+	if( net_set_nonblocking( sock ) < 0 ) {
+		close( sock );
+		log_err( "%s: Failed to make socket nonblocking: '%s'", name, strerror( errno ) );
+		return -1;
+	}
+
+#if defined(__APPLE__) || defined(__CYGWIN__)
+	if( ifce ) {
+		close( sock );
+		log_err( "%s: Bind to device not supported on Windows or MacOSX.", name );
+		return -1;
+	}
+#else
+	if( ifce && setsockopt( sock, SOL_SOCKET, SO_BINDTODEVICE, ifce, strlen( ifce ) ) ) {
+		close( sock );
+		log_err( "%s: Unable to bind to device '%s': %s", name, ifce, strerror( errno ) );
+		return -1;
+	}
+#endif
+
+	return sock;
 }
 
 int net_bind(
@@ -86,32 +126,9 @@ int net_bind(
 		return -1;
 	}
 
-	if( protocol == IPPROTO_TCP ) {
-		sock = socket( sockaddr.ss_family, SOCK_STREAM, IPPROTO_TCP );
-	} else if( protocol == IPPROTO_UDP ) {
-		sock = socket( sockaddr.ss_family, SOCK_DGRAM, IPPROTO_UDP );
-	} else {
-		sock = -1;
-	}
-
-	if( sock < 0 ) {
-		log_err( "%s: Failed to create socket: %s", name, strerror( errno ) );
+	if( (sock = net_socket( name, ifce, protocol, af )) < 0 ) {
 		return -1;
 	}
-
-#if defined(__APPLE__) || defined(__CYGWIN__)
-	if( ifce ) {
-		close( sock );
-		log_err( "%s: Bind to device not supported on Mac OS.", name );
-		return -1;
-	}
-#else
-	if( ifce && setsockopt( sock, SOL_SOCKET, SO_BINDTODEVICE, ifce, strlen( ifce ) ) ) {
-		close( sock );
-		log_err( "%s: Unable to bind to device '%s': %s", name, ifce, strerror( errno ) );
-		return -1;
-	}
-#endif
 
 	if( af == AF_INET6 ) {
 		if( setsockopt( sock, IPPROTO_IPV6, IPV6_V6ONLY, &opt_on, sizeof(opt_on) ) < 0 ) {
@@ -124,12 +141,6 @@ int net_bind(
 	if( bind( sock, (struct sockaddr*) &sockaddr, addrlen ) < 0 ) {
 		close( sock );
 		log_err( "%s: Failed to bind socket to address: '%s'", name, strerror( errno ) );
-		return -1;
-	}
-
-	if( net_set_nonblocking( sock ) < 0 ) {
-		close( sock );
-		log_err( "%s: Failed to make socket nonblocking: '%s'", name, strerror( errno ) );
 		return -1;
 	}
 

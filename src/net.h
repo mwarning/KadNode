@@ -4,7 +4,14 @@
 
 typedef void net_callback( int rc, int fd );
 
-/* Create and bind to a socket */
+/* Create a socket and bind to interface */
+int net_socket(
+	const char *name,
+	const char *ifce,
+	int protocol, int af
+);
+
+/* Create a socket and bind to address/interface */
 int net_bind(
 	const char* name,
 	const char* addr,
@@ -12,9 +19,6 @@ int net_bind(
 	const char* ifce,
 	int protocol, int af
 );
-
-/* Set a socket non-blocking */
-int net_set_nonblocking( int fd );
 
 /* Add a socket to the file descriptor set */
 void net_add_handler( int fd, net_callback *callback );
