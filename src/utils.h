@@ -49,7 +49,8 @@ int addr_len( const IP *addr );
 int addr_equal( const IP *addr1, const IP *addr2 );
 
 time_t time_now_sec( void );
-time_t time_add_min( unsigned int min );
+time_t time_add_min( unsigned int minutes );
+time_t time_add_hour( unsigned int hours );
 
 
 #endif /* _UTILS_H_ */

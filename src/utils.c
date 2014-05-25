@@ -401,6 +401,10 @@ time_t time_now_sec( void ) {
 	return gconf->time_now.tv_sec;
 }
 
-time_t time_add_min( unsigned int min ) {
-	return time_now_sec() + (60 * min);
+time_t time_add_min( unsigned int minutes ) {
+	return time_now_sec() + (60 * minutes);
+}
+
+time_t time_add_hour( unsigned int hours ) {
+	return time_now_sec() + (60 * 60 * hours);
 }
