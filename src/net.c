@@ -60,7 +60,7 @@ int net_set_nonblocking( int sock ) {
 	return 0;
 }
 
-int net_socket( const char *name, const char *ifce, int protocol, int af ) {
+int net_socket( const char name[], const char ifce[], int protocol, int af ) {
 	int sock;
 
 	if( protocol == IPPROTO_TCP ) {
@@ -100,10 +100,10 @@ int net_socket( const char *name, const char *ifce, int protocol, int af ) {
 }
 
 int net_bind(
-	const char *name,
-	const char *addr,
-	const char *port,
-	const char *ifce,
+	const char name[],
+	const char addr[],
+	const char port[],
+	const char ifce[],
 	int protocol, int af
 ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
