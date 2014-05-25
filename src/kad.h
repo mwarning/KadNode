@@ -35,8 +35,8 @@ int kad_export_nodes( IP addr_array[], size_t *addr_num );
 /* Print status information */
 int kad_status( char *buf, int len );
 
-/* Count all nodes in the given bucket */
-int kad_count_nodes( void );
+/* Count good or all known peers */
+int kad_count_nodes( int good );
 
 /*
 * Announce that the resource identified by id can

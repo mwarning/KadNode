@@ -117,7 +117,7 @@ void peerfile_import( void ) {
 
 void peerfile_handle_peerfile( int _rc, int _sock ) {
 
-	if( peerfile_import_time <= time_now_sec() && kad_count_nodes() == 0 ) {
+	if( peerfile_import_time <= time_now_sec() && kad_count_nodes( 0 ) == 0 ) {
 		/* Ping peers from peerfile, if present */
 		peerfile_import();
 
@@ -125,7 +125,7 @@ void peerfile_handle_peerfile( int _rc, int _sock ) {
 		peerfile_import_time = time_add_min( 5 );
 	}
 
-	if( peerfile_export_time <= time_now_sec() && kad_count_nodes() != 0 ) {
+	if( peerfile_export_time <= time_now_sec() && kad_count_nodes( 1 ) != 0 ) {
 		/* Export peers */
 		peerfile_export();
 

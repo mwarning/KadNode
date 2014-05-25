@@ -244,7 +244,7 @@ void values_handle( int _rc, int _sock ) {
 		g_values_expire = time_add_min( 1 );
 	}
 
-	if( g_values_announce <= time_now_sec() && kad_count_nodes() != 0 ) {
+	if( g_values_announce <= time_now_sec() && kad_count_nodes( 0 ) != 0 ) {
 		values_announce();
 
 		/* Try again in ~1 minute */

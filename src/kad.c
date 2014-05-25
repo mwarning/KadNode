@@ -259,14 +259,23 @@ void kad_setup( void ) {
 	}
 }
 
-int kad_count_nodes( void ) {
+int kad_count_nodes( int good ) {
 	struct bucket *bucket;
+	struct node *node;
 	int count;
 
 	bucket = (gconf->af == AF_INET ) ? buckets : buckets6;
 	count = 0;
 	while( bucket ) {
-		count += bucket->count;
+		if( good ) {
+			node = bucket->nodes;
+			while( node ) {
+				count += node_good( node ) ? 1 : 0;
+				node = node->next;
+			}
+		} else {
+			count += bucket->count;
+		}
 		bucket = bucket->next;
 	}
 	return count;
@@ -312,8 +321,8 @@ int kad_status( char *buf, int size ) {
 		(gconf->dht_ifce == NULL) ? "<any device>" : gconf->dht_ifce
    );
 
-	bprintf( "DHT Nodes: %d (%s)\n", kad_count_nodes(), (gconf->af == AF_INET) ? "IPv4" : "IPv6" );
-
+	bprintf( "DHT Nodes: %d (%d good) (%s)\n",
+		kad_count_nodes( 0 ), kad_count_nodes( 1 ), (gconf->af == AF_INET) ? "IPv4" : "IPv6" );
 	bprintf( "DHT Storage: %d (max %d), %d peers (max %d per storage)\n",
 		numstorage, DHT_MAX_HASHES, numstorage_peers, DHT_MAX_PEERS );
 	bprintf( "DHT Searches: %d active, %d completed (max %d)\n",

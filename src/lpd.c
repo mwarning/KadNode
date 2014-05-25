@@ -172,7 +172,7 @@ void bootstrap_handle_mcast( int rc, int sock_recv ) {
 	int rc_recv;
 
 	if( g_mcast_time <= time_now_sec() ) {
-		if( kad_count_nodes() == 0 ) {
+		if( kad_count_nodes( 0 ) == 0 ) {
 			/* Join multicast group if possible */
 			if( g_mcast_registered == 0 && multicast_join_group( g_sock_recv, &g_mcast_addr ) == 0 ) {
 				log_info( "LPD: No peers known. Joined multicast group." );
