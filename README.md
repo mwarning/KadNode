@@ -39,8 +39,9 @@ into an empty file and provide it to KadNode:
 kadnode --peerfile peers.txt
 ```
 
-If boostrapping is successful and after at least 5 minutes of running time, good peers will be written
-to the peer file on KadNode shutdown. This ensures successful boostrapping on the next startup.
+At most 150 good peers are written back to the peer file on KadNode shutdown and
+also every 24 hours. This ensures successful boostrapping on the next startup.
+The peer file is not written after at least 5 minutes of runtime.
 
 ## AUTHENTICATION
 

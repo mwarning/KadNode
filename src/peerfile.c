@@ -23,7 +23,7 @@ static time_t peerfile_export_time = 0;
 void peerfile_export( void ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	const char *filename;
-	IP addrs[128];
+	IP addrs[150];
 	size_t i, num;
 	FILE * fp;
 

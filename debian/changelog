@@ -7,6 +7,7 @@ kadnode (1.0) UNRELEASED; urgency=low
     than half of the search results lifetime has expired.
   * export peers not only at program exit, but every 24 hours
   * listen for local peer discovery packets on DHT interface (--ifce)
+  * increase maximum number of exported good peers to 150
 
  -- mwarning <moritzwarning@web.de>  Sun, 18 May 2014 16:51:22 +0200
 
