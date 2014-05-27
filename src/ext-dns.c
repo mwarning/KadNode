@@ -297,7 +297,12 @@ int dns_decode_msg( struct Message *msg, const UCHAR *buffer, size_t size ) {
 	/* Parse questions - but stop after the first A or AAAA */
 	for( i = 0; i < msg->qdCount; ++i ) {
 		n = dns_decode_domain( msg->qName_buffer, &buffer, size );
-		if( n < 0 ) {
+		/*
+		* A UDP DNS message is limited to 512 bytes. 300 Bytes for
+		* the encoded qName is a comfortable margin assuming
+		* one question and up to 8 AAAA records in the response.
+		*/
+		if( n < 0 || n > 300 ) {
 			return -1;
 		}
 
