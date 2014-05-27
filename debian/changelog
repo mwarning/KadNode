@@ -8,6 +8,7 @@ kadnode (1.0) UNRELEASED; urgency=low
   * export peers not only at program exit, but every 24 hours
   * listen for local peer discovery packets on DHT interface (--ifce)
   * increase maximum number of exported good peers to 150
+  * allow DNS interface to return multiple IP addresses
 
  -- mwarning <moritzwarning@web.de>  Sun, 18 May 2014 16:51:22 +0200
 

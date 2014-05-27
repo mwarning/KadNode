@@ -76,13 +76,13 @@ enum {
 };
 
 /* Question Section */
-struct question {
+struct Question {
 	char *qName;
 	unsigned int qType;
 	unsigned int qClass;
 };
 
-union resource_data {
+union ResourceData {
 	struct {
 		char *txt_data;
 	} txt_record;
@@ -114,10 +114,10 @@ struct ResourceRecord {
 	unsigned int class;
 	unsigned int ttl;
 	unsigned int rd_length;
-	union resource_data rd_data;
+	union ResourceData rd_data;
 };
 
-struct message {
+struct Message {
 	unsigned int id; /* Identifier */
 
 	/* flags */
@@ -135,8 +135,8 @@ struct message {
 	unsigned int arCount; /* Additional Record Count */
 
 	/* We only handle one question and one answers */
-	struct question question;
-	struct ResourceRecord answer;
+	struct Question question;
+	struct ResourceRecord answers[8];
 
 	/* Buffer for the qName part. */
 	char qName_buffer[256];
@@ -207,7 +207,7 @@ int dns_decode_domain( char *domain, const UCHAR** buffer, int size ) {
 }
 
 /* foo.bar.com => 3foo3bar3com0 */
-void dns_code_domain( UCHAR** buffer, const char *domain ) {
+void dns_encode_domain( UCHAR** buffer, const char *domain ) {
 	char *buf = (char*) *buffer;
 	const char *beg = domain;
 	const char *pos;
@@ -238,7 +238,7 @@ void dns_code_domain( UCHAR** buffer, const char *domain ) {
 	*buffer += i;
 }
 
-int dns_decode_header( struct message *msg, const UCHAR** buffer, int size ) {
+int dns_decode_header( struct Message *msg, const UCHAR** buffer, int size ) {
 	unsigned int fields;
 
 	if( size < 12 ) {
@@ -247,14 +247,13 @@ int dns_decode_header( struct message *msg, const UCHAR** buffer, int size ) {
 
 	msg->id = get16bits( buffer );
 	fields = get16bits( buffer );
-	msg->qr = fields & QR_MASK;
-	msg->opcode = fields & OPCODE_MASK;
-	msg->aa = fields & AA_MASK;
-	msg->tc = fields & TC_MASK;
-	msg->rd = fields & RD_MASK;
-	msg->ra = fields & RA_MASK;
-	msg->rcode = fields & RCODE_MASK;
-
+	msg->qr = (fields & QR_MASK) >> 15;
+	msg->opcode = (fields & OPCODE_MASK) >> 11;
+	msg->aa = (fields & AA_MASK) >> 10;
+	msg->tc = (fields & TC_MASK) >> 9;
+	msg->rd = (fields & RD_MASK) >> 8;
+	msg->ra = (fields & RA_MASK) >> 7;
+	msg->rcode = (fields & RCODE_MASK) >> 0;
 
 	msg->qdCount = get16bits( buffer );
 	msg->anCount = get16bits( buffer );
@@ -264,11 +263,16 @@ int dns_decode_header( struct message *msg, const UCHAR** buffer, int size ) {
 	return 12;
 }
 
-void dns_code_header( struct message *msg, UCHAR** buffer ) {
+void dns_encode_header( struct Message *msg, UCHAR** buffer ) {
+	int fields;
+
 	put16bits( buffer, msg->id );
 
-	/* Set response flag only */
-	put16bits( buffer, (1 << 15) );
+	/* Set Flags - most fields are omitted */
+	fields = 0;
+	fields |= (msg->qr << 15) & QR_MASK;
+	fields |= (msg->rcode << 0) & RCODE_MASK;
+	put16bits( buffer, fields );
 
 	put16bits( buffer, msg->qdCount );
 	put16bits( buffer, msg->anCount );
@@ -276,7 +280,7 @@ void dns_code_header( struct message *msg, UCHAR** buffer ) {
 	put16bits( buffer, msg->arCount );
 }
 
-int dns_decode_query( struct message *msg, const UCHAR *buffer, int size ) {
+int dns_decode_msg( struct Message *msg, const UCHAR *buffer, size_t size ) {
 	ssize_t n;
 	size_t i;
 
@@ -290,7 +294,7 @@ int dns_decode_query( struct message *msg, const UCHAR *buffer, int size ) {
 		return -1;
 	}
 
-	/* parse questions */
+	/* Parse questions - but stop after the first A or AAAA */
 	for( i = 0; i < msg->qdCount; ++i ) {
 		n = dns_decode_domain( msg->qName_buffer, &buffer, size );
 		if( n < 0 ) {
@@ -318,90 +322,101 @@ int dns_decode_query( struct message *msg, const UCHAR *buffer, int size ) {
 	return -1;
 }
 
-UCHAR *dns_code_response( struct message *msg, UCHAR *buffer ) {
+UCHAR *dns_encode_msg( struct Message *msg, UCHAR *buffer ) {
+	const int qName_offset = 12; //offset of first qName
+	struct ResourceRecord *rr;
+	int i;
 
-	dns_code_header( msg, &buffer );
+	dns_encode_header( msg, &buffer );
 
 	/* Attach a single question section. */
-	dns_code_domain( &buffer, msg->question.qName );
+	dns_encode_domain( &buffer, msg->question.qName );
 	put16bits( &buffer, msg->question.qType );
 	put16bits( &buffer, msg->question.qClass );
 
-	/* Attach a single resource section. */
-	dns_code_domain( &buffer, msg->answer.name );
-	put16bits( &buffer, msg->answer.type );
-	put16bits( &buffer, msg->answer.class );
-	put32bits( &buffer, msg->answer.ttl );
-	put16bits( &buffer, msg->answer.rd_length );
+	/* Attach a resource sections. */
+	for( i = 0; i < msg->anCount; i++ ) {
+		rr = &msg->answers[i];
 
-	if( msg->question.qType == AAAA_Resource_RecordType ) {
-		/* AAAA_Resource_RecordType */
-		memcpy( buffer, &msg->answer.rd_data.aaaa_record.addr, 16 );
-		buffer += 16;
-	} else {
-		/* A_Resource_RecordType */
-		memcpy( buffer, &msg->answer.rd_data.a_record.addr, 4 );
-		buffer += 4;
+		dns_encode_domain( &buffer, msg->question.qName );
+		put16bits( &buffer, rr->type );
+		put16bits( &buffer, rr->class );
+		put32bits( &buffer, rr->ttl );
+		put16bits( &buffer, rr->rd_length );
+
+		if( msg->question.qType == AAAA_Resource_RecordType ) {
+			/* AAAA_Resource_RecordType */
+			memcpy( buffer, &rr->rd_data.aaaa_record.addr, 16 );
+			buffer += 16;
+		} else {
+			/* A_Resource_RecordType */
+			memcpy( buffer, &rr->rd_data.a_record.addr, 4 );
+			buffer += 4;
+		}
 	}
-
 	return buffer;
 }
 
-int dns_lookup( const char *hostname, IP *addr ) {
-	size_t num;
+int dns_lookup( const char hostname[], IP addr[], size_t addr_num ) {
 
 	/* Start lookup for one address */
-	num = 1;
-	if( kad_lookup_value( hostname, addr, &num ) >= 0 && num > 0 ) {
-		return 0;
+	if( kad_lookup_value( hostname, addr, &addr_num ) >= 0 && addr_num > 0 ) {
+		return addr_num;
 	} else {
-		return 1;
+		return 0;
 	}
 }
 
-void dns_reply_msg( struct message *msg, IP *nodeaddr ) {
+void dns_set_msg( struct Message *msg, IP addrs[], size_t addrs_num ) {
 	struct ResourceRecord *rr;
-	struct question *qu;
-
-	qu = &msg->question;
-	rr = &msg->answer;
+	struct Question *qu;
+	IP *addr;
+	int i;
 
 	/* Header: leave most values intact for response */
 	msg->qr = 1; /* this is a response */
 	msg->aa = 1; /* this server is authoritative */
 	msg->ra = 0; /* no recursion available - we don't ask other dns servers */
 	msg->rcode = Ok_ResponseType;
-	msg->anCount = 1;
+	msg->anCount = addrs_num;
 	msg->nsCount = 0;
 	msg->arCount = 0;
 
-	/* Set A Resource Record */
-	if( nodeaddr->ss_family == AF_INET ) {
-		rr->name = qu->qName;
-		rr->type = A_Resource_RecordType;
-		rr->class = qu->qClass;
-		rr->ttl = 0; /* no caching */
-		rr->rd_length = 4;
+	qu = &msg->question;
+	for( i = 0; i < addrs_num; i++ ) {
+		addr = &addrs[i];
+		rr = &msg->answers[i];
 
-		memcpy( rr->rd_data.a_record.addr, &((IP4 *)nodeaddr)->sin_addr, 4 );
-	}
+		/* Set A Resource Record */
+		if( addr->ss_family == AF_INET ) {
+			rr->name = qu->qName;
+			rr->type = A_Resource_RecordType;
+			rr->class = qu->qClass;
+			rr->ttl = 0; /* no caching */
+			rr->rd_length = 4;
 
-	/* Set AAAA Resource Record */
-	if( nodeaddr->ss_family == AF_INET6 ) {
-		rr->name = qu->qName;
-		rr->type = AAAA_Resource_RecordType;
-		rr->class = qu->qClass;
-		rr->ttl = 0; /* no caching */
-		rr->rd_length = 16;
+			memcpy( rr->rd_data.a_record.addr, &((IP4 *)addr)->sin_addr, 4 );
+		}
 
-		memcpy( rr->rd_data.aaaa_record.addr, &((IP6 *)nodeaddr)->sin6_addr, 16 );
+		/* Set AAAA Resource Record */
+		if( addr->ss_family == AF_INET6 ) {
+			rr->name = qu->qName;
+			rr->type = AAAA_Resource_RecordType;
+			rr->class = qu->qClass;
+			rr->ttl = 0; /* no caching */
+			rr->rd_length = 16;
+
+			memcpy( rr->rd_data.aaaa_record.addr, &((IP6 *)addr)->sin6_addr, 16 );
+		}
 	}
 }
 
 void dns_handler( int rc, int sock ) {
-	int n;
-	struct message msg;
-	IP clientaddr, nodeaddr;
+	int buflen;
+	struct Message msg;
+	IP clientaddr;
+	IP addrs[8];
+	size_t addrs_num;
 	socklen_t addrlen_ret;
 
 	UCHAR buffer[1500];
@@ -414,21 +429,21 @@ void dns_handler( int rc, int sock ) {
 	}
 
 	addrlen_ret = sizeof(IP);
-	n = recvfrom( sock, buffer, sizeof(buffer), 0, (struct sockaddr *) &clientaddr, &addrlen_ret );
-	if( n < 0 ) {
+	buflen = recvfrom( sock, buffer, sizeof(buffer), 0, (struct sockaddr *) &clientaddr, &addrlen_ret );
+	if( buflen < 0 ) {
 		return;
 	}
 
 	log_debug( "DNS: Received query from: %s",  str_addr( &clientaddr, addrbuf1 ) );
 
-	if( dns_decode_query( &msg, buffer, n ) < 0 ) {
+	if( dns_decode_msg( &msg, buffer, buflen ) < 0 ) {
 		return;
 	}
 
 	hostname = msg.question.qName;
 
 	if ( hostname == NULL ) {
-		log_warn( "DNS: Missing hostname in lookup." );
+		log_warn( "DNS: Empty hostname." );
 		return;
 	}
 
@@ -442,21 +457,19 @@ void dns_handler( int rc, int sock ) {
 		return;
 	}
 
-	if( dns_lookup( hostname, &nodeaddr ) != 0 ) {
-		log_debug( "DNS: Hostname not found." );
+	if( (addrs_num = dns_lookup( hostname, addrs, N_ELEMS(addrs) )) == 0 ) {
+		log_debug( "DNS: Failed to resolve hostname: %s", hostname );
 		return;
 	}
 
-	dns_reply_msg( &msg, &nodeaddr );
+	dns_set_msg( &msg, &addrs[0], addrs_num );
 
-	UCHAR* p = dns_code_response( &msg, buffer );
+	UCHAR* end = dns_encode_msg( &msg, buffer );
 
-	if( p ) {
-		int buflen = p - buffer;
-		log_debug( "DNS: Send address %s to %s. Packet has %d bytes.",
-			str_addr( &nodeaddr, addrbuf1 ),
-			str_addr( &clientaddr, addrbuf2 ),
-			buflen
+	if( end ) {
+		buflen = end - buffer;
+		log_debug( "DNS: Send %ul addresses to %s. Packet has %d bytes.",
+			addrs_num, str_addr( &clientaddr, addrbuf2 ), buflen
 		);
 
 		sendto( sock, buffer, buflen, 0, (struct sockaddr*) &clientaddr, sizeof(IP) );
