@@ -323,7 +323,7 @@ int dns_decode_msg( struct Message *msg, const UCHAR *buffer, size_t size ) {
 }
 
 UCHAR *dns_encode_msg( struct Message *msg, UCHAR *buffer ) {
-	const int qName_offset = 12; //offset of first qName
+	const int qName_offset = 11; //offset of first qName
 	struct ResourceRecord *rr;
 	int i;
 
@@ -338,7 +338,7 @@ UCHAR *dns_encode_msg( struct Message *msg, UCHAR *buffer ) {
 	for( i = 0; i < msg->anCount; i++ ) {
 		rr = &msg->answers[i];
 
-		dns_encode_domain( &buffer, msg->question.qName );
+		put16bits( &buffer, (3 << 14) + qName_offset );
 		put16bits( &buffer, rr->type );
 		put16bits( &buffer, rr->class );
 		put32bits( &buffer, rr->ttl );
