@@ -425,8 +425,7 @@ void dns_handler( int rc, int sock ) {
 	socklen_t addrlen_ret;
 
 	UCHAR buffer[1500];
-	char addrbuf1[FULL_ADDSTRLEN+1];
-	char addrbuf2[FULL_ADDSTRLEN+1];
+	char addrbuf[FULL_ADDSTRLEN+1];
 	const char *hostname;
 
 	if( rc == 0 ) {
@@ -439,7 +438,7 @@ void dns_handler( int rc, int sock ) {
 		return;
 	}
 
-	log_debug( "DNS: Received query from: %s",  str_addr( &clientaddr, addrbuf1 ) );
+	log_debug( "DNS: Received query from: %s",  str_addr( &clientaddr, addrbuf ) );
 
 	if( dns_decode_msg( &msg, buffer, buflen ) < 0 ) {
 		return;
@@ -474,7 +473,7 @@ void dns_handler( int rc, int sock ) {
 	if( end ) {
 		buflen = end - buffer;
 		log_debug( "DNS: Send %ul addresses to %s. Packet has %d bytes.",
-			addrs_num, str_addr( &clientaddr, addrbuf2 ), buflen
+			addrs_num, str_addr( &clientaddr, addrbuf ), buflen
 		);
 
 		sendto( sock, buffer, buflen, 0, (struct sockaddr*) &clientaddr, sizeof(IP) );
