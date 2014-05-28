@@ -163,7 +163,7 @@ A ".p2p" at the end of every identifier is ignored. It is used to direct request
   * `--value-id` *id[:port]*  
     Add a value identifier and optional port to be announced every 30 minutes.  
     The announcement will associate this nodes IP address with this identifier.  
-    This option can occur multiple times.
+    This option may occur multiple times.
 
   * `--peerfile` *file-path*  
     Import peers for bootstrapping and write good peers  

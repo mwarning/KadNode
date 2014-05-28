@@ -64,7 +64,7 @@ void peerfile_export( void ) {
 
 	fclose( fp );
 
-	log_info( "PEERFILE: Exported %d peers to: %s", i, filename );
+	log_info( "PEERFILE: %d peers exported: %s", i, filename );
 }
 
 void peerfile_import( void ) {

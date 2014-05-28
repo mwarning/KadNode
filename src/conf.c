@@ -59,7 +59,7 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon (IPv4/IP
 " --node-id <id>			Set the node id. Use --value-id to announce values.\n"
 "				Default: <random>\n\n"
 " --value-id <id>[:<port>]	Add a value to be announced every 30 minutes.\n"
-"				This option can occur multiple times.\n\n"
+"				This option may occur multiple times.\n\n"
 " --peerfile <file>		Import/Export peers from and to a file.\n\n"
 " --user <user>			Change the UUID after start.\n\n"
 " --port	<port>			Bind to this port.\n"
