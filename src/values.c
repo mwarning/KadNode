@@ -14,6 +14,8 @@
 #endif
 #include "values.h"
 
+/* Announce values every 20 minutes */
+#define ANNOUNCE_INTERVAL (20*60)
 
 static time_t g_values_expire = 0;
 static time_t g_values_announce = 0;
@@ -229,7 +231,7 @@ void values_announce( void ) {
 			log_debug( "VAL: Announce %s:%hu",  str_id( value->id, hexbuf ), value->port );
 #endif
 			kad_announce_once( value->id, value->port );
-			value->refresh = now + (25 * 60);
+			value->refresh = now + ANNOUNCE_INTERVAL;
 		}
 		value = value->next;
 	}

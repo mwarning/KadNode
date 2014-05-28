@@ -8,8 +8,8 @@
 #endif
 
 /*
-* Announce a value id / port pair every 30 minutes
-* using the DHT until the lifetime expires.
+* Announce a value id / port pair in regular
+* intervals until the lifetime expires.
 */
 
 struct value_t {
