@@ -322,13 +322,13 @@ void conf_info( void ) {
 
 	switch( gconf->verbosity ) {
 		case VERBOSITY_QUIET:
-			log_info( "Verbosity: Quiet" );
+			log_info( "Verbosity: quiet" );
 			break;
 		case VERBOSITY_VERBOSE:
-			log_info( "Verbosity: Verbose" );
+			log_info( "Verbosity: verbose" );
 			break;
 		case VERBOSITY_DEBUG:
-			log_info( "Verbosity: Debug" );
+			log_info( "Verbosity: debug" );
 			break;
 		default:
 			log_err( "Invalid verbosity level." );
