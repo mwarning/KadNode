@@ -122,7 +122,9 @@ int net_bind(
 	}
 
 	if( addr_parse( &sockaddr, addr, port, af ) != 0 ) {
-		log_err( "%s: Failed to parse IP address '%s' and port '%s'.", name, addr, port );
+		log_err( "%s: Failed to parse IP address '%s' and port '%s'.",
+			name, addr, port
+		);
 		return -1;
 	}
 
@@ -133,20 +135,26 @@ int net_bind(
 	if( af == AF_INET6 ) {
 		if( setsockopt( sock, IPPROTO_IPV6, IPV6_V6ONLY, &opt_on, sizeof(opt_on) ) < 0 ) {
 			close( sock );
-			log_err( "%s: Failed to set socket option IPV6_V6ONLY: %s", name, strerror( errno ));
+			log_err( "%s: Failed to set socket option IPV6_V6ONLY: '%s' (%s)",
+				name, strerror( errno ), str_addr( &sockaddr, addrbuf )
+			);
 			return -1;
 		}
 	}
 
 	if( bind( sock, (struct sockaddr*) &sockaddr, addrlen ) < 0 ) {
 		close( sock );
-		log_err( "%s: Failed to bind socket to address: '%s'", name, strerror( errno ) );
+		log_err( "%s: Failed to bind socket to address: '%s' (%s)",
+			name, strerror( errno ), str_addr( &sockaddr, addrbuf )
+		);
 		return -1;
 	}
 
 	if( protocol == IPPROTO_TCP && listen( sock, 5 ) < 0 ) {
 		close( sock );
-		log_err( "%s: Failed to listen on socket: '%s'", name, strerror( errno ) );
+		log_err( "%s: Failed to listen on socket: '%s' (%s)",
+			name, strerror( errno ), str_addr( &sockaddr, addrbuf )
+		);
 		return -1;
 	}
 
