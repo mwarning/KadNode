@@ -121,22 +121,28 @@ struct setting_t {
 /* Temporary list of all settings */
 struct setting_t *g_settings = NULL;
 
-/* Add to temporary storage */
-void conf_add_setting( char *name, char *value ) {
-	struct setting_t *cur;
+/* Append to temporary storage */
+void conf_append_setting( char *name, char *value ) {
+	struct setting_t *end, *new;
 
-	cur = g_settings;
-	g_settings = calloc( 1, sizeof(struct setting_t) );
-	g_settings->name = name ? strdup( name ) : NULL;
-	g_settings->value = value ? strdup( value ) : NULL;
-	g_settings->next = cur;
+	end = g_settings;
+	while( end && end->next  ) {
+		end = end->next;
+	}
 
-	if( cur ) {
-		cur->prev = g_settings;
+	new = calloc( 1, sizeof(struct setting_t) );
+	new->name = name ? strdup( name ) : NULL;
+	new->value = value ? strdup( value ) : NULL;
+	new->prev = end;
+
+	if( end == NULL ) {
+		g_settings = new;
+	} else {
+		end->next = new;
 	}
 }
 
-struct setting_t *conf_rem_setting( struct setting_t *cur ) {
+struct setting_t *conf_remove_setting( struct setting_t *cur ) {
 	struct setting_t *next, *prev;
 
 	prev = cur->prev;
@@ -549,7 +555,7 @@ void conf_load_settings( void ) {
 	setting = g_settings;
 	while( setting ) {
 		if( conf_handle_option( setting->name, setting->value ) ) {
-			setting = conf_rem_setting( setting );
+			setting = conf_remove_setting( setting );
 		} else {
 			setting = setting->next;
 		}
@@ -563,7 +569,7 @@ void conf_load_settings( void ) {
 	setting = g_settings;
 	while( setting ) {
 		if( conf_handle_key( setting->name, setting->value ) ) {
-			setting = conf_rem_setting( setting );
+			setting = conf_remove_setting( setting );
 		} else {
 			setting = setting->next;
 		}
@@ -574,7 +580,7 @@ void conf_load_settings( void ) {
 	setting = g_settings;
 	while( setting ) {
 		if( conf_handle_value( setting->name, setting->value ) ) {
-			setting = conf_rem_setting( setting );
+			setting = conf_remove_setting( setting );
 		} else {
 			setting = setting->next;
 		}
@@ -646,7 +652,7 @@ void conf_load_file( const char *filename ) {
 			log_err( "CFG: Option '--config' not allowed inside a configuration file, line %ld.", n );
 			exit( 1 );
 		}
-		conf_add_setting( option, value );
+		conf_append_setting( option, value );
 	}
 
 	fclose( file );
@@ -663,15 +669,15 @@ void conf_load_args( int argc, char **argv ) {
 		if( argv[i][0] == '-' ) {
 			if( i+1 < argc && argv[i+1][0] != '-' ) {
 				/* -x abc */
-				conf_add_setting( argv[i], argv[i+1] );
+				conf_append_setting( argv[i], argv[i+1] );
 				i++;
 			} else {
 				/* -x -y => -x */
-				conf_add_setting( argv[i], NULL );
+				conf_append_setting( argv[i], NULL );
 			}
 		} else {
 			/* x */
-			conf_add_setting( NULL, argv[i] );
+			conf_append_setting( NULL, argv[i] );
 		}
 	}
 
