@@ -111,13 +111,55 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon (IPv4/IP
 " -h, --help			Print this help.\n\n"
 " -v, --version			Print program version.\n";
 
-struct tmp_value_t {
+struct setting_t {
+	char *name;
 	char *value;
-	struct tmp_value_t *next;
+	struct setting_t *prev;
+	struct setting_t *next;
 };
 
-/* Temporary storage for delayed ading of values IDs */
-struct tmp_value_t *g_values = NULL;
+/* Temporary list of all settings */
+struct setting_t *g_settings = NULL;
+
+/* Add to temporary storage */
+void conf_add_setting( char *name, char *value ) {
+	struct setting_t *cur;
+
+	cur = g_settings;
+	g_settings = calloc( 1, sizeof(struct setting_t) );
+	g_settings->name = name ? strdup( name ) : NULL;
+	g_settings->value = value ? strdup( value ) : NULL;
+	g_settings->next = cur;
+
+	if( cur ) {
+		cur->prev = g_settings;
+	}
+}
+
+struct setting_t *conf_rem_setting( struct setting_t *cur ) {
+	struct setting_t *next, *prev;
+
+	prev = cur->prev;
+	next = cur->next;
+
+	if( prev ) {
+		prev->next = next;
+	}
+
+	if( next ) {
+		next->prev = prev;
+	}
+
+	if( cur == g_settings ) {
+		g_settings = next;
+	}
+
+	free( cur->value );
+	free( cur->name );
+	free( cur );
+
+	return next;
+}
 
 void conf_apply_value( const char *val ) {
 	int port;
@@ -153,31 +195,6 @@ void conf_apply_value( const char *val ) {
 		}
 #endif
 	}
-}
-
-/* Remove from temporary storage and apply values */
-void conf_apply_values( void ) {
-	struct tmp_value_t *v, *n;
-
-	v = g_values;
-	while( v ) {
-		conf_apply_value( v->value );
-		n = v->next;
-		free( v->value );
-		free( v );
-		v = n;
-	}
-	g_values = NULL;
-}
-
-/* Add to temporary storage */
-void conf_add_value( char *val ) {
-	struct tmp_value_t *next;
-
-	next = g_values;
-	g_values = calloc( 1, sizeof(struct tmp_value_t) );
-	g_values->value = strdup( val );
-	g_values->next = next;
 }
 
 void conf_init( void ) {
@@ -300,9 +317,6 @@ void conf_check( void ) {
 	/* Store startup time */
 	gettimeofday( &gconf->time_now, NULL );
 	gconf->startup_time = time_now_sec();
-
-	/* Add value IDs after all other options have been processed */
-	conf_apply_values();
 }
 
 void conf_info( void ) {
@@ -392,7 +406,7 @@ void conf_str( const char *opt, char **dst, const char *src ) {
 	*dst = strdup( src );
 }
 
-void conf_handle( char *opt, char *val ) {
+int conf_handle_option( char *opt, char *val ) {
 
 	if( match( opt, "--node-id" ) ) {
 		if( val == NULL ) {
@@ -402,11 +416,6 @@ void conf_handle( char *opt, char *val ) {
 			log_err( "CFG: Invalid hex string for --node-id." );
 		}
 		conf_str( opt, &gconf->node_id_str, val );
-	} else if( match( opt, "--value-id" ) ) {
-		if( val == NULL ) {
-			conf_arg_expected( opt );
-		}
-		conf_add_value( val );
 	} else if( match( opt, "--query-tld" ) ) {
 		conf_str( opt, &gconf->query_tld, val );
 	} else if( match( opt, "--pidfile" ) ) {
@@ -444,20 +453,6 @@ void conf_handle( char *opt, char *val ) {
 #ifdef WEB
 	} else if( match( opt, "--web-port" ) ) {
 		conf_str( opt, &gconf->web_port, val );
-#endif
-#ifdef AUTH
-	} else if( match( opt, "--auth-gen-keys" ) ) {
-		exit( auth_generate_key_pair() );
-	} else if( match( opt, "--auth-add-skey" ) ) {
-		if( val == NULL ) {
-			conf_arg_expected( opt );
-		}
-		auth_add_skey( val );
-	} else if( match( opt, "--auth-add-pkey" ) ) {
-		if( val == NULL ) {
-			conf_arg_expected( opt );
-		}
-		auth_add_pkey( val );
 #endif
 	} else if( match( opt, "--config" ) ) {
 		if( val == NULL ) {
@@ -508,7 +503,88 @@ void conf_handle( char *opt, char *val ) {
 		printf( "%s\n", kadnode_version_str );
 		exit( 0 );
 	} else {
-		log_err( "CFG: Unknown command line argument: '%s'", opt ? opt : val );
+		return 0;
+	}
+	return 1;
+}
+
+int conf_handle_value( char *opt, char *val ) {
+	if( match( opt, "--value-id" ) ) {
+		if( val == NULL ) {
+			conf_arg_expected( opt );
+		}
+		conf_apply_value( val );
+	} else {
+		return 0;
+	}
+	return 1;
+}
+
+#ifdef AUTH
+int conf_handle_key( char *opt, char *val ) {
+
+	if( match( opt, "--auth-gen-keys" ) ) {
+		exit( auth_generate_key_pair() );
+	} else if( match( opt, "--auth-add-skey" ) ) {
+		if( val == NULL ) {
+			conf_arg_expected( opt );
+		}
+		auth_add_skey( val );
+	} else if( match( opt, "--auth-add-pkey" ) ) {
+		if( val == NULL ) {
+			conf_arg_expected( opt );
+		}
+		auth_add_pkey( val );
+	} else {
+		return 0;
+	}
+	return 1;
+}
+#endif
+
+void conf_load_settings( void ) {
+	struct setting_t *setting;
+
+	/* Handle common settings */
+	setting = g_settings;
+	while( setting ) {
+		if( conf_handle_option( setting->name, setting->value ) ) {
+			setting = conf_rem_setting( setting );
+		} else {
+			setting = setting->next;
+		}
+	}
+
+	/* Set defaults and check common settings */
+	conf_check();
+
+#ifdef AUTH
+	/* Handle public/secret keys */
+	setting = g_settings;
+	while( setting ) {
+		if( conf_handle_key( setting->name, setting->value ) ) {
+			setting = conf_rem_setting( setting );
+		} else {
+			setting = setting->next;
+		}
+	}
+#endif
+
+	/* Handle values IDs */
+	setting = g_settings;
+	while( setting ) {
+		if( conf_handle_value( setting->name, setting->value ) ) {
+			setting = conf_rem_setting( setting );
+		} else {
+			setting = setting->next;
+		}
+	}
+
+	/* Error on unhandled settings */
+	if( g_settings ) {
+		log_err( "CFG: Unknown command line argument: '%s'",
+			g_settings->name ? g_settings->name : g_settings->value
+		);
 	}
 }
 
@@ -561,7 +637,7 @@ void conf_load_file( const char *filename ) {
 			pch = strtok( NULL, " \t\n" );
 		}
 
-		if( option == NULL  ) {
+		if( option == NULL ) {
 			continue;
 		}
 
@@ -570,7 +646,7 @@ void conf_load_file( const char *filename ) {
 			log_err( "CFG: Option '--config' not allowed inside a configuration file, line %ld.", n );
 			exit( 1 );
 		}
-		conf_handle( option, value );
+		conf_add_setting( option, value );
 	}
 
 	fclose( file );
@@ -587,15 +663,17 @@ void conf_load_args( int argc, char **argv ) {
 		if( argv[i][0] == '-' ) {
 			if( i+1 < argc && argv[i+1][0] != '-' ) {
 				/* -x abc */
-				conf_handle( argv[i], argv[i+1] );
+				conf_add_setting( argv[i], argv[i+1] );
 				i++;
 			} else {
 				/* -x -y => -x */
-				conf_handle( argv[i], NULL );
+				conf_add_setting( argv[i], NULL );
 			}
 		} else {
 			/* x */
-			conf_handle( NULL, argv[i] );
+			conf_add_setting( NULL, argv[i] );
 		}
 	}
+
+	conf_load_settings();
 }

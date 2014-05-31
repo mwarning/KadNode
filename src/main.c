@@ -41,7 +41,6 @@ int main( int argc, char **argv ) {
 
 	conf_init();
 	conf_load_args( argc, argv );
-	conf_check();
 
 	if( gconf->is_daemon == 1 ) {
 		gconf->use_syslog = 1;
