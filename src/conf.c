@@ -122,7 +122,7 @@ struct setting_t {
 struct setting_t *g_settings = NULL;
 
 /* Append to temporary storage */
-void conf_append_setting( char *name, char *value ) {
+void conf_append_setting( char name[], char value[] ) {
 	struct setting_t *end, *new;
 
 	end = g_settings;
@@ -167,7 +167,7 @@ struct setting_t *conf_remove_setting( struct setting_t *cur ) {
 	return next;
 }
 
-void conf_apply_value( const char *val ) {
+void conf_apply_value( const char val[] ) {
 	int port;
 	int rc;
 	char *p;
@@ -387,20 +387,20 @@ void conf_free( void ) {
 	free( gconf );
 }
 
-void conf_arg_expected( const char *opt ) {
+void conf_arg_expected( const char opt[] ) {
 	log_err( "CFG: Argument expected for option: %s", opt );
 }
 
-void conf_no_arg_expected( const char *opt ) {
+void conf_no_arg_expected( const char opt[] ) {
 	log_err( "CFG: No argument expected for option: %s", opt );
 }
 
-void conf_duplicate_option( const char *opt ) {
+void conf_duplicate_option( const char opt[] ) {
 	log_err( "CFG: Option was already set: %s", opt );
 }
 
 /* Set a string once - error when already set */
-void conf_str( const char *opt, char **dst, const char *src ) {
+void conf_str( const char opt[], char *dst[], const char src[] ) {
 	if( src == NULL ) {
 		conf_arg_expected( opt );
 	}
@@ -412,7 +412,7 @@ void conf_str( const char *opt, char **dst, const char *src ) {
 	*dst = strdup( src );
 }
 
-int conf_handle_option( char *opt, char *val ) {
+int conf_handle_option( char opt[], char val[] ) {
 
 	if( match( opt, "--node-id" ) ) {
 		if( val == NULL ) {
@@ -514,7 +514,7 @@ int conf_handle_option( char *opt, char *val ) {
 	return 1;
 }
 
-int conf_handle_value( char *opt, char *val ) {
+int conf_handle_value( char opt[], char val[] ) {
 	if( match( opt, "--value-id" ) ) {
 		if( val == NULL ) {
 			conf_arg_expected( opt );
@@ -527,7 +527,7 @@ int conf_handle_value( char *opt, char *val ) {
 }
 
 #ifdef AUTH
-int conf_handle_key( char *opt, char *val ) {
+int conf_handle_key( char opt[], char val[] ) {
 
 	if( match( opt, "--auth-gen-keys" ) ) {
 		exit( auth_generate_key_pair() );
@@ -594,7 +594,7 @@ void conf_load_settings( void ) {
 	}
 }
 
-void conf_load_file( const char *filename ) {
+void conf_load_file( const char filename[] ) {
 	char line[1000];
 	size_t n;
 	struct stat s;
