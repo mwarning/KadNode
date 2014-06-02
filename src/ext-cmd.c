@@ -29,11 +29,11 @@
 const char* cmd_usage =
 	"Usage:\n"
 	"	status\n"
-	"	lookup <id>\n"
+	"	lookup <query>\n"
 #if 0
 	"	lookup_node <id>\n"
 #endif
-	"	announce [<id>[:<port>] [<minutes>]]\n"
+	"	announce [<query>[:<port>] [<minutes>]]\n"
 	"	import <addr>\n"
 	"	export\n"
 	"	blacklist <addr>\n";

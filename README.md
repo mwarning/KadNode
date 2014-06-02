@@ -257,12 +257,12 @@ A ".p2p" at the end of every identifier is ignored. It is used to direct request
   * `status`  
     Print the node id, the number of known nodes / searches / stored hashes and more.
 
-  * `lookup` *id*  
-    Lookup the IP addresses of all nodes that claim to satisfy the identifier.  
+  * `lookup` *query*  
+    Lookup the IP addresses of all nodes that claim to satisfy the query.  
 	The first call will start the search.
 
-  * `announce` [*id*[<i>:*port*</i>] [<i>*minutes*</i>]]  
-    Announce that this instance is associated with identifier id  
+  * `announce` [*query*[<i>:*port*</i>] [<i>*minutes*</i>]]  
+    Announce that this instance is associated with a query  
     and an optional port. The default port is random (but not equal 0).  
     No *minutes* trigger a single announcement. Negative *minutes*  
     last for the entire runtime. Otherwise the lifetime is set *minutes* into the future.  
