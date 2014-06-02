@@ -417,6 +417,7 @@ void dns_set_msg( struct Message *msg, IP addrs[], size_t addrs_num ) {
 
 void dns_handler( int rc, int sock ) {
 	int buflen;
+	int af;
 	struct Message msg;
 	IP clientaddr;
 	IP addrs[32];
@@ -444,6 +445,7 @@ void dns_handler( int rc, int sock ) {
 	}
 
 	hostname = msg.question.qName;
+	af = (msg.question.qType == A_Resource_RecordType) ? AF_INET : AF_INET6;
 
 	if ( hostname == NULL ) {
 		log_warn( "DNS: Empty hostname." );
@@ -451,6 +453,10 @@ void dns_handler( int rc, int sock ) {
 	}
 
 	if( !is_suffix( hostname, gconf->query_tld ) ) {
+		return;
+	}
+
+	if( af != gconf->af ) {
 		return;
 	}
 
