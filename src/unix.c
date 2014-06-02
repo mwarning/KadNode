@@ -91,7 +91,7 @@ void unix_write_pidfile( pid_t pid ) {
 }
 
 void unix_dropuid0( void ) {
-	struct passwd *pw = NULL;
+	struct passwd *pw;
 
 	/* Return if no user is set */
 	if( gconf->user == NULL ) {
