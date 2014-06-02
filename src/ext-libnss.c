@@ -14,7 +14,7 @@
 #include "main.h"
 #include "ext-libnss.h"
 
-#define MAX_ADDRS 8
+#define MAX_ADDRS 32
 
 
 enum nss_status _nss_kadnode_gethostbyname_r(

@@ -9,11 +9,13 @@
 #include "net.h"
 #include "ext-nss.h"
 
+#define MAX_ADDRS 32
+
 
 void nss_lookup( int sock, IP *clientaddr, const char *hostname ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	socklen_t addrlen;
-	IP addrs[8];
+	IP addrs[MAX_ADDRS];
 	size_t num;
 
 	/* Return at most 8 addresses */

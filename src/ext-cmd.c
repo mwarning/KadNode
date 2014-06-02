@@ -183,7 +183,7 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	time_t lifetime;
 	int minutes;
-	IP addrs[16];
+	IP addrs[32];
 	int port;
 	int count;
 	static struct value_t *value;

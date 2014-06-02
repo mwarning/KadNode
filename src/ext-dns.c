@@ -136,7 +136,7 @@ struct Message {
 
 	/* We only handle one question and one answers */
 	struct Question question;
-	struct ResourceRecord answers[8];
+	struct ResourceRecord answers[32];
 
 	/* Buffer for the qName part. */
 	char qName_buffer[256];
@@ -298,9 +298,8 @@ int dns_decode_msg( struct Message *msg, const UCHAR *buffer, size_t size ) {
 	for( i = 0; i < msg->qdCount; ++i ) {
 		n = dns_decode_domain( msg->qName_buffer, &buffer, size );
 		/*
-		* A UDP DNS message is limited to 512 bytes. 300 Bytes for
-		* the encoded qName is a comfortable margin assuming
-		* one question and up to 8 AAAA records in the response.
+		* 300 Bytes for the encoded qName is a comfortable margin assuming
+		* one question and up to 32 AAAA records in the response.
 		*/
 		if( n < 0 || n > 300 ) {
 			return -1;
@@ -420,7 +419,7 @@ void dns_handler( int rc, int sock ) {
 	int buflen;
 	struct Message msg;
 	IP clientaddr;
-	IP addrs[8];
+	IP addrs[32];
 	size_t addrs_num;
 	socklen_t addrlen_ret;
 
