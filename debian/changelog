@@ -9,6 +9,8 @@ kadnode (1.0) UNRELEASED; urgency=low
   * fix: listening peer discovery socket did not apply --ifce
   * increase maximum number of exported good peers to 150
   * allow DNS interface to return multiple IP addresses
+  * increase maximum number of addresses to be returned
+    at once by every interface to 32 (cmd, nss, dns)
   * make local peer discovery a compile time option
     * rename --disable-multicast to --lpd-disable
     * rename --mcast-addr to --lpd-addr
