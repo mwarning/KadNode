@@ -12,7 +12,7 @@
 #include "utils.h"
 #include "net.h"
 #include "kad.h"
-#include "lpd.h"
+#include "ext-lpd.h"
 
 
 /* Multicast message format - inspired by, but not compatible to the BitTorrent Local Peer Discovery (LPD) */
@@ -26,7 +26,7 @@ const char msg_fmt[] =
 
 enum { PACKET_LIMIT_MAX =  20 }; /* Packets per minute to be handled */
 static int g_packet_limit = 0;
-static IP g_mcast_addr = {0};
+static IP g_lpd_addr = {0};
 static int g_mcast_registered = 0; /* Indicates if the multicast addresses has been registered */
 static time_t g_mcast_time = 0; /* Next time to perform a multicast ping */
 static int g_sock_recv = -1;
@@ -174,7 +174,7 @@ void bootstrap_handle_mcast( int rc, int sock_recv ) {
 	if( g_mcast_time <= time_now_sec() ) {
 		if( kad_count_nodes( 0 ) == 0 ) {
 			/* Join multicast group if possible */
-			if( g_mcast_registered == 0 && multicast_join_group( g_sock_recv, &g_mcast_addr ) == 0 ) {
+			if( g_mcast_registered == 0 && multicast_join_group( g_sock_recv, &g_lpd_addr ) == 0 ) {
 				log_info( "LPD: No peers known. Joined multicast group." );
 				g_mcast_registered = 1;
 			}
@@ -182,8 +182,8 @@ void bootstrap_handle_mcast( int rc, int sock_recv ) {
 			if( g_mcast_registered == 1 ) {
 				snprintf( buf, sizeof(buf), msg_fmt, atoi( gconf->dht_port ) );
 
-				addrlen = addr_len( &g_mcast_addr );
-				rc_send = sendto( g_sock_send, buf, strlen( buf ), 0, (struct sockaddr*) &g_mcast_addr, addrlen );
+				addrlen = addr_len( &g_lpd_addr );
+				rc_send = sendto( g_sock_send, buf, strlen( buf ), 0, (struct sockaddr*) &g_lpd_addr, addrlen );
 				if( rc_send < 0 ) {
 					log_warn( "LPD: Cannot send multicast message: %s", strerror( errno ) );
 				} else {
@@ -213,7 +213,7 @@ void bootstrap_handle_mcast( int rc, int sock_recv ) {
 
 	if( g_packet_limit < 0 ) {
 		/* Too much traffic - leave multicast group for now */
-		if( g_mcast_registered == 1 && multicast_leave_group( g_sock_recv, &g_mcast_addr ) == 0 ) {
+		if( g_mcast_registered == 1 && multicast_leave_group( g_sock_recv, &g_lpd_addr ) == 0 ) {
 			log_warn( "LPD: Too much traffic. Left multicast group." );
 			g_mcast_registered = 0;
 		}
@@ -277,7 +277,7 @@ fail:
 int create_receive_socket( void ) {
 	int sock_recv;
 
-	sock_recv = net_bind( "LPD", gconf->mcast_addr, DHT_PORT_MCAST, gconf->dht_ifce, IPPROTO_UDP, gconf->af );
+	sock_recv = net_bind( "LPD", gconf->lpd_addr, DHT_PORT_MCAST, gconf->dht_ifce, IPPROTO_UDP, gconf->af );
 
 	/* We don't want to receive our own packets */
 	if( multicast_disable_loop( sock_recv, gconf->af ) < 0 ) {
@@ -291,11 +291,11 @@ int create_receive_socket( void ) {
 void lpd_setup( void ) {
 
 	g_packet_limit = PACKET_LIMIT_MAX;
-	if( addr_parse( &g_mcast_addr, gconf->mcast_addr, DHT_PORT_MCAST, gconf->af ) != 0 ) {
-		log_err( "BOOT: Failed to parse IP address for '%s'.", gconf->mcast_addr );
+	if( addr_parse( &g_lpd_addr, gconf->lpd_addr, DHT_PORT_MCAST, gconf->af ) != 0 ) {
+		log_err( "BOOT: Failed to parse IP address for '%s'.", gconf->lpd_addr );
 	}
 
-	if( gconf->disable_multicast ) {
+	if( gconf->lpd_disable ) {
 		return;
 	}
 

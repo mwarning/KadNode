@@ -15,8 +15,10 @@
 #include "values.h"
 #include "results.h"
 #include "peerfile.h"
-#include "lpd.h"
 
+#ifdef LPD
+#include "ext-lpd.h"
+#endif
 #ifdef AUTH
 #include "ext-auth.h"
 #endif
@@ -86,10 +88,10 @@ int main( int argc, char **argv ) {
 	/* Setup import of peerfile  */
 	peerfile_setup();
 
-	/* Setup local peer discovery */
-	lpd_setup();
-
 	/* Setup extensions */
+#ifdef LPD
+	lpd_setup();
+#endif
 #ifdef AUTH
 	auth_setup();
 #endif
@@ -112,7 +114,10 @@ int main( int argc, char **argv ) {
 	/* Export peers if a file is provided */
 	peerfile_export();
 
+#ifdef LPD
 	lpd_free();
+#endif
+
 	conf_free();
 
 	return 0;

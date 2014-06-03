@@ -24,6 +24,9 @@
 struct gconf_t *gconf = NULL;
 
 const char *kadnode_version_str = "KadNode v"MAIN_VERSION" ("
+#ifdef LPD
+" lpd"
+#endif
 #ifdef AUTH
 " auth"
 #endif
@@ -66,8 +69,6 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon (IPv4/IP
 "				Default: "DHT_PORT"\n\n"
 " --config <file>		Provide a configuration file with one command line\n"
 "				option on each line. Comments start after '#'.\n\n"
-" --mcast-addr <addr>		Set multicast address for local peer discovery.\n"
-"				Default: "DHT_ADDR4_MCAST" / "DHT_ADDR6_MCAST"\n\n"
 " --ifce <interface>		Bind to this interface.\n"
 "				Default: <any>\n\n"
 " --daemon			Run the node in background.\n\n"
@@ -78,6 +79,11 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon (IPv4/IP
 "				Default: ipv4\n\n"
 " --query-tld <domain>		Top level domain to be handled by KadNode.\n"
 "				Default: "QUERY_TLD_DEFAULT"\n\n"
+#ifdef LPD
+" --lpd-addr <addr>		Set multicast address for Local Peer Discovery.\n"
+"				Default: "DHT_ADDR4_MCAST" / "DHT_ADDR6_MCAST"\n\n"
+" --lpd-disable			Disable multicast to discover local peers.\n\n"
+#endif
 #ifdef AUTH
 " --auth-gen-keys		Generate a new public/secret key pair and exit.\n\n"
 " --auth-add-pkey [<pat>:]<pkey>	Assign a public key to all values that match the pattern.\n"
@@ -107,7 +113,6 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon (IPv4/IP
 #ifdef FWD
 " --disable-forwarding		Disable UPnP/NAT-PMP to forward router ports.\n\n"
 #endif
-" --disable-multicast		Disable multicast to discover local nodes.\n\n"
 " -h, --help			Print this help.\n\n"
 " -v, --version			Print program version.\n";
 
@@ -217,11 +222,8 @@ void conf_init( void ) {
 
 /* Set default if setting was not set and validate settings */
 void conf_check( void ) {
-	char addrbuf[FULL_ADDSTRLEN+1];
 	UCHAR node_id[SHA1_BIN_LENGTH];
 	char hexbuf[SHA1_HEX_LENGTH+1];
-	IP mcast_addr;
-	UCHAR octet;
 
 	if( gconf->af == 0 ) {
 		gconf->af = AF_INET;
@@ -265,15 +267,6 @@ void conf_check( void ) {
 	}
 #endif
 
-	if( gconf->mcast_addr == NULL ) {
-		/* Set default multicast address string */
-		if( gconf->af == AF_INET ) {
-			gconf->mcast_addr = strdup( DHT_ADDR4_MCAST );
-		} else {
-			gconf->mcast_addr = strdup( DHT_ADDR6_MCAST );
-		}
-	}
-
 	if( port_parse( gconf->dht_port, -1 ) < 1 ) {
 		log_err( "CFG: Invalid DHT port '%s'.", gconf->dht_port );
 	}
@@ -302,9 +295,23 @@ void conf_check( void ) {
 	}
 #endif
 
+#ifdef LPD
+	char addrbuf[FULL_ADDSTRLEN+1];
+	IP mcast_addr;
+	UCHAR octet;
+
+	if( gconf->lpd_addr == NULL ) {
+		/* Set default multicast address string */
+		if( gconf->af == AF_INET ) {
+			gconf->lpd_addr = strdup( DHT_ADDR4_MCAST );
+		} else {
+			gconf->lpd_addr = strdup( DHT_ADDR6_MCAST );
+		}
+	}
+
 	/* Parse multicast address string */
-	if( addr_parse( &mcast_addr, gconf->mcast_addr, DHT_PORT_MCAST, gconf->af ) != 0 ) {
-		log_err( "CFG: Failed to parse IP address for '%s'.", gconf->mcast_addr );
+	if( addr_parse( &mcast_addr, gconf->lpd_addr, DHT_PORT_MCAST, gconf->af ) != 0 ) {
+		log_err( "CFG: Failed to parse IP address for '%s'.", gconf->lpd_addr );
 	}
 
 	/* Verifiy multicast address */
@@ -319,6 +326,7 @@ void conf_check( void ) {
 			log_err( "CFG: Multicast address expected: %s", str_addr( &mcast_addr, addrbuf ) );
 		}
 	}
+#endif
 
 	/* Store startup time */
 	gettimeofday( &gconf->time_now, NULL );
@@ -356,7 +364,9 @@ void conf_info( void ) {
 
 	log_info( "Query TLD: %s", gconf->query_tld );
 	log_info( "Peer File: %s", gconf->peerfile ? gconf->peerfile : "None" );
-	log_info( "Multicast Address: %s", (gconf->disable_multicast == 0) ? gconf->mcast_addr : "Disabled" );
+#ifdef LPD
+	log_info( "LPD Address: %s", (gconf->lpd_disable == 0) ? gconf->lpd_addr : "Disabled" );
+#endif
 }
 
 void conf_free( void ) {
@@ -368,9 +378,11 @@ void conf_free( void ) {
 	free( gconf->peerfile );
 	free( gconf->dht_port );
 	free( gconf->dht_ifce );
-	free( gconf->mcast_addr );
 	free( gconf->configfile );
 
+#ifdef LPD
+	free( gconf->lpd_addr );
+#endif
 #ifdef CMD
 	free( gconf->cmd_port );
 #endif
@@ -478,14 +490,16 @@ int conf_handle_option( char opt[], char val[] ) {
 		}
 	} else if( match( opt, "--port" ) ) {
 		conf_str( opt, &gconf->dht_port, val );
-	} else if( match( opt, "--mcast-addr" ) ) {
-		conf_str( opt, &gconf->mcast_addr, val );
-	} else if( match( opt, "--disable-multicast" ) ) {
+#ifdef LPD
+	} else if( match( opt, "--lpd-addr" ) ) {
+		conf_str( opt, &gconf->lpd_addr, val );
+	} else if( match( opt, "--lpd-disable" ) ) {
 		if( val != NULL ) {
 			conf_no_arg_expected( opt );
 		} else {
-			gconf->disable_multicast = 1;
+			gconf->lpd_disable = 1;
 		}
+#endif
 	} else if( match( opt, "--disable-forwarding" ) ) {
 		if( val != NULL ) {
 			conf_no_arg_expected( opt );

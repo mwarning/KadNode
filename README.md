@@ -183,15 +183,8 @@ A ".p2p" at the end of every identifier is ignored. It is used to direct request
   * `--ifce` *interface*  
     Bind to this specific interface.
 
-  * `--mcast-addr` *address*  
-    Send pings to this multicast address as long no nodes were found.  
-    Default: 239.192.202.7:6771 / [ff08:ca:07::]:6771
-
   * `--disable-forwarding`  
     Disable UPnP/NAT-PMP to forward router ports.
-
-  * `--disable-multicast`  
-    Disable multicast to discover local nodes.
 
   * `--daemon`  
     Run in background.
@@ -204,6 +197,13 @@ A ".p2p" at the end of every identifier is ignored. It is used to direct request
 
   * `--pidfile` *file-path*  
     Write process pid to a file.
+
+  * `--lpd-addr` *address*  
+    Send LPD packets to this multicast address as long no peers were found.  
+    Default: 239.192.202.7:6771 / [ff08:ca:07::]:6771
+
+  * `--lpd-disable`  
+    Disable Local Peer Discovery (LPD).
 
   * `--cmd-disable-stdin`  
     Disable the local control interface.

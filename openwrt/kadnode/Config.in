@@ -1,6 +1,11 @@
 menu "Configuration"
 	depends on PACKAGE_kadnode
 
+config KADNODE_ENABLE_LPD
+	bool "Enable Local Peer Discovery"
+	depends on PACKAGE_kadnode
+	default y
+
 config KADNODE_ENABLE_DNS
 	bool "Enable the local DNS server"
 	depends on PACKAGE_kadnode

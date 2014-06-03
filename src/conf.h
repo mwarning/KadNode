@@ -65,17 +65,19 @@ struct gconf_t {
 	/* DHT interface */
 	char *dht_ifce;
 
-	/* DHT multicast address for bootstrapping */
-	char *mcast_addr;
-
 	/* KadNode startup time */
 	time_t startup_time;
 
-	/* Disable ping on multicast address */
-	int disable_multicast;
-
 	/* Disable port forwarding */
 	int disable_forwarding;
+
+#ifdef LPD
+	/* DHT multicast address for bootstrapping */
+	char *lpd_addr;
+
+	/* Disable ping on multicast address */
+	int lpd_disable;
+#endif
 
 #ifdef CMD
 	char *cmd_port;

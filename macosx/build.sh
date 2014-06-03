@@ -6,7 +6,7 @@ VERSION="0.9"
 cd ..
 
 make clean
-make FEATURES="auth cmd dns"
+make FEATURES="auth cmd lpd dns"
 make strip
 
 mkdir -p build/osx-root/private/etc/kadnode/
