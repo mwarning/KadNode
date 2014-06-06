@@ -21,7 +21,7 @@
 #include "ext-auth.h"
 #endif
 #ifdef FWD
-#include "forwardings.h"
+#include "ext-fwd.h"
 #endif
 #include "ext-cmd.h"
 
@@ -295,7 +295,7 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 		if( kad_announce( argv[1], port, lifetime ) >= 0 ) {
 #ifdef FWD
 			if( !is_random_port ) {
-				forwardings_add( port, lifetime);
+				fwd_add( port, lifetime);
 			}
 #endif
 			if( lifetime == 0 ) {
@@ -335,7 +335,7 @@ int cmd_exec( REPLY *r, int argc, char **argv ) {
 			rc = 0;
 #ifdef FWD
 		} else if( match( argv[1], "forwardings" ) ) {
-			forwardings_debug( STDOUT_FILENO );
+			fwd_debug( STDOUT_FILENO );
 			rc = 0;
 #endif
 #ifdef AUTH

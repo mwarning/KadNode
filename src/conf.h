@@ -68,8 +68,10 @@ struct gconf_t {
 	/* KadNode startup time */
 	time_t startup_time;
 
+#ifdef FWD
 	/* Disable port forwarding */
-	int disable_forwarding;
+	int fwd_disable;
+#endif
 
 #ifdef LPD
 	/* DHT multicast address for bootstrapping */

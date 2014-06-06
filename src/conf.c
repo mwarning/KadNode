@@ -17,7 +17,7 @@
 #include "ext-auth.h"
 #endif
 #ifdef FWD
-#include "forwardings.h"
+#include "ext-fwd.h"
 #endif
 
 /* Global object variables */
@@ -111,7 +111,7 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon (IPv4/IP
 "				Default: "WEB_PORT"\n\n"
 #endif
 #ifdef FWD
-" --disable-forwarding		Disable UPnP/NAT-PMP to forward router ports.\n\n"
+" --fwd-disable			Disable UPnP/NAT-PMP to forward router ports.\n\n"
 #endif
 " -h, --help			Print this help.\n\n"
 " -v, --version			Print program version.\n";
@@ -202,7 +202,7 @@ void conf_apply_value( const char val[] ) {
 	} else {
 #ifdef FWD
 		if( !is_random_port ) {
-			forwardings_add( port, LONG_MAX );
+			fwd_add( port, LONG_MAX );
 		}
 #endif
 	}
@@ -500,12 +500,14 @@ int conf_handle_option( char opt[], char val[] ) {
 			gconf->lpd_disable = 1;
 		}
 #endif
-	} else if( match( opt, "--disable-forwarding" ) ) {
+#ifdef FWD
+	} else if( match( opt, "--fwd-disable" ) ) {
 		if( val != NULL ) {
 			conf_no_arg_expected( opt );
 		} else {
-			gconf->disable_forwarding = 1;
+			gconf->fwd_disable = 1;
 		}
+#endif
 	} else if( match( opt, "--ifce" ) ) {
 		conf_str( opt, &gconf->dht_ifce, val );
 	} else if( match( opt, "--user" ) ) {

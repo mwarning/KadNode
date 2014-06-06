@@ -9,7 +9,7 @@
 #include "net.h"
 #include "log.h"
 #include "utils.h"
-#include "forwardings.h"
+#include "ext-fwd.h"
 #ifdef FWD_NATPMP
 #include "natpmp.h"
 #endif
@@ -30,11 +30,11 @@ static time_t g_forwardings_retry = 0;
 static struct forwarding_t *g_forwardings_beg = NULL;
 static struct forwarding_t *g_forwardings_cur = NULL;
 
-struct forwarding_t *forwardings_get( void ) {
+struct forwarding_t *fwd_get( void ) {
 	return g_forwardings_beg;
 }
 
-int forwardings_count( void ) {
+int fwd_count( void ) {
 	struct forwarding_t *item;
 	int count;
 
@@ -48,7 +48,7 @@ int forwardings_count( void ) {
 	return count;
 }
 
-void forwardings_debug( int fd ) {
+void fwd_debug( int fd ) {
 	struct forwarding_t *fwd;
 	char refreshed[64];
 	char lifetime[64];
@@ -82,7 +82,7 @@ void forwardings_debug( int fd ) {
 	dprintf( fd, " Found %d forwardings.\n", counter );
 }
 
-void forwardings_add( int port, time_t lifetime ) {
+void fwd_add( int port, time_t lifetime ) {
 	struct forwarding_t *cur;
 	struct forwarding_t *new;
 
@@ -110,7 +110,7 @@ void forwardings_add( int port, time_t lifetime ) {
 }
 
 /* Remove a port from the list - internal use only */
-void forwardings_remove( struct forwarding_t *item ) {
+void fwd_remove( struct forwarding_t *item ) {
 	struct forwarding_t *pre;
 	struct forwarding_t *cur;
 
@@ -140,7 +140,7 @@ void forwardings_remove( struct forwarding_t *item ) {
 * We do not actually check if we are in a private network.
 * This function is called in intervals.
 */
-void forwardings_handle( int _rc, int _sock ) {
+void fwd_handle( int _rc, int _sock ) {
 	struct forwarding_t *item;
 	int rc;
 	time_t lifespan;
@@ -186,7 +186,7 @@ void forwardings_handle( int _rc, int _sock ) {
 		if( rc == PF_DONE ) {
 			if( lifespan == 0 ) {
 				log_debug( "FWD: Remove NAT-PMP forwarding for port %hu.", item->port );
-				forwardings_remove( item );
+				fwd_remove( item );
 			} else {
 				log_debug( "FWD: Add NAT-PMP forwarding for port %hu.", item->port );
 				item->refreshed = now;
@@ -210,7 +210,7 @@ void forwardings_handle( int _rc, int _sock ) {
 		if( rc == PF_DONE ) {
 			if( lifespan == 0 ) {
 				log_debug( "FWD: Remove UPnP forwarding for port %hu.", item->port );
-				forwardings_remove( item );
+				fwd_remove( item );
 			} else {
 				log_debug( "FWD: Add UPnP forwarding for port %hu.", item->port );
 				item->refreshed = now;
@@ -228,8 +228,8 @@ void forwardings_handle( int _rc, int _sock ) {
 #endif
 }
 
-void forwardings_setup( void ) {
-	if( gconf->disable_forwarding == 1 ) {
+void fwd_setup( void ) {
+	if( gconf->fwd_disable == 1 ) {
 		return;
 	}
 
@@ -244,8 +244,8 @@ void forwardings_setup( void ) {
 
 	/* Add a port forwarding for the DHT for the entire run time */
 	int port = atoi( gconf->dht_port );
-	forwardings_add( port, LONG_MAX );
+	fwd_add( port, LONG_MAX );
 
 	/* Cause the callback to be called in intervals */
-	net_add_handler( -1, &forwardings_handle );
+	net_add_handler( -1, &fwd_handle );
 }

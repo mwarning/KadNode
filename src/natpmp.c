@@ -5,7 +5,7 @@
 #include <arpa/inet.h>
 
 #include "log.h"
-#include "forwardings.h"
+#include "ext-fwd.h"
 #include "natpmp.h"
 
 

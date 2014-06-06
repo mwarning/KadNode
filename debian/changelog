@@ -7,6 +7,7 @@ kadnode (1.0) UNRELEASED; urgency=low
     than half of the search results lifetime has expired.
   * export peers not only at program exit, but every 24 hours
   * increase maximum number of exported good peers to 150
+  * [FWD] rename --disable-forwardings to --fwd-disable
   * [DNS] allow return of multiple IP addresses
   * [DNS] add support for service location records (SRV)
   * [DNS,CMD,NSS,WEB] increase maximum number

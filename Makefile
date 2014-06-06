@@ -70,7 +70,7 @@ ifeq ($(findstring natpmp,$(FEATURES)),natpmp)
 endif
 
 ifeq ($(ENABLE_FORWARDING),1)
-	OBJS += build/forwardings.o
+	OBJS += build/ext-fwd.o
 	CFLAGS += -DFWD
 endif
 

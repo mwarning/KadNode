@@ -183,7 +183,7 @@ A ".p2p" at the end of every identifier is ignored. It is used to direct request
   * `--ifce` *interface*  
     Bind to this specific interface.
 
-  * `--disable-forwarding`  
+  * `--fwd-disable`  
     Disable UPnP/NAT-PMP to forward router ports.
 
   * `--daemon`  

@@ -1,6 +1,6 @@
 
-#ifndef _FORWARDINGS_H_
-#define _FORWARDINGS_H_
+#ifndef _EXT_FWD_H_
+#define _EXT_FWD_H_
 
 #include <sys/time.h>
 
@@ -26,18 +26,18 @@ struct forwarding_t {
 	struct forwarding_t *next;
 };
 
-void forwardings_setup( void );
+void fwd_setup( void );
 
-struct forwarding_t *forwardings_get( void );
+struct forwarding_t *fwd_get( void );
 
 /* List all entries */
-void forwardings_debug( int fd );
+void fwd_debug( int fd );
 
 /* Count all entries */
-int forwardings_count( void );
+int fwd_count( void );
 
 /* Add a port forwarding from external port to the same local port. */
-void forwardings_add( int port, time_t host_lifetime );
+void fwd_add( int port, time_t host_lifetime );
 
 
-#endif /* _FORWARDINGS_H_ */
+#endif /* _EXT_FWD_H_ */

@@ -15,9 +15,6 @@
 #ifdef AUTH
 #include "ext-auth.h"
 #endif
-#ifdef FWD
-#include "forwardings.h"
-#endif
 
 #include "dht.c"
 

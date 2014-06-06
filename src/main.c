@@ -35,7 +35,7 @@
 #include "ext-cmd.h"
 #endif
 #ifdef FWD
-#include "forwardings.h"
+#include "ext-fwd.h"
 #endif
 
 
@@ -73,7 +73,7 @@ int main( int argc, char **argv ) {
 
 	/* Setup port-forwarding */
 #ifdef FWD
-	forwardings_setup();
+	fwd_setup();
 #endif
 
 	/* Setup the Kademlia DHT */
