@@ -11,11 +11,13 @@
 #include "net.h"
 #include "ext-web.h"
 
+#define MAX_ADDRS 32
+
 
 /* handle 'GET /lookup?foo.p2p' */
 void handle_lookup( char *reply_buf, const char *params ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
-	IP addrs[16];
+	IP addrs[MAX_ADDRS];
 	size_t num;
 	size_t i, n;
 
@@ -55,7 +57,7 @@ void web_handler( int rc, int sock ) {
 	IP clientaddr;
 	socklen_t addrlen_ret;
 	char request_buf[1024];
-	char reply_buf[1024];
+	char reply_buf[(MAX_ADDRS+1)*FULL_ADDSTRLEN+2];
 	char *cmd, *params;
 	char *space, *delim;
 	size_t n;
