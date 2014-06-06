@@ -6,13 +6,13 @@ kadnode (1.0) UNRELEASED; urgency=low
   * restart a search only if there are no valid results or more
     than half of the search results lifetime has expired.
   * export peers not only at program exit, but every 24 hours
-  * fix: listening peer discovery socket did not apply --ifce
   * increase maximum number of exported good peers to 150
-  * allow DNS interface to return multiple IP addresses
-  * allow DNS interface to handle service location records (SRV)
-  * increase maximum number of addresses to be returned
-    at once by every interface to 32 (cmd, nss, dns)
-  * make local peer discovery a compile time option
+  * [DNS] allow return of multiple IP addresses
+  * [DNS] add support for service location records (SRV)
+  * [DNS,CMD,NSS] increase maximum number
+	of addresses to be returned at once to 32
+  * [LPD] honor --ifce setting for listening multicast socket
+  * [LPD] make local peer discovery a compile time option
     * rename --disable-multicast to --lpd-disable
     * rename --mcast-addr to --lpd-addr
 
