@@ -228,11 +228,11 @@ int dns_encode_domain( UCHAR** buffer, const char *domain ) {
 	size_t plen = 0;
 	size_t i = 0;
 
-	while( (pos = strchr(beg, '.')) != '\0' ) {
+	while( (pos = strchr(beg, '.')) != NULL ) {
 		plen = pos - beg;
 		buf[i] = plen;
 		i += 1;
-		memcpy( buf+i, beg, plen );
+		memcpy( buf + i, beg, plen );
 		i += plen;
 
 		beg = pos + 1;
