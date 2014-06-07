@@ -457,19 +457,11 @@ int dns_setup_msg( struct Message *msg, IP addrs[], size_t addrs_num ) {
 			setAddressRecord( &msg->answers[c], g_names[i], &addrs[i] );
 			msg->arCount++;
 		}
-	} else if( msg->question.qType == A_Resource_RecordType ) {
+	} else {
+		/* Assume AAAA or A Record Type */
 		for( i = 0; i < addrs_num; i++, c++ ) {
-			if( addrs[i].ss_family == AF_INET ) {
-				setAddressRecord( &msg->answers[c], qName, &addrs[i] );
-				msg->arCount++;
-			}
-		}
-	} else if( msg->question.qType == AAAA_Resource_RecordType ) {
-		for( i = 0; i < addrs_num; i++, c++ ) {
-			if( addrs[i].ss_family == AF_INET6 ) {
-				setAddressRecord( &msg->answers[c], qName, &addrs[i] );
-				msg->arCount++;
-			}
+			setAddressRecord( &msg->answers[c], qName, &addrs[i] );
+			msg->arCount++;
 		}
 	}
 
@@ -503,6 +495,14 @@ void dns_handler( int rc, int sock ) {
 
 	/* Decode message */
 	if( dns_decode_msg( &msg, buffer ) < 0 ) {
+		return;
+	}
+
+	if( msg->question.qType == A_Resource_RecordType && gconf->af != AFINET ) {
+		return;
+	}
+
+	if( msg->question.qType == AAAA_Resource_RecordType && gconf->af != AFINET6 ) {
 		return;
 	}
 
