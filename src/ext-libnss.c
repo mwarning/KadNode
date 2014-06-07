@@ -231,7 +231,7 @@ enum nss_status _nss_kadnode_hostent(
 	return NSS_STATUS_SUCCESS;
 }
 
-int _nss_kadnode_valid_hostname( const char *hostname, int hostlen ) {
+int _nss_kadnode_valid_hostname( const char hostname[], int hostlen ) {
 	int i;
 
 	for( i = 0; i < hostlen; i++ ) {
@@ -251,7 +251,7 @@ int _nss_kadnode_valid_hostname( const char *hostname, int hostlen ) {
 	return 1;
 }
 
-int _nss_kadnode_lookup( const char *hostname, int hostlen, IP addrs[] ) {
+int _nss_kadnode_lookup( const char hostname[], int hostlen, IP addrs[] ) {
 
 	IP6 sockaddr;
 	socklen_t addrlen;

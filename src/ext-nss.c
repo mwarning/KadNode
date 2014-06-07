@@ -12,7 +12,7 @@
 #define MAX_ADDRS 32
 
 
-void nss_lookup( int sock, IP *clientaddr, const char *hostname ) {
+void nss_lookup( int sock, IP *clientaddr, const char hostname[] ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	socklen_t addrlen;
 	IP addrs[MAX_ADDRS];
