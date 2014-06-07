@@ -94,18 +94,17 @@ void peerfile_import( void ) {
 			continue;
 		}
 
-		rc = addr_parse_full( &addr, linebuf, DHT_PORT, gconf->af );
-		if( rc == ADDR_PARSE_SUCCESS ) {
+		if( (rc = addr_parse_full( &addr, linebuf, DHT_PORT, gconf->af )) == 0 ) {
 			if( kad_ping( &addr ) == 0 ) {
 				num++;
 			} else {
 				log_warn( "PEERFILE: Cannot ping address '%s': %s", linebuf, strerror( errno ) );
 				goto end;
 			}
-		} else if( rc == ADDR_PARSE_CANNOT_RESOLVE ) {
-			log_warn( "PEERFILE: Cannot resolve address: '%s'", linebuf );
-		} else {
+		} else if( rc == -1 ) {
 			log_warn( "PEERFILE: Cannot parse address: '%s'", linebuf );
+		} else {
+			log_warn( "PEERFILE: Cannot resolve address: '%s'", linebuf );
 		}
 	}
 

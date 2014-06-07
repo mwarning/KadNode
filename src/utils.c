@@ -290,7 +290,7 @@ int addr_parse( IP *addr, const char addr_str[], const char port_str[], int af )
 	hints.ai_family = af;
 
 	if( getaddrinfo( addr_str, port_str, &hints, &info ) != 0 ) {
-		return ADDR_PARSE_CANNOT_RESOLVE;
+		return -2;
 	}
 
 	p = info;
@@ -298,17 +298,17 @@ int addr_parse( IP *addr, const char addr_str[], const char port_str[], int af )
 		if( p->ai_family == AF_INET6 ) {
 			memcpy( addr, p->ai_addr, sizeof(IP6) );
 			freeaddrinfo( info );
-			return ADDR_PARSE_SUCCESS;
+			return 0;
 		}
 		if( p->ai_family == AF_INET ) {
 			memcpy( addr, p->ai_addr, sizeof(IP4) );
 			freeaddrinfo( info );
-			return ADDR_PARSE_SUCCESS;
+			return 0;
 		}
 	}
 
 	freeaddrinfo( info );
-	return ADDR_PARSE_NO_ADDR_FOUND;
+	return -3;
 }
 
 /*
@@ -334,7 +334,7 @@ int addr_parse_full( IP *addr, const char full_addr_str[], const char default_po
 	len = strlen( full_addr_str );
 	if( len >= (sizeof(addr_buf) - 1) ) {
 		/* address too long */
-		return ADDR_PARSE_INVALID_FORMAT;
+		return -1;
 	} else {
 		addr_beg = addr_buf;
 	}
@@ -350,7 +350,7 @@ int addr_parse_full( IP *addr, const char full_addr_str[], const char default_po
 
 		if( addr_tmp == NULL ) {
 			/* broken format */
-			return ADDR_PARSE_INVALID_FORMAT;
+			return -1;
 		}
 
 		*addr_tmp = '\0';
@@ -362,7 +362,7 @@ int addr_parse_full( IP *addr, const char full_addr_str[], const char default_po
 			port_str = addr_tmp + 2;
 		} else {
 			/* port expected */
-			return ADDR_PARSE_INVALID_FORMAT;
+			return -1;
 		}
 	} else if( last_colon && last_colon == strchr( addr_buf, ':' ) ) {
 		/* <non-ipv6-addr>:<port> */

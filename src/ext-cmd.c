@@ -117,7 +117,7 @@ int cmd_import( REPLY *r, const char *addr_str) {
 	int rc;
 
 	/* If the address contains no port - use the default port */
-	if( (rc = addr_parse_full( &addr, addr_str, DHT_PORT, gconf->af )) == ADDR_PARSE_SUCCESS ) {
+	if( (rc = addr_parse_full( &addr, addr_str, DHT_PORT, gconf->af )) == 0 ) {
 		if( kad_ping( &addr ) == 0 ) {
 			r_printf( r, "Send ping to: %s\n", str_addr( &addr, addrbuf ) );
 			return 0;
@@ -125,14 +125,11 @@ int cmd_import( REPLY *r, const char *addr_str) {
 			r_printf( r, "Failed to send ping.\n" );
 			return 1;
 		}
-	} else if( rc == ADDR_PARSE_CANNOT_RESOLVE ) {
-		r_printf( r, "Failed to resolve address.\n" );
-		return 1;
-	} else if( rc == ADDR_PARSE_NO_ADDR_FOUND ) {
-		r_printf( r, "Failed to aquire address of required protocol.\n" );
+	} else if( rc == -1 ) {
+		r_printf( r, "Failed to parse address.\n" );
 		return 1;
 	} else {
-		r_printf( r, "Failed to parse address.\n" );
+		r_printf( r, "Failed to resolve address.\n" );
 		return 1;
 	}
 }
@@ -145,13 +142,13 @@ int cmd_blacklist( REPLY *r, const char *addr_str ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	IP addr;
 
-	if( addr_parse( &addr, addr_str, NULL, gconf->af ) != 0 ) {
-		r_printf( r, "Invalid address.\n" );
-		return 1;
-	} else {
+	if( addr_parse( &addr, addr_str, NULL, gconf->af ) == 0 ) {
 		kad_blacklist( &addr );
 		r_printf( r, "Added to blacklist: %s\n", str_addr( &addr, addrbuf ) );
 		return 0;
+	} else {
+		r_printf( r, "Invalid address.\n" );
+		return 1;
 	}
 }
 

@@ -13,11 +13,6 @@
 /* Simple string match */
 #define match(opt, arg) ((opt != NULL) && (strcmp( opt, arg ) == 0))
 
-#define ADDR_PARSE_SUCCESS 0
-#define ADDR_PARSE_INVALID_FORMAT 1
-#define ADDR_PARSE_CANNOT_RESOLVE 2
-#define ADDR_PARSE_NO_ADDR_FOUND 3
-
 
 int is_suffix( const char str[], const char suffix[] );
 UCHAR *memdup( const UCHAR src[], size_t size );
