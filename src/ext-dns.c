@@ -498,11 +498,11 @@ void dns_handler( int rc, int sock ) {
 		return;
 	}
 
-	if( msg->question.qType == A_Resource_RecordType && gconf->af != AFINET ) {
+	if( msg.question.qType == A_Resource_RecordType && gconf->af != AF_INET ) {
 		return;
 	}
 
-	if( msg->question.qType == AAAA_Resource_RecordType && gconf->af != AFINET6 ) {
+	if( msg.question.qType == AAAA_Resource_RecordType && gconf->af != AF_INET6 ) {
 		return;
 	}
 
