@@ -550,6 +550,6 @@ void dns_setup( void ) {
 		return;
 	}
 
-	sock = net_bind( "DNS", "::1", gconf->dns_port, NULL, IPPROTO_UDP, AF_INET6 );
+	sock = net_bind( "DNS", "localhost", gconf->dns_port, NULL, IPPROTO_UDP, AF_UNSPEC );
 	net_add_handler( sock, &dns_handler );
 }

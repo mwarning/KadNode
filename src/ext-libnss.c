@@ -251,19 +251,64 @@ int _nss_kadnode_valid_hostname( const char hostname[], int hostlen ) {
 	return 1;
 }
 
-int _nss_kadnode_lookup( const char hostname[], int hostlen, IP addrs[] ) {
+/*
+* Parse/Resolve an IP address.
+* The port must be specified separately.
+*/
+int addr_parse( IP *addr, const char addr_str[], const char port_str[], int af ) {
+	struct addrinfo hints;
+	struct addrinfo *info = NULL;
+	struct addrinfo *p = NULL;
 
-	IP6 sockaddr;
+	memset( &hints, '\0', sizeof(struct addrinfo) );
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_family = af;
+
+	if( getaddrinfo( addr_str, port_str, &hints, &info ) != 0 ) {
+		return -2;
+	}
+
+	p = info;
+	while( p != NULL ) {
+		if( p->ai_family == AF_INET6 ) {
+			memcpy( addr, p->ai_addr, sizeof(IP6) );
+			freeaddrinfo( info );
+			return 0;
+		}
+		if( p->ai_family == AF_INET ) {
+			memcpy( addr, p->ai_addr, sizeof(IP4) );
+			freeaddrinfo( info );
+			return 0;
+		}
+	}
+
+	freeaddrinfo( info );
+	return -3;
+}
+
+int addr_len( const IP *addr ) {
+	switch( addr->ss_family ) {
+		case AF_INET:
+			return sizeof(IP4);
+		case AF_INET6:
+			return sizeof(IP6);
+		default:
+			return 0;
+	}
+}
+
+int _nss_kadnode_lookup( const char hostname[], int hostlen, IP addrs[] ) {
+	IP sockaddr;
 	socklen_t addrlen;
 	int sockfd, size;
 	struct timeval tv;
 
-	addrlen = sizeof(IP6);
-	memset( &sockaddr, '\0', addrlen );
+	if( addr_parse( &sockaddr, "localhost", NSS_PORT, AF_UNSPEC ) < 0 ) {
+		return 0;
+	}
 
-	/* Setup UDP */
-	sockfd = socket( AF_INET6, SOCK_DGRAM, 0 );
-	if( sockfd < 0 ) {
+	/* Setup UDP socket */
+	if( (sockfd = socket( sockaddr.ss_family, SOCK_DGRAM, IPPROTO_UDP )) < 0 ) {
 		return 0;
 	}
 
@@ -274,13 +319,7 @@ int _nss_kadnode_lookup( const char hostname[], int hostlen, IP addrs[] ) {
 		return 0;
 	}
 
-	/* Setup IPv6 */
-	sockaddr.sin6_family = AF_INET6;
-	sockaddr.sin6_port = htons( atoi( NSS_PORT ) );
-	if( !inet_pton( AF_INET6, "::1", &sockaddr.sin6_addr ) ) {
-		return 0;
-	}
-
+	addrlen = addr_len( &sockaddr );
 	size = sendto( sockfd, hostname, hostlen, 0, (struct sockaddr *)&sockaddr, addrlen );
 	if( size != hostlen ) {
 		return 0;

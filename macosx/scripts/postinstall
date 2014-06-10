@@ -4,7 +4,7 @@ set -e
 
 #Use resolver. Works for console apps.
 mkdir -p /etc/resolver/
-echo "nameserver ::1.53" > /etc/resolver/p2p
+echo "nameserver localhost.53" > /etc/resolver/p2p
 
 #a helper function
 contains() {
@@ -17,12 +17,11 @@ contains() {
 
 #Add localhost to DNS server list for every device.
 #The Safari Browser seems to ignore this - let us try it nevertheless.
-localhost="::1"
 for device in $(networksetup listallnetworkservices | tail -n+2 | tr '*\n' ' '); do
   { servers=$(networksetup -getdnsservers $device); } || continue
   servers=$(echo $servers | tr '\n' ' ')
-  contains $localhost $servers && continue
-  networksetup -setdnsservers "$device" $servers $localhost
+  contains 'localhost' $servers && continue
+  networksetup -setdnsservers "$device" $servers 'localhost'
 done
 
 #launch KadNode

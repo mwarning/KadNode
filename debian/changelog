@@ -2,6 +2,7 @@ kadnode (1.0) UNRELEASED; urgency=low
 
   * add --query-tld option to configure the top level domain
     used to divert DNS queries to KadNode (default is .p2p)
+  * support hosts that only have IPv4 enabled
   * set search results lifetime to 20 minutes instead of just 5
   * restart a search only if there are no valid results or more
     than half of the search results lifetime has expired.

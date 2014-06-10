@@ -110,15 +110,6 @@ int net_bind(
 	socklen_t addrlen;
 	IP sockaddr;
 
-	if( af == AF_INET ) {
-		addrlen = sizeof(IP4);
-	} else if( af == AF_INET6 ) {
-		addrlen = sizeof(IP6);
-	} else {
-		log_err( "%s: Unknown address family value.", name );
-		return -1;
-	}
-
 	if( addr_parse( &sockaddr, addr, port, af ) != 0 ) {
 		log_err( "%s: Failed to parse IP address '%s' and port '%s'.",
 			name, addr, port
@@ -126,20 +117,20 @@ int net_bind(
 		return -1;
 	}
 
-	if( (sock = net_socket( name, ifce, protocol, af )) < 0 ) {
+	if( (sock = net_socket( name, ifce, protocol, sockaddr.ss_family )) < 0 ) {
 		return -1;
 	}
 
-	if( af == AF_INET6 ) {
+	if( sockaddr.ss_family == AF_INET6 ) {
 		if( setsockopt( sock, IPPROTO_IPV6, IPV6_V6ONLY, &opt_on, sizeof(opt_on) ) < 0 ) {
 			close( sock );
 			log_err( "%s: Failed to set socket option IPV6_V6ONLY: '%s' (%s)",
-				name, strerror( errno ), str_addr( &sockaddr, addrbuf )
-			);
+				name, strerror( errno ), str_addr( &sockaddr, addrbuf ) );
 			return -1;
 		}
 	}
 
+	addrlen = addr_len( &sockaddr );
 	if( bind( sock, (struct sockaddr*) &sockaddr, addrlen ) < 0 ) {
 		close( sock );
 		log_err( "%s: Failed to bind socket to address: '%s' (%s)",

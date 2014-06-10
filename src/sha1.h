@@ -3,6 +3,7 @@
 #define _SHA1_H
 
 #include <inttypes.h>
+#include <string.h>
 
 typedef struct {
 	uint32_t state[5];

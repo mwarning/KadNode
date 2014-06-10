@@ -3,6 +3,7 @@
 #define _CONF_H_
 
 #include <sys/time.h>
+#include "main.h"
 
 extern const char *kadnode_version_str;
 

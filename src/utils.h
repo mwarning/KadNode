@@ -13,6 +13,8 @@
 /* Simple string match */
 #define match(opt, arg) ((opt != NULL) && (strcmp( opt, arg ) == 0))
 
+/* IPv6 address length including port, e.g. [::1]:12345 */
+#define FULL_ADDSTRLEN (INET6_ADDRSTRLEN + 8)
 
 int is_suffix( const char str[], const char suffix[] );
 UCHAR *memdup( const UCHAR src[], size_t size );
@@ -46,6 +48,5 @@ int addr_equal( const IP *addr1, const IP *addr2 );
 time_t time_now_sec( void );
 time_t time_add_min( unsigned int minutes );
 time_t time_add_hour( unsigned int hours );
-
 
 #endif /* _UTILS_H_ */
