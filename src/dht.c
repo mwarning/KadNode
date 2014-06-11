@@ -484,6 +484,33 @@ find_bucket(unsigned const char *id, int af)
     }
 }
 
+static int
+max_bucket_count(struct bucket *b)
+{
+    struct bucket *p = b->af == AF_INET ? buckets : buckets6;
+    int n = 0;
+
+    while(p) {
+        if(p == b) {
+            break;
+        }
+        if(p->next == NULL) {
+            n = 0;
+            break;
+        }
+        n++;
+        p = p->next;
+    }
+
+    switch(n) {
+        case 0: return 128;
+        case 1: return 64;
+        case 2: return 32;
+        case 3: return 16;
+        default: return 8;
+    }
+}
+
 static struct bucket *
 previous_bucket(struct bucket *b)
 {
@@ -811,7 +838,8 @@ new_node(const unsigned char *id, const struct sockaddr *sa, int salen,
         n = n->next;
     }
 
-    if(b->count >= 8) {
+    int max_count = max_bucket_count(b);
+    if(b->count >= max_count) {
         /* Bucket full.  Ping a dubious node */
         int dubious = 0;
         n = b->nodes;
