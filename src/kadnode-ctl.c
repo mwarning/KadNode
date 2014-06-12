@@ -170,7 +170,7 @@ int main( int argc, char **argv ) {
 		}
 	}
 
-	if( port_parse( port, -1 ) < 0 ) {
+	if( port_parse( port, -1 ) < 1 ) {
 		fprintf( stderr, "Port is invalid!\n" );
 		return 1;
 	}
