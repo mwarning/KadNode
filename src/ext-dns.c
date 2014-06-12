@@ -421,7 +421,7 @@ void setServiceRecord( struct ResourceRecord *rr, const char name[], const char 
 	rr->type = SRV_Resource_RecordType;
 	rr->class = 1;
 	rr->ttl = 0; /* no caching */
-	rr->rd_length = 6 + strlen( target ) + 2;
+	rr->rd_length = 6 + strlen( target ) + 2; /* target may not contain any dots */
 
 	rr->rd_data.srv_record.priority = 0;
 	rr->rd_data.srv_record.weight = 0;
