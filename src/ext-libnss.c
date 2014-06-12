@@ -255,7 +255,7 @@ int _nss_kadnode_valid_hostname( const char hostname[], int hostlen ) {
 * Parse/Resolve an IP address.
 * The port must be specified separately.
 */
-int addr_parse( IP *addr, const char addr_str[], const char port_str[], int af ) {
+int _nss_kadnode_addr_parse( IP *addr, const char addr_str[], const char port_str[], int af ) {
 	struct addrinfo hints;
 	struct addrinfo *info = NULL;
 	struct addrinfo *p = NULL;
@@ -286,7 +286,7 @@ int addr_parse( IP *addr, const char addr_str[], const char port_str[], int af )
 	return -3;
 }
 
-int addr_len( const IP *addr ) {
+int _nss_kadnode_addr_len( const IP *addr ) {
 	switch( addr->ss_family ) {
 		case AF_INET:
 			return sizeof(IP4);
@@ -303,7 +303,7 @@ int _nss_kadnode_lookup( const char hostname[], int hostlen, IP addrs[] ) {
 	int sockfd, size;
 	struct timeval tv;
 
-	if( addr_parse( &sockaddr, "localhost", NSS_PORT, AF_UNSPEC ) < 0 ) {
+	if( _nss_kadnode_addr_parse( &sockaddr, "localhost", NSS_PORT, AF_UNSPEC ) < 0 ) {
 		return 0;
 	}
 
@@ -319,7 +319,7 @@ int _nss_kadnode_lookup( const char hostname[], int hostlen, IP addrs[] ) {
 		return 0;
 	}
 
-	addrlen = addr_len( &sockaddr );
+	addrlen = _nss_kadnode_addr_len( &sockaddr );
 	size = sendto( sockfd, hostname, hostlen, 0, (struct sockaddr *)&sockaddr, addrlen );
 	if( size != hostlen ) {
 		return 0;
