@@ -1,7 +1,7 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "README" "" "May 2014" "" ""
+.TH "README" "" "June 2014" "" ""
 .
 .SH "NAME"
 \fBREADME\fR
@@ -62,7 +62,7 @@ If KadNode cannot join a swarm (an empty peer file and no other peer on the loca
 \fBkadnode \-\-peerfile peers\.txt\fR
 .
 .P
-If boostrapping is successful and after at least 5 minutes of running time, good peers will be written to the peer file on KadNode shutdown\. This ensures successful boostrapping on the next startup\.
+At most 150 good peers are written back to the peer file on KadNode shutdown and also every 24 hours\. This ensures successful boostrapping on the next startup\. The peer file is not written after at least 5 minutes of runtime\.
 .
 .SH "AUTHENTICATION"
 For most use cases you first need to create a secret/public key pair:
@@ -77,7 +77,7 @@ For most use cases you first need to create a secret/public key pair:
 A typical use case would be to reach a computer (Node1) from another (Node2)\. On Node 1 we announce an identifier (\fBsha1(myname)\fR): \fB$kadnode \-\-value\-id myname\.p2p\fR
 .
 .P
-On other computers running KadNode, we can use myname\.p2p to resolve the IP address of Node1 (e\.g\. in the Browser)\. It may take ~8 seconds on the first try\. But others peers could also announce the same identifier\. This would result in multiple IP addresses to be found and used\. Using secret/public key pairs helps\. See the next examples\.
+On other computers running KadNode, we can use myname\.p2p to resolve the IP address of Node1 (e\.g\. in the Browser)\. It may take ~8 seconds on the first try\. The problem with this approach is that others could also announce the same identifier\. This would result in multiple IP addresses to be found and used\. To avoid this you can use secret/public key pairs\. See the next examples\.
 .
 .SS "EXAMPLE 2"
 Now we want to reach a computer (Node1) from another (Node2) using cryptographic keys\. We tell KadNode on Node1 to \fIannounce\fR its secret key\. \fB$kadnode \-\-value\-id <secret\-key>\.p2p\fR What is actually announced is the SHA1 hash of the derived public key (\fBsha1(<public\-key>)\fR), not the secret key itself\.
@@ -192,13 +192,16 @@ Add a value identifier and optional port to be announced every 30 minutes\.
 The announcement will associate this nodes IP address with this identifier\.
 .
 .br
-This option can occur multiple times\.
+This option may occur multiple times\.
 .
 .IP "\(bu" 4
 \fB\-\-peerfile\fR \fIfile\-path\fR
 .
 .br
-Import peers for bootstrapping and write good peers to this file on shutdown\.
+Import peers for bootstrapping and write good peers
+.
+.br
+to this file every 24 hours and on shutdown\.
 .
 .IP "\(bu" 4
 \fB\-\-user\fR \fIname\fR
@@ -231,31 +234,22 @@ option on each line\. Comments start after \'#\'\.
 Bind to this specific interface\.
 .
 .IP "\(bu" 4
-\fB\-\-mcast\-addr\fR \fIaddress\fR
-.
-.br
-Send pings to this multicast address as long no nodes were found\.
-.
-.br
-Default: 239\.192\.202\.7:6771 / [ff08:ca:07::]:6771
-.
-.IP "\(bu" 4
-\fB\-\-disable\-forwarding\fR
+\fB\-\-fwd\-disable\fR
 .
 .br
 Disable UPnP/NAT\-PMP to forward router ports\.
-.
-.IP "\(bu" 4
-\fB\-\-disable\-multicast\fR
-.
-.br
-Disable multicast to discover local nodes\.
 .
 .IP "\(bu" 4
 \fB\-\-daemon\fR
 .
 .br
 Run in background\.
+.
+.IP "\(bu" 4
+\fB\-\-query\-tld\fR \fIdomain\fR
+.
+.br
+Top level domain used to filter queries to be resolved by KadNode\. (Default: "\.p2p")
 .
 .IP "\(bu" 4
 \fB\-\-verbosity\fR \fIlevel\fR
@@ -268,6 +262,21 @@ Verbosity level: quiet, verbose or debug (Default: verbose)\.
 .
 .br
 Write process pid to a file\.
+.
+.IP "\(bu" 4
+\fB\-\-lpd\-addr\fR \fIaddress\fR
+.
+.br
+Send LPD packets to this multicast address as long no peers were found\.
+.
+.br
+Default: 239\.192\.202\.7:6771 / [ff08:ca:07::]:6771
+.
+.IP "\(bu" 4
+\fB\-\-lpd\-disable\fR
+.
+.br
+Disable Local Peer Discovery (LPD)\.
 .
 .IP "\(bu" 4
 \fB\-\-cmd\-disable\-stdin\fR
@@ -375,19 +384,19 @@ Print this help\.
 Print the node id, the number of known nodes / searches / stored hashes and more\.
 .
 .IP "\(bu" 4
-\fBlookup\fR \fIid\fR
+\fBlookup\fR \fIquery\fR
 .
 .br
-Lookup the IP addresses of all nodes that claim to satisfy the identifier\.
+Lookup the IP addresses of all nodes that claim to satisfy the query\.
 .
 .br
 The first call will start the search\.
 .
 .IP "\(bu" 4
-\fBannounce\fR [\fIid\fR[\fI:\fIport\fR\fR] [\fI\fIminutes\fR\fR]]
+\fBannounce\fR [\fIquery\fR[\fI:\fIport\fR\fR] [\fI\fIminutes\fR\fR]]
 .
 .br
-Announce that this instance is associated with identifier id
+Announce that this instance is associated with a query
 .
 .br
 and an optional port\. The default port is random (but not equal 0)\.
@@ -450,7 +459,7 @@ If KadNode runs on a computer in a private network, it will try to establish a p
 .SH "NOTES"
 .
 .IP "\(bu" 4
-\fI\.p2p\fR at the end of a identifier is ignored by KadNode\. It is used to filter requests and divert them to KadNode\.
+\fI\.p2p\fR at the end of an identifier (or set by \-\-query\-tld) is ignored by KadNode\. It is used to filter requests and divert them to KadNode\.
 .
 .IP "\(bu" 4
 The interfaces (NSS, DNS, command line) may return the localhost address if the node itself announced a value\.
