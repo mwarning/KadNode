@@ -1,4 +1,4 @@
-kadnode (1.0) UNRELEASED; urgency=low
+kadnode (0.9.1) UNRELEASED; urgency=low
 
   * add --query-tld option to configure the top level domain
     used to divert DNS queries to KadNode (default is .p2p)
