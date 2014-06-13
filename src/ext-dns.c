@@ -165,19 +165,19 @@ static const char g_names[MAX_ADDR_RECORDS][3] = {
 size_t get16bits( const UCHAR** buffer ) {
 	unsigned short value;
 
-	value = ntohs( *((typeof(value)*) *buffer) );
+	value = ntohs( *((unsigned short *) *buffer) );
 	*buffer += 2;
 
 	return value;
 }
 
 void put16bits( UCHAR** buffer, unsigned short value ) {
-	*((typeof(value)*) *buffer) = htons( value );
+	*((unsigned short *) *buffer) = htons( value );
 	*buffer += 2;
 }
 
 void put32bits( UCHAR** buffer, unsigned long long value ) {
-	*((typeof(value)*) *buffer) = htonl( value );
+	*((unsigned long long *) *buffer) = htonl( value );
 	*buffer += 4;
 }
 
