@@ -3,7 +3,7 @@ set -e
 
 #Use resolver. Works for console apps.
 mkdir -p /etc/resolver/
-echo "nameserver localhost.53" > /etc/resolver/p2p
+echo "nameserver ::1.53" > /etc/resolver/p2p
 
 #a helper function
 contains() {
@@ -19,8 +19,8 @@ contains() {
 for device in $(networksetup listallnetworkservices | tail -n+2 | tr '*\n' ' '); do
   servers="$(networksetup -getdnsservers $device | tr '\n' ' ')"
   contains 'DNS' $servers && servers=""
-  contains 'localhost' $servers && continue
-  networksetup -setdnsservers "$device" $servers 'localhost'
+  contains '::1' $servers && continue
+  networksetup -setdnsservers "$device" $servers '::1'
 done
 
 #launch KadNode
