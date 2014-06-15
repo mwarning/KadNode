@@ -19,7 +19,7 @@ install="kadnode.install"
 
 build() {
 	cd KadNode-${pkgver}
-	make FEATURES="auth cmd nss"
+	make FEATURES="auth lpd cmd nss"
 }
 
 package() {
