@@ -1,4 +1,4 @@
-kadnode (0.9.1) UNRELEASED; urgency=low
+kadnode (0.9.1) unstable; urgency=low
 
   * add --query-tld option to configure the top level domain
     used to divert DNS queries to KadNode (default is .p2p)
@@ -18,7 +18,7 @@ kadnode (0.9.1) UNRELEASED; urgency=low
     * rename --disable-multicast to --lpd-disable
     * rename --mcast-addr to --lpd-addr
 
- -- mwarning <moritzwarning@web.de>  Sun, 18 May 2014 16:51:22 +0200
+ -- mwarning <moritzwarning@web.de>  Sun, 15 Jun 2014 22:48:27 +0200
 
 kadnode (0.9) unstable; urgency=low
 
