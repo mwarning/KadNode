@@ -12,7 +12,7 @@ kadnode (0.9.1) unstable; urgency=low
   * [DNS] allow return of multiple IP addresses
   * [DNS] add support for service location records (SRV)
   * [DNS,CMD,NSS,WEB] increase maximum number
-	of addresses to be returned at once to 32
+    of addresses to be returned at once to 32
   * [LPD] honor --ifce setting for listening multicast socket
   * [LPD] make local peer discovery a compile time option
     * rename --disable-multicast to --lpd-disable
