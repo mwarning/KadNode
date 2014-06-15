@@ -1,6 +1,6 @@
-#!/bin/bash
-
+#!/usr/bin/env sh
 set -e
-if /bin/launchctl list "p2p.kadnode" &> /dev/null; then
-    /bin/launchctl unload "/Library/LaunchDaemons/p2p.kadnode.plist"
-fi
+
+launchctl unload "/Library/LaunchDaemons/p2p.kadnode.plist" || true
+
+exit 0

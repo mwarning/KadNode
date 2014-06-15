@@ -1,5 +1,4 @@
-#!/bin/sh
-
+#!/usr/bin/env sh
 set -e
 
 #Use resolver. Works for console apps.
@@ -18,11 +17,13 @@ contains() {
 #Add localhost to DNS server list for every device.
 #The Safari Browser seems to ignore this - let us try it nevertheless.
 for device in $(networksetup listallnetworkservices | tail -n+2 | tr '*\n' ' '); do
-  { servers=$(networksetup -getdnsservers $device); } || continue
-  servers=$(echo $servers | tr '\n' ' ')
+  servers="$(networksetup -getdnsservers $device | tr '\n' ' ')"
+  contains 'DNS' $servers && servers=""
   contains 'localhost' $servers && continue
   networksetup -setdnsservers "$device" $servers 'localhost'
 done
 
 #launch KadNode
-/bin/launchctl load "/Library/LaunchDaemons/p2p.kadnode.plist"
+launchctl load "/Library/LaunchDaemons/p2p.kadnode.plist"
+
+exit 0
