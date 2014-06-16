@@ -48,9 +48,11 @@ const char* cmd_usage_debug =
 #endif
 	"results|searches|storage|values]\n";
 
+#define REPLY_DATA_SIZE 1472
+
 /* A UDP packet sized reply */
 struct Reply {
-	char data[1472];
+	char data[REPLY_DATA_SIZE];
 	ssize_t size;
 	bool allow_debug;
 };
@@ -67,7 +69,7 @@ void r_printf( struct Reply *r, const char *format, ... ) {
 	int written;
 
 	va_start( vlist, format );
-	written = vsnprintf( r->data + r->size, M_SIZEOF(struct Reply, data) - 1 , format, vlist );
+	written = vsnprintf( r->data + r->size, REPLY_DATA_SIZE - 1 , format, vlist );
 	va_end( vlist );
 
 	/* Ignore characters that do not fit into packet */
@@ -135,7 +137,7 @@ int cmd_import( struct Reply *r, const char *addr_str) {
 }
 
 void cmd_print_status( struct Reply *r ) {
-	r->size += kad_status( r->data + r->size, 1472 - r->size );
+	r->size += kad_status( r->data + r->size, REPLY_DATA_SIZE - r->size );
 }
 
 int cmd_blacklist( struct Reply *r, const char *addr_str ) {

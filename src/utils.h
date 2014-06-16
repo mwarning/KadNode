@@ -4,9 +4,6 @@
 
 #include <sys/time.h>
 
-/* Size of a struct member */
-#define M_SIZEOF(type, member) sizeof(((type*) 0)->member)
-
 /* Number of elements in an array */
 #define N_ELEMS(x)  (sizeof(x) / sizeof(x[0]))
 
