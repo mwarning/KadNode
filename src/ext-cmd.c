@@ -49,25 +49,25 @@ const char* cmd_usage_debug =
 	"results|searches|storage|values]\n";
 
 /* A UDP packet sized reply */
-typedef struct Reply {
+struct Reply {
 	char data[1472];
 	ssize_t size;
 	bool allow_debug;
-} REPLY;
+};
 
-void r_init( REPLY *r, bool allow_debug ) {
+void r_init( struct Reply *r, bool allow_debug ) {
 	r->data[0] = '\0';
 	r->size = 0;
 	r->allow_debug = allow_debug;
 }
 
 /* Append a formatted string to the packet buffer */
-void r_printf( REPLY *r, const char *format, ... ) {
+void r_printf( struct Reply *r, const char *format, ... ) {
 	va_list vlist;
 	int written;
 
 	va_start( vlist, format );
-	written = vsnprintf( r->data + r->size, M_SIZEOF(REPLY, data) - 1 , format, vlist );
+	written = vsnprintf( r->data + r->size, M_SIZEOF(struct Reply, data) - 1 , format, vlist );
 	va_end( vlist );
 
 	/* Ignore characters that do not fit into packet */
@@ -111,7 +111,7 @@ void cmd_to_args( char *str, int *argc, char **argv, int max_argv ) {
 	argv[*argc] = NULL;
 }
 
-int cmd_import( REPLY *r, const char *addr_str) {
+int cmd_import( struct Reply *r, const char *addr_str) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	IP addr;
 	int rc;
@@ -134,11 +134,11 @@ int cmd_import( REPLY *r, const char *addr_str) {
 	}
 }
 
-void cmd_print_status( REPLY *r ) {
+void cmd_print_status( struct Reply *r ) {
 	r->size += kad_status( r->data + r->size, 1472 - r->size );
 }
 
-int cmd_blacklist( REPLY *r, const char *addr_str ) {
+int cmd_blacklist( struct Reply *r, const char *addr_str ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	IP addr;
 
@@ -153,7 +153,7 @@ int cmd_blacklist( REPLY *r, const char *addr_str ) {
 }
 
 /* Export up to 32 peer addresses - more would not fit into one UDP packet */
-int cmd_export( REPLY *r ) {
+int cmd_export( struct Reply *r ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	IP addr_array[32];
 	size_t addr_num;
@@ -176,7 +176,7 @@ int cmd_export( REPLY *r ) {
 	return 0;
 }
 
-int cmd_exec( REPLY *r, int argc, char **argv ) {
+int cmd_exec( struct Reply *r, int argc, char **argv ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	time_t lifetime;
 	int minutes;
@@ -383,7 +383,7 @@ void cmd_remote_handler( int rc, int sock ) {
 	socklen_t addrlen_ret;
 	socklen_t addrlen;
 	char request[1500];
-	REPLY reply;
+	struct Reply reply;
 
 	addrlen_ret = sizeof(IP);
 	rc = recvfrom( sock, request, sizeof(request) - 1, 0, (struct sockaddr*)&clientaddr, &addrlen_ret );
@@ -413,7 +413,7 @@ void cmd_remote_handler( int rc, int sock ) {
 void cmd_console_handler( int rc, int fd ) {
 	char request[512];
 	char *req;
-	REPLY reply;
+	struct Reply reply;
 	char *argv[32];
 	int argc;
 
