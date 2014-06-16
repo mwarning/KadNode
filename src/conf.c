@@ -53,9 +53,9 @@ const char *kadnode_version_str = "KadNode v"MAIN_VERSION" ("
 #endif
 " )";
 
-const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon (IPv4/IPv6)\n"
+const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 "A Wrapper for the Kademlia implementation of a Distributed Hash Table (DHT)\n"
-"with several optional interfaces (check --version).\n"
+"with several optional interfaces (use --version).\n"
 "\n"
 "Usage: kadnode [OPTIONS]*\n"
 "\n"
