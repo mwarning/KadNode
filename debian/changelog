@@ -1,3 +1,9 @@
+kadnode (1.0) UNRELEASED; urgency=low
+
+  * [NSS] fix maximum address limit per request
+
+ -- mwarning <moritzwarning@web.de>  Fri, 20 Jun 2014 14:24:42 +0200
+
 kadnode (0.9.1) unstable; urgency=low
 
   * add --query-tld option to configure the top level domain
