@@ -11,7 +11,6 @@
 
 #define MAX_ADDRS 32
 
-
 void nss_lookup( int sock, IP *clientaddr, const char hostname[] ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	socklen_t addrlen;
@@ -27,10 +26,12 @@ void nss_lookup( int sock, IP *clientaddr, const char hostname[] ) {
 		log_debug( "NSS: Send %lu addresses to %s. Packet has %d bytes.",
 		   num, str_addr( clientaddr, addrbuf ), sizeof(IP)
 		);
-
-		addrlen = addr_len( clientaddr );
-		sendto( sock, (UCHAR *) addrs, num * sizeof(IP), 0, (const struct sockaddr *) clientaddr, addrlen );
+	} else {
+		num = 0;
 	}
+
+	addrlen = addr_len( clientaddr );
+	sendto( sock, (UCHAR *) addrs, num * sizeof(IP), 0, (const struct sockaddr *) clientaddr, addrlen );
 }
 
 /*
