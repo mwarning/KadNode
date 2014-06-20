@@ -232,7 +232,11 @@ enum nss_status _nss_kadnode_hostent(
 }
 
 int _nss_kadnode_valid_hostname( const char hostname[], int hostlen ) {
-	int i;
+	size_t i;
+
+	if( hostlen < 0 || hostlen > 300 ) {
+		return 0;
+	}
 
 	for( i = 0; i < hostlen; i++ ) {
 		const char c = hostname[i];
