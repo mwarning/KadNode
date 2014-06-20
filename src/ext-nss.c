@@ -18,8 +18,8 @@ void nss_lookup( int sock, IP *clientaddr, const char hostname[] ) {
 	IP addrs[MAX_ADDRS];
 	size_t num;
 
-	/* Return at most 8 addresses */
-	num = 8;
+	/* Return at most MAX_ADDRS addresses */
+	num = MAX_ADDRS;
 
 	/* Lookup id. Starts search when not already started. */
 	if( kad_lookup_value( hostname, addrs, &num ) >= 0 && num > 0 ) {
