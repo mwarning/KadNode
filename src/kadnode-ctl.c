@@ -143,7 +143,7 @@ int udp_send( char buffer[], const char port[] ) {
 
 int main( int argc, char **argv ) {
 	char buffer[BUFSIZE];
-	int i;
+	size_t i;
 	const char *port;
 
 	/* Use the default port */
