@@ -45,20 +45,24 @@ void dht_unlock( void ) {
 #endif
 }
 
+/*
+* Put an address and port into a sockaddr_storages struct.
+* Both addr and port are in network byte order.
+*/
 void to_addr( IP *addr, const void *ip, size_t len, unsigned int port ) {
 	memset( addr, '\0', sizeof(IP) );
 
 	if( len == 4 ) {
 		IP4 *a = (IP4 *) addr;
 		a->sin_family = AF_INET;
-		a->sin_port = htons( port );
+		a->sin_port = port;
 		memcpy( &a->sin_addr.s_addr, ip, 4 );
 	}
 
 	if( len == 16 ) {
 		IP6 *a = (IP6 *) addr;
 		a->sin6_family = AF_INET6;
-		a->sin6_port = htons( port );
+		a->sin6_port = port;
 		memcpy( &a->sin6_addr.s6_addr, ip, 16 );
 	}
 }
@@ -90,7 +94,7 @@ void dht_callback_func( void *closure, int event, const UCHAR *info_hash, const 
 			if( gconf->af == AF_INET ) {
 				dht_addr4_t *data4 = (dht_addr4_t *) data;
 				for( i = 0; i < (data_len / sizeof(dht_addr4_t)); i++ ) {
-					to_addr( &addr, &data4[i].addr, 4, ntohs( data4[i].port ) );
+					to_addr( &addr, &data4[i].addr, 4, data4[i].port );
 					results_add_addr( results, &addr );
 				}
 			}
@@ -99,7 +103,7 @@ void dht_callback_func( void *closure, int event, const UCHAR *info_hash, const 
 			if( gconf->af == AF_INET6 ) {
 				dht_addr6_t *data6 = (dht_addr6_t *) data;
 				for( i = 0; i < (data_len / sizeof(dht_addr6_t)); i++ ) {
-					to_addr( &addr, &data6[i].addr, 16, ntohs( data6[i].port ) );
+					to_addr( &addr, &data6[i].addr, 16, data6[i].port );
 					results_add_addr( results, &addr );
 				}
 			}
@@ -126,9 +130,9 @@ void kad_lookup_local_values( struct results_t *results ) {
 	value = values_find( results->id );
 	if( value ) {
 		if( gconf->af == AF_INET6 ) {
-			to_addr( &addr, &in6addr_loopback, 16, value->port ); // ::1
+			to_addr( &addr, &in6addr_loopback, 16, htons( value->port ) ); // ::1
 		} else {
-			to_addr( &addr, &inaddr_loopback, 4, value->port ); // 127.0.0.1
+			to_addr( &addr, &inaddr_loopback, 4, htons( value->port ) ); // 127.0.0.1
 		}
 		log_debug( "KAD: Address found in local values: %s\n", str_addr( &addr, addrbuf ) );
 		results_add_addr( results, &addr );
@@ -596,7 +600,7 @@ void kad_debug_storage( int fd ) {
 		dprintf( fd, " ID: %s\n", str_id(s->id, hexbuf ));
 		for( i = 0; i < s->numpeers; ++i ) {
 			p = &s->peers[i];
-			to_addr( &addr, &p->ip, p->len, p->port );
+			to_addr( &addr, &p->ip, p->len, htons( p->port ) );
 			dprintf( fd, "   Peer: %s\n", str_addr( &addr, addrbuf)  );
 		}
 		dprintf( fd, "  Found %d peers.\n", i );
