@@ -125,7 +125,7 @@ void kad_lookup_local_values( struct results_t *results ) {
 	IP addr;
 
 	/* 127.0.0.1 */
-	static unsigned long inaddr_loopback = 0x0100007F;
+	unsigned int inaddr_loopback = htonl( INADDR_LOOPBACK );
 
 	value = values_find( results->id );
 	if( value ) {
