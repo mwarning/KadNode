@@ -22,7 +22,7 @@ Features:
 * public/secret key authentication ([libsodium](https://github.com/jedisct1/libsodium))
 * command line interface (kadnode-ctl)
 * NSS support through /etc/nsswitch.conf
-* integrated simplified DNS server
+* integrated simplified DNS server (supports A, AAAA, and SRV requests)
 * packages for MacOSX/Debian/ArchLinux/OpenWrt
 * peer file import/export on startup/shutdown
 
