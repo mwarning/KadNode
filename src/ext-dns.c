@@ -469,7 +469,7 @@ int dns_setup_msg( struct Message *msg, IP addrs[], size_t addrs_num ) {
 }
 
 void dns_handler( int rc, int sock ) {
-	size_t buflen;
+	ssize_t buflen;
 	struct Message msg;
 	IP clientaddr;
 	IP addrs[MAX_ADDR_RECORDS];
