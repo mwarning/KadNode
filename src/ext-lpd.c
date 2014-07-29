@@ -33,83 +33,40 @@ static int g_sock_recv = -1;
 static int g_sock_send = -1;
 
 
-/* Try to join/leave multicast group */
-int multicast_setup4( int sock, IP *addr, const char ifce[], int enable ) {
-	struct ip_mreq mreq;
-	int optname;
+int mcast_join_group( int sock, IP *addr, const char ifce[] ) {
+	struct group_req req;
 
-	memset( &mreq, '\0', sizeof(mreq) );
-	memcpy( &mreq.imr_multiaddr, &((IP4 *)addr)->sin_addr, sizeof(mreq.imr_multiaddr) );
-
-	/* Using an interface index of x is indicated by 0.0.0.x */
-	if( ifce && ((mreq.imr_interface.s_addr = htonl( if_nametoindex( ifce )) ) == 0) ) {
-		log_err( "LPD: Cannot find interface '%s' for multicast: %s", ifce, strerror( errno ) );
-		return -1;
+	if( ifce ) {
+		if( (req.gr_interface = htonl( if_nametoindex(ifce) )) == 0 ) {
+			log_err( "LPD: Cannot find interface '%s' for multicast: %s", ifce, strerror( errno ) );
+			return -1;
+		}
 	} else {
-		mreq.imr_interface.s_addr = 0;
+		req.gr_interface = 0;
 	}
 
-	optname = enable ? IP_ADD_MEMBERSHIP : IP_DROP_MEMBERSHIP;
-	if( setsockopt( sock, IPPROTO_IP, optname, &mreq, sizeof(mreq) ) < 0 ) {
-		if( enable ) {
-			log_warn( "LPD: Failed to join IPv4 multicast group: %s", strerror( errno ) );
-		} else {
-			log_warn( "LPD: Failed to leave IPv4 multicast group: %s", strerror( errno ) );
-		}
+	memcpy( &req.gr_group, addr, addr_len( addr ) );
+
+	if( setsockopt( sock, IPPROTO_IP, MCAST_JOIN_GROUP, &req, sizeof(req) ) < 0 ) {
+		log_warn( "LPD: Failed to join multicast group: %s", strerror( errno ) );
 		return -1;
 	}
 
 	return 0;
 }
 
-/* Try to join/leave multicast group */
-int multicast_setup6( int sock, IP *addr, const char ifce[], int enable ) {
-	struct ipv6_mreq mreq;
-	int optname;
+int mcast_leave_group( int sock, IP *addr ) {
+	struct group_req req;
 
-	memset( &mreq, '\0', sizeof(mreq) );
-	memcpy( &mreq.ipv6mr_multiaddr, &((IP6 *)addr)->sin6_addr, sizeof(mreq.ipv6mr_multiaddr) );
+	req.gr_interface = 0;
+	memcpy( &req.gr_group, addr, addr_len( addr ) );
 
-	if( ifce && ((mreq.ipv6mr_interface = if_nametoindex( ifce )) == 0) ) {
-		log_err( "LPD: Cannot find interface '%s' for multicast: %s", ifce, strerror( errno ) );
-		return -1;
-	}
-
-	optname = enable ? IPV6_JOIN_GROUP : IPV6_LEAVE_GROUP;
-	if( setsockopt( sock, IPPROTO_IPV6, optname, &mreq, sizeof(mreq)) != 0 ) {
-		if( enable ) {
-			log_warn( "LPD: Failed to join IPv6 multicast group: %s", strerror( errno ) );
-		} else {
-			log_warn( "LPD: Failed to leave IPv6 multicast group: %s", strerror( errno ) );
-		}
+	if( setsockopt( sock, IPPROTO_IP, MCAST_LEAVE_GROUP, &req, sizeof(req) ) < 0 ) {
+		log_warn( "LPD: Failed to leave multicast group: %s", strerror( errno ) );
 		return -1;
 	}
 
 	return 0;
-}
-
-int multicast_join_group( int sock, IP *addr ) {
-	const int af = addr->ss_family;
-
-	if( af == AF_INET ) {
-		return multicast_setup4( sock, addr, gconf->dht_ifce, 1 );
-	} else if( af == AF_INET6 ) {
-		return multicast_setup6( sock, addr, gconf->dht_ifce, 1 );
-	} else {
-		return -1;
-	}
-}
-
-int multicast_leave_group( int sock, IP *addr ) {
-	const int af = addr->ss_family;
-
-	if( af == AF_INET ) {
-		return multicast_setup4( sock, addr, gconf->dht_ifce, 0 );
-	} else if( af == AF_INET6 ) {
-		return multicast_setup6( sock, addr, gconf->dht_ifce, 0 );
-	} else {
-		return -1;
-	}
 }
 
 const char *parse_packet_param( const char* str, const char* param ) {
@@ -174,7 +131,7 @@ void bootstrap_handle_mcast( int rc, int sock_recv ) {
 	if( g_mcast_time <= time_now_sec() ) {
 		if( kad_count_nodes( 0 ) == 0 ) {
 			/* Join multicast group if possible */
-			if( g_mcast_registered == 0 && multicast_join_group( g_sock_recv, &g_lpd_addr ) == 0 ) {
+			if( g_mcast_registered == 0 && mcast_join_group( g_sock_recv, &g_lpd_addr, gconf->dht_ifce ) == 0 ) {
 				log_info( "LPD: No peers known. Joined multicast group." );
 				g_mcast_registered = 1;
 			}
@@ -213,7 +170,7 @@ void bootstrap_handle_mcast( int rc, int sock_recv ) {
 
 	if( g_packet_limit < 0 ) {
 		/* Too much traffic - leave multicast group for now */
-		if( g_mcast_registered == 1 && multicast_leave_group( g_sock_recv, &g_lpd_addr ) == 0 ) {
+		if( g_mcast_registered == 1 && mcast_leave_group( g_sock_recv, &g_lpd_addr ) == 0 ) {
 			log_warn( "LPD: Too much traffic. Left multicast group." );
 			g_mcast_registered = 0;
 		}
