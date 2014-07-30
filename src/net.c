@@ -94,6 +94,13 @@ int net_socket( const char name[], const char ifce[], int protocol, int af ) {
 	}
 #endif
 
+	const int optval = 1;
+	if( setsockopt( sock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval) ) < 0 ) {
+		close( sock );
+		log_err( "%s: Unable to set SO_REUSEADDR for '%s': %s", name, strerror( errno ) );
+		return -1;
+	}
+
 	return sock;
 }
 
