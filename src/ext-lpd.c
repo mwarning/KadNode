@@ -276,32 +276,52 @@ void bootstrap_handle_mcast( int rc, int sock_recv ) {
 	}
 }
 
-int multicast_disable_loop( int sock, int af ) {
-	const int opt_off = 1;
-	int optname;
+int multicast_set_loop( int sock, int af, int val ) {
 
-	/* We don't want to receive our own packets */
-	optname = (af == AF_INET) ? IPPROTO_IP : IPPROTO_IPV6;
-	if( setsockopt( sock, optname, IP_MULTICAST_LOOP, &opt_off, sizeof(opt_off) ) < 0 ) {
-		log_warn( "LPD: Failed to set IP_MULTICAST_LOOP: %s", strerror( errno ) );
-		return -1;
+	switch( af ) {
+		case AF_INET: {
+			unsigned char flag = val;
+			return setsockopt( sock, IPPROTO_IP, IP_MULTICAST_LOOP, &flag, sizeof(flag) );
+		}
+		case AF_INET6: {
+			unsigned int flag = val;
+			return setsockopt( sock, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, &flag, sizeof(flag)  );
+		}
+		default:
+			errno = EAFNOSUPPORT;
+			return -1;
 	}
+}
 
-	return 0;
+int multicast_set_ttl( int sock, int af, int val ) {
+
+	switch( af ) {
+		case AF_INET: {
+			unsigned char scope = val;
+			return setsockopt( sock, IPPROTO_IP, IP_MULTICAST_TTL, &scope, sizeof(scope) );
+		}
+		case AF_INET6: {
+			int scope = val;
+			return setsockopt( sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &scope, sizeof(scope) );
+		}
+		default:
+			errno = EAFNOSUPPORT;
+			return -1;
+	}
 }
 
 int create_send_socket( void ) {
-	const int scope = 1;
 	int sock_send;
 
 	sock_send = net_socket( "LPD", gconf->dht_ifce, IPPROTO_UDP, gconf->af );
 
-	if( setsockopt( sock_send, IPPROTO_IP, IP_MULTICAST_TTL, &scope, sizeof(scope) ) < 0 ) {
+	if( multicast_set_ttl( sock_send, gconf->af, 1 ) < 0 ) {
 		log_err( "LPD: Failed to set IP_MULTICAST_TTL for sending socket: %s", strerror( errno ));
 		goto fail;
 	}
 
-	if( multicast_disable_loop( sock_send, gconf->af ) < 0 ) {
+	if( multicast_set_loop( sock_send, gconf->af, 0 ) < 0 ) {
+		log_warn( "LPD: Failed to set IP_MULTICAST_LOOP: %s", strerror( errno ) );
 		goto fail;
 	}
 
@@ -318,8 +338,9 @@ int create_receive_socket( void ) {
 	sock_recv = net_bind( "LPD", gconf->lpd_addr, DHT_PORT_MCAST, gconf->dht_ifce, IPPROTO_UDP, gconf->af );
 
 	/* We don't want to receive our own packets */
-	if( multicast_disable_loop( sock_recv, gconf->af ) < 0 ) {
+	if( multicast_set_loop( sock_recv, gconf->af, 0 ) < 0 ) {
 		close( sock_recv );
+		log_warn( "LPD: Failed to set IP_MULTICAST_LOOP: %s", strerror( errno ) );
 		return -1;
 	}
 
