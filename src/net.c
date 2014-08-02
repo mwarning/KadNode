@@ -80,7 +80,7 @@ int net_socket( const char name[], const char ifce[], int protocol, int af ) {
 		return -1;
 	}
 
-#if defined(__APPLE__) || defined(__CYGWIN__)
+#if defined(__APPLE__) || defined(__CYGWIN__) || defined(__FreeBSD__)
 	if( ifce ) {
 		close( sock );
 		log_err( "%s: Bind to device not supported on Windows and MacOSX.", name );

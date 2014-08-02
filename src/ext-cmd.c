@@ -1,4 +1,5 @@
 
+#define _WITH_DPRINTF
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
