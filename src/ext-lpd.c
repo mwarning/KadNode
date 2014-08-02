@@ -39,7 +39,7 @@ int mcast_join_group( int sock, IP *addr, const char ifce[] ) {
 	struct group_req req;
 
 	if( ifce ) {
-		if( (req.gr_interface = htonl( if_nametoindex( ifce ) )) == 0 ) {
+		if( (req.gr_interface = if_nametoindex( ifce )) == 0 ) {
 			log_err( "LPD: Cannot find interface '%s' for multicast: %s", ifce, strerror( errno ) );
 			return -1;
 		}
