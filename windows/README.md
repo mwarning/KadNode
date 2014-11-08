@@ -13,9 +13,9 @@ Now start the Cygwin Terminal and install [libsodium](https://github.com/jedisct
 This step is only needed for the auth extension.
 
 ```
-wget https://github.com/jedisct1/libsodium/releases/download/0.6.1/libsodium-0.5.0.tar.gz
-tar -xvzf libsodium-0.6.1.tar.gz
-cd libsodium-0.6.1
+wget https://github.com/jedisct1/libsodium/releases/download/1.0.0/libsodium-1.0.0.tar.gz
+tar -xvzf libsodium-1.0.0.tar.gz
+cd libsodium-1.0.0
 ./configure
 make
 make install
