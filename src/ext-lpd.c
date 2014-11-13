@@ -6,6 +6,7 @@
 #include <net/if.h>
 #include <unistd.h> /* close */
 #include <sys/ioctl.h>
+#include <ifaddrs.h>
 
 #include "main.h"
 #include "conf.h"
@@ -33,8 +34,11 @@ static time_t g_mcast_time = 0; /* Next time to perform a multicast ping */
 static int g_sock_recv = -1;
 static int g_sock_send = -1;
 
-
-int mcast_join_group( int sock, IP *addr, const char ifce[] ) {
+/*
+* Join/leave a multicast group (ba mulitcast address) on the given interface.
+* The interface may be null.
+*/
+int mcast_set_group( int sock, IP *addr, const char ifce[], int join ) {
 #if defined(MCAST_JOIN_GROUP) && !defined(__APPLE__)
 	struct group_req req;
 
@@ -49,8 +53,8 @@ int mcast_join_group( int sock, IP *addr, const char ifce[] ) {
 
 	memcpy( &req.gr_group, addr, addr_len( addr ) );
 
-	if( setsockopt( sock, IPPROTO_IP, MCAST_JOIN_GROUP, &req, sizeof(req) ) < 0 ) {
-		log_warn( "LPD: Failed to join multicast group: %s", strerror( errno ) );
+	if( setsockopt( sock, IPPROTO_IP, join ? MCAST_JOIN_GROUP : MCAST_LEAVE_GROUP, &req, sizeof(req) ) < 0 ) {
+		log_warn( "LPD: Failed to %s multicast group on %s: %s", join ? "join" : "leave", ifce ? ifce : "<any>", strerror( errno ) );
 		return -1;
 	}
 
@@ -58,25 +62,23 @@ int mcast_join_group( int sock, IP *addr, const char ifce[] ) {
 #else
 	switch( addr->ss_family ) {
 		case AF_INET: {
-			struct ip_mreq mreq;
-			struct ifreq ifreq;
+			struct ip_mreqn mreq;
 
 			memcpy( &mreq.imr_multiaddr, &((IP4*) addr)->sin_addr, 4 );
 
 			if( ifce ) {
-				strncpy( ifreq.ifr_name, ifce, IFNAMSIZ );
-
-				if( ioctl( sock, SIOCGIFADDR, &ifreq ) < 0 ) {
+				mreq.imr_address.s_addr = htonl( INADDR_ANY );
+				if( (mreq.imr_ifindex = if_nametoindex( ifce )) == 0 ) {
 					log_err( "LPD: Cannot find interface '%s' for multicast: %s", ifce, strerror( errno ) );
 					return -1;
 				}
-				memcpy( &mreq.imr_interface, &((struct sockaddr_in *) &ifreq.ifr_addr)->sin_addr, 4);
 			} else {
-				mreq.imr_interface.s_addr = htonl( INADDR_ANY );
+				mreq.imr_address.s_addr = htonl( INADDR_ANY );
+				mreq.imr_ifindex = 0;
 			}
 
-			if( setsockopt(sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) < 0 ) {
-				log_warn( "LPD: Failed to join IPv4 multicast group: %s", strerror( errno ) );
+			if( setsockopt(sock, IPPROTO_IP, join ? IP_ADD_MEMBERSHIP : IP_DROP_MEMBERSHIP, &mreq, sizeof(mreq)) < 0 ) {
+				log_warn( "LPD: Failed to %s IPv4 multicast group on %s: %s", join ? "join" : "leave", ifce ? ifce : "<any>", strerror( errno ) );
 				return -1;
 			}
 			return 0;
@@ -95,8 +97,8 @@ int mcast_join_group( int sock, IP *addr, const char ifce[] ) {
 				mreq6.ipv6mr_interface = 0;
 			}
 
-			if( setsockopt(sock, IPPROTO_IPV6, IPV6_JOIN_GROUP, &mreq6, sizeof(mreq6)) < 0 ) {
-				log_warn( "LPD: Failed to join IPv6 multicast group: %s", strerror( errno ) );
+			if( setsockopt(sock, IPPROTO_IPV6, join ? IPV6_JOIN_GROUP : IPV6_LEAVE_GROUP, &mreq6, sizeof(mreq6)) < 0 ) {
+				log_warn( "LPD: Failed to %s IPv6 multicast group on %s: %s", join ? "join" : "leave", ifce ? ifce : "<any>", strerror( errno ) );
 				return -1;
 			}
 			return 0;
@@ -107,49 +109,97 @@ int mcast_join_group( int sock, IP *addr, const char ifce[] ) {
 #endif
 }
 
-int mcast_leave_group( int sock, IP *addr ) {
-#if defined(MCAST_JOIN_GROUP) && !defined(__APPLE__)
-	struct group_req req;
+int multicast_set_if( int sock, IP* addr, const char *ifce ) {
 
-	req.gr_interface = 0;
-	memcpy( &req.gr_group, addr, addr_len( addr ) );
-
-	if( setsockopt( sock, IPPROTO_IP, MCAST_LEAVE_GROUP, &req, sizeof(req) ) < 0 ) {
-		log_warn( "LPD: Failed to leave multicast group: %s", strerror( errno ) );
-		return -1;
-	}
-
-	return 0;
-#else
 	switch( addr->ss_family ) {
 		case AF_INET: {
-			struct ip_mreq mreq;
+			struct ip_mreqn mreq;
 
 			memcpy( &mreq.imr_multiaddr, &((IP4*) addr)->sin_addr, 4 );
-			mreq.imr_interface.s_addr = htonl( INADDR_ANY );
-			if( setsockopt( sock, IPPROTO_IP, IP_DROP_MEMBERSHIP, &mreq, sizeof(mreq) ) < 0 ) {
-				log_warn( "LPD: Failed to leave IPv4 multicast group: %s", strerror( errno ) );
-				return -1;
+
+			if( ifce ) {
+				mreq.imr_address.s_addr = htonl( INADDR_ANY );
+				if( (mreq.imr_ifindex = if_nametoindex( ifce )) == 0 ) {
+					log_err( "LPD: Cannot find interface '%s' for IP_MULTICAST_IF: %s", ifce, strerror( errno ) );
+					return -1;
+				}
+			} else {
+				mreq.imr_address.s_addr = htonl( INADDR_ANY );
+				mreq.imr_ifindex = 0;
 			}
-			return 0;
+
+			return setsockopt(sock, IPPROTO_IP, IP_MULTICAST_IF, &mreq, sizeof(mreq));
 		}
 		case AF_INET6: {
 			struct ipv6_mreq	mreq6;
 
-			memcpy( &mreq6.ipv6mr_multiaddr, &((IP6 *) addr)->sin6_addr, 16 );
-			mreq6.ipv6mr_interface = 0;
-			if( setsockopt( sock, IPPROTO_IPV6, IPV6_LEAVE_GROUP, &mreq6, sizeof(mreq6) ) < 0 ) {
-				log_warn( "LPD: Failed to leave IPv6 multicast group: %s", strerror( errno ) );
-				return -1;
+			memcpy( &mreq6.ipv6mr_multiaddr, &((IP6*) addr)->sin6_addr, 16 );
+
+			if( ifce ) {
+				if( (mreq6.ipv6mr_interface = if_nametoindex( ifce )) == 0 ) {
+					log_err( "LPD: Cannot find interface '%s' for IPV6_MULTICAST_IF: %s", ifce, strerror( errno ) );
+					return -1;
+				}
+			} else {
+				mreq6.ipv6mr_interface = 0;
 			}
-			return 0;
+
+			return setsockopt(sock, IPPROTO_IPV6, IPV6_MULTICAST_IF, &mreq6, sizeof(mreq6));
 		}
 		default:
+			errno = EAFNOSUPPORT;
 			return -1;
 	}
-#endif
 }
 
+int multicast_send_packet( int sock_send, const char *ifce, const char *msg ) {
+	int rc;
+
+	if( multicast_set_if( sock_send, &g_lpd_addr, ifce ) < 0 ) {
+		log_err( "LPD: Failed to set IP_MULTICAST_IF for sending socket: %s", strerror( errno ));
+		return -1;
+	}
+
+	rc = sendto( sock_send, msg, strlen( msg ), 0, (struct sockaddr*) &g_lpd_addr, addr_len( &g_lpd_addr ) );
+
+	if( rc < 0 ) {
+		log_warn( "LPD: Cannot send multicast message on %s: %s", ifce ? ifce : "<any>", strerror( errno ) );
+	}
+
+	return rc;
+}
+
+/* Send packet to all specified interfaces */
+int multicast_send_packets( int sock_send, const char *msg ) {
+	struct ifaddrs *addrs;
+	const struct ifaddrs *cur;
+
+	if( gconf->dht_ifce ) {
+		multicast_send_packet( sock_send, gconf->dht_ifce, msg );
+		return 0;
+	}
+
+	if( getifaddrs( &addrs ) < 0 ) {
+		log_err( "LPD: Cannot get interface list." );
+		return -1;
+	}
+
+	cur = addrs;
+	while ( cur != NULL ) {
+		if ( cur->ifa_addr->sa_family == gconf->af
+			&& !(cur->ifa_flags & IFF_LOOPBACK)
+			&& !(cur->ifa_flags & IFF_POINTOPOINT)
+			&& (cur->ifa_flags & IFF_MULTICAST) ) {
+			multicast_send_packet( sock_send, cur->ifa_name, msg );
+		}
+		cur = cur->ifa_next;
+	}
+
+	freeifaddrs( addrs );
+	return 0;
+}
+
+/* Parse received packet */
 const char *parse_packet_param( const char* str, const char* param ) {
 	const char* pos;
 
@@ -206,27 +256,23 @@ void bootstrap_handle_mcast( int rc, int sock_recv ) {
 	char buf[512];
 	IP c_addr;
 	socklen_t addrlen;
-	int rc_send;
 	int rc_recv;
 
 	if( g_mcast_time <= time_now_sec() ) {
 		if( kad_count_nodes( 0 ) == 0 ) {
 			/* Join multicast group if possible */
-			if( g_mcast_registered == 0 && mcast_join_group( g_sock_recv, &g_lpd_addr, gconf->dht_ifce ) == 0 ) {
+			if( g_mcast_registered == 0 && mcast_set_group( sock_recv, &g_lpd_addr, gconf->dht_ifce, 1 ) == 0 ) {
 				log_info( "LPD: No peers known. Joined multicast group." );
 				g_mcast_registered = 1;
 			}
 
 			if( g_mcast_registered == 1 ) {
+				log_info( "LPD: Send multicast message to find nodes." );
+				
+				/* Create message */
 				snprintf( buf, sizeof(buf), msg_fmt, atoi( gconf->dht_port ) );
 
-				addrlen = addr_len( &g_lpd_addr );
-				rc_send = sendto( g_sock_send, buf, strlen( buf ), 0, (struct sockaddr*) &g_lpd_addr, addrlen );
-				if( rc_send < 0 ) {
-					log_warn( "LPD: Cannot send multicast message: %s", strerror( errno ) );
-				} else {
-					log_info( "LPD: Send multicast message to find nodes." );
-				}
+				multicast_send_packets( g_sock_send, buf );
 			}
 		}
 
@@ -243,7 +289,7 @@ void bootstrap_handle_mcast( int rc, int sock_recv ) {
 
 	/* Reveice multicast ping */
 	addrlen = sizeof(IP);
-	rc_recv = recvfrom( g_sock_recv, buf, sizeof(buf), 0, (struct sockaddr*) &c_addr, (socklen_t*) &addrlen );
+	rc_recv = recvfrom( sock_recv, buf, sizeof(buf), 0, (struct sockaddr*) &c_addr, (socklen_t*) &addrlen );
 	if( rc_recv < 0 ) {
 		log_warn( "LPD: Cannot receive multicast message: %s", strerror( errno ) );
 		return;
@@ -251,7 +297,7 @@ void bootstrap_handle_mcast( int rc, int sock_recv ) {
 
 	if( g_packet_limit < 0 ) {
 		/* Too much traffic - leave multicast group for now */
-		if( g_mcast_registered == 1 && mcast_leave_group( g_sock_recv, &g_lpd_addr ) == 0 ) {
+		if( g_mcast_registered == 1 && mcast_set_group( sock_recv, &g_lpd_addr, gconf->dht_ifce, 0 ) == 0 ) {
 			log_warn( "LPD: Too much traffic. Left multicast group." );
 			g_mcast_registered = 0;
 		}
@@ -335,16 +381,19 @@ fail:
 int create_receive_socket( void ) {
 	int sock_recv;
 
-	sock_recv = net_bind( "LPD", gconf->lpd_addr, DHT_PORT_MCAST, gconf->dht_ifce, IPPROTO_UDP, gconf->af );
+	const char *any_addr = (gconf->af == AF_INET) ? "0.0.0.0" : "::";
+	sock_recv = net_bind( "LPD", any_addr, DHT_PORT_MCAST, gconf->dht_ifce, IPPROTO_UDP, gconf->af );
 
-	/* We don't want to receive our own packets */
 	if( multicast_set_loop( sock_recv, gconf->af, 0 ) < 0 ) {
-		close( sock_recv );
 		log_warn( "LPD: Failed to set IP_MULTICAST_LOOP: %s", strerror( errno ) );
-		return -1;
+		goto fail;
 	}
 
 	return sock_recv;
+
+fail:
+	close( sock_recv );
+	return -1;
 }
 
 void lpd_setup( void ) {
