@@ -19,6 +19,7 @@ int query_sanitize( char buf[], size_t buflen, const char query[] );
 
 int port_random( void );
 int port_parse( const char pstr[], int err );
+int port_set( IP *addr, unsigned short port );
 
 int bytes_random( UCHAR buffer[], size_t size );
 void bytes_from_hex( UCHAR bin[], const char hex[], size_t length );

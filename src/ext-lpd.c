@@ -240,17 +240,6 @@ int parse_packet( const char *str ) {
 	return port;
 }
 
-int set_port( IP *addr, unsigned short port ) {
-	if( addr->ss_family == AF_INET ) {
-		((IP4 *)addr)->sin_port = htons( port );
-	} else if( addr->ss_family == AF_INET6 ) {
-		((IP6 *)addr)->sin6_port = htons( port );
-	} else {
-		return 1;
-	}
-	return 0;
-}
-
 void bootstrap_handle_mcast( int rc, int sock_recv ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	char buf[512];
@@ -314,7 +303,7 @@ void bootstrap_handle_mcast( int rc, int sock_recv ) {
 
 	int port = parse_packet( buf );
 	if( port > 0 ) {
-		set_port( &c_addr, port );
+		port_set( &c_addr, port );
 		log_debug( "LPD: Ping lonely peer at %s", str_addr( &c_addr, addrbuf ) );
 		kad_ping( &c_addr );
 	} else {

@@ -99,6 +99,19 @@ int port_parse( const char *pstr, int err ) {
 	}
 }
 
+int port_set( IP *addr, unsigned short port ) {
+	switch( addr->ss_family ) {
+		case AF_INET:
+			((IP4 *)addr)->sin_port = htons( port );
+			return 0;
+		case AF_INET6:
+			((IP6 *)addr)->sin6_port = htons( port );
+			return 0;
+		default:
+			return 1;
+	}
+}
+
 /* Fill buffer with random bytes */
 int bytes_random( UCHAR buffer[], size_t size ) {
 	int fd;
