@@ -174,6 +174,7 @@ int multicast_send_packets( int sock_send, const char *msg ) {
 	struct ifaddrs *addrs;
 	const struct ifaddrs *cur;
 
+	/* Use one specific interface */
 	if( gconf->dht_ifce ) {
 		multicast_send_packet( sock_send, gconf->dht_ifce, msg );
 		return 0;
@@ -184,6 +185,7 @@ int multicast_send_packets( int sock_send, const char *msg ) {
 		return -1;
 	}
 
+	/* Use all available interfaces */
 	cur = addrs;
 	while ( cur != NULL ) {
 		if ( cur->ifa_addr->sa_family == gconf->af
