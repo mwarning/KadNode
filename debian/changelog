@@ -2,7 +2,7 @@ kadnode (0.9.2) UNRELEASED; urgency=low
 
   * fix IPv4 localhost address byte order when resolving own value
   * [NSS] fix maximum address limit per request
-  * [LPD] fix interface setting for multicast group handling
+  * [LPD] send a multicast packet for each interface by default
 
  -- mwarning <moritzwarning@web.de>  Fri, 20 Jun 2014 14:24:42 +0200
 
