@@ -29,7 +29,6 @@ const char msg_fmt[] =
 enum { PACKET_LIMIT_MAX =  20 }; /* Packets per minute to be handled */
 static int g_packet_limit = 0;
 static IP g_lpd_addr = {0};
-static socklen_t g_lpd_addrlen = 0;
 static int g_mcast_registered = 0; /* Indicates if the multicast addresses has been registered */
 static time_t g_mcast_time = 0; /* Next time to perform a multicast ping */
 
@@ -163,7 +162,7 @@ int multicast_send_packets( const char *msg ) {
 				goto skip;
 			}
 
-			if( sendto( sock, msg, strlen( msg ), 0, (struct sockaddr*) &g_lpd_addr, g_lpd_addrlen ) < 0 ) {
+			if( sendto( sock, msg, strlen( msg ), 0, (struct sockaddr*) &g_lpd_addr, addr_len( &g_lpd_addr ) ) < 0 ) {
 				log_warn( "LPD: Cannot send message from '%s': %s", str_addr( &addr, addrbuf ), strerror( errno ) );
 				goto skip;
 			}
@@ -333,7 +332,6 @@ void lpd_setup( void ) {
 	if( addr_parse( &g_lpd_addr, gconf->lpd_addr, DHT_PORT_MCAST, gconf->af ) != 0 ) {
 		log_err( "BOOT: Failed to parse IP address for '%s'.", gconf->lpd_addr );
 	}
-	g_lpd_addrlen = addr_len( &g_lpd_addr );
 
 	if( gconf->lpd_disable ) {
 		return;
