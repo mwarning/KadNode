@@ -124,6 +124,7 @@ int multicast_send_packets( const char *msg ) {
 
 	char addrbuf[FULL_ADDSTRLEN+1];
 	int sock;
+	IP addr;
 
 	/* Iterate all interfaces */
 	cur = addrs;
@@ -134,10 +135,14 @@ int multicast_send_packets( const char *msg ) {
 			&& (cur->ifa_flags & IFF_MULTICAST)
 			&& !(gconf->dht_ifce && strcmp( cur->ifa_name, gconf->dht_ifce ) == 0) ) {
 
+			/* Copy address to separate field and set port */
+			memcpy( &addr, cur->ifa_addr, addr_len( (IP*) cur->ifa_addr ) );
+			port_set( &addr, addr_port(&g_lpd_addr) );
+
 			/* For IPv6, only send from link local addresses */
-			if(cur->ifa_addr->sa_family == AF_INET6) {
-				unsigned char* addr = &((IP6*) cur->ifa_addr)->sin6_addr.s6_addr[0];
-				if( !(addr[0] == 0xFE && addr[1] == 0x80) ) {
+			if( addr.ss_family == AF_INET6) {
+				unsigned char* a = &((IP6*) &addr)->sin6_addr.s6_addr[0];
+				if( !(a[0] == 0xFE && a[1] == 0x80) ) {
 					break;
 				}
 			}
@@ -153,13 +158,13 @@ int multicast_send_packets( const char *msg ) {
 				goto skip;
 			}
 
-			if( bind( sock, cur->ifa_addr, addr_len( (IP*)cur->ifa_addr ) ) < 0 ) {
+			if( bind( sock, (struct sockaddr*) &addr, addr_len( &addr ) ) < 0 ) {
 				log_warn( "LPD: Cannot bind send socket: %s", strerror( errno ) );
 				goto skip;
 			}
 
 			if( sendto( sock, msg, strlen( msg ), 0, (struct sockaddr*) &g_lpd_addr, g_lpd_addrlen ) < 0 ) {
-				log_warn( "LPD: Cannot send message from '%s': %s", str_addr( (const IP*)cur->ifa_addr, addrbuf ), strerror( errno ) );
+				log_warn( "LPD: Cannot send message from '%s': %s", str_addr( &addr, addrbuf ), strerror( errno ) );
 				goto skip;
 			}
 
