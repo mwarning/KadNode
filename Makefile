@@ -25,6 +25,7 @@ ifeq ($(findstring auth,$(FEATURES)),auth)
   ifeq ($(findstring gcc,$(shell ${CC} --version)),gcc)
     POST_LINKING += -Wl,-Bstatic -lsodium -Wl,-Bdynamic
   else
+    CFLAGS += -I/usr/local/include
     POST_LINKING += /usr/local/lib/libsodium.a
   endif
 endif

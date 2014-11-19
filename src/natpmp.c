@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include <sys/socket.h>
 
 #include "log.h"
 #include "ext-fwd.h"

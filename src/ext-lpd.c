@@ -113,7 +113,7 @@ int mcast_set_group( int sock, IP *mcast_addr, const char ifname[], int join ) {
 
 /* Send packet to all specified interfaces */
 int multicast_send_packets( const char *msg ) {
-	const struct ifaddrs const *cur;
+	const struct ifaddrs *cur;
 	struct ifaddrs *addrs;
 
 	if( getifaddrs( &addrs ) < 0 ) {

@@ -1,5 +1,6 @@
 
 #include <stdio.h>
+#include <sys/socket.h>
 
 #include "main.h"
 #include "conf.h"
