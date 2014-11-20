@@ -1,7 +1,8 @@
 
 CC ?= gcc
 CFLAGS ?= -O2 -Wall -Wwrite-strings -pedantic
-CFLAGS += -std=gnu99
+CFLAGS += -std=gnu99 -I/usr/local/include
+LFLAGS += -L/usr/local/lib
 FEATURES ?= auth cmd lpd nss natpmp upnp #dns debug web
 
 OBJS = build/main.o build/results.o build/kad.o build/log.o \
@@ -12,6 +13,7 @@ OBJS = build/main.o build/results.o build/kad.o build/log.o \
 	arch-pkg deb-pkg osx-pkg install uninstall
 
 all: kadnode
+
 
 ifeq ($(findstring lpd,$(FEATURES)),lpd)
   OBJS += build/ext-lpd.o
@@ -24,7 +26,6 @@ ifeq ($(findstring auth,$(FEATURES)),auth)
   ifeq ($(findstring gcc,$(shell ${CC} --version)),gcc)
     LFLAGS += -Wl,-Bstatic -lsodium -Wl,-Bdynamic
   else
-    CFLAGS += -I/usr/local/include
     LFLAGS += /usr/local/lib/libsodium.a
   endif
 endif
