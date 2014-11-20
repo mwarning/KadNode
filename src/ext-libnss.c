@@ -17,39 +17,112 @@
 #define MAX_ADDRS 32
 
 
-enum nss_status _nss_kadnode_gethostbyname_r(
-		const char *hostname, struct hostent *host,
-		char *buf, size_t buflen, int *errnop, int *h_errnop ) {
+/*
+* Parse/Resolve an IP address.
+* The port must be specified separately.
+*/
+int _nss_kadnode_addr_parse( IP *addr, const char addr_str[], const char port_str[], int af ) {
+	struct addrinfo hints;
+	struct addrinfo *info = NULL;
+	struct addrinfo *p = NULL;
 
-	return _nss_kadnode_hostent( hostname, AF_INET6, host,
-		buf, buflen, errnop, h_errnop, NULL, NULL );
+	memset( &hints, '\0', sizeof(struct addrinfo) );
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_family = af;
+
+	if( getaddrinfo( addr_str, port_str, &hints, &info ) != 0 ) {
+		return -2;
+	}
+
+	p = info;
+	while( p != NULL ) {
+		if( p->ai_family == AF_INET6 ) {
+			memcpy( addr, p->ai_addr, sizeof(IP6) );
+			freeaddrinfo( info );
+			return 0;
+		}
+		if( p->ai_family == AF_INET ) {
+			memcpy( addr, p->ai_addr, sizeof(IP4) );
+			freeaddrinfo( info );
+			return 0;
+		}
+	}
+
+	freeaddrinfo( info );
+	return -3;
 }
 
-enum nss_status _nss_kadnode_gethostbyname2_r(
-		const char *hostname, int af, struct hostent *host,
-		char *buf, size_t buflen, int *errnop, int *h_errnop ) {
-
-	return _nss_kadnode_hostent( hostname, af, host,
-		buf, buflen, errnop, h_errnop, NULL, NULL );
+int _nss_kadnode_addr_len( const IP *addr ) {
+	switch( addr->ss_family ) {
+		case AF_INET:
+			return sizeof(IP4);
+		case AF_INET6:
+			return sizeof(IP6);
+		default:
+			return 0;
+	}
 }
 
-enum nss_status _nss_kadnode_gethostbyname3_r(
-		const char *hostname, int af, struct hostent *host,
-		char *buf, size_t buflen, int *errnop,  int *h_errnop,
-		int32_t *ttlp, char **canonp ) {
+int _nss_kadnode_lookup( const char hostname[], int hostlen, IP addrs[] ) {
+	IP sockaddr;
+	socklen_t addrlen;
+	int sockfd, size;
+	struct timeval tv;
 
-	return _nss_kadnode_hostent( hostname, af, host,
-		buf, buflen, errnop, h_errnop, ttlp, canonp );
+	if( _nss_kadnode_addr_parse( &sockaddr, "localhost", NSS_PORT, AF_UNSPEC ) < 0 ) {
+		return 0;
+	}
+
+	/* Setup UDP socket */
+	if( (sockfd = socket( sockaddr.ss_family, SOCK_DGRAM, IPPROTO_UDP )) < 0 ) {
+		return 0;
+	}
+
+	/* Set receive timeout to 0.1 seconds */
+	tv.tv_sec = 0;
+	tv.tv_usec = 100000;
+	if( setsockopt( sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(struct timeval) ) < 0 ) {
+		return 0;
+	}
+
+	addrlen = _nss_kadnode_addr_len( &sockaddr );
+	size = sendto( sockfd, hostname, hostlen, 0, (struct sockaddr *)&sockaddr, addrlen );
+	if( size != hostlen ) {
+		return 0;
+	}
+
+	size = recvfrom( sockfd, addrs, MAX_ADDRS * sizeof(IP), 0, (struct sockaddr *)&sockaddr, &addrlen );
+
+	if( size > 0 && (size % sizeof(IP)) == 0 ) {
+		/* Return number of addresses */
+		return (size / sizeof(IP));
+	} else {
+		return 0;
+	}
 }
 
-enum nss_status _nss_kadnode_gethostbyname4_r(
-	const char *hostname, struct gaih_addrtuple **pat,
-	char *buf, size_t buflen, int *errnop,
-	int *h_errnop, int32_t *ttlp ) {
+int _nss_kadnode_valid_hostname( const char hostname[], int hostlen ) {
+	size_t i;
 
-	return _nss_kadnode_gaih_addrtuple(
-		hostname, strlen( hostname ), pat,
-		buf, buflen, errnop, h_errnop, ttlp );
+	if( hostlen < 0 || hostlen > 300 ) {
+		return 0;
+	}
+
+	for( i = 0; i < hostlen; i++ ) {
+		const char c = hostname[i];
+		if( (c >= '0' && c <= '9')
+				|| (c >= 'A' && c <= 'Z')
+				|| (c >= 'a' && c <= 'z')
+				|| (c == '-')
+				|| (c == '_')
+				|| (c == '.') ) {
+			continue;
+		} else {
+			return 0;
+		}
+	}
+
+	return 1;
 }
 
 enum nss_status _nss_kadnode_gaih_addrtuple(
@@ -231,110 +304,37 @@ enum nss_status _nss_kadnode_hostent(
 	return NSS_STATUS_SUCCESS;
 }
 
-int _nss_kadnode_valid_hostname( const char hostname[], int hostlen ) {
-	size_t i;
+enum nss_status _nss_kadnode_gethostbyname_r(
+		const char *hostname, struct hostent *host,
+		char *buf, size_t buflen, int *errnop, int *h_errnop ) {
 
-	if( hostlen < 0 || hostlen > 300 ) {
-		return 0;
-	}
-
-	for( i = 0; i < hostlen; i++ ) {
-		const char c = hostname[i];
-		if( (c >= '0' && c <= '9')
-				|| (c >= 'A' && c <= 'Z')
-				|| (c >= 'a' && c <= 'z')
-				|| (c == '-')
-				|| (c == '_')
-				|| (c == '.') ) {
-			continue;
-		} else {
-			return 0;
-		}
-	}
-
-	return 1;
+	return _nss_kadnode_hostent( hostname, AF_INET6, host,
+		buf, buflen, errnop, h_errnop, NULL, NULL );
 }
 
-/*
-* Parse/Resolve an IP address.
-* The port must be specified separately.
-*/
-int _nss_kadnode_addr_parse( IP *addr, const char addr_str[], const char port_str[], int af ) {
-	struct addrinfo hints;
-	struct addrinfo *info = NULL;
-	struct addrinfo *p = NULL;
+enum nss_status _nss_kadnode_gethostbyname2_r(
+		const char *hostname, int af, struct hostent *host,
+		char *buf, size_t buflen, int *errnop, int *h_errnop ) {
 
-	memset( &hints, '\0', sizeof(struct addrinfo) );
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_family = af;
-
-	if( getaddrinfo( addr_str, port_str, &hints, &info ) != 0 ) {
-		return -2;
-	}
-
-	p = info;
-	while( p != NULL ) {
-		if( p->ai_family == AF_INET6 ) {
-			memcpy( addr, p->ai_addr, sizeof(IP6) );
-			freeaddrinfo( info );
-			return 0;
-		}
-		if( p->ai_family == AF_INET ) {
-			memcpy( addr, p->ai_addr, sizeof(IP4) );
-			freeaddrinfo( info );
-			return 0;
-		}
-	}
-
-	freeaddrinfo( info );
-	return -3;
+	return _nss_kadnode_hostent( hostname, af, host,
+		buf, buflen, errnop, h_errnop, NULL, NULL );
 }
 
-int _nss_kadnode_addr_len( const IP *addr ) {
-	switch( addr->ss_family ) {
-		case AF_INET:
-			return sizeof(IP4);
-		case AF_INET6:
-			return sizeof(IP6);
-		default:
-			return 0;
-	}
+enum nss_status _nss_kadnode_gethostbyname3_r(
+		const char *hostname, int af, struct hostent *host,
+		char *buf, size_t buflen, int *errnop,  int *h_errnop,
+		int32_t *ttlp, char **canonp ) {
+
+	return _nss_kadnode_hostent( hostname, af, host,
+		buf, buflen, errnop, h_errnop, ttlp, canonp );
 }
 
-int _nss_kadnode_lookup( const char hostname[], int hostlen, IP addrs[] ) {
-	IP sockaddr;
-	socklen_t addrlen;
-	int sockfd, size;
-	struct timeval tv;
+enum nss_status _nss_kadnode_gethostbyname4_r(
+	const char *hostname, struct gaih_addrtuple **pat,
+	char *buf, size_t buflen, int *errnop,
+	int *h_errnop, int32_t *ttlp ) {
 
-	if( _nss_kadnode_addr_parse( &sockaddr, "localhost", NSS_PORT, AF_UNSPEC ) < 0 ) {
-		return 0;
-	}
-
-	/* Setup UDP socket */
-	if( (sockfd = socket( sockaddr.ss_family, SOCK_DGRAM, IPPROTO_UDP )) < 0 ) {
-		return 0;
-	}
-
-	/* Set receive timeout to 0.1 seconds */
-	tv.tv_sec = 0;
-	tv.tv_usec = 100000;
-	if( setsockopt( sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(struct timeval) ) < 0 ) {
-		return 0;
-	}
-
-	addrlen = _nss_kadnode_addr_len( &sockaddr );
-	size = sendto( sockfd, hostname, hostlen, 0, (struct sockaddr *)&sockaddr, addrlen );
-	if( size != hostlen ) {
-		return 0;
-	}
-
-	size = recvfrom( sockfd, addrs, MAX_ADDRS * sizeof(IP), 0, (struct sockaddr *)&sockaddr, &addrlen );
-
-	if( size > 0 && (size % sizeof(IP)) == 0 ) {
-		/* Return number of addresses */
-		return (size / sizeof(IP));
-	} else {
-		return 0;
-	}
+	return _nss_kadnode_gaih_addrtuple(
+		hostname, strlen( hostname ), pat,
+		buf, buflen, errnop, h_errnop, ttlp );
 }
