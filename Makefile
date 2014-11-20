@@ -2,7 +2,6 @@
 CC ?= gcc
 CFLAGS ?= -O2 -Wall -Wwrite-strings -pedantic
 CFLAGS += -std=gnu99
-POST_LINKING =
 FEATURES ?= auth cmd lpd nss natpmp upnp #dns debug web
 
 OBJS = build/main.o build/results.o build/kad.o build/log.o \
@@ -23,10 +22,10 @@ ifeq ($(findstring auth,$(FEATURES)),auth)
   OBJS += build/ext-auth.o
   CFLAGS += -DAUTH
   ifeq ($(findstring gcc,$(shell ${CC} --version)),gcc)
-    POST_LINKING += -Wl,-Bstatic -lsodium -Wl,-Bdynamic
+    LFLAGS += -Wl,-Bstatic -lsodium -Wl,-Bdynamic
   else
     CFLAGS += -I/usr/local/include
-    POST_LINKING += /usr/local/lib/libsodium.a
+    LFLAGS += /usr/local/lib/libsodium.a
   endif
 endif
 
@@ -59,14 +58,14 @@ endif
 ifeq ($(findstring upnp,$(FEATURES)),upnp)
   OBJS += build/upnp.o
   CFLAGS += -DFWD_UPNP
-  POST_LINKING += -Wl,-Bdynamic -lminiupnpc
+  LFLAGS += -Wl,-Bdynamic -lminiupnpc
   ENABLE_FORWARDING = 1
 endif
 
 ifeq ($(findstring natpmp,$(FEATURES)),natpmp)
   OBJS += build/natpmp.o
   CFLAGS += -DFWD_NATPMP
-  POST_LINKING += -Wl,-Bdynamic -lnatpmp
+  LFLAGS += -Wl,-Bdynamic -lnatpmp
   ENABLE_FORWARDING = 1
 endif
 
@@ -87,7 +86,7 @@ kadnode-ctl:
 	$(CC) $(CFLAGS) src/kadnode-ctl.c -o build/kadnode-ctl
 
 kadnode: $(OBJS) $(EXTRA)
-	$(CC) $(OBJS) -o build/kadnode $(POST_LINKING)
+	$(CC) $(OBJS) -o build/kadnode $(LFLAGS)
 
 clean:
 	rm -rf build/*
