@@ -1,6 +1,8 @@
 kadnode (0.9.2) UNRELEASED; urgency=low
 
+  * add FreeBSD package
   * fix IPv4 localhost address byte order when resolving own value
+  * [NSS] add FreeBSD support
   * [NSS] fix maximum address limit per request
   * [LPD] send a multicast packet for each interface by default
 
