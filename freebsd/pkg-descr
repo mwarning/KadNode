@@ -1,0 +1,10 @@
+This tool translates hostnames to IPv6/IPv4 addresses
+using P2P technology. Every user can announce
+various hostnames and can resolve these hostnames
+on other computers running KadNode.
+KadNode wraps the Kademlia DHT implementation
+and offers support for the Name Service Switch (NSS)
+facility. The package also includes a control program
+called kadnode-ctl.
+
+WWW: https://github.com/mwarning/KadNode

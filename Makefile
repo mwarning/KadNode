@@ -106,6 +106,9 @@ deb-pkg:
 osx-pkg:
 	cd macosx && ./build.sh
 
+freebsd-pkg:
+	cd freebsd && make package
+
 install:
 	cp build/kadnode $(DESTDIR)/usr/bin/
 	-cp build/kadnode-ctl $(DESTDIR)/usr/bin/

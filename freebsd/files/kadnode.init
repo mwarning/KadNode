@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# PROVIDE: kadnode
+# REQUIRE: SERVERS
+# BEFORE: DAEMON
+# KEYWORD: shutdown
+
+. /etc/rc.subr
+
+name=kadnode
+rcvar=kadnode_enable
+
+pidfile="/var/run/${name}.pid"
+
+command="/usr/local/bin/${name}"
+kadnode_flags="--config /etc/kadnode/kadnode.conf --pidfile $pidfile --daemon"
+
+required_files="/etc/kadnode/${name}.conf"
+
+#add/remove kadnode from /etc/nsswitch.conf
+start_precmd="sed -i -e '/kadnode/!s/^\(hosts:.*\)dns\(.*\)/\1kadnode dns\2/' /etc/nsswitch.conf"
+stop_postcmd="sed -i -e 's/^\(hosts:.*\)kadnode \(.*\)/\1\2/' /etc/nsswitch.conf"
+
+load_rc_config $name
+: ${kadnode_enable:=yes}
+run_rc_command "$1"
