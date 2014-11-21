@@ -26,6 +26,7 @@ enum nss_status _nss_kadnode_gethostbyname2_r(
 	char *buffer, size_t buflen, int *errnop,
 	int *h_errnop ) _public_;
 
+#ifndef __FreeBSD__
 enum nss_status _nss_kadnode_gethostbyname3_r(
 	const char *hostname, int af, struct hostent *host,
 	char *buf, size_t buflen, int *errnop,
@@ -35,5 +36,6 @@ enum nss_status _nss_kadnode_gethostbyname4_r(
 	const char *hostname, struct gaih_addrtuple **pat,
 	char *buffer, size_t buflen, int *errnop,
 	int *h_errnop, int32_t *ttlp ) _public_;
+#endif
 
 #endif /* _EXT_LIBNSS_H_ */

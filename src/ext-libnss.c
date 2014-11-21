@@ -3,16 +3,19 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <nss.h>
 #include <netdb.h>
+#include <unistd.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <nss.h>
 
-#include <fcntl.h>
-#include <unistd.h>
+#ifdef __FreeBSD__
+#include <nsswitch.h>
+#include <stdarg.h>
+#include <sys/param.h>
+#endif
 
 #include "main.h"
-#include "ext-libnss.h"
 
 #define MAX_ADDRS 32
 
@@ -125,6 +128,7 @@ int _nss_kadnode_valid_hostname( const char hostname[], int hostlen ) {
 	return 1;
 }
 
+#ifndef __FreeBSD__
 enum nss_status _nss_kadnode_gaih_addrtuple(
 	const char *hostname, int hostlen, struct gaih_addrtuple **pat,
 	char *buf, size_t buflen, int *errnop, int *h_errnop, int32_t *ttlp ) {
@@ -204,6 +208,7 @@ enum nss_status _nss_kadnode_gaih_addrtuple(
 
 	return NSS_STATUS_SUCCESS;
 }
+#endif
 
 enum nss_status _nss_kadnode_hostent(
 		const char *hostname, int af, struct hostent *host,
@@ -320,6 +325,7 @@ enum nss_status _nss_kadnode_gethostbyname2_r(
 		buf, buflen, errnop, h_errnop, NULL, NULL );
 }
 
+#ifndef __FreeBSD__
 enum nss_status _nss_kadnode_gethostbyname3_r(
 		const char *hostname, int af, struct hostent *host,
 		char *buf, size_t buflen, int *errnop,  int *h_errnop,
@@ -338,3 +344,43 @@ enum nss_status _nss_kadnode_gethostbyname4_r(
 		hostname, strlen( hostname ), pat,
 		buf, buflen, errnop, h_errnop, ttlp );
 }
+#endif
+
+#ifdef __FreeBSD__
+static NSS_METHOD_PROTOTYPE(__nss_compat_gethostbyname2_r);
+
+static ns_mtab methods[] = {
+	{ NSDB_HOSTS, "gethostbyname_r", __nss_compat_gethostbyname2_r, NULL },
+	{ NSDB_HOSTS, "gethostbyname2_r", __nss_compat_gethostbyname2_r, NULL },
+};
+
+ns_mtab *nss_module_register( const char *source, unsigned int *mtabsize, nss_module_unregister_fn *unreg ) {
+	*mtabsize = sizeof(methods) / sizeof(methods[0]);
+	*unreg = NULL;
+	return methods;
+}
+
+int __nss_compat_gethostbyname2_r( void *retval, void *mdata, va_list ap ) {
+	int s;
+	const char *name;
+	int af;
+	struct hostent *hptr;
+	char *buffer;
+	size_t buflen;
+	int *errnop;
+	int *h_errnop;
+
+	name = va_arg(ap, const char*);
+	af = va_arg(ap, int);
+	hptr = va_arg(ap, struct hostent*);
+	buffer = va_arg(ap, char*);
+	buflen = va_arg(ap, size_t);
+	errnop = va_arg(ap, int*);
+	h_errnop = va_arg(ap, int*);
+
+	s = _nss_kadnode_gethostbyname2_r( name, af, hptr, buffer, buflen, errnop, h_errnop );
+	*(struct hostent**) retval = (s == NS_SUCCESS) ? hptr : NULL;
+
+	return __nss_compat_result(s, *errnop);
+}
+#endif
