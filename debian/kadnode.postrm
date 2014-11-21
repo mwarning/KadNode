@@ -3,7 +3,7 @@ set -e
 
 case "$1" in
 	purge|remove)
-		sed -i -e 's/^hosts:\s*files kadnode /hosts:          files /' /etc/nsswitch.conf 2> /dev/null
+		sed -i -e 's/^\(hosts:.*\)kadnode \(.*\)/\1\2/' /etc/nsswitch.conf 2> /dev/null
 		;;
 esac
 

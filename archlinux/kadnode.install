@@ -3,10 +3,10 @@ post_install() {
 	printf "To enable service KadNode: systemctl enable kadnode\n"
 
 	#add kadnode entry to NSS config file
-	sed -i -e 's/^hosts:\s*files \(kadnode\)\?\s*/hosts:          files kadnode /' "${DESTDIR}/etc/nsswitch.conf" 2> /dev/null
+	sed -i -e '/kadnode/!s/^\(hosts:.*\)dns\(.*\)/\1kadnode dns\2/' ${DESTDIR}/etc/nsswitch.conf
 }
 
 post_remove() {
 	#remove kadnode entry from NSS config file
-	sed -i -e 's/^hosts:\s*files kadnode /hosts:          files /' "${DESTDIR}/etc/nsswitch.conf" 2> /dev/null
+	sed -i -e 's/^\(hosts:.*\)kadnode \(.*\)/\1\2/' ${DESTDIR}/etc/nsswitch.conf
 }
