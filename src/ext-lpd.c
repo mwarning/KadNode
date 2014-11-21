@@ -37,7 +37,7 @@ static time_t g_mcast_time = 0; /* Next time to perform a multicast ping */
 * The interface may be null.
 */
 int mcast_set_group( int sock, IP *mcast_addr, const char ifname[], int join ) {
-#if defined(MCAST_JOIN_GROUP) && !defined(__APPLE__)
+#if defined(MCAST_JOIN_GROUP) && !defined(__APPLE__) && !defined(__FreeBSD__)
 	struct group_req req;
 	int level, optname;
 
