@@ -1,7 +1,7 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "README" "" "June 2014" "" ""
+.TH "README" "" "November 2014" "" ""
 .
 .SH "NAME"
 \fBREADME\fR
@@ -15,7 +15,7 @@
 \fBkadnode\-ctl\fR [\.\.\.]
 .
 .SH "DESCRIPTION"
-\fBKadNode\fR is a small P2P name/resource resolution daemon based on a Distributed Hash Table (DHT)\. It can be used as a personal and decentralized DynDNS service that intercepts and resolves DNS requests\. The DHT is identical to the one used in the Transmission Bittorrent client\.
+\fBKadNode\fR is a small P2P DNS resolution daemon based on a Distributed Hash Table (DHT)\. It can intercept and resolve DNS request of a given top level domain in the background of the system\. This makes it usable even in a browser or on the command line\. KadNode can serve as as a personal and decentralized DynDNS service that way\. A KadNode instance can also announce domains to the network\. A cryptographic public key can be used to let KadNode filter out nodes that announce the same domain as the expected one\. The DHT is identical to the one used in the Transmission Bittorrent client and works on the Internet as well as on local networks\. Packages for multiple operating systems are available to setup your system right away\. Have a look at the configuration file (/etc/kadnode/kadnode\.conf) for further instructions\.
 .
 .P
 Features:
@@ -42,10 +42,10 @@ command line interface (kadnode\-ctl)
 NSS support through /etc/nsswitch\.conf
 .
 .IP "\(bu" 4
-integrated simplified DNS server
+integrated simplified DNS server (supports A, AAAA, and SRV requests)
 .
 .IP "\(bu" 4
-packages for MacOSX/Debian/ArchLinux/OpenWrt
+packages for MacOSX/Debian/FreeBSD/OpenWrt/ArchLinux
 .
 .IP "\(bu" 4
 peer file import/export on startup/shutdown
