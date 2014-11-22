@@ -1,29 +1,28 @@
-# New ports collection makefile for:   kadnode
-# Date created:        16 November 2014
-# Whom:                mwarning
-#
+# Created by: Moritz Warning <moritzwarning@web.de>
 # $FreeBSD$
-#
 
 PORTNAME=	kadnode
 PORTVERSION=	0.9.1
+PORTREVISION=	1
 CATEGORIES=	dns
 MASTER_SITES=	https://github.com/mwarning/KadNode/releases/download/v0.9.1/
 DISTNAME=	${PORTNAME}_${DISTVERSIONPREFIX}${DISTVERSION}${DISTVERSIONSUFFIX}
-WRKSRC=		${WRKDIR}/KadNode
+
 MAINTAINER=	moritzwarning@web.de
 COMMENT=	P2P name resolution daemon
+
 LICENSE=	MIT
 
-USES+=gmake
+USES=	gmake
+WRKSRC=		${WRKDIR}/KadNode
 
-OPTIONS_DEFINE=	AUTH CMD DEBUG DNS LPD NATPMP UPNP
+OPTIONS_DEFINE=	AUTH CMD DEBUG DNS LPD NATPMP NSS UPNP
 AUTH_DESC=	Authorization support based on libsodium.
 CMD_DESC=	Command line control tool kadnode-ctl.
 DEBUG_DESC=	Build with debug messages and symbols.
 DNS_DESC=	Include local DNS interface.
 LPD_DESC=	Local peer discovery.
-NATPMP_DESC=	 NAT-PMP support. Enables remote port forwarding on the router. 
+NATPMP_DESC=	 NAT-PMP support. Enables remote port forwarding on the router.
 NSS_DESC=	Name Service Switch support to intercept host queries (/etc/nsswitch.conf).
 UPNP_DESC=	UPnP support. Enable remote port forwarding on the router.
 
@@ -45,7 +44,7 @@ FEATURES+=debug
 .endif
 
 .if ${PORT_OPTIONS:MDNS}
-FEATURES+=dns
+FEATURES+=dnsl
 .endif
 
 .if ${PORT_OPTIONS:MLPD}
@@ -66,7 +65,7 @@ FEATURES+=upnp
 LIB_DEPENDS+=	libminiupnpc.so:${PORTSDIR}/net/miniupnpc
 .endif
 
-MAKE_ENV+=      FEATURES="${FEATURES}"
+MAKE_ENV+=	FEATURES="${FEATURES}"
 
 do-install:
 	${MKDIR} ${STAGEDIR}/usr/bin

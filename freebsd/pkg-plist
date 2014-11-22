@@ -6,4 +6,4 @@ man/man1/kadnode.1.gz
 /etc/rc.d/kadnode
 /etc/kadnode/kadnode.conf
 /etc/kadnode/peers.txt
-@dirrm /etc/kadnode
+@dir /etc/kadnode
