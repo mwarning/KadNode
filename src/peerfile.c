@@ -88,7 +88,7 @@ void peerfile_import( void ) {
 
 	num = 0;
 	while( fgets( linebuf, sizeof(linebuf), fp ) != NULL && gconf->is_running ) {
-		linebuf[strcspn( linebuf, "\n" )] = '\0';
+		linebuf[strcspn( linebuf, "\n\r" )] = '\0';
 
 		if( linebuf[0] == '\0' || linebuf[0] == '#' ) {
 			continue;
