@@ -13,7 +13,7 @@ It can intercept and resolve DNS request of a given top level domain in the back
 This makes it usable even in a browser or on the command line. KadNode can serve as
 as a personal and decentralized DynDNS service that way. A KadNode instance can also
 announce domains to the network. A cryptographic public key can be used to let KadNode
-filter out nodes that announce the same domain as the expected one.
+filter out unexpected responses.
 The DHT is identical to the one used in the Transmission Bittorrent client and works
 on the Internet as well as on local networks.
 Packages for multiple operating systems are available to setup your system right away.
@@ -25,7 +25,7 @@ Features:
 * UPnP/NAT-PMP support
 * local peer discovery
 * small size 75KB-125KB
-* public/secret key authentication ([libsodium](https://github.com/jedisct1/libsodium))
+* public/secret key authentication (based on [libsodium](https://github.com/jedisct1/libsodium))
 * command line interface (kadnode-ctl)
 * NSS support through /etc/nsswitch.conf
 * integrated simplified DNS server (supports A, AAAA, and SRV requests)
@@ -59,7 +59,7 @@ public key: <public-key>
 secret key: <secret-key>
 ```
 
-(The keys are not displayed for convenience.)
+(The keys are not displayed here for convenience.)
 
 ### EXAMPLE 1
 

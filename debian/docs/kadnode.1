@@ -15,7 +15,7 @@
 \fBkadnode\-ctl\fR [\.\.\.]
 .
 .SH "DESCRIPTION"
-\fBKadNode\fR is a small P2P DNS resolution daemon based on a Distributed Hash Table (DHT)\. It can intercept and resolve DNS request of a given top level domain in the background of the system\. This makes it usable even in a browser or on the command line\. KadNode can serve as as a personal and decentralized DynDNS service that way\. A KadNode instance can also announce domains to the network\. A cryptographic public key can be used to let KadNode filter out nodes that announce the same domain as the expected one\. The DHT is identical to the one used in the Transmission Bittorrent client and works on the Internet as well as on local networks\. Packages for multiple operating systems are available to setup your system right away\. Have a look at the configuration file (/etc/kadnode/kadnode\.conf) for further instructions\.
+\fBKadNode\fR is a small P2P DNS resolution daemon based on a Distributed Hash Table (DHT)\. It can intercept and resolve DNS request of a given top level domain in the background of the system\. This makes it usable even in a browser or on the command line\. KadNode can serve as as a personal and decentralized DynDNS service that way\. A KadNode instance can also announce domains to the network\. A cryptographic public key can be used to let KadNode filter out unexpected responses\. The DHT is identical to the one used in the Transmission Bittorrent client and works on the Internet as well as on local networks\. Packages for multiple operating systems are available to setup your system right away\. Have a look at the configuration file (/etc/kadnode/kadnode\.conf) for further instructions\.
 .
 .P
 Features:
@@ -33,7 +33,7 @@ local peer discovery
 small size 75KB\-125KB
 .
 .IP "\(bu" 4
-public/secret key authentication (libsodium \fIhttps://github\.com/jedisct1/libsodium\fR)
+public/secret key authentication (based on libsodium \fIhttps://github\.com/jedisct1/libsodium\fR)
 .
 .IP "\(bu" 4
 command line interface (kadnode\-ctl)
@@ -71,7 +71,7 @@ For most use cases you first need to create a secret/public key pair:
 \fB$kadnode \-\-auth\-genkey public key: <public\-key> secret key: <secret\-key>\fR
 .
 .P
-(The keys are not displayed for convenience\.)
+(The keys are not displayed here for convenience\.)
 .
 .SS "EXAMPLE 1"
 A typical use case would be to reach a computer (Node1) from another (Node2)\. On Node 1 we announce an identifier (\fBsha1(myname)\fR): \fB$kadnode \-\-value\-id myname\.p2p\fR
