@@ -1,0 +1,24 @@
+
+#Announce an identifier for the entire runtime of KadNode.
+#
+#--value-id mycomputer.p2p
+#
+# To prevent others from claiming the same domain you should
+# add cryptographic keys for authentication:
+#
+# 1. Create a public/secret key pair:
+#    kadnode --auth-gen-keys
+#
+# 2. Make sure these two lines are in this file:
+#    --auth-add-skey mycomputer.p2p:<secret-key>
+#    --value-id mycomputer.p2p
+#
+# 3. Add the following line on other computers:
+#    --auth-add-pkey mycomputer.p2p:<public-key>
+#
+
+#Switch to IPv6 mode
+#--mode ipv6
+
+#Disable multicast peer discovery
+#--lpd-disable

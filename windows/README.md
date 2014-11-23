@@ -1,3 +1,5 @@
+##Compilation on Windows
+
 KadNode can be build for Window systems using the [Cygwin](http://www.cygwin.com/) environment.
 These instruction do not include packaging. That's work in progress for now.
 
@@ -9,8 +11,9 @@ The following packages and its dependencies need to be selected:
 * All => Devel => git
 * All => Devel => wget
 
-Now start the Cygwin Terminal and install [libsodium](https://github.com/jedisct1/libsodium).
-This step is only needed for the auth extension.
+If you want to use auth extension (for public/private keys),
+you need to download and install [libsodium](https://github.com/jedisct1/libsodium).
+Open the Cygwin terminal and execute:
 
 ```
 wget https://github.com/jedisct1/libsodium/releases/download/1.0.0/libsodium-1.0.0.tar.gz
@@ -27,7 +30,7 @@ Now download and compile KadNode:
 ```
 git clone https://github.com/mwarning/KadNode.git
 cd KadNode
-FEATURES="auth cmd dns " make
+FEATURES="auth cmd dns lpd" make
 ```
 
 Finally, start KadNode:
@@ -36,6 +39,9 @@ Finally, start KadNode:
 ./build/kadnode
 ```
 
-Note:
-* You need the file cygwin1.dll for running KadNode on systems without Cygwin.
-* Cygwin does not support Multicast packets. That is why Local Peer Discovery won't work.
+## Packaging for Windows
+
+To create a package, [Inno Setup](http://www.jrsoftware.org/isinfo.php) is used.
+Install it and open kadnode.iss, press 'Run' to create a kadnode_setup.exe file.
+
+Please be aware that the setup materials are still in an alpha state.
