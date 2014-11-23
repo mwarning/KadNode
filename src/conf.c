@@ -647,7 +647,7 @@ void conf_load_file( const char filename[] ) {
 		}
 
 		/* Parse "--option [<value>]" */
-		char *pch = strtok( line," \t\n" );
+		char *pch = strtok( line," \t\n\r" );
 		while( pch != NULL ) {
 			if( option == NULL ) {
 				option = pch;
@@ -657,7 +657,7 @@ void conf_load_file( const char filename[] ) {
 				fclose( file );
 				log_err( "CFG: Too many arguments in line %ld.", n );
 			}
-			pch = strtok( NULL, " \t\n" );
+			pch = strtok( NULL, " \t\n\r" );
 		}
 
 		if( option == NULL ) {
