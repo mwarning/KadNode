@@ -36,6 +36,12 @@ Name: "{group}\{cm:UninstallProgram,KadNode}"; Filename: "{uninstallexe}"
 ;Create a link from the autostart folder to the startup script.
 Name: "{commonstartup}\kadnode"; Filename: "{app}\kadnode.bat"
 
+[Run]
+Filename: "{sys}\schtasks.exe"; Parameters: "/Create /F /TN KadNode /RU ""NT AUTHORITY\NETWORKSERVICE"" /SC ONSTART /TR ""{app}\kadnode-start.bat"" /NP /RL HIGHEST"
+
+[UninstallRun]
+Filename: "{sys}\schtasks.exe"; Parameters: "/Delete /F /TN KadNode"
+
 [Code]
 const
   LF = #10;
