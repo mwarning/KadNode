@@ -153,6 +153,7 @@ int udp_send( char buffer[], const char port[] ) {
 #endif
 
 	if( n <= 0 ) {
+		close( sockfd );
 		fprintf( stderr, "No response received.\n" );
 		return 1;
 	}
@@ -163,9 +164,12 @@ int udp_send( char buffer[], const char port[] ) {
 	if( buffer[0] == '0' ) {
 		fprintf( stdout, "%s", buffer+1 );
 		return 0;
-	} else {
+	} else if( buffer[0] == '1' ) {
 		fprintf( stderr, "%s", buffer+1 );
 		return 1;
+	} else {
+		fprintf( stderr, "Invalid response received.\n" );
+		return 2;
 	}
 }
 
