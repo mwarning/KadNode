@@ -15,8 +15,10 @@ SET adapterName=!adapterName:~17!
 REM Removes the colon from the end of the adapter name
 SET adapterName=!adapterName:~0,-1!
 
-netsh interface ipv4 add dns name="!adapterName!" 127.0.0.1 index=1
-netsh interface ipv6 add dns name="!adapterName!" ::1 index=1
+netsh interface ipv4 add dns name="!adapterName!" 8.8.8.8 index=1
+netsh interface ipv4 add dns name="!adapterName!" 127.0.0.1 index=2
+netsh interface ipv6 add dns name="!adapterName!" :2001:4860:4860::8888 index=1
+netsh interface ipv6 add dns name="!adapterName!" ::1 index=2
 )
 
 ipconfig /flushdns
