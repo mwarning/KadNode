@@ -44,7 +44,7 @@ FEATURES+=debug
 .endif
 
 .if ${PORT_OPTIONS:MDNS}
-FEATURES+=dnsl
+FEATURES+=dns
 .endif
 
 .if ${PORT_OPTIONS:MLPD}
