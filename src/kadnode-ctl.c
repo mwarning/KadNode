@@ -90,6 +90,28 @@ int addr_parse( IP *addr, const char addr_str[], const char port_str[], int af )
 	return -3;
 }
 
+/* Read from socket with timeout */
+int select_read( int sockfd, char *buffer, int bufsize, struct timeval *tv ) {
+	fd_set rfds;
+	int retval;
+
+	FD_ZERO( &rfds );
+	FD_SET( sockfd, &rfds );
+
+	retval = select( sockfd + 1, &rfds, NULL, NULL, tv );
+
+	if( retval == -1 ) {
+		/* Error */
+		return -1;
+	} else if( retval ) {
+		/* Data available */
+		return read( sockfd, buffer, bufsize );
+	} else {
+		/* Timeout reached */
+		return 0;
+	}
+}
+
 int udp_send( char buffer[], const char port[] ) {
 	struct timeval tv;
 	IP sockaddr;
@@ -107,22 +129,28 @@ int udp_send( char buffer[], const char port[] ) {
 		return 1;
 	}
 
-	/* Set receive timeout: 200ms */
-	tv.tv_sec = 0;
-	tv.tv_usec = 200000;
-	if( setsockopt( sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(tv) ) < 0 ) {
-		fprintf( stderr, "Failed to set socket option SO_RCVTIMEO: %s\n", strerror( errno ) );
-		return 1;
-	}
-
 	addrlen = addr_len( &sockaddr );
 	if( sendto( sockfd, buffer, strlen(buffer), 0, (struct sockaddr *)&sockaddr, addrlen ) < 0 ) {
 		fprintf( stderr, "Cannot connect to server: %s\n", strerror( errno ) );
 		return 1;
 	}
 
+	/* Set receive timeout: 200ms */
+	tv.tv_sec = 0;
+	tv.tv_usec = 200000;
+
+#ifdef __CYGWIN__
+	/* Receive reply */
+	n = select_read( sockfd, buffer, BUFSIZE - 1, &tv );
+#else
+	if( setsockopt( sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(tv) ) < 0 ) {
+		fprintf( stderr, "Failed to set socket option SO_RCVTIMEO: %s\n", strerror( errno ) );
+		return 1;
+	}
+
 	/* Receive reply */
 	n = read( sockfd, buffer, BUFSIZE - 1 );
+#endif
 
 	if( n <= 0 ) {
 		fprintf( stderr, "No response received.\n" );
