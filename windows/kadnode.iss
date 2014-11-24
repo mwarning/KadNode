@@ -22,7 +22,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Source: "C:\cygwin64\bin\cygwin1.dll"; DestDir: "{app}"
 Source: "..\build\kadnode.exe"; DestDir: "{app}"
 Source: "..\build\kadnode-ctl.exe"; DestDir: "{app}"
-Source: "..\windows\kadnode.bat"; DestDir: "{app}"
+Source: "..\windows\kadnode-start.bat"; DestDir: "{app}"
 Source: "..\windows\config.txt"; DestDir: "{app}"
 Source: "..\README.md"; DestDir: "{app}"; DestName: "readme.txt"; Flags: isreadme; AfterInstall: ConvertLineEndings 
 Source: "..\LICENSE"; DestDir: "{app}"; DestName: "license.txt"; AfterInstall: ConvertLineEndings
