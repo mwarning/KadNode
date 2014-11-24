@@ -1,5 +1,8 @@
 :: Set primary and alternate DNS for IPv4/IPv6 on Windows Server 2000/2003/2008 & Windows XP/Vista/7
 @ECHO OFF
+
+:: Change working directory to script location
+cd %~dp0
 
 SETLOCAL EnableDelayedExpansion
 
@@ -18,5 +21,5 @@ netsh interface ipv6 add dns name="!adapterName!" ::1 index=1
 
 ipconfig /flushdns
 
-::Start KadNode
-kadnode --config config.txt --peerfile peers.txt --port 53 --daemon
+:: Start KadNode
+.\kadnode.exe --config config.txt --peerfile peers.txt --port 53 --daemon
