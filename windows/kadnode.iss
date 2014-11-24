@@ -30,17 +30,22 @@ Source: "..\debian\peers.txt"; DestDir: "{app}"; AfterInstall: ConvertLineEnding
 Source: "..\debian\changelog"; DestDir: "{app}"; DestName: "changelog.txt"; AfterInstall: ConvertLineEndings
 
 [Icons]
-Name: "{group}\KadNode-Configuration"; Filename: "{app}\config.txt"
-Name: "{group}\KadNode-ReadMe"; Filename: "{app}\readme.txt"
+Name: "{group}\Configuration"; Filename: "{app}\config.txt"
+Name: "{group}\ReadMe"; Filename: "{app}\readme.txt"
 Name: "{group}\{cm:UninstallProgram,KadNode}"; Filename: "{uninstallexe}"
 ;Create a link from the autostart folder to the startup script.
 Name: "{commonstartup}\kadnode"; Filename: "{app}\kadnode.bat"
 
 [Run]
-Filename: "{sys}\schtasks.exe"; Parameters: "/Create /F /TN KadNode /RU ""NT AUTHORITY\NETWORKSERVICE"" /SC ONSTART /TR ""{app}\kadnode-start.bat"" /NP /RL HIGHEST"
+Filename: "{sys}\schtasks.exe"; Parameters: "/Create /F /TN KadNode /RU ""NT AUTHORITY\NETWORKSERVICE"" /SC ONSTART /TR ""'{app}\kadnode-start.bat'"" /NP /RL HIGHEST"
+Filename: "{app}\kadnode-bat.bat"; Description: {cm:LaunchMsg}; Flags: nowait postinstall skipifsilent
 
 [UninstallRun]
 Filename: "{sys}\schtasks.exe"; Parameters: "/Delete /F /TN KadNode"
+Filename: "{sys}\taskkill.exe"; Parameters: "/f /im kadnode.exe"; Flags: skipifdoesntexist runhidden
+
+[CustomMessages]
+LaunchMsg=Start KadNode now
 
 [Code]
 const
