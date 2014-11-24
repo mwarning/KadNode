@@ -24,7 +24,7 @@ Source: "..\build\kadnode.exe"; DestDir: "{app}"
 Source: "..\build\kadnode-ctl.exe"; DestDir: "{app}"
 Source: "..\windows\kadnode-start.bat"; DestDir: "{app}"
 Source: "..\windows\config.txt"; DestDir: "{app}"
-Source: "..\README.md"; DestDir: "{app}"; DestName: "readme.txt"; Flags: isreadme; AfterInstall: ConvertLineEndings 
+Source: "..\README.md"; DestDir: "{app}"; DestName: "readme.txt"; AfterInstall: ConvertLineEndings 
 Source: "..\LICENSE"; DestDir: "{app}"; DestName: "license.txt"; AfterInstall: ConvertLineEndings
 Source: "..\debian\peers.txt"; DestDir: "{app}"; AfterInstall: ConvertLineEndings
 Source: "..\debian\changelog"; DestDir: "{app}"; DestName: "changelog.txt"; AfterInstall: ConvertLineEndings
@@ -37,11 +37,12 @@ Name: "{group}\{cm:UninstallProgram,KadNode}"; Filename: "{uninstallexe}"
 Name: "{commonstartup}\kadnode"; Filename: "{app}\kadnode.bat"
 
 [Run]
-Filename: "{sys}\schtasks.exe"; Parameters: "/Create /F /TN KadNode /RU ""NT AUTHORITY\NETWORKSERVICE"" /SC ONSTART /TR ""'{app}\kadnode-start.bat'"" /NP /RL HIGHEST"
-Filename: "{app}\kadnode-bat.bat"; Description: {cm:LaunchMsg}; Flags: nowait postinstall skipifsilent
+Filename: "{sys}\schtasks.exe"; Parameters: "/Create /F /TN KadNode /RU ""NT AUTHORITY\NETWORKSERVICE"" /SC ONSTART /TR ""'{app}\kadnode-start.bat'"" /NP /RL HIGHEST"; Flags: runhidden
+Filename: "{app}\readme.txt"; Flags: shellexec skipifdoesntexist postinstall skipifsilent
+Filename: "{app}\kadnode-start.bat"; Description: {cm:LaunchMsg}; Flags: nowait postinstall skipifsilent runascurrentuser runhidden
 
 [UninstallRun]
-Filename: "{sys}\schtasks.exe"; Parameters: "/Delete /F /TN KadNode"
+Filename: "{sys}\schtasks.exe"; Parameters: "/Delete /F /TN KadNode"; Flags: runhidden
 Filename: "{sys}\taskkill.exe"; Parameters: "/f /im kadnode.exe"; Flags: skipifdoesntexist runhidden
 
 [CustomMessages]
