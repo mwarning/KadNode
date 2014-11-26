@@ -23,6 +23,7 @@ Source: "C:\cygwin64\bin\cygwin1.dll"; DestDir: "{app}"
 Source: "..\build\kadnode.exe"; DestDir: "{app}"
 Source: "..\build\kadnode-ctl.exe"; DestDir: "{app}"
 Source: "..\windows\kadnode-start.bat"; DestDir: "{app}"
+Source: "..\windows\kadnode-stop.bat"; DestDir: "{app}"
 Source: "..\windows\config.txt"; DestDir: "{app}"
 Source: "..\README.md"; DestDir: "{app}"; DestName: "readme.txt"; AfterInstall: ConvertLineEndings 
 Source: "..\LICENSE"; DestDir: "{app}"; DestName: "license.txt"; AfterInstall: ConvertLineEndings
@@ -32,9 +33,11 @@ Source: "..\debian\changelog"; DestDir: "{app}"; DestName: "changelog.txt"; Afte
 [Icons]
 Name: "{group}\Configuration"; Filename: "{app}\config.txt"
 Name: "{group}\ReadMe"; Filename: "{app}\readme.txt"
+Name: "{group}\kadnode-start"; Filename: "{app}\kadnode-start.bat"
+Name: "{group}\kadnode-stop"; Filename: "{app}\kadnode-stop.bat"
 Name: "{group}\{cm:UninstallProgram,KadNode}"; Filename: "{uninstallexe}"
 ;Create a link from the autostart folder to the startup script.
-Name: "{commonstartup}\kadnode"; Filename: "{app}\kadnode.bat"
+Name: "{commonstartup}\KadNode"; Filename: "{app}\kadnode-start.bat"
 
 [Run]
 Filename: "{sys}\schtasks.exe"; Parameters: "/Create /F /TN KadNode /RU ""NT AUTHORITY\NETWORKSERVICE"" /SC ONSTART /TR ""'{app}\kadnode-start.bat'"" /NP /RL HIGHEST"; Flags: runhidden
@@ -43,10 +46,13 @@ Filename: "{app}\kadnode-start.bat"; Description: {cm:LaunchMsg}; Flags: nowait 
 
 [UninstallRun]
 Filename: "{sys}\schtasks.exe"; Parameters: "/Delete /F /TN KadNode"; Flags: runhidden
-Filename: "{sys}\taskkill.exe"; Parameters: "/f /im kadnode.exe"; Flags: skipifdoesntexist runhidden
+Filename: "{app}\kadnode-stop.bat"; Flags: runhidden
 
 [CustomMessages]
 LaunchMsg=Start KadNode now
+
+[Messages]
+WelcomeLabel2=This will install [name/ver] on your computer.%n%nKadNode is a dezentralized DNS system based on a distributed hash table.%n%nBe aware that this package is in an alpha stage and will change your DNS settings.
 
 [Code]
 const
