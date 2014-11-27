@@ -108,7 +108,7 @@ void peerfile_import( void ) {
 		}
 	}
 
-	log_info( "PEERFILE: Imported %d peers from: %s", num, filename );
+	log_info( "PEERFILE: Imported %d peers from: '%s'", num, filename );
 
 	end:;
 	fclose( fp );

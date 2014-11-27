@@ -346,7 +346,7 @@ void conf_info( void ) {
 	}
 
 	if( gconf->configfile ) {
-		log_info( "Configuration File: %s", gconf->configfile );
+		log_info( "Configuration File: '%s'", gconf->configfile );
 	}
 
 	switch( gconf->verbosity ) {
