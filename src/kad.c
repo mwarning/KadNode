@@ -315,8 +315,8 @@ int kad_status( char *buf, int size ) {
 	numvalues = values_count();
 
 	bprintf( "Version: %s\n", kadnode_version_str );
-	bprintf( "Node id: %s\n", str_id( myid, hexbuf ) );
-	bprintf( "Bound to: %s:%s / %s\n",
+	bprintf( "DHT id: %s\n", str_id( myid, hexbuf ) );
+	bprintf( "DHT bound to: %s:%s / %s\n",
 		(gconf->af == AF_INET) ? "0.0.0.0" : "::",
 		gconf->dht_port,
 		(gconf->dht_ifce == NULL) ? "<any device>" : gconf->dht_ifce
