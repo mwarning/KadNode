@@ -4,10 +4,10 @@
 #--value-id mycomputer.p2p
 #
 # To prevent others from claiming the same domain you should
-# add cryptographic keys for authentication:
+# use cryptographic keys for authentication:
 #
-# 1. Create a public/secret key pair:
-#    kadnode --auth-gen-keys
+# 1. Create a public/secret key pair on the console:
+#    kadnode.exe --auth-gen-keys
 #
 # 2. Make sure these two lines are in this file:
 #    --auth-add-skey mycomputer.p2p:<secret-key>
