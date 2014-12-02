@@ -35,7 +35,7 @@ void windows_service_control( DWORD dwControl ) {
 
 void windows_service_main( int argc, char **argv ) {
 
-	hServiceStatus = RegisterServiceCtrlHandler( argv[0], (LPHANDLER_FUNCTION) service_service_control );
+	hServiceStatus = RegisterServiceCtrlHandler( argv[0], (LPHANDLER_FUNCTION) windows_service_control );
 	if( hServiceStatus == 0 ) {
 		return;
 	}
