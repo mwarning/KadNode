@@ -44,5 +44,7 @@ Finally, start KadNode:
 To create a package, [Inno Setup](http://www.jrsoftware.org/isinfo.php) is used.
 Install it and open kadnode.iss, press 'Run' to create a kadnode_setup.exe file.
 
-Please be aware that the setup materials are still in an alpha state.
-
+The package will register KadNode as a Windows service that is started on system startup.
+When KadNode starts, it will change the DNS settings for each interface to a public DNS server
+and localhost for KadNode to receive DNS requests.
+The DNS settings will be set to automatic when KadNode shuts down.
