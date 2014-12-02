@@ -66,7 +66,9 @@ int main( int argc, char **argv ) {
 	unix_signals();
 
 	/* Write a pid file */
-	unix_write_pidfile( getpid() );
+	if( gconf->pidfile ) {
+		unix_write_pidfile( getpid(), gconf->pidfile );
+	}
 
 	/* Drop privileges */
 	unix_dropuid0();

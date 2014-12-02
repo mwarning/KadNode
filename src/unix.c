@@ -64,21 +64,17 @@ void unix_fork( void ) {
 	umask( 0 );
 }
 
-void unix_write_pidfile( pid_t pid ) {
+void unix_write_pidfile( int pid, const char* pidfile ) {
 	FILE *file;
 
-	if( gconf->pidfile == NULL ) {
-		return;
-	}
-
-	file = fopen( gconf->pidfile, "r" );
+	file = fopen( pidfile, "r" );
 	if( file ) {
 		fclose( file );
-		log_err( "UNX: PID file already exists: %s", gconf->pidfile );
+		log_err( "UNX: PID file already exists: %s", pidfile );
 		return;
 	}
 
-	file = fopen( gconf->pidfile, "w" );
+	file = fopen( pidfile, "w" );
 	if( file == NULL ) {
 		log_err( "UNX: Failed to open PID file." );
 	}
