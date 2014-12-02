@@ -32,4 +32,4 @@ SET spath=!spath:~0,-1!
 taskkill.exe /f /im kadnode.exe >nul 2>&1
 
 :: Start KadNode
-"!spath!\kadnode.exe" --config "!spath!\config.txt" --peerfile "!spath!\peers.txt" --port 53 --daemon
+"!spath!\kadnode.exe" --config "!spath!\config.txt" --peerfile "!spath!\peers.txt" --dns-port 53 --daemon
