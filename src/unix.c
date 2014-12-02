@@ -13,23 +13,6 @@
 #include "unix.h"
 
 
-void unix_signal( void ) {
-
-	/* STRG+C aka SIGINT => Stop the program */
-	gconf->sig_stop.sa_handler = unix_sig_stop;
-	gconf->sig_stop.sa_flags = 0;
-	if( ( sigemptyset( &gconf->sig_stop.sa_mask ) == -1) || (sigaction( SIGINT, &gconf->sig_stop, NULL ) != 0) ) {
-		log_err( "UNX: Failed to set SIGINT to handle Ctrl-C" );
-	}
-
-	/* SIGTERM => Stop the program gracefully */
-	gconf->sig_term.sa_handler = unix_sig_term;
-	gconf->sig_term.sa_flags = 0;
-	if( ( sigemptyset( &gconf->sig_term.sa_mask ) == -1) || (sigaction( SIGTERM, &gconf->sig_term, NULL ) != 0) ) {
-		log_err( "UNX: Failed to set SIGTERM to handle Ctrl-C" );
-	}
-}
-
 void unix_sig_stop( int signo ) {
 	gconf->is_running = 0;
 	log_info( "Shutting down..." );
@@ -37,6 +20,25 @@ void unix_sig_stop( int signo ) {
 
 void unix_sig_term( int signo ) {
 	gconf->is_running = 0;
+}
+
+void unix_signals( void ) {
+	struct sigaction sig_stop;
+	struct sigaction sig_term;
+
+	/* STRG+C aka SIGINT => Stop the program */
+	sig_stop.sa_handler = unix_sig_stop;
+	sig_stop.sa_flags = 0;
+	if( ( sigemptyset( &sig_stop.sa_mask ) == -1) || (sigaction( SIGINT, &sig_stop, NULL ) != 0) ) {
+		log_err( "UNX: Failed to set SIGINT to handle Ctrl-C" );
+	}
+
+	/* SIGTERM => Stop the program gracefully */
+	sig_term.sa_handler = unix_sig_term;
+	sig_term.sa_flags = 0;
+	if( ( sigemptyset( &sig_term.sa_mask ) == -1) || (sigaction( SIGTERM, &sig_term, NULL ) != 0) ) {
+		log_err( "UNX: Failed to set SIGTERM to handle Ctrl-C" );
+	}
 }
 
 void unix_fork( void ) {

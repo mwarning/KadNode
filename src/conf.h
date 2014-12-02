@@ -99,10 +99,6 @@ struct gconf_t {
 	char *web_port;
 #endif
 
-	/* Catch signals */
-	struct sigaction sig_stop;
-	struct sigaction sig_term;
-
 #ifdef PTHREAD
 	/* DHT thread stuff */
 	pthread_t dht_thread;

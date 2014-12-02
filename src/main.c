@@ -63,7 +63,7 @@ int main( int argc, char **argv ) {
 	}
 
 	/* Catch SIG INT */
-	unix_signal();
+	unix_signals();
 
 	/* Write a pid file */
 	unix_write_pidfile( getpid() );
