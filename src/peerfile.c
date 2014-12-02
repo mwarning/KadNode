@@ -57,9 +57,15 @@ void peerfile_export( void ) {
 
 	/* Write peers to file */
 	for( i = 0; i < num; ++i ) {
+#ifdef __CYGWIN__
+		if( fprintf( fp, "%s\r\n", str_addr( &addrs[i], addrbuf ) ) < 0 ) {
+			break;
+		}
+#else
 		if( fprintf( fp, "%s\n", str_addr( &addrs[i], addrbuf ) ) < 0 ) {
 			break;
 		}
+#endif
 	}
 
 	fclose( fp );
