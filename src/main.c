@@ -104,6 +104,13 @@ int main( int argc, char **argv ) {
 	conf_init();
 	conf_load_args( argc, argv );
 
+#ifdef WIN_SERVICE
+	if( gconf->service_start ) {
+		gconf->use_syslog = 1;
+		return windows_service_start( (int (*)(int, char **)) main_start, 0, NULL );
+	}
+#endif
+
 	if( gconf->is_daemon ) {
 		gconf->use_syslog = 1;
 

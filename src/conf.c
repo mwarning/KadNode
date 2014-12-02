@@ -20,6 +20,9 @@
 #ifdef FWD
 #include "ext-fwd.h"
 #endif
+#ifdef __CYGWIN__
+#include "windows.h"
+#endif
 
 /* Global object variables */
 struct gconf_t *gconf = NULL;
@@ -507,6 +510,26 @@ int conf_handle_option( char opt[], char val[] ) {
 			conf_no_arg_expected( opt );
 		} else {
 			gconf->fwd_disable = 1;
+		}
+#endif
+#ifdef WIN_SERVICE
+	} else if( match( opt, "--service-install" ) ) {
+		if( val != NULL ) {
+			conf_no_arg_expected( opt );
+		} else {
+			windows_service_install();
+		}
+	} else if( match( opt, "--service-remove" ) ) {
+		if( val != NULL ) {
+			conf_no_arg_expected( opt );
+		} else {
+			windows_service_remove();
+		}
+	} else if( match( opt, "--service-start" ) ) {
+		if( val != NULL ) {
+			conf_no_arg_expected( opt );
+		} else {
+			gconf->service_start = 1;
 		}
 #endif
 	} else if( match( opt, "--ifce" ) ) {

@@ -45,7 +45,7 @@ struct gconf_t {
 	/* Path to configuration file */
 	char *configfile;
 
-	/* Foreground / Background */
+	/* Start in Foreground / Background */
 	int is_daemon;
 
 	/* Thread terminator */
@@ -68,6 +68,11 @@ struct gconf_t {
 
 	/* KadNode startup time */
 	time_t startup_time;
+
+#ifdef __CYGWIN__
+	/* Start as windows service */
+	int service_start;
+#endif
 
 #ifdef FWD
 	/* Disable port forwarding */
