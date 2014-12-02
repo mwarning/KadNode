@@ -4,6 +4,9 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#ifdef __CYGWIN__
+#include <windows.h>
+#endif
 
 #include "main.h"
 #include "conf.h"
@@ -15,6 +18,9 @@
 #include "values.h"
 #include "results.h"
 #include "peerfile.h"
+#ifdef __CYGWIN__
+#include "windows.h"
+#endif
 
 #ifdef LPD
 #include "ext-lpd.h"
@@ -39,40 +45,7 @@
 #endif
 
 
-int main( int argc, char **argv ) {
-
-	conf_init();
-	conf_load_args( argc, argv );
-
-	if( gconf->is_daemon == 1 ) {
-		gconf->use_syslog = 1;
-
-		/* Fork before any threads are started */
-		unix_fork();
-
-		if( chdir( "/" ) != 0 ) {
-			log_err( "UNX: Changing working directory to / failed: %s", strerror( errno ) );
-		}
-
-		/* Close pipes */
-		fclose( stderr );
-		fclose( stdout );
-		fclose( stdin );
-	} else {
-		conf_info();
-	}
-
-	/* Catch SIG INT */
-	unix_signals();
-
-	/* Write a pid file */
-	if( gconf->pidfile ) {
-		unix_write_pidfile( getpid(), gconf->pidfile );
-	}
-
-	/* Drop privileges */
-	unix_dropuid0();
-
+int main_start( void ) {
 	/* Setup port-forwarding */
 #ifdef FWD
 	fwd_setup();
@@ -124,3 +97,82 @@ int main( int argc, char **argv ) {
 
 	return 0;
 }
+
+#ifdef __CYGWIN__
+int main( int argc, char **argv ) {
+
+	conf_init();
+	conf_load_args( argc, argv );
+
+	if( gconf->is_daemon ) {
+		gconf->use_syslog = 1;
+
+		/* Fork before any threads are started */
+		unix_fork();
+
+		char path[MAX_PATH], *p;
+		/* Change to C:\ directory or disk equivalent */
+		if( GetModuleFileNameA( NULL, path, sizeof(path) ) && (p = strchr( path, '\\' )) ) {
+			*(p+1) = 0;
+			SetCurrentDirectoryA( path );
+		}
+
+		/* Close pipes */
+		fclose( stderr );
+		fclose( stdout );
+		fclose( stdin );
+	} else {
+		conf_info();
+	}
+
+	/* Catch signals */
+	windows_signals();
+
+	/* Write pid file */
+	if( gconf->pidfile ) {
+		unix_write_pidfile( GetCurrentProcessId(), gconf->pidfile );
+	}
+
+	/* Drop privileges */
+	unix_dropuid0();
+
+	return main_start();
+}
+#else
+int main( int argc, char **argv ) {
+
+	conf_init();
+	conf_load_args( argc, argv );
+
+	if( gconf->is_daemon ) {
+		gconf->use_syslog = 1;
+
+		/* Fork before any threads are started */
+		unix_fork();
+
+		if( chdir( "/" ) != 0 ) {
+			log_err( "UNX: Changing working directory to / failed: %s", strerror( errno ) );
+		}
+
+		/* Close pipes */
+		fclose( stderr );
+		fclose( stdout );
+		fclose( stdin );
+	} else {
+		conf_info();
+	}
+
+	/* Catch signals */
+	unix_signals();
+
+	/* Write pid file */
+	if( gconf->pidfile ) {
+		unix_write_pidfile( getpid(), gconf->pidfile );
+	}
+
+	/* Drop privileges */
+	unix_dropuid0();
+
+	return main_start();
+}
+#endif

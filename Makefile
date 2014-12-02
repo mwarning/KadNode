@@ -6,8 +6,15 @@ LFLAGS += -L/usr/local/lib -lc
 FEATURES ?= auth cmd lpd nss natpmp upnp #dns debug web
 
 OBJS = build/main.o build/results.o build/kad.o build/log.o \
-	build/conf.o build/sha1.o build/unix.o build/net.o build/utils.o \
+	build/conf.o build/sha1.o build/net.o build/utils.o \
 	build/values.o build/peerfile.o
+
+ifeq ($(OS),Windows_NT)
+OBJS += build/unix.o build/windows.o
+else
+OBJS += build/unix.o
+endif
+
 
 .PHONY: all clean strip install kadnode kadnode-ctl libnss_kadnode.so.2 \
 	arch-pkg deb-pkg osx-pkg install uninstall
