@@ -1,7 +1,7 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "README" "" "November 2014" "" ""
+.TH "README" "" "December 2014" "" ""
 .
 .SH "NAME"
 \fBREADME\fR
@@ -45,7 +45,7 @@ NSS support through /etc/nsswitch\.conf
 integrated simplified DNS server (supports A, AAAA, and SRV requests)
 .
 .IP "\(bu" 4
-packages for MacOSX/Debian/FreeBSD/OpenWrt/ArchLinux
+packages for ArchLinux/Debian/FreeBSD/MacOSX/OpenWrt/Windows
 .
 .IP "\(bu" 4
 peer file import/export on startup/shutdown
@@ -58,8 +58,15 @@ Most features are optional and can be left out to reduce the binary size\.
 .SH "JOIN THE SWARM"
 If KadNode cannot join a swarm (an empty peer file and no other peer on the local network), then a node address is needed to boostrap from\. To do this, insert \fIbttracker\.debian\.org\fR into an empty file and provide it to KadNode:
 .
-.P
-\fBkadnode \-\-peerfile peers\.txt\fR
+.IP "" 4
+.
+.nf
+
+kadnode \-\-peerfile peers\.txt
+.
+.fi
+.
+.IP "" 0
 .
 .P
 At most 150 good peers are written back to the peer file on KadNode shutdown and also every 24 hours\. This ensures successful boostrapping on the next startup\. The peer file is not written after at least 5 minutes of runtime\.
@@ -67,8 +74,17 @@ At most 150 good peers are written back to the peer file on KadNode shutdown and
 .SH "AUTHENTICATION"
 For most use cases you first need to create a secret/public key pair:
 .
-.P
-\fB$kadnode \-\-auth\-genkey public key: <public\-key> secret key: <secret\-key>\fR
+.IP "" 4
+.
+.nf
+
+$kadnode \-\-auth\-genkey
+public key: <public\-key>
+secret key: <secret\-key>
+.
+.fi
+.
+.IP "" 0
 .
 .P
 (The keys are not displayed here for convenience\.)
