@@ -36,8 +36,6 @@ Name: "{group}\ReadMe"; Filename: "{app}\readme.txt"
 Name: "{group}\kadnode-start"; Filename: "{app}\kadnode-start.bat"
 Name: "{group}\kadnode-stop"; Filename: "{app}\kadnode-stop.bat"
 Name: "{group}\{cm:UninstallProgram,KadNode}"; Filename: "{uninstallexe}"
-;Create a link from the autostart folder to the startup script.
-Name: "{commonstartup}\KadNode"; Filename: "{app}\kadnode-start.bat"
 
 [Run]
 Filename: "{sys}\schtasks.exe"; Parameters: "/Create /F /TN KadNode /RU ""NT AUTHORITY\NETWORKSERVICE"" /SC ONSTART /TR ""'{app}\kadnode-start.bat'"" /NP /RL HIGHEST"; Flags: runhidden
