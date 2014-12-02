@@ -26,7 +26,7 @@ ifeq ($(findstring auth,$(FEATURES)),auth)
   ifeq ($(findstring gcc,$(shell ${CC} --version)),gcc)
     LFLAGS += -Wl,-Bstatic -lsodium -Wl,-Bdynamic
   else
-    LFLAGS += /usr/local/lib/libsodium.a
+    LFLAGS += $(shell find /usr/ -iname "libsodium.a" -print -quit)
   endif
 endif
 
