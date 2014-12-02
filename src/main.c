@@ -104,12 +104,27 @@ int main( int argc, char **argv ) {
 	conf_init();
 	conf_load_args( argc, argv );
 
-#ifdef WIN_SERVICE
 	if( gconf->service_start ) {
 		gconf->use_syslog = 1;
-		return windows_service_start( (int (*)(int, char **)) main_start, 0, NULL );
+
+		/* Get kadnode.exe binary lcoation */
+		char cmd[MAX_PATH], path[MAX_PATH], *p;
+		if( GetModuleFileNameA( NULL, path, sizeof(path) ) && (p = strrchr( path, '\\' )) ) {
+			*(p+1) = 0;
+		}
+
+		/* Set DNS server to localhost */
+		sprintf( cmd, "cmd.exe /c \"%s\\dns_setup.bat\"", path );
+		windows_exec( cmd );
+
+		int rc = windows_service_start( (void (*)()) main_start );
+
+		/* Reset DNS settings to DHCP */
+		sprintf( cmd, "cmd.exe /c \"%s\\dns_reset.bat\"", path );
+		windows_exec( cmd );
+
+		return rc;
 	}
-#endif
 
 	if( gconf->is_daemon ) {
 		gconf->use_syslog = 1;
@@ -117,8 +132,8 @@ int main( int argc, char **argv ) {
 		/* Fork before any threads are started */
 		unix_fork();
 
+		/* Change working directory to C:\ directory or disk equivalent */
 		char path[MAX_PATH], *p;
-		/* Change to C:\ directory or disk equivalent */
 		if( GetModuleFileNameA( NULL, path, sizeof(path) ) && (p = strchr( path, '\\' )) ) {
 			*(p+1) = 0;
 			SetCurrentDirectoryA( path );

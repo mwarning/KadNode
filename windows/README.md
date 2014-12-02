@@ -46,7 +46,3 @@ Install it and open kadnode.iss, press 'Run' to create a kadnode_setup.exe file.
 
 Please be aware that the setup materials are still in an alpha state.
 
-## Problems
-
-KadNode does not store peers in its peer file on shutdown,
-since the Windows shutdown cannot be detected right now.

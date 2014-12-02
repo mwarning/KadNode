@@ -14,8 +14,7 @@ REM Removes the colon from the end of the adapter name
 SET adapterName=!adapterName:~0,-1!
 
 netsh interface ip set address "!adapterName!" dhcp
+netsh interface ip delete dnsserver "!adapterName!" all
 )
 
 ipconfig /flushdns
-
-taskkill.exe /f /im kadnode.exe >nul 2>&1

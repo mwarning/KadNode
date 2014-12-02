@@ -512,7 +512,7 @@ int conf_handle_option( char opt[], char val[] ) {
 			gconf->fwd_disable = 1;
 		}
 #endif
-#ifdef WIN_SERVICE
+#ifdef __CYGWIN__
 	} else if( match( opt, "--service-install" ) ) {
 		if( val != NULL ) {
 			conf_no_arg_expected( opt );

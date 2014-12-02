@@ -22,8 +22,10 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Source: "C:\cygwin64\bin\cygwin1.dll"; DestDir: "{app}"
 Source: "..\build\kadnode.exe"; DestDir: "{app}"
 Source: "..\build\kadnode-ctl.exe"; DestDir: "{app}"
-Source: "..\windows\kadnode-start.bat"; DestDir: "{app}"
-Source: "..\windows\kadnode-stop.bat"; DestDir: "{app}"
+Source: "..\windows\dns_setup.bat"; DestDir: "{app}"
+Source: "..\windows\dns_reset.bat"; DestDir: "{app}"
+Source: "..\windows\kadnode_start.bat"; DestDir: "{app}"
+Source: "..\windows\kadnode_stop.bat"; DestDir: "{app}"
 Source: "..\windows\config.txt"; DestDir: "{app}"
 Source: "..\README.md"; DestDir: "{app}"; DestName: "readme.txt"; AfterInstall: ConvertLineEndings 
 Source: "..\LICENSE"; DestDir: "{app}"; DestName: "license.txt"; AfterInstall: ConvertLineEndings
@@ -33,21 +35,22 @@ Source: "..\debian\changelog"; DestDir: "{app}"; DestName: "changelog.txt"; Afte
 [Icons]
 Name: "{group}\Configuration"; Filename: "{app}\config.txt"
 Name: "{group}\ReadMe"; Filename: "{app}\readme.txt"
-Name: "{group}\kadnode-start"; Filename: "{app}\kadnode-start.bat"
-Name: "{group}\kadnode-stop"; Filename: "{app}\kadnode-stop.bat"
+Name: "{group}\Start KadNode"; Filename: "{app}\kadnode_start.bat"
+Name: "{group}\Stop KadNode"; Filename: "{app}\kadnode_stop.bat"
 Name: "{group}\{cm:UninstallProgram,KadNode}"; Filename: "{uninstallexe}"
 
 [Run]
-Filename: "{sys}\schtasks.exe"; Parameters: "/Create /F /TN KadNode /RU ""NT AUTHORITY\NETWORKSERVICE"" /SC ONSTART /TR ""'{app}\kadnode-start.bat'"" /NP /RL HIGHEST"; Flags: runhidden
 Filename: "{app}\readme.txt"; Flags: shellexec skipifdoesntexist postinstall skipifsilent
-Filename: "{app}\kadnode-start.bat"; Description: {cm:LaunchMsg}; Flags: nowait postinstall skipifsilent runascurrentuser runhidden
-
-[UninstallRun]
-Filename: "{sys}\schtasks.exe"; Parameters: "/Delete /F /TN KadNode"; Flags: runhidden
-Filename: "{app}\kadnode-stop.bat"; Flags: runhidden
+Filename: "{sys}\sc.exe"; Parameters: "create KadNode DisplayName= KadNode type= own start= auto error= normal binPath= ""\""{app}\kadnode.exe\"" --service-start --config \""{app}\config.txt\"" --peerfile \""{app}\peers.txt\"" --dns-port 53"""; Flags: runascurrentuser runhidden
+Filename: "{sys}\sc.exe"; Parameters: "description KadNode ""KadNode is a decentralized DNS server. It intercepts and resolves DNS requests for a specific top level domain like \"".p2p\""."""; Flags: runascurrentuser runhidden
+Filename: "{sys}\sc.exe"; Parameters: "start KadNode"; Description: {cm:LaunchMsg}; Flags: nowait postinstall skipifsilent runascurrentuser runhidden
 
 [CustomMessages]
 LaunchMsg=Start KadNode now
+
+[UninstallRun]
+Filename: "{sys}\sc.exe"; Parameters: "stop KadNode"; Flags: runhidden
+Filename: "{sys}\sc.exe"; Parameters: "delete KadNode"; Flags: runhidden
 
 [Messages]
 WelcomeLabel2=This will install [name/ver] on your computer.%n%nKadNode is a dezentralized DNS system based on a distributed hash table.%n%nBe aware that this package is in an alpha stage and will change your DNS settings.

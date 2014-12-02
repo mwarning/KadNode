@@ -13,9 +13,7 @@
 static SERVICE_STATUS sStatus;
 static SERVICE_STATUS_HANDLE hServiceStatus = 0;
 
-static int (*svc_main_func)(int, char **);
-static int svc_main_argc;
-static char ** svc_main_argv;
+static void (*svc_main_func)();
 
 
 void windows_service_control( DWORD dwControl ) {
@@ -52,14 +50,14 @@ void windows_service_main( int argc, char **argv ) {
 	SetServiceStatus( hServiceStatus, &sStatus );
 
 	/* The main program */
-	svc_main_func( svc_main_argc, svc_main_argv );
+	svc_main_func();
 
 	/* cleanup */
 	sStatus.dwCurrentState  = SERVICE_STOPPED;
 	SetServiceStatus( hServiceStatus, &sStatus );
 }
 
-int windows_service_start( int (*func)(int, char **), int argc, char** argv ) {
+int windows_service_start( void (*func)() ) {
 	static SERVICE_TABLE_ENTRY Services[] = {
 		{ MAIN_SRVNAME,  (LPSERVICE_MAIN_FUNCTIONA) windows_service_main },
 		{ NULL, NULL }
@@ -67,8 +65,6 @@ int windows_service_start( int (*func)(int, char **), int argc, char** argv ) {
 
 	/* Safe args for later call in windows_service_main() */
 	svc_main_func = func;
-	svc_main_argc = argc;
-	svc_main_argv = argv;
 	
 	if( !StartServiceCtrlDispatcher(Services) ) {
 		log_warn("WIN: Can not start service: Error %d", GetLastError() );
@@ -80,7 +76,7 @@ int windows_service_start( int (*func)(int, char **), int argc, char** argv ) {
 
 /*
 * Similar to:
-* sc create KadNode binPath= C:\...\kadnode.exe type= own DisplayName= KadNode start= auto error= normal
+* sc create KadNode type= own DisplayName= KadNode start= auto error= normal binPath= C:\...\kadnode.exe
 */
 void windows_service_install( void ) {
 	char path[MAX_PATH];
@@ -114,7 +110,7 @@ void windows_service_install( void ) {
 * Similar to:
 * sc delete KadNode
 */
-void service_remove( void ) {
+void windows_service_remove( void ) {
 	SC_HANDLE hService = 0;
 	SC_HANDLE hSCManager = OpenSCManager( 0, 0, 0 );
 	hService = OpenService( hSCManager, MAIN_SRVNAME, DELETE );
@@ -140,4 +136,38 @@ void windows_signals( void ) {
 	if( !SetConsoleCtrlHandler( (PHANDLER_ROUTINE) windows_console_handler, TRUE ) ) {
 		log_warn( "WIN: Cannot set console handler. Error: %d", GetLastError() );
 	}
+}
+
+int windows_exec( const char* cmd ) {
+	STARTUPINFO si;
+	PROCESS_INFORMATION pi;
+
+	ZeroMemory( &si, sizeof(si) );
+	si.cb = sizeof(si);
+	ZeroMemory( &pi, sizeof(pi) );
+
+	/* Start the child process */
+	if( !CreateProcess( NULL, // No module name (use command line)
+		(char*) cmd, // Command line
+		NULL, // Process handle not inheritable
+		NULL, // Thread handle not inheritable
+		FALSE, // Set handle inheritance to FALSE
+		0, // No creation flags
+		NULL, // Use parent's environment block
+		NULL, // Use parent's starting directory
+		&si, // Pointer to STARTUPINFO structure
+		&pi ) // Pointer to PROCESS_INFORMATION structure
+	) {
+		log_warn( "CreateProcess failed: Error %d", GetLastError() );
+		return 1;
+	}
+
+	// Wait until child process exits.
+	WaitForSingleObject( pi.hProcess, INFINITE );
+
+	// Close process and thread handles.
+	CloseHandle( pi.hProcess );
+	CloseHandle( pi.hThread );
+
+	return 0;
 }
