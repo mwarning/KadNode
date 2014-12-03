@@ -31,7 +31,6 @@ make menuconfig
 
 At this point select the appropiate "Target System" and "Target Profile"
 depending on what target chipset/router you want to build for.
-To get an *.ipk file you also need to select "Build the OpenWrt SDK".
 Also mark the KadNode package under "Network" => "IP Addresses and Names".
 
 Now compile/build everything:
