@@ -3,6 +3,12 @@ an .ipk package (equivalent to Debians .deb files),
 you have to build an OpenWRT image.
 These steps were tested using OpenWRT-"Attitude Adjustment":
 
+For building OpenWrt on Debian, you need to install these packages:
+<pre>
+apt-get install git subversion g++ libncurses5-dev gawk zlib1g-dev build-essential
+</pre>
+
+Now build OpenWrt:
 <pre>
 git clone git://git.openwrt.org/14.07/openwrt.git
 cd openwrt
