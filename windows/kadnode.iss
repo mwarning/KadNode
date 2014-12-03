@@ -42,7 +42,7 @@ Name: "{group}\{cm:UninstallProgram,KadNode}"; Filename: "{uninstallexe}"
 [Run]
 Filename: "{app}\readme.txt"; Flags: shellexec skipifdoesntexist postinstall skipifsilent
 Filename: "{sys}\sc.exe"; Parameters: "create KadNode DisplayName= KadNode type= own start= auto error= normal binPath= ""\""{app}\kadnode.exe\"" --service-start --config \""{app}\config.txt\"" --peerfile \""{app}\peers.txt\"" --dns-port 53"""; Flags: runascurrentuser runhidden
-Filename: "{sys}\sc.exe"; Parameters: "description KadNode ""KadNode is a decentralized DNS server. It intercepts and resolves DNS requests for a specific top level domain like \"".p2p\""."""; Flags: runascurrentuser runhidden
+Filename: "{sys}\sc.exe"; Parameters: "description KadNode ""KadNode is a decentralized DNS service. It intercepts and resolves DNS requests for a specific top level domain like \"".p2p\"". The mapping from a domain to an IP address is done by means of a Distributed Hash Table (DHT)."""; Flags: runascurrentuser runhidden
 Filename: "{sys}\sc.exe"; Parameters: "start KadNode"; Description: {cm:LaunchMsg}; Flags: nowait postinstall skipifsilent runascurrentuser runhidden
 
 [CustomMessages]
