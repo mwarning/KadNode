@@ -117,6 +117,11 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 #ifdef FWD
 " --fwd-disable			Disable UPnP/NAT-PMP to forward router ports.\n\n"
 #endif
+#ifdef __CYGWIN__
+" --service-start		Start, install and remove KadNode as Windows service.\n"
+" --service-install		KadNode will be started/shut down along with Windows\n"
+" --service-remove		or on request by using the Service Control Manager.\n\n"
+#endif
 " -h, --help			Print this help.\n\n"
 " -v, --version			Print program version.\n";
 
