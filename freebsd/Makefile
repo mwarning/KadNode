@@ -2,11 +2,11 @@
 # $FreeBSD$
 
 PORTNAME=	kadnode
-PORTVERSION=	0.9.1
+PORTVERSION=	0.9.2
 PORTREVISION=	1
 CATEGORIES=	dns
-MASTER_SITES=	https://github.com/mwarning/KadNode/releases/download/v0.9.1/
-DISTNAME=	${PORTNAME}_${DISTVERSIONPREFIX}${DISTVERSION}${DISTVERSIONSUFFIX}
+MASTER_SITES=	https://github.com/mwarning/KadNode/archive/
+DISTNAME=	v${DISTVERSION}${DISTVERSIONSUFFIX}
 
 MAINTAINER=	moritzwarning@web.de
 COMMENT=	P2P name resolution daemon
@@ -14,7 +14,7 @@ COMMENT=	P2P name resolution daemon
 LICENSE=	MIT
 
 USES=	gmake
-WRKSRC=		${WRKDIR}/KadNode
+WRKSRC=		${WRKDIR}/KadNode-${DISTVERSION}
 
 OPTIONS_DEFINE=	AUTH CMD DEBUG DNS LPD NATPMP NSS UPNP
 AUTH_DESC=	Authorization support based on libsodium.
