@@ -11,7 +11,7 @@ PrivilegesRequired=admin
 AllowNoIcons=yes
 LicenseFile=..\LICENSE
 OutputDir=..\build
-OutputBaseFilename=kadnode_setup
+OutputBaseFilename=kadnode_0.9.2_i386
 Compression=lzma
 SolidCompression=yes
 
