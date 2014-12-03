@@ -111,6 +111,8 @@ int main( int argc, char **argv ) {
 		char cmd[MAX_PATH], path[MAX_PATH], *p;
 		if( GetModuleFileNameA( NULL, path, sizeof(path) ) && (p = strrchr( path, '\\' )) ) {
 			*(p+1) = 0;
+		} else {
+			log_err( "MAIN: Can not get location of KadNode binary." );
 		}
 
 		/* Set DNS server to localhost */
