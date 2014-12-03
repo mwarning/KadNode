@@ -121,10 +121,11 @@ void windows_service_remove( void ) {
 }
 
 static BOOL WINAPI windows_console_handler( int event ) {
-	switch(event) {
+	switch( event ) {
 		case CTRL_C_EVENT:
 		case CTRL_BREAK_EVENT:
 			gconf->is_running = 0;
+			log_info( "Shutting down..." );
 			return TRUE;
 		default:
 			return FALSE;
