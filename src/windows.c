@@ -44,7 +44,7 @@ void windows_service_main( int argc, char **argv ) {
 	sStatus.dwWin32ExitCode = 0;
 	sStatus.dwServiceSpecificExitCode = 0;
 	sStatus.dwCheckPoint = 0;
-	sStatus.dwWaitHint = 3000; /* Three seconds */
+	sStatus.dwWaitHint = 3000; /* Allow us to wait three seconds */
 	sStatus.dwCurrentState = SERVICE_RUNNING;
 
 	SetServiceStatus( hServiceStatus, &sStatus );
@@ -58,7 +58,7 @@ void windows_service_main( int argc, char **argv ) {
 }
 
 int windows_service_start( void (*func)() ) {
-	static SERVICE_TABLE_ENTRY Services[] = {
+	static SERVICE_TABLE_ENTRY services[] = {
 		{ MAIN_SRVNAME,  (LPSERVICE_MAIN_FUNCTIONA) windows_service_main },
 		{ NULL, NULL }
 	};
@@ -66,8 +66,8 @@ int windows_service_start( void (*func)() ) {
 	/* Safe args for later call in windows_service_main() */
 	svc_main_func = func;
 	
-	if( !StartServiceCtrlDispatcher(Services) ) {
-		log_warn("WIN: Can not start service: Error %d", GetLastError() );
+	if( !StartServiceCtrlDispatcher( services ) ) {
+		log_warn( "WIN: Can not start service: Error %d", GetLastError() );
 		return 1;
 	} else {
 		return 0;
