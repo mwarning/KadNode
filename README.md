@@ -28,9 +28,9 @@ Features:
 * public/secret key authentication (based on [libsodium](https://github.com/jedisct1/libsodium))
 * command line interface (kadnode-ctl)
 * NSS support through /etc/nsswitch.conf
-* integrated simplified DNS server (supports A, AAAA, and SRV requests)
+* integrated simplified DNS server (handles A, AAAA, and SRV requests)
 * packages for ArchLinux/Debian/FreeBSD/MacOSX/OpenWrt/Windows
-* peer file import/export on startup/shutdown
+* peer file import/export on startup/shutdown and every 24h
 
 Most features are optional and can be left out to reduce the binary size.
 
