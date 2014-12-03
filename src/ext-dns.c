@@ -294,15 +294,11 @@ int dns_decode_header( struct Message *msg, const UCHAR** buffer ) {
 	return 1;
 }
 
+/* Decode the message from a byte array into a message structure */
 int dns_decode_msg( struct Message *msg, const UCHAR *buffer ) {
 	size_t i;
 
 	if( dns_decode_header( msg, &buffer ) < 0 ) {
-		return -1;
-	}
-
-	if( (msg->anCount + msg->nsCount + msg->arCount) != 0 ) {
-		log_warn( "DNS: Only questions expected." );
 		return -1;
 	}
 
@@ -318,6 +314,7 @@ int dns_decode_msg( struct Message *msg, const UCHAR *buffer ) {
 		if( qType == A_Resource_RecordType
 			|| qType == AAAA_Resource_RecordType
 			|| qType == SRV_Resource_RecordType
+			|| qType == PTR_Resource_RecordType
 		) {
 			msg->question.qName = msg->qName_buffer;
 			msg->question.qType = qType;
@@ -326,10 +323,11 @@ int dns_decode_msg( struct Message *msg, const UCHAR *buffer ) {
 		}
 	}
 
-	log_warn( "DNS: No question for A or AAAA resource found in query." );
+	log_warn( "DNS: No question for A, AAAA, SRV or PTR resource found in query." );
 	return -1;
 }
 
+/* Encode the message structure into a byte array */
 int dns_encode_msg( UCHAR *buffer, size_t size, const struct Message *msg ) {
 	const size_t qName_offset = 12;
 	const struct ResourceRecord *rr;
@@ -366,7 +364,7 @@ int dns_encode_msg( UCHAR *buffer, size_t size, const struct Message *msg ) {
 		put16bits( &buffer, rr->type );
 		put16bits( &buffer, rr->class );
 		put32bits( &buffer, rr->ttl );
-		put16bits( &buffer, rr->rd_length );
+		put16bits( &buffer, rr->rd_length ); /* already accounts for encoded data */
 
 		if( rr->type == SRV_Resource_RecordType ) {
 			put16bits( &buffer, rr->rd_data.srv_record.priority );
@@ -375,8 +373,12 @@ int dns_encode_msg( UCHAR *buffer, size_t size, const struct Message *msg ) {
 			if( dns_encode_domain( &buffer, rr->rd_data.srv_record.target ) < 0 ) {
 				return -1;
 			}
+		} else if( rr->type == PTR_Resource_RecordType ) {
+			if( dns_encode_domain( &buffer, rr->rd_data.ptr_record.name ) < 0 ) {
+				return -1;
+			}
 		} else {
-			/* Assume address record data */
+			/* Assume A/AAAA address record data */
 			memcpy( buffer, &rr->rd_data, rr->rd_length );
 			buffer += rr->rd_length;
 		}
@@ -385,7 +387,7 @@ int dns_encode_msg( UCHAR *buffer, size_t size, const struct Message *msg ) {
 	return (buffer - beg);
 }
 
-int dns_lookup( const char hostname[], IP addr[], size_t addr_num ) {
+int dns_lookup_addr( const char hostname[], IP addr[], size_t addr_num ) {
 
 	/* Start lookup for one address */
 	if( kad_lookup_value( hostname, addr, &addr_num ) >= 0 && addr_num > 0 ) {
@@ -393,6 +395,27 @@ int dns_lookup( const char hostname[], IP addr[], size_t addr_num ) {
 	} else {
 		return 0;
 	}
+}
+
+const char* dns_lookup_ptr( const char ptr_name[] ) {
+	typedef struct {
+		const char* ptr_name;
+		const char* hostname;
+	} Entry;
+
+	static const Entry entries[] = {
+		{ "1.0.0.127.in-addr.arpa", "localhost" },
+		{ "1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.ip6.arpa", "localhost" }
+	};
+
+	size_t i;
+	for( i = 0; i < (sizeof(entries) / sizeof(entries[0])); i++ ) {
+		if( strcmp( ptr_name, entries[i].ptr_name )  == 0 ) {
+			return entries[i].hostname;
+		}
+	}
+
+	return NULL;
 }
 
 void setAddressRecord( struct ResourceRecord *rr, const char name[], const IP *addr ) {
@@ -421,7 +444,7 @@ void setServiceRecord( struct ResourceRecord *rr, const char name[], const char 
 	rr->type = SRV_Resource_RecordType;
 	rr->class = 1;
 	rr->ttl = 0; /* no caching */
-	rr->rd_length = 6 + strlen( target ) + 2; /* target may not contain any dots */
+	rr->rd_length = 6 + strlen( target ) + 2; /* encoded target will be +2 longer */
 
 	rr->rd_data.srv_record.priority = 0;
 	rr->rd_data.srv_record.weight = 0;
@@ -429,7 +452,17 @@ void setServiceRecord( struct ResourceRecord *rr, const char name[], const char 
 	rr->rd_data.srv_record.target = target;
 }
 
-int dns_setup_msg( struct Message *msg, IP addrs[], size_t addrs_num ) {
+void setPointerRecord( struct ResourceRecord *rr, const char name[], const char domain[] ) {
+	rr->name = name;
+	rr->type = PTR_Resource_RecordType;
+	rr->class = 1;
+	rr->ttl = 0; /* no caching */
+	rr->rd_length = strlen( domain ) + 2; /* encoded target will be +2 longer */
+
+	rr->rd_data.ptr_record.name = domain;
+}
+
+int dns_setup_msg( struct Message *msg, IP addrs[], size_t addrs_num, const char* hostname ) {
 	const char *qName;
 	size_t i, c;
 
@@ -457,6 +490,10 @@ int dns_setup_msg( struct Message *msg, IP addrs[], size_t addrs_num ) {
 			setAddressRecord( &msg->answers[c], g_names[i], &addrs[i] );
 			msg->arCount++;
 		}
+	} else if( msg->question.qType == PTR_Resource_RecordType ) {
+		setPointerRecord( &msg->answers[c], qName, hostname );
+		msg->anCount++;
+		c++;
 	} else {
 		/* Assume AAAA or A Record Type */
 		for( i = 0; i < addrs_num; i++, c++ ) {
@@ -466,6 +503,22 @@ int dns_setup_msg( struct Message *msg, IP addrs[], size_t addrs_num ) {
 	}
 
 	return (c == 0) ? -1 : 1;
+}
+
+/* Get a small string representation of the query type */
+const char* qtype_str( int qType ) {
+	switch( qType ) {
+		case A_Resource_RecordType:
+			return "A";
+		case AAAA_Resource_RecordType:
+			return "AAAA";
+		case SRV_Resource_RecordType:
+			return "SRV";
+		case PTR_Resource_RecordType:
+			return "PTR";
+		default:
+			return "???";
+	}
 }
 
 void dns_handler( int rc, int sock ) {
@@ -479,6 +532,7 @@ void dns_handler( int rc, int sock ) {
 	UCHAR buffer[1472];
 	char addrbuf[FULL_ADDSTRLEN+1];
 	const char *hostname;
+	const char *domain;
 
 	if( rc == 0 ) {
 		return;
@@ -490,8 +544,6 @@ void dns_handler( int rc, int sock ) {
 	if( buflen < 0 ) {
 		return;
 	}
-
-	log_debug( "DNS: Received query from: %s",  str_addr( &clientaddr, addrbuf ) );
 
 	/* Decode message */
 	if( dns_decode_msg( &msg, buffer ) < 0 ) {
@@ -509,11 +561,7 @@ void dns_handler( int rc, int sock ) {
 	hostname = msg.question.qName;
 
 	if ( hostname == NULL ) {
-		log_warn( "DNS: Empty hostname." );
-		return;
-	}
-
-	if( !is_suffix( hostname, gconf->query_tld ) ) {
+		log_warn( "DNS: Empty hostname in question record." );
 		return;
 	}
 
@@ -522,24 +570,56 @@ void dns_handler( int rc, int sock ) {
 		return;
 	}
 
-	if( (addrs_num = dns_lookup( hostname, addrs, MAX_ADDR_RECORDS )) == 0 ) {
-		log_debug( "DNS: Failed to resolve hostname: %s", hostname );
-		return;
-	}
+	log_debug( "DNS: Received %s query from %s for: %s",
+		qtype_str( msg.question.qType ),
+		str_addr( &clientaddr, addrbuf ),
+		hostname
+	);
 
-	if( dns_setup_msg( &msg, &addrs[0], addrs_num ) < 0 ) {
-		return;
+	if( msg.question.qType == PTR_Resource_RecordType ) {
+		if( !is_suffix( hostname, ".arpa" )) {
+			return;
+		}
+
+		if( (domain = dns_lookup_ptr( hostname )) == NULL ) {
+			log_debug( "DNS: No domain found for PTR question." );
+			return;
+		}
+
+		if( dns_setup_msg( &msg, NULL, 0, domain ) < 0 ) {
+			return;
+		}
+
+		log_debug( "DNS: Send back hostname '%s' to: %s",
+			domain, str_addr( &clientaddr, addrbuf )
+		);
+	} else {
+		/* Check if ends with .p2p */
+		if( !is_suffix( hostname, gconf->query_tld ) ) {
+			return;
+		}
+
+		if( (addrs_num = dns_lookup_addr( hostname, addrs, MAX_ADDR_RECORDS )) == 0 ) {
+			log_debug( "DNS: Failed to resolve hostname: %s", hostname );
+			return;
+		}
+
+		if( dns_setup_msg( &msg, &addrs[0], addrs_num, NULL ) < 0 ) {
+			return;
+		}
+
+		log_debug( "DNS: Send back %ul addresses to: %s",
+			addrs_num, str_addr( &clientaddr, addrbuf )
+		);
 	}
 
 	/* Encode message */
 	buflen = dns_encode_msg( buffer, sizeof(buffer), &msg );
 
 	if( buflen > 0 ) {
-		log_debug( "DNS: Send %ul addresses to %s. Packet has %d bytes.",
-			addrs_num, str_addr( &clientaddr, addrbuf ), buflen
-		);
-
 		sendto( sock, buffer, buflen, 0, (struct sockaddr*) &clientaddr, sizeof(IP) );
+	} else {
+		log_err( "DNS: Failed not create a response packet." );
 	}
 }
 
