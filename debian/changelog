@@ -10,8 +10,9 @@ kadnode (0.9.2) unstable; urgency=low
   * [NSS] fix maximum address limit per request
   * [LPD] send a multicast packet for each interface by default
   * [DNS] now answer to PTR queries for localhost address
-    - some requesters wait for a timeout first
-      until they start doing A/AAA/SRV requests
+    - some programs request a PTR record for localhost and
+      time out first until they start doing A/AAA/SRV requests,
+      so this will hopefully speed up other requests
 
  -- mwarning <mwarning@debian>  Wed, 03 Dec 2014 08:19:08 +0100
 
