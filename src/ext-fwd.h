@@ -20,10 +20,10 @@ enum {
 };
 
 struct forwarding_t {
+	struct forwarding_t *next;
 	int port; /* the port to be forwarded on the router */
 	time_t lifetime; /* keep entry until lifetime expires */
 	time_t refreshed; /* last time the entry was refreshed */
-	struct forwarding_t *next;
 };
 
 void fwd_setup( void );

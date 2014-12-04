@@ -13,16 +13,17 @@
 
 /* An address that was received as a result of an id search */
 struct result_t {
+	struct result_t *next;
 	IP addr;
 #ifdef AUTH
 	UCHAR *challenge;
 	int challenges_send;
 #endif
-	struct result_t *next;
 };
 
 /* A bucket of results received when searching of an id */
 struct results_t {
+	struct results_t *next;
 	/* The value id to search for */
 	UCHAR id[SHA1_BIN_LENGTH];
 #ifdef AUTH
@@ -31,8 +32,6 @@ struct results_t {
 	time_t start_time;
 	struct result_t *entries;
 	int done;
-
-	struct results_t *next;
 };
 
 struct results_t *results_get( void );

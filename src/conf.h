@@ -17,9 +17,9 @@ void conf_free( void );
 
 /* value to announce */
 struct value {
+	struct value *next;
 	UCHAR value_id[SHA1_BIN_LENGTH];
 	int port;
-	struct value *next;
 };
 
 struct gconf_t {

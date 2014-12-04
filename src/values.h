@@ -13,6 +13,7 @@
 */
 
 struct value_t {
+	struct value_t *next;
 	UCHAR id[SHA1_BIN_LENGTH];
 #ifdef AUTH
 	UCHAR *skey;
@@ -20,7 +21,6 @@ struct value_t {
 	int port;
 	time_t lifetime; /* Keep entry refreshed until the lifetime expires */
 	time_t refresh; /* Next time the entry need to be refreshed */
-	struct value_t *next;
 };
 
 void values_setup( void );
