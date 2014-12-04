@@ -1,3 +1,9 @@
+kadnode (1.0.0) UNRELEASED; urgency=medium
+
+  * rename --ifce to --ifname, it is less obscure
+
+ -- mwarning <moritzwarning@web.de>  Thu, 04 Dec 2014 12:03:52 +0100
+
 kadnode (0.9.2) unstable; urgency=low
 
   * add FreeBSD package
@@ -14,7 +20,7 @@ kadnode (0.9.2) unstable; urgency=low
       time out first until they start doing A/AAA/SRV requests,
       so this will hopefully speed up other requests
 
- -- mwarning <mwarning@debian>  Wed, 03 Dec 2014 08:19:08 +0100
+ -- mwarning <moritzwarning@web.de>  Wed, 03 Dec 2014 08:19:08 +0100
 
 kadnode (0.9.1) unstable; urgency=low
 
