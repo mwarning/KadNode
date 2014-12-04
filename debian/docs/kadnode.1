@@ -15,7 +15,7 @@
 \fBkadnode\-ctl\fR [\.\.\.]
 .
 .SH "DESCRIPTION"
-\fBKadNode\fR is a small P2P DNS resolution daemon based on a Distributed Hash Table (DHT)\. It can intercept and resolve DNS request of a given top level domain in the background of the system\. This makes it usable even in a browser or on the command line\. KadNode can serve as as a personal and decentralized DynDNS service that way\. A KadNode instance can also announce domains to the network\. A cryptographic public key can be used to let KadNode filter out unexpected responses\. The DHT is identical to the one used in the Transmission Bittorrent client and works on the Internet as well as on local networks\. Packages for multiple operating systems are available to setup your system right away\. Have a look at the configuration file (/etc/kadnode/kadnode\.conf) for further instructions\.
+\fBKadNode\fR is a small P2P DNS resolution daemon based on a Distributed Hash Table (DHT)\. KadNode can intercept and resolve DNS request in the systems background\. Every instance can also announce any domain like e\.g\. myname\.p2p\. People on others devices running KadNode can then enter myname\.p2p into their browsers or console in order to reach the announcing host\. To avoid name clashes, cryptographic public/private key pairs can be used\. This makes it possible to have a personal and decentralized DynDNS service\. The DHT is identical to the one used in the Transmission Bittorrent client and works on the Internet as well as on local networks\.
 .
 .P
 Features:
