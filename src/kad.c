@@ -247,10 +247,10 @@ void kad_setup( void ) {
 	dht_lock_init();
 
 	if( gconf->af == AF_INET ) {
-		s4 = net_bind( "KAD", DHT_ADDR4, gconf->dht_port, gconf->dht_ifce, IPPROTO_UDP, AF_INET );
+		s4 = net_bind( "KAD", DHT_ADDR4, gconf->dht_port, gconf->dht_ifname, IPPROTO_UDP, AF_INET );
 		net_add_handler( s4, &dht_handler );
 	} else {
-		s6 = net_bind( "KAD", DHT_ADDR6, gconf->dht_port, gconf->dht_ifce, IPPROTO_UDP, AF_INET6 );
+		s6 = net_bind( "KAD", DHT_ADDR6, gconf->dht_port, gconf->dht_ifname, IPPROTO_UDP, AF_INET6 );
 		net_add_handler( s6, &dht_handler );
 	}
 
@@ -319,7 +319,7 @@ int kad_status( char *buf, int size ) {
 	bprintf( "DHT bound to: %s:%s / %s\n",
 		(gconf->af == AF_INET) ? "0.0.0.0" : "::",
 		gconf->dht_port,
-		(gconf->dht_ifce == NULL) ? "<any device>" : gconf->dht_ifce
+		(gconf->dht_ifname == NULL) ? "<any device>" : gconf->dht_ifname
    );
 
 	bprintf( "DHT Nodes: %d (%d good) (%s)\n",

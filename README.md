@@ -186,7 +186,7 @@ A ".p2p" at the end of every identifier is ignored. It is used to direct request
     Provide a configuration file with one command line  
     option on each line. Comments start after '#'.
 
-  * `--ifce` *interface*  
+  * `--ifname` *interface*  
     Bind to this specific interface.
 
   * `--fwd-disable`  

@@ -7,7 +7,7 @@ typedef void net_callback( int rc, int fd );
 /* Create a socket and bind to interface */
 int net_socket(
 	const char name[],
-	const char ifce[],
+	const char ifname[],
 	int protocol, int af
 );
 
@@ -16,7 +16,7 @@ int net_bind(
 	const char name[],
 	const char addr[],
 	const char port[],
-	const char ifce[],
+	const char ifname[],
 	int protocol, int af
 );
 

@@ -58,7 +58,7 @@ int net_set_nonblocking( int sock ) {
 	return 0;
 }
 
-int net_socket( const char name[], const char ifce[], int protocol, int af ) {
+int net_socket( const char name[], const char ifname[], int protocol, int af ) {
 	int sock;
 
 	if( protocol == IPPROTO_TCP ) {
@@ -81,15 +81,15 @@ int net_socket( const char name[], const char ifce[], int protocol, int af ) {
 	}
 
 #if defined(__APPLE__) || defined(__CYGWIN__) || defined(__FreeBSD__)
-	if( ifce ) {
+	if( ifname ) {
 		close( sock );
 		log_err( "%s: Bind to device not supported on Windows and MacOSX.", name );
 		return -1;
 	}
 #else
-	if( ifce && setsockopt( sock, SOL_SOCKET, SO_BINDTODEVICE, ifce, strlen( ifce ) ) ) {
+	if( ifname && setsockopt( sock, SOL_SOCKET, SO_BINDTODEVICE, ifname, strlen( ifname ) ) ) {
 		close( sock );
-		log_err( "%s: Unable to bind to device '%s': %s", name, ifce, strerror( errno ) );
+		log_err( "%s: Unable to bind to device '%s': %s", name, ifname, strerror( errno ) );
 		return -1;
 	}
 #endif
@@ -108,7 +108,7 @@ int net_bind(
 	const char name[],
 	const char addr[],
 	const char port[],
-	const char ifce[],
+	const char ifname[],
 	int protocol, int af
 ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
@@ -124,7 +124,7 @@ int net_bind(
 		return -1;
 	}
 
-	if( (sock = net_socket( name, ifce, protocol, sockaddr.ss_family )) < 0 ) {
+	if( (sock = net_socket( name, ifname, protocol, sockaddr.ss_family )) < 0 ) {
 		return -1;
 	}
 
@@ -154,8 +154,8 @@ int net_bind(
 		return -1;
 	}
 
-	log_info( ifce ? "%s: Bind to %s, interface %s" : "%s: Bind to %s",
-		name, str_addr( &sockaddr, addrbuf ), ifce
+	log_info( ifname ? "%s: Bind to %s, interface %s" : "%s: Bind to %s",
+		name, str_addr( &sockaddr, addrbuf ), ifname
 	);
 
 	return sock;

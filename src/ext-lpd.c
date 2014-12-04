@@ -132,7 +132,7 @@ int multicast_send_packets( const char *msg ) {
 			&& !(cur->ifa_flags & IFF_LOOPBACK)
 			&& !(cur->ifa_flags & IFF_POINTOPOINT)
 			&& (cur->ifa_flags & IFF_MULTICAST)
-			&& !(gconf->dht_ifce && strcmp( cur->ifa_name, gconf->dht_ifce ) == 0) ) {
+			&& !(gconf->dht_ifname && strcmp( cur->ifa_name, gconf->dht_ifname ) == 0) ) {
 
 			/* Copy address to separate field and set port */
 			memcpy( &addr, cur->ifa_addr, addr_len( (IP*) cur->ifa_addr ) );
@@ -230,7 +230,7 @@ void bootstrap_handle_mcast( int rc, int sock_recv ) {
 	if( g_mcast_time <= time_now_sec() ) {
 		if( kad_count_nodes( 0 ) == 0 ) {
 			/* Join multicast group if possible */
-			if( g_mcast_registered == 0 && mcast_set_group( sock_recv, &g_lpd_addr, gconf->dht_ifce, 1 ) == 0 ) {
+			if( g_mcast_registered == 0 && mcast_set_group( sock_recv, &g_lpd_addr, gconf->dht_ifname, 1 ) == 0 ) {
 				log_info( "LPD: No peers known. Joined multicast group." );
 				g_mcast_registered = 1;
 			}
@@ -266,7 +266,7 @@ void bootstrap_handle_mcast( int rc, int sock_recv ) {
 
 	if( g_packet_limit < 0 ) {
 		/* Too much traffic - leave multicast group for now */
-		if( g_mcast_registered == 1 && mcast_set_group( sock_recv, &g_lpd_addr, gconf->dht_ifce, 0 ) == 0 ) {
+		if( g_mcast_registered == 1 && mcast_set_group( sock_recv, &g_lpd_addr, gconf->dht_ifname, 0 ) == 0 ) {
 			log_warn( "LPD: Too much traffic. Left multicast group." );
 			g_mcast_registered = 0;
 		}
@@ -312,7 +312,7 @@ int create_receive_socket( void ) {
 	int sock_recv;
 
 	const char *any_addr = (gconf->af == AF_INET) ? "0.0.0.0" : "::";
-	sock_recv = net_bind( "LPD", any_addr, DHT_PORT_MCAST, gconf->dht_ifce, IPPROTO_UDP, gconf->af );
+	sock_recv = net_bind( "LPD", any_addr, DHT_PORT_MCAST, gconf->dht_ifname, IPPROTO_UDP, gconf->af );
 
 	if( multicast_set_loop( sock_recv, gconf->af, 0 ) < 0 ) {
 		log_warn( "LPD: Failed to set IP_MULTICAST_LOOP: %s", strerror( errno ) );

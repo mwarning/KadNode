@@ -42,13 +42,13 @@ command line interface (kadnode\-ctl)
 NSS support through /etc/nsswitch\.conf
 .
 .IP "\(bu" 4
-integrated simplified DNS server (supports A, AAAA, and SRV requests)
+integrated simplified DNS server (handles A, AAAA, and SRV requests)
 .
 .IP "\(bu" 4
 packages for ArchLinux/Debian/FreeBSD/MacOSX/OpenWrt/Windows
 .
 .IP "\(bu" 4
-peer file import/export on startup/shutdown
+peer file import/export on startup/shutdown and every 24h
 .
 .IP "" 0
 .
@@ -244,7 +244,7 @@ Provide a configuration file with one command line
 option on each line\. Comments start after \'#\'\.
 .
 .IP "\(bu" 4
-\fB\-\-ifce\fR \fIinterface\fR
+\fB\-\-ifname\fR \fIinterface\fR
 .
 .br
 Bind to this specific interface\.

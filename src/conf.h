@@ -64,7 +64,7 @@ struct gconf_t {
 	char* dht_port;
 
 	/* DHT interface */
-	char *dht_ifce;
+	char *dht_ifname;
 
 	/* KadNode startup time */
 	time_t startup_time;

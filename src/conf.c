@@ -73,7 +73,7 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 "				Default: "DHT_PORT"\n\n"
 " --config <file>		Provide a configuration file with one command line\n"
 "				option on each line. Comments start after '#'.\n\n"
-" --ifce <interface>		Bind to this interface.\n"
+" --ifname <interface>		Bind to this interface.\n"
 "				Default: <any>\n\n"
 " --daemon			Run the node in background.\n\n"
 " --verbosity <level>		Verbosity level: quiet, verbose or debug.\n"
@@ -386,7 +386,7 @@ void conf_free( void ) {
 	free( gconf->pidfile );
 	free( gconf->peerfile );
 	free( gconf->dht_port );
-	free( gconf->dht_ifce );
+	free( gconf->dht_ifname );
 	free( gconf->configfile );
 
 #ifdef LPD
@@ -537,8 +537,8 @@ int conf_handle_option( char opt[], char val[] ) {
 			gconf->service_start = 1;
 		}
 #endif
-	} else if( match( opt, "--ifce" ) ) {
-		conf_str( opt, &gconf->dht_ifce, val );
+	} else if( match( opt, "--ifname" ) ) {
+		conf_str( opt, &gconf->dht_ifname, val );
 	} else if( match( opt, "--user" ) ) {
 		conf_str( opt, &gconf->user, val );
 	} else if( match( opt, "--daemon" ) ) {
