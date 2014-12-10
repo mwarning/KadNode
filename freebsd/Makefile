@@ -76,12 +76,12 @@ do-install:
 	${LN} -sf ${STAGEDIR}${PREFIX}/lib/nss_kadnode.so ${STAGEDIR}${PREFIX}/lib/nss_kadnode.so.1
 
 	${MKDIR} ${STAGEDIR}/etc/kadnode
-	${INSTALL_DATA} ${WRKSRC}/debian/peers.txt ${STAGEDIR}/etc/kadnode/
-	${INSTALL_DATA} ${WRKSRC}/debian/kadnode.conf ${STAGEDIR}/etc/kadnode/
+	${INSTALL_DATA} ${WRKSRC}/misc/peers.txt ${STAGEDIR}/etc/kadnode/
+	${INSTALL_DATA} ${WRKSRC}/misc/kadnode.conf ${STAGEDIR}/etc/kadnode/
 
 	${MKDIR} ${STAGEDIR}/etc/rc.d/
 	${INSTALL_SCRIPT} ${WRKSRC}/freebsd/files/kadnode.init ${STAGEDIR}/etc/rc.d/kadnode
 
-	${INSTALL_MAN} ${WRKSRC}/debian/docs/kadnode.1 ${STAGEDIR}${MANPREFIX}/man/man1/
+	${INSTALL_MAN} ${WRKSRC}/misc/kadnode.1 ${STAGEDIR}${MANPREFIX}/man/man1/
 
 .include <bsd.port.mk>

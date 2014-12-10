@@ -29,8 +29,8 @@ Source: "..\windows\kadnode_stop.bat"; DestDir: "{app}"
 Source: "..\windows\config.txt"; DestDir: "{app}"
 Source: "..\README.md"; DestDir: "{app}"; DestName: "readme.txt"; AfterInstall: ConvertLineEndings 
 Source: "..\LICENSE"; DestDir: "{app}"; DestName: "license.txt"; AfterInstall: ConvertLineEndings
-Source: "..\debian\peers.txt"; DestDir: "{app}"; AfterInstall: ConvertLineEndings
-Source: "..\debian\changelog"; DestDir: "{app}"; DestName: "changelog.txt"; AfterInstall: ConvertLineEndings
+Source: "..\misc\peers.txt"; DestDir: "{app}"; AfterInstall: ConvertLineEndings
+Source: "..\misc\changelog"; DestDir: "{app}"; DestName: "changelog.txt"; AfterInstall: ConvertLineEndings
 
 [Icons]
 Name: "{group}\Configuration"; Filename: "{app}\config.txt"

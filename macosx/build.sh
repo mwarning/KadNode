@@ -16,9 +16,9 @@ mkdir -p build/osx-root/usr/share/man/man1/
 
 install -m 755 build/kadnode build/osx-root/usr/bin/
 install -m 755 build/kadnode-ctl build/osx-root/usr/bin/
-install -m 644 debian/kadnode.conf build/osx-root/private/etc/kadnode/
-install -m 644 debian/peers.txt build/osx-root/private/etc/kadnode/
-install -m 644 debian/docs/kadnode.1 build/osx-root/usr/share/man/man1/
+install -m 644 misc/kadnode.conf build/osx-root/private/etc/kadnode/
+install -m 644 misc/peers.txt build/osx-root/private/etc/kadnode/
+install -m 644 misc/kadnode.1 build/osx-root/usr/share/man/man1/
 install -m 755 macosx/p2p.kadnode.plist build/osx-root/Library/LaunchDaemons/
 
 mkdir -p build/pkg1

@@ -34,6 +34,6 @@ package() {
 	install -Dm644 archlinux/kadnode.service "$pkgdir"/usr/lib/systemd/system/kadnode.service
 	install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/"$pkgname"/LICENSE
 
-	install -Dm644 debian/kadnode.conf "$pkgdir"/etc/kadnode/kadnode.conf
-	install -Dm644 debian/peers.txt "$pkgdir"/etc/kadnode/peers.txt
+	install -Dm644 misc/kadnode.conf "$pkgdir"/etc/kadnode/kadnode.conf
+	install -Dm644 misc/peers.txt "$pkgdir"/etc/kadnode/peers.txt
 }
