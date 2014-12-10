@@ -177,8 +177,7 @@ A ".p2p" at the end of every identifier is ignored. It is used to direct request
     Change the UUID after start.
 
   * `--port` *port*  
-    Bind the DHT to this port.  
-    Default: 6881
+    Bind the DHT to this port (Default: 6881).  
 
   * `--config` *file*  
     Provide a configuration file with one command line  
