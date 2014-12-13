@@ -35,17 +35,22 @@ Most features are optional and can be left out to reduce the binary size.
 
 ## JOIN THE SWARM
 
-If KadNode cannot join a swarm (an empty peer file and no other peer on the local network),
-then a node address is needed to boostrap from. To do this, insert *bttracker.debian.org*
-into an empty file and provide it to KadNode:
+KadNode needs to know at least one active peer to join a swarm. This can be achieved
+by inserting e.g. *bttracker.debian.org*, or any other address of an active peer,
+into a file and provide it to KadNode:
 
 ```
 kadnode --peerfile peers.txt
 ```
 
-At most 150 good peers are written back to the peer file on KadNode shutdown and
-also every 24 hours. This ensures successful boostrapping on the next startup.
+This will cause KadNode to bootstrap into a network. On shutdown and also every 24h,
+KadNode writes at most 150 good peers back to the peer file.
+This ensures successful boostrapping on the next startup.
 The peer file is not written after at least 5 minutes of runtime.
+
+Another source of peers is the local network. KadNode can find peers via
+local peer discovery and bootstrap that way. This is useful if the peers file
+only contains stale entries.
 
 ## AUTHENTICATION
 
@@ -250,7 +255,7 @@ A ".p2p" at the end of every identifier is ignored. It is used to direct request
 **kadnode-ctl** allows to control KadNode from the command line.
 
   * `-p` *port*  
-    The port used to connect to the command line of a local KadNode instance (Default: 1700).
+    The port used to connect to the command shell of a local KadNode instance (Default: 1700).
 
   * `-h`  
     Print this help.
@@ -300,7 +305,8 @@ In case the IPv6 entry for localhost is not used or missing, try `[::1]` instead
 If KadNode runs on a computer in a private network, it will try to establish a port forwarding for the DHT port.
 Port forwarding only works if UPnP/NAT-PMP is compiled into KadNode and is supported by the gateway/router.
 Also, ports attached to announcement values (e.g. `--value-id foo.p2p:80`) will result in additional port forwardings.
-This is useful to make a local service (e.g. web server) reachable from the Internet.
+This is useful to make a local service (e.g. a web server) reachable from the Internet without the need to
+configure port forwardings manually.
 
 ## NOTES
 
