@@ -10,9 +10,9 @@ OBJS = build/main.o build/results.o build/kad.o build/log.o \
 	build/values.o build/peerfile.o
 
 ifeq ($(OS),Windows_NT)
-OBJS += build/unix.o build/windows.o
+  OBJS += build/unix.o build/windows.o
 else
-OBJS += build/unix.o
+  OBJS += build/unix.o
 endif
 
 
