@@ -670,7 +670,7 @@ void conf_load_file( const char filename[] ) {
 			*p =  '\0';
 		}
 
-		if( strchr( line, '\"' ) || strchr( line, '\"' ) ) {
+		if( strchr( line, '\'' ) || strchr( line, '\"' ) ) {
 			fclose( file );
 			log_err( "CFG: Quotation marks cannot be used in configuration file, line %ld.", n );
 		}
