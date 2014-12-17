@@ -670,9 +670,13 @@ void conf_load_file( const char filename[] ) {
 			*p =  '\0';
 		}
 
-		if( strchr( line, '\'' ) || strchr( line, '\"' ) ) {
-			fclose( file );
-			log_err( "CFG: Quotation marks cannot be used in configuration file, line %ld.", n );
+		/* Replace quotation marks with spaces */
+		p = line;
+		while( *p ) {
+			if( *p == '\'' || *p == '\"' ) {
+				*p = ' ';
+			}
+			p++;
 		}
 
 		/* Parse "--option [<value>]" */
@@ -698,6 +702,7 @@ void conf_load_file( const char filename[] ) {
 			log_err( "CFG: Option '--config' not allowed inside a configuration file, line %ld.", n );
 			exit( 1 );
 		}
+
 		conf_append_setting( option, value );
 	}
 
