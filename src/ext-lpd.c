@@ -173,7 +173,7 @@ int multicast_set_groups( int sock, IP *mcast_addr, const char ifname[], int joi
 			&& !(cur->ifa_flags & IFF_LOOPBACK)
 			&& !(cur->ifa_flags & IFF_POINTOPOINT)
 			&& (cur->ifa_flags & IFF_MULTICAST)
-			&& !(ifname && strcmp( cur->ifa_name, ifname ) == 0) ) {
+			&& !(ifname && strcmp( cur->ifa_name, ifname ) != 0) ) {
 			mcast_set_group( sock, mcast_addr, cur->ifa_name, join );
 		}
 
@@ -202,7 +202,7 @@ int mcast_send_packets( const char msg[], const char ifname[] ) {
 			&& !(cur->ifa_flags & IFF_LOOPBACK)
 			&& !(cur->ifa_flags & IFF_POINTOPOINT)
 			&& (cur->ifa_flags & IFF_MULTICAST)
-			&& !(ifname && strcmp( cur->ifa_name, ifname ) == 0) ) {
+			&& !(ifname && strcmp( cur->ifa_name, ifname ) != 0) ) {
 			mcast_send_packet( msg, (IP*) cur->ifa_addr, cur->ifa_name );
 		}
 
