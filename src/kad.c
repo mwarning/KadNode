@@ -146,6 +146,10 @@ void dht_handler( int rc, int sock ) {
 	socklen_t fromlen;
 	time_t time_wait = 0;
 
+#ifdef AUTH
+	auth_send_challenges( sock );
+#endif
+
 	if( rc > 0 ) {
 		/* Check which socket received the data */
 		fromlen = sizeof(from);
@@ -160,7 +164,7 @@ void dht_handler( int rc, int sock ) {
 
 #ifdef AUTH
 		/* Hook up AUTH extension on the DHT socket */
-		if( auth_handle_packet( sock, buf, rc, &from ) == 0 ) {
+		if( auth_handle_challenges( sock, buf, rc, &from ) == 0 ) {
 			return;
 		}
 #endif

@@ -22,8 +22,9 @@ UCHAR *auth_handle_pkey( UCHAR pkey[], UCHAR id[], const char query[] );
 void auth_debug_skeys( int );
 void auth_debug_pkeys( int );
 
-/* Function that is hooked up the DHT socket */
-int auth_handle_packet( int sock, UCHAR buf[], size_t buflen, IP *from );
+/* Functions that are hooked up the DHT socket */
+void auth_send_challenges( int sock );
+int auth_handle_challenges( int sock, UCHAR buf[], size_t buflen, IP *from );
 
 /* Generate a public/secret key pair and print it to stdout */
 int auth_generate_key_pair( void );

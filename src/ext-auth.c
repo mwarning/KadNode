@@ -326,6 +326,16 @@ void auth_send_challenges( int sock ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	struct results_t *results;
 	struct result_t *result;
+	time_t now;
+
+	now = time_now_sec();
+
+	/* Send out challenges every second */
+	if( g_send_challenges < now ) {
+		g_send_challenges = now;
+	} else {
+		return;
+	}
 
 	results = results_get();
 	while( results ) {
@@ -451,17 +461,8 @@ void auth_receive_challenge( int sock, UCHAR buf[], size_t buflen, IP *addr, tim
 * Handle authorization packets. This function is hooked
 * up to the DHT socket and is called for every packet.
 */
-int auth_handle_packet( int sock, UCHAR buf[], size_t buflen, IP *from ) {
+int auth_handle_challenges( int sock, UCHAR buf[], size_t buflen, IP *from ) {
 	time_t now;
-
-	now = time_now_sec();
-
-	/* Send out challenges every second */
-	if( g_send_challenges < now ) {
-		auth_send_challenges( sock );
-
-		g_send_challenges = now;
-	}
 
 	/* Detect authorization packets */
 	if( buflen < 4 || memcmp( buf, "AUTH", 4 ) != 0 ) {
@@ -470,6 +471,7 @@ int auth_handle_packet( int sock, UCHAR buf[], size_t buflen, IP *from ) {
 	}
 
 	g_request_counter++;
+	now = time_now_sec();
 
 	/* Reset counter every second */
 	if( now > g_request_counter_started ) {
