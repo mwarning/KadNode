@@ -2,7 +2,6 @@
 #ifndef _MAIN_H_
 #define _MAIN_H_
 
-#include <signal.h>
 #include <netinet/in.h>
 
 #define MAIN_SRVNAME "kadnode"

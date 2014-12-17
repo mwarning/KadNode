@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <pwd.h>
 #include <fcntl.h>
+#include <signal.h>
 
 #include "main.h"
 #include "conf.h"
