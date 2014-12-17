@@ -137,30 +137,39 @@ void results_debug( int fd ) {
 	dprintf( fd, " Found %d result buckets.\n", results_counter );
 }
 
-void results_expire( void ) {
+void results_remove( struct results_t *target ) {
 	struct results_t *pre;
-	struct results_t *next;
+	struct results_t *cur;
+
+	cur = g_results;
+	pre = NULL;
+	while( cur ) {
+		if( cur == target ) {
+			if( pre ) {
+				pre->next = cur->next;
+			} else {
+				g_results = NULL;
+			}
+			results_free( target );
+			return;
+		}
+		pre = cur;
+		cur = cur->next;
+	}
+}
+
+void results_expire( void ) {
 	struct results_t *results;
 	time_t now;
 
 	now = time_now_sec();
-	pre = NULL;
-	next = NULL;
 	results = g_results;
 	while( results ) {
-		next = results->next;
 		if( results->start_time < (now - MAX_SEARCH_LIFETIME) ) {
-			if( pre ) {
-				pre->next = next;
-			} else {
-				g_results = next;
-			}
-			results_free( results );
-			g_results_num--;
-		} else {
-			pre = results;
+			results_remove( results );
+			return;
 		}
-		results = next;
+		results = results->next;
 	}
 }
 
@@ -258,6 +267,10 @@ int results_add_addr( struct results_t *results, const IP *addr ) {
 int results_done( struct results_t *results, int done ) {
 	if( done ) {
 		results->done = 1;
+		/* Remove search if no results have been found */
+		if( results_entries_count( results ) == 0 ) {
+			results_remove( results );
+		}
 	} else {
 		results->start_time = time_now_sec();
 		results->done = 0;
