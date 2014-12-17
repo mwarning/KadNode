@@ -47,6 +47,7 @@ int mcast_set_group( int sock, IP *mcast_addr, const char ifname[], int join ) {
 			return -1;
 		}
 	} else {
+		/* Register to first interface */
 		req.gr_interface = 0;
 	}
 
@@ -111,8 +112,52 @@ int mcast_set_group( int sock, IP *mcast_addr, const char ifname[], int join ) {
 #endif
 }
 
-/* Send packet to all specified interfaces */
-int multicast_send_packets( const char *msg ) {
+int mcast_send_packet( const char msg[], IP *src_addr, const char ifname[] ) {
+	char addrbuf[FULL_ADDSTRLEN+1];
+	int sock;
+	IP addr;
+
+	/* Copy address to separate field and set port */
+	memcpy( &addr, src_addr, addr_len( (IP*) src_addr ) );
+	port_set( &addr, addr_port(&g_lpd_addr) );
+
+	/* For IPv6, only send from link local addresses */
+	if( addr.ss_family == AF_INET6) {
+		unsigned char* a = &((IP6*) &addr)->sin6_addr.s6_addr[0];
+		if( !(a[0] == 0xFE && a[1] == 0x80) ) {
+			return 1;
+		}
+	}
+
+	if( (sock = socket( gconf->af, SOCK_DGRAM, IPPROTO_UDP )) < 0 ) {
+		log_warn( "LPD: Cannot create send socket: %s", strerror( errno ) );
+		goto skip;
+	}
+
+	const int optval = 1;
+	if( setsockopt( sock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval) ) < 0 ) {
+		log_warn( "LPD: Unable to set SO_REUSEADDR: %s", strerror( errno ) );
+		goto skip;
+	}
+
+	if( bind( sock, (struct sockaddr*) &addr, addr_len( &addr ) ) < 0 ) {
+		log_warn( "LPD: Cannot bind send socket: %s", strerror( errno ) );
+		goto skip;
+	}
+
+	if( sendto( sock, msg, strlen( msg ), 0, (struct sockaddr*) &g_lpd_addr, addr_len( &g_lpd_addr ) ) < 0 ) {
+		log_warn( "LPD: Cannot send message from '%s': %s", str_addr( &addr, addrbuf ), strerror( errno ) );
+		goto skip;
+	}
+
+	skip:
+	close(sock);
+
+	return 0;
+}
+
+/* Register to multicast group on all specified interfaces */
+int multicast_set_groups( int sock, IP *mcast_addr, const char ifname[], int join ) {
 	const struct ifaddrs *cur;
 	struct ifaddrs *addrs;
 
@@ -121,9 +166,34 @@ int multicast_send_packets( const char *msg ) {
 		return -1;
 	}
 
-	char addrbuf[FULL_ADDSTRLEN+1];
-	int sock;
-	IP addr;
+	/* Iterate all interfaces */
+	cur = addrs;
+	while( cur != NULL ) {
+		if( cur->ifa_addr && (cur->ifa_addr->sa_family == gconf->af)
+			&& !(cur->ifa_flags & IFF_LOOPBACK)
+			&& !(cur->ifa_flags & IFF_POINTOPOINT)
+			&& (cur->ifa_flags & IFF_MULTICAST)
+			&& !(ifname && strcmp( cur->ifa_name, ifname ) == 0) ) {
+			mcast_set_group( sock, mcast_addr, cur->ifa_name, join );
+		}
+
+		cur = cur->ifa_next;
+	}
+
+	freeifaddrs( addrs );
+
+	return 0;
+}
+
+/* Send packet to all specified interfaces */
+int mcast_send_packets( const char msg[], const char ifname[] ) {
+	const struct ifaddrs *cur;
+	struct ifaddrs *addrs;
+
+	if( getifaddrs( &addrs ) < 0 ) {
+		log_err( "LPD: Cannot get interface list." );
+		return -1;
+	}
 
 	/* Iterate all interfaces */
 	cur = addrs;
@@ -132,43 +202,8 @@ int multicast_send_packets( const char *msg ) {
 			&& !(cur->ifa_flags & IFF_LOOPBACK)
 			&& !(cur->ifa_flags & IFF_POINTOPOINT)
 			&& (cur->ifa_flags & IFF_MULTICAST)
-			&& !(gconf->dht_ifname && strcmp( cur->ifa_name, gconf->dht_ifname ) == 0) ) {
-
-			/* Copy address to separate field and set port */
-			memcpy( &addr, cur->ifa_addr, addr_len( (IP*) cur->ifa_addr ) );
-			port_set( &addr, addr_port(&g_lpd_addr) );
-
-			/* For IPv6, only send from link local addresses */
-			if( addr.ss_family == AF_INET6) {
-				unsigned char* a = &((IP6*) &addr)->sin6_addr.s6_addr[0];
-				if( !(a[0] == 0xFE && a[1] == 0x80) ) {
-					break;
-				}
-			}
-
-			if( (sock = socket( gconf->af, SOCK_DGRAM, IPPROTO_UDP )) < 0 ) {
-				log_warn( "LPD: Cannot create send socket: %s", strerror( errno ) );
-				goto skip;
-			}
-
-			const int optval = 1;
-			if( setsockopt( sock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval) ) < 0 ) {
-				log_warn( "LPD: Unable to set SO_REUSEADDR: %s", strerror( errno ) );
-				goto skip;
-			}
-
-			if( bind( sock, (struct sockaddr*) &addr, addr_len( &addr ) ) < 0 ) {
-				log_warn( "LPD: Cannot bind send socket: %s", strerror( errno ) );
-				goto skip;
-			}
-
-			if( sendto( sock, msg, strlen( msg ), 0, (struct sockaddr*) &g_lpd_addr, addr_len( &g_lpd_addr ) ) < 0 ) {
-				log_warn( "LPD: Cannot send message from '%s': %s", str_addr( &addr, addrbuf ), strerror( errno ) );
-				goto skip;
-			}
-
-			skip:
-			close(sock);
+			&& !(ifname && strcmp( cur->ifa_name, ifname ) == 0) ) {
+			mcast_send_packet( msg, (IP*) cur->ifa_addr, cur->ifa_name );
 		}
 
 		cur = cur->ifa_next;
@@ -180,7 +215,7 @@ int multicast_send_packets( const char *msg ) {
 }
 
 /* Parse received packet */
-const char *parse_packet_param( const char* str, const char* param ) {
+const char *parse_packet_param( const char str[], const char param[] ) {
 	const char* pos;
 
 	pos = strstr( str, param );
@@ -191,7 +226,7 @@ const char *parse_packet_param( const char* str, const char* param ) {
 	}
 }
 
-int parse_packet( const char *str ) {
+int parse_packet( const char str[] ) {
 	const char *beg;
 	int port = 0;
 
@@ -220,7 +255,7 @@ int parse_packet( const char *str ) {
 	return port;
 }
 
-void bootstrap_handle_mcast( int rc, int sock_recv ) {
+void handle_mcast( int rc, int sock_recv ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	char buf[512];
 	IP c_addr;
@@ -230,18 +265,18 @@ void bootstrap_handle_mcast( int rc, int sock_recv ) {
 	if( g_mcast_time <= time_now_sec() ) {
 		if( kad_count_nodes( 0 ) == 0 ) {
 			/* Join multicast group if possible */
-			if( g_mcast_registered == 0 && mcast_set_group( sock_recv, &g_lpd_addr, gconf->dht_ifname, 1 ) == 0 ) {
+			if( g_mcast_registered == 0 && multicast_set_groups( sock_recv, &g_lpd_addr, gconf->dht_ifname, 1 ) == 0 ) {
 				log_info( "LPD: No peers known. Joined multicast group." );
 				g_mcast_registered = 1;
 			}
 
 			if( g_mcast_registered == 1 ) {
 				log_info( "LPD: Send multicast message to find nodes." );
-				
+
 				/* Create message */
 				snprintf( buf, sizeof(buf), msg_fmt, atoi( gconf->dht_port ) );
 
-				multicast_send_packets( buf );
+				mcast_send_packets( buf, gconf->dht_ifname );
 			}
 		}
 
@@ -266,7 +301,7 @@ void bootstrap_handle_mcast( int rc, int sock_recv ) {
 
 	if( g_packet_limit < 0 ) {
 		/* Too much traffic - leave multicast group for now */
-		if( g_mcast_registered == 1 && mcast_set_group( sock_recv, &g_lpd_addr, gconf->dht_ifname, 0 ) == 0 ) {
+		if( g_mcast_registered == 1 && multicast_set_groups( sock_recv, &g_lpd_addr, gconf->dht_ifname, 0 ) == 0 ) {
 			log_warn( "LPD: Too much traffic. Left multicast group." );
 			g_mcast_registered = 0;
 		}
@@ -338,7 +373,7 @@ void lpd_setup( void ) {
 	}
 
 	int sock_recv = create_receive_socket();
-	net_add_handler( sock_recv, &bootstrap_handle_mcast );
+	net_add_handler( sock_recv, &handle_mcast );
 }
 
 void lpd_free( void ) {
