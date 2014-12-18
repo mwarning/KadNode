@@ -86,13 +86,36 @@ int main_start( void ) {
 	/* Loop over all sockets and FDs */
 	net_loop();
 
+#ifdef CMD
+	cmd_free();
+#endif
+#ifdef NSS
+	nss_free();
+#endif
+#ifdef WEB
+	web_free();
+#endif
+#ifdef DNS
+	dns_free();
+#endif
+#ifdef AUTH
+	auth_free();
+#endif
+#ifdef LPD
+	lpd_free();
+#endif
+
 	/* Export peers if a file is provided */
 	peerfile_export();
 
-	kad_uninit();
+	results_free();
 
-#ifdef LPD
-	lpd_free();
+	values_free();
+
+	kad_free();
+
+#ifdef FWD
+	fwd_free();
 #endif
 
 	conf_free();

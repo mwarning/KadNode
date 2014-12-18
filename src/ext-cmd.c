@@ -465,3 +465,7 @@ void cmd_setup( void ) {
 		net_add_handler( STDIN_FILENO, &cmd_console_handler );
 	}
 }
+
+void cmd_free( void ) {
+	/* Nothing to do */
+}

@@ -12,6 +12,7 @@
 
 #define MAX_ADDRS 32
 
+
 void nss_lookup( int sock, IP *clientaddr, const char hostname[] ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
 	socklen_t addrlen;
@@ -79,4 +80,8 @@ void nss_setup( void ) {
 
 	sock = net_bind( "NSS", "localhost", gconf->nss_port, NULL, IPPROTO_UDP, AF_UNSPEC );
 	net_add_handler( sock, &nss_handler );
+}
+
+void nss_free( void ) {
+	/* Nothing to do */
 }

@@ -498,3 +498,24 @@ int auth_handle_challenges( int sock, UCHAR buf[], size_t buflen, IP *from ) {
 void auth_setup( void ) {
 	/* Nothing to do */
 }
+
+void auth_free( void ) {
+	struct key_t *cur;
+	struct key_t *next;
+
+	cur = g_secret_keys;
+	while( cur ) {
+		next = cur->next;
+		free_key( cur );
+		cur = next;
+	}
+	g_secret_keys = NULL;
+
+	cur = g_public_keys;
+	while( cur ) {
+		next = cur->next;
+		free_key( cur );
+		cur = next;
+	}
+	g_public_keys = NULL;
+}

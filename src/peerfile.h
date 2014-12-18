@@ -10,6 +10,7 @@
 
 /* Setup callbacks */
 void peerfile_setup( void );
+void peerfile_free( void );
 
 /* Write peers to peerfile */
 void peerfile_export( void );

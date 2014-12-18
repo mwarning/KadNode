@@ -30,5 +30,6 @@ int auth_handle_challenges( int sock, UCHAR buf[], size_t buflen, IP *from );
 int auth_generate_key_pair( void );
 
 void auth_setup( void );
+void auth_free( void );
 
 #endif /* _EXT_AUTH_H_ */

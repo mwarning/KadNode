@@ -79,7 +79,7 @@ int results_entries_count( struct results_t *result ) {
 }
 
 /* Free a results_t item and all its result_t entries */
-void results_free( struct results_t *results ) {
+void results_item_free( struct results_t *results ) {
 	struct result_t *cur;
 	struct result_t *next;
 
@@ -150,7 +150,7 @@ void results_remove( struct results_t *target ) {
 			} else {
 				g_results = NULL;
 			}
-			results_free( target );
+			results_item_free( target );
 			return;
 		}
 		pre = cur;
@@ -232,6 +232,7 @@ int results_add_addr( struct results_t *results, const IP *addr ) {
 		return -1;
 	}
 
+	/* Check if result already exists */
 	result = results->entries;
 	while( result ) {
 		if( addr_equal( &result->addr, addr ) ) {
@@ -255,6 +256,7 @@ int results_add_addr( struct results_t *results, const IP *addr ) {
 	}
 #endif
 
+	/* Append new entry */
 	if( result ) {
 		result->next = new;
 	} else {
@@ -316,4 +318,18 @@ void results_handle( int _rc, int _sock ) {
 
 void results_setup( void ) {
 	net_add_handler( -1, &results_handle );
+}
+
+void results_free( void ) {
+	struct results_t *cur;
+	struct results_t *next;
+
+	cur = g_results;
+	while( cur ) {
+		next = cur->next;
+		results_item_free( cur );
+		cur = next;
+	}
+
+	g_results = NULL;
 }

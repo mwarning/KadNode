@@ -344,26 +344,29 @@ int multicast_set_loop( int sock, int af, int val ) {
 }
 
 int create_receive_socket( void ) {
-	int sock_recv;
+	const char *any_addr;
+	int sock;
 
-	const char *any_addr = (gconf->af == AF_INET) ? "0.0.0.0" : "::";
-	sock_recv = net_bind( "LPD", any_addr, DHT_PORT_MCAST, gconf->dht_ifname, IPPROTO_UDP, gconf->af );
+	any_addr = (gconf->af == AF_INET) ? "0.0.0.0" : "::";
+	sock = net_bind( "LPD", any_addr, DHT_PORT_MCAST, gconf->dht_ifname, IPPROTO_UDP, gconf->af );
 
-	if( multicast_set_loop( sock_recv, gconf->af, 0 ) < 0 ) {
+	if( multicast_set_loop( sock, gconf->af, 0 ) < 0 ) {
 		log_warn( "LPD: Failed to set IP_MULTICAST_LOOP: %s", strerror( errno ) );
 		goto fail;
 	}
 
-	return sock_recv;
+	return sock;
 
 fail:
-	close( sock_recv );
+	close( sock );
 	return -1;
 }
 
 void lpd_setup( void ) {
+	int sock;
 
 	g_packet_limit = PACKET_LIMIT_MAX;
+
 	if( addr_parse( &g_lpd_addr, gconf->lpd_addr, DHT_PORT_MCAST, gconf->af ) != 0 ) {
 		log_err( "BOOT: Failed to parse IP address for '%s'.", gconf->lpd_addr );
 	}
@@ -372,10 +375,10 @@ void lpd_setup( void ) {
 		return;
 	}
 
-	int sock_recv = create_receive_socket();
-	net_add_handler( sock_recv, &handle_mcast );
+	sock = create_receive_socket();
+	net_add_handler( sock, &handle_mcast );
 }
 
 void lpd_free( void ) {
-	/* Nothing to do here */
+	/* Nothing to do */
 }

@@ -39,6 +39,7 @@ struct results_t *results_find( const UCHAR id[] );
 
 /* Register a handler to call results_expire in intervalls */
 void results_setup( void );
+void results_free( void );
 
 /* Create and append a new results item */
 struct results_t *results_add( const char query[], int *is_new );

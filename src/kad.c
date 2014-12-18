@@ -25,7 +25,6 @@ The interface that is used to interact with the DHT.
 
 /* Next time to do DHT maintenance */
 static time_t g_dht_maintenance = 0;
-static int g_dht_socket = -1;
 
 void dht_lock_init( void ) {
 #ifdef PTHREAD
@@ -254,13 +253,11 @@ void kad_setup( void ) {
 
 	if( gconf->af == AF_INET ) {
 		s4 = net_bind( "KAD", DHT_ADDR4, gconf->dht_port, gconf->dht_ifname, IPPROTO_UDP, AF_INET );
-		g_dht_socket = s4;
+		net_add_handler( s4, &dht_handler );
 	} else {
 		s6 = net_bind( "KAD", DHT_ADDR6, gconf->dht_port, gconf->dht_ifname, IPPROTO_UDP, AF_INET6 );
-		g_dht_socket = s6;
+		net_add_handler( s6, &dht_handler );
 	}
-
-	net_add_handler( g_dht_socket, &dht_handler );
 
 	/* Init the DHT.  Also set the sockets into non-blocking mode. */
 	if( dht_init( s4, s6, node_id, (UCHAR*) "KN\0\0") < 0 ) {
@@ -268,9 +265,8 @@ void kad_setup( void ) {
 	}
 }
 
-void kad_uninit( void ) {
+void kad_free( void ) {
 	dht_uninit();
-	close( g_dht_socket );
 }
 
 int kad_count_nodes( int good ) {

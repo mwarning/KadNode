@@ -635,3 +635,7 @@ void dns_setup( void ) {
 	sock = net_bind( "DNS", "localhost", gconf->dns_port, NULL, IPPROTO_UDP, AF_UNSPEC );
 	net_add_handler( sock, &dns_handler );
 }
+
+void dns_free( void ) {
+	/* Nothing to do */
+}

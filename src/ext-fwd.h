@@ -27,6 +27,7 @@ struct forwarding_t {
 };
 
 void fwd_setup( void );
+void fwd_free( void );
 
 struct forwarding_t *fwd_get( void );
 

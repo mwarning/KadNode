@@ -123,3 +123,7 @@ void web_setup( void ) {
 	sock = net_bind( "WEB", "localhost", gconf->web_port, NULL, IPPROTO_TCP, AF_UNSPEC );
 	net_add_handler( sock, &web_handler );
 }
+
+void web_free( void ) {
+	/* Nothing to do */
+}

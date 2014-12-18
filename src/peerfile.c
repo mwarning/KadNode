@@ -144,3 +144,7 @@ void peerfile_setup( void ) {
 	peerfile_export_time = time_now_sec();
 	net_add_handler( -1 , &peerfile_handle_peerfile );
 }
+
+void peerfile_free( void ) {
+	/* Nothing to do */
+}

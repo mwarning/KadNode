@@ -163,7 +163,7 @@ struct value_t *values_add( const char query[], int port, time_t lifetime ) {
 	return new;
 }
 
-void free_value( struct value_t *value ) {
+void value_free( struct value_t *value ) {
 #ifdef AUTH
 	/* Secure erase */
 	if( value->skey ) {
@@ -188,7 +188,7 @@ void values_remove( struct value_t *value ) {
 			} else {
 				g_values = cur->next;
 			}
-			free_value( cur );
+			value_free( cur );
 			return;
 		}
 		pre = cur;
@@ -211,7 +211,7 @@ void values_expire( void ) {
 			} else {
 				g_values = cur->next;
 			}
-			free_value( cur );
+			value_free( cur );
 			return;
 		}
 		pre = cur;
@@ -258,4 +258,17 @@ void values_handle( int _rc, int _sock ) {
 void values_setup( void ) {
 	/* Cause the callback to be called in intervals */
 	net_add_handler( -1, &values_handle );
+}
+
+void values_free( void ) {
+	struct value_t *cur;
+	struct value_t *next;
+
+	cur = g_values;
+	while( cur ) {
+		next = cur->next;
+		value_free( cur );
+		cur = next;
+	}
+	g_values = NULL;
 }

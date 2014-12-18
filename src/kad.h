@@ -9,7 +9,7 @@
 
 
 void kad_setup( void );
-void kad_uninit( void );
+void kad_free( void );
 
 /* Ping this node to add it to the node table */
 int kad_ping( const IP *addr );

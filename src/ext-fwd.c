@@ -36,21 +36,21 @@ struct forwarding_t *fwd_get( void ) {
 }
 
 int fwd_count( void ) {
-	struct forwarding_t *item;
+	struct forwarding_t *cur;
 	int count;
 
 	count = 0;
-	item = g_forwardings_beg;
-	while( item ) {
-		item = item->next;
+	cur = g_forwardings_beg;
+	while( cur ) {
 		count++;
+		cur = cur->next;
 	}
 
 	return count;
 }
 
 void fwd_debug( int fd ) {
-	struct forwarding_t *fwd;
+	struct forwarding_t *cur;
 	char refreshed[64];
 	char lifetime[64];
 	time_t now;
@@ -58,26 +58,26 @@ void fwd_debug( int fd ) {
 
 	now = time_now_sec();
 	counter = 0;
-	fwd = g_forwardings_beg;
-	while( fwd ) {
-		if( fwd->refreshed == 0 ) {
+	cur = g_forwardings_beg;
+	while( cur ) {
+		if( cur->refreshed == 0 ) {
 			sprintf( refreshed, "never" );
 		} else {
-			sprintf( refreshed, "%ld [min]", (now - fwd->refreshed) / 60 );
+			sprintf( refreshed, "%ld [min]", (now - cur->refreshed) / 60 );
 		}
 
-		if( fwd->lifetime == LONG_MAX ) {
+		if( cur->lifetime == LONG_MAX ) {
 			sprintf( lifetime, "infinite" );
 		} else {
-			sprintf( lifetime, "%ld [min]", (fwd->lifetime -  now) / 60 );
+			sprintf( lifetime, "%ld [min]", (cur->lifetime -  now) / 60 );
 		}
 
-		dprintf( fd, " port: %hu\n", fwd->port );
+		dprintf( fd, " port: %hu\n", cur->port );
 		dprintf( fd, "  refreshed ago: %s\n", refreshed );
 		dprintf( fd, "  lifetime remaining: %s\n", lifetime );
 
 		counter++;
-		fwd = fwd->next;
+		cur = cur->next;
 	}
 
 	dprintf( fd, " Found %d forwardings.\n", counter );
@@ -249,4 +249,24 @@ void fwd_setup( void ) {
 
 	/* Cause the callback to be called in intervals */
 	net_add_handler( -1, &fwd_handle );
+}
+
+void fwd_free( void ) {
+	struct forwarding_t *cur;
+	struct forwarding_t *next;
+
+	cur = g_forwardings_beg;
+	while( cur ) {
+		next = cur->next;
+		free( cur );
+		cur = next;
+	}
+	g_forwardings_beg = NULL;
+
+#ifdef FWD_NATPMP
+	natpmp_uninit( &natpmp );
+#endif
+#ifdef FWD_UPNP
+	upnp_uninit( &upnp );
+#endif
 }

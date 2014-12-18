@@ -24,6 +24,7 @@ struct value_t {
 };
 
 void values_setup( void );
+void values_free( void );
 
 struct value_t* values_get( void );
 struct value_t* values_find( UCHAR id[] );
