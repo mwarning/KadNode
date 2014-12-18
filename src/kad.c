@@ -146,9 +146,6 @@ void dht_handler( int rc, int sock ) {
 	socklen_t fromlen;
 	time_t time_wait = 0;
 
-#ifdef AUTH
-	auth_send_challenges( sock );
-#endif
 
 	if( rc > 0 ) {
 		/* Check which socket received the data */
@@ -156,7 +153,7 @@ void dht_handler( int rc, int sock ) {
 		rc = recvfrom( sock, buf, sizeof(buf) - 1, 0, (struct sockaddr*) &from, &fromlen );
 
 		if( rc <= 0 || rc >= sizeof(buf) ) {
-			return;
+			goto end;
 		}
 
 		/* The DHT code expects the message to be null-terminated. */
@@ -197,14 +194,19 @@ void dht_handler( int rc, int sock ) {
 
 	if( rc < 0 ) {
 		if( errno == EINTR ) {
-			return;
+			goto end;
 		} else if( rc == EINVAL || rc == EFAULT ) {
 			log_err( "KAD: Error using select: %s", strerror( errno ) );
-			return;
+			goto end;
 		} else {
 			g_dht_maintenance = time_now_sec() + 1;
 		}
 	}
+
+	end:;
+#ifdef AUTH
+	auth_send_challenges( sock );
+#endif
 }
 
 /*
