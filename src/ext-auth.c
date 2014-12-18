@@ -346,7 +346,7 @@ void auth_send_challenges( int sock ) {
 				memcpy( buf+4, results->id, SHA1_BIN_LENGTH );
 				memcpy( buf+4+SHA1_BIN_LENGTH, result->challenge, CHALLENGE_BIN_LENGTH );
 
-				log_debug( "AUTH: Send challenge to %s.", str_addr( &result->addr, addrbuf ) );
+				log_debug( "AUTH: Send challenge: %s", str_addr( &result->addr, addrbuf ) );
 				sendto( sock, buf, sizeof(buf), 0, (struct sockaddr*) &result->addr, sizeof(IP) );
 
 				result->challenges_send++;
@@ -401,17 +401,17 @@ void auth_verify_challenge( int sock, UCHAR buf[], size_t buflen, IP *addr, time
 	}
 
 	if( crypto_sign_open( m, &mlen, sm, smlen, results->pkey ) != 0 ) {
-		log_debug(  "AUTH: Challenge response does not verify for %s.", str_addr( addr, addrbuf ) );
+		log_debug(  "AUTH: Challenge response does not verify: %s", str_addr( addr, addrbuf ) );
 		return;
 	}
 
 	/* Check challenge */
 	if( mlen != CHALLENGE_BIN_LENGTH || memcmp( m, result->challenge, CHALLENGE_BIN_LENGTH ) != 0 ) {
-		log_debug(  "AUTH: Challenge response from %s is invalid.", str_addr( addr, addrbuf ) );
+		log_debug(  "AUTH: Challenge response is invalid: %s", str_addr( addr, addrbuf ) );
 		return;
 	}
 
-	log_debug( "AUTH: Challenge response from %s is valid.", str_addr(addr, addrbuf ) );
+	log_debug( "AUTH: Challenge response is valid: %s", str_addr(addr, addrbuf ) );
 
 	/* Mark result as verified (no challenge set) */
 	free( result->challenge );
