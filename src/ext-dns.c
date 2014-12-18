@@ -19,14 +19,16 @@
 * DNS-Server interface for KadNode.
 */
 
-static const unsigned int QR_MASK = 0x8000;
-static const unsigned int OPCODE_MASK = 0x7800;
-static const unsigned int AA_MASK = 0x0400;
-static const unsigned int TC_MASK = 0x0200;
-static const unsigned int RD_MASK = 0x0100;
-static const unsigned int RA_MASK = 0x8000;
-static const unsigned int RCODE_MASK = 0x000F;
-
+/* DNS Header Masks */
+enum {
+	QR_MASK = 0x8000,
+	OPCODE_MASK = 0x7800,
+	AA_MASK = 0x0400,
+	TC_MASK = 0x0200,
+	RD_MASK = 0x0100,
+	RA_MASK = 0x8000,
+	RCODE_MASK = 0x000F
+};
 
 /* Response Type */
 enum {
