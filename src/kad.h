@@ -8,8 +8,8 @@
 */
 
 
-/* Setup the DHT */
 void kad_setup( void );
+void kad_uninit( void );
 
 /* Ping this node to add it to the node table */
 int kad_ping( const IP *addr );

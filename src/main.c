@@ -89,6 +89,8 @@ int main_start( void ) {
 	/* Export peers if a file is provided */
 	peerfile_export();
 
+	kad_uninit();
+
 #ifdef LPD
 	lpd_free();
 #endif
