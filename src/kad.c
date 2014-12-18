@@ -505,14 +505,14 @@ int kad_export_nodes( IP addr_array[], size_t *num ) {
 	int i;
 
 	if( gconf->af == AF_INET6 ) {
-		num6 = (*num % 200);
+		num6 = MIN(*num, 200);
 		addr6 = calloc( num6, sizeof(IP6) );
 		num4 = 0;
 		addr4 = NULL;
 	} else {
 		num6 = 0;
 		addr6 = NULL;
-		num4 = (*num % 200);
+		num4 = MIN(*num, 200);
 		addr4 = calloc( num4, sizeof(IP4) );
 	}
 
