@@ -25,7 +25,7 @@ The interface that is used to interact with the DHT.
 
 /* Next time to do DHT maintenance */
 static time_t g_dht_maintenance = 0;
-static int g_dht_socket = 0;
+static int g_dht_socket = -1;
 
 void dht_lock_init( void ) {
 #ifdef PTHREAD
