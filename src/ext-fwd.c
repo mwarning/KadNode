@@ -27,12 +27,12 @@ struct natpmp_handle_t *natpmp = NULL;
 struct upnp_handle_t *upnp = NULL;
 #endif
 
-static time_t g_forwardings_retry = 0;
-static struct forwarding_t *g_forwardings_beg = NULL;
-static struct forwarding_t *g_forwardings_cur = NULL;
+static time_t g_fwd_retry = 0;
+static struct forwarding_t *g_fwds = NULL;
+static struct forwarding_t *g_fwd_cur = NULL;
 
 struct forwarding_t *fwd_get( void ) {
-	return g_forwardings_beg;
+	return g_fwds;
 }
 
 int fwd_count( void ) {
@@ -40,7 +40,7 @@ int fwd_count( void ) {
 	int count;
 
 	count = 0;
-	cur = g_forwardings_beg;
+	cur = g_fwds;
 	while( cur ) {
 		count++;
 		cur = cur->next;
@@ -58,7 +58,7 @@ void fwd_debug( int fd ) {
 
 	now = time_now_sec();
 	counter = 0;
-	cur = g_forwardings_beg;
+	cur = g_fwds;
 	while( cur ) {
 		if( cur->refreshed == 0 ) {
 			sprintf( refreshed, "never" );
@@ -91,7 +91,7 @@ void fwd_add( int port, time_t lifetime ) {
 		return;
 	}
 
-	cur = g_forwardings_beg;
+	cur = g_fwds;
 	while( cur ) {
 		if( cur->port == port ) {
 			cur->lifetime = lifetime;
@@ -104,10 +104,10 @@ void fwd_add( int port, time_t lifetime ) {
 	new->port = port;
 	new->lifetime = lifetime;
 	new->refreshed = 0;
-	new->next = g_forwardings_beg;
+	new->next = g_fwds;
 
-	g_forwardings_beg = new;
-	g_forwardings_retry = 0; /* Trigger quick handling */
+	g_fwds = new;
+	g_fwd_retry = 0; /* Trigger quick handling */
 }
 
 /* Remove a port from the list - internal use only */
@@ -115,18 +115,18 @@ void fwd_remove( struct forwarding_t *item ) {
 	struct forwarding_t *pre;
 	struct forwarding_t *cur;
 
-	if( g_forwardings_cur == item ) {
-		g_forwardings_cur = NULL;
+	if( g_fwd_cur == item ) {
+		g_fwd_cur = NULL;
 	}
 
 	pre = NULL;
-	cur = g_forwardings_beg;
+	cur = g_fwds;
 	while( cur ) {
 		if( cur == item ) {
 			if( pre ) {
 				pre->next = cur->next;
 			} else {
-				g_forwardings_beg = cur->next;
+				g_fwds = cur->next;
 			}
 			free( cur );
 			return;
@@ -148,15 +148,15 @@ void fwd_handle( int _rc, int _sock ) {
 	time_t now;
 
 	now = time_now_sec();
-	item = g_forwardings_cur;
+	item = g_fwd_cur;
 
 	/* Handle current forwarding entry or wait 60 seconds to select a new one to process */
 	if( item == NULL ) {
-		if( g_forwardings_retry > now ) {
+		if( g_fwd_retry > now ) {
 			return;
 		} else {
-			item = g_forwardings_beg;
-			g_forwardings_retry = now + (1 * 60);
+			item = g_fwds;
+			g_fwd_retry = now + (1 * 60);
 		}
 	}
 
@@ -168,10 +168,10 @@ void fwd_handle( int _rc, int _sock ) {
 	}
 
 	if( item == NULL ) {
-		g_forwardings_cur = NULL;
+		g_fwd_cur = NULL;
 		return;
 	} else {
-		g_forwardings_cur = item;
+		g_fwd_cur = item;
 	}
 
 	if( item->lifetime < now ) {
@@ -255,13 +255,13 @@ void fwd_free( void ) {
 	struct forwarding_t *cur;
 	struct forwarding_t *next;
 
-	cur = g_forwardings_beg;
+	cur = g_fwds;
 	while( cur ) {
 		next = cur->next;
 		free( cur );
 		cur = next;
 	}
-	g_forwardings_beg = NULL;
+	g_fwds = NULL;
 
 #ifdef FWD_NATPMP
 	natpmp_uninit( &natpmp );
