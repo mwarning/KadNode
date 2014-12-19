@@ -1,4 +1,4 @@
-kadnode (1.0.0) UNRELEASED; urgency=medium
+kadnode (1.0.0) unstable; urgency=medium
 
   * rename --ifce to --ifname, it is less obscure
   * ignore quotation marks in configuration files
