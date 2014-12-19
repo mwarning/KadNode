@@ -2,7 +2,7 @@
 # $FreeBSD$
 
 PORTNAME=	kadnode
-PORTVERSION=	0.9.2
+PORTVERSION=	1.0.0
 PORTREVISION=	1
 CATEGORIES=	dns
 MASTER_SITES=	https://github.com/mwarning/KadNode/archive/
