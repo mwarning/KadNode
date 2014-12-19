@@ -4,6 +4,7 @@ kadnode (1.0.0) UNRELEASED; urgency=medium
   * ignore quotation marks in configuration files
   * remove finished searches with no results immediately
   * fix the number of exported addresses, the calculation was wrong
+  * free all resources on (regular) shutdown
   * [AUTH] make sure to send auth requests as soon as sheduled
   * [LPD] register multicast group on all interfaces by default
 
