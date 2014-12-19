@@ -25,7 +25,6 @@
 #define QUERY_TLD_DEFAULT ".p2p"
 #define QUERY_MAX_SIZE 512
 
-typedef unsigned short USHORT;
 typedef unsigned char UCHAR;
 typedef struct sockaddr_storage IP;
 typedef struct sockaddr_in IP4;
