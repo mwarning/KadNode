@@ -20,16 +20,17 @@
 
 
 #ifdef FWD_NATPMP
-struct natpmp_handle_t *natpmp = NULL;
+static struct natpmp_handle_t *natpmp = NULL;
 #endif
 
 #ifdef FWD_UPNP
-struct upnp_handle_t *upnp = NULL;
+static struct upnp_handle_t *upnp = NULL;
 #endif
 
 static time_t g_fwd_retry = 0;
 static struct forwarding_t *g_fwds = NULL;
 static struct forwarding_t *g_fwd_cur = NULL;
+
 
 struct forwarding_t *fwd_get( void ) {
 	return g_fwds;
@@ -37,7 +38,7 @@ struct forwarding_t *fwd_get( void ) {
 
 int fwd_count( void ) {
 	struct forwarding_t *cur;
-	int count;
+	size_t count;
 
 	count = 0;
 	cur = g_fwds;
@@ -54,7 +55,7 @@ void fwd_debug( int fd ) {
 	char refreshed[64];
 	char lifetime[64];
 	time_t now;
-	int counter;
+	size_t counter;
 
 	now = time_now_sec();
 	counter = 0;
