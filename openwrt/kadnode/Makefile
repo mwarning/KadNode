@@ -17,7 +17,6 @@ PKG_SOURCE_VERSION:=master
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)/
 PKG_BUILD_PARALLEL:=1
-PKG_BUILD_DEPENDS:=libsodium
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -25,7 +24,6 @@ define Package/kadnode
 	SECTION:=net
 	CATEGORY:=Network
 	TITLE:=P2P DNS Server
-	DEPENDS:=
 	SUBMENU:=IP Addresses and Names
 	URL:=https://github.com/mwarning/KadNode
 	MENU:=1

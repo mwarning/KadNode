@@ -32,7 +32,7 @@ OPTIONS_DEFAULT=	AUTH CMD LPD NSS
 
 .if ${PORT_OPTIONS:MAUTH}
 FEATURES+=auth
-BUILD_DEPENDS+=	/usr/local/lib/libsodium.a:${PORTSDIR}/security/libsodium
+DEPENDS+=	${PORTSDIR}/security/libsodium
 .endif
 
 .if ${PORT_OPTIONS:MCMD}

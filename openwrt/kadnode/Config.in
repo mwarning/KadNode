@@ -18,7 +18,7 @@ config KADNODE_ENABLE_WEB
 
 config KADNODE_ENABLE_AUTH
 	bool "Enable authentication support"
-	depends on PACKAGE_kadnode
+	depends on PACKAGE_kadnode && PACKAGE_libsodium
 	default n
 
 config KADNODE_ENABLE_UPNP

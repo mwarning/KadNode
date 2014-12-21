@@ -30,11 +30,7 @@ endif
 ifeq ($(findstring auth,$(FEATURES)),auth)
   OBJS += build/ext-auth.o
   CFLAGS += -DAUTH
-  ifeq ($(findstring gcc,$(shell ${CC} --version)),gcc)
-    LFLAGS += -Wl,-Bstatic -lsodium -Wl,-Bdynamic
-  else
-    LFLAGS += $(shell find /usr/ -iname "libsodium.a" -print -quit)
-  endif
+  LFLAGS += -lsodium
 endif
 
 ifeq ($(findstring cmd,$(FEATURES)),cmd)

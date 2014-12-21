@@ -8,6 +8,7 @@ pkgdesc='A P2P based DNS service using the Kademlia Distributed Hash Table (DHT)
 arch=('x86_64' 'i686')
 url='http://github.com/mwarning/KadNode'
 license=('MIT')
+depends=('libsodium')
 
 backup=('etc/kadnode/kadnode.conf' 'etc/kadnode/peers.txt')
 
