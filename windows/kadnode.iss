@@ -50,6 +50,7 @@ LaunchMsg=Start KadNode now
 
 [UninstallRun]
 Filename: "{sys}\sc.exe"; Parameters: "stop KadNode"; Flags: runhidden
+Filename: "{sys}\timeout.exe"; Parameters: "/T 4"; Flags: runhidden
 Filename: "{sys}\sc.exe"; Parameters: "delete KadNode"; Flags: runhidden
 
 [Messages]
