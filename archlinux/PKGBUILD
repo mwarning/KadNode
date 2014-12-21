@@ -9,7 +9,7 @@ arch=('x86_64' 'i686')
 url='http://github.com/mwarning/KadNode'
 license=('MIT')
 
-backup=('etc/kadnode.conf' 'etc/peers.txt')
+backup=('etc/kadnode/kadnode.conf' 'etc/kadnode/peers.txt')
 
 source=(https://github.com/mwarning/KadNode/archive/v${pkgver}.tar.gz)
 
