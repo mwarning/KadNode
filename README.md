@@ -250,17 +250,9 @@ A ".p2p" at the end of every identifier is ignored. It is used to direct request
   * `-v`, `--version`  
     Print program version and included features.
 
-## kadnode-ctl
-
-**kadnode-ctl** allows to control KadNode from the command line.
-
-  * `-p` *port*  
-    The port used to connect to the command shell of a local KadNode instance (Default: 1700).
-
-  * `-h`  
-    Print this help.
-
 ### KadNode Console Commands
+
+When not started in background, KadNode accepts a variety of commands from standard input.
 
   * `status`  
     Print the node id, the number of known nodes / searches / stored hashes and more.
@@ -287,6 +279,18 @@ A ".p2p" at the end of every identifier is ignored. It is used to direct request
 
   * `blacklist` *addr*  
     Blacklist a specifc IP address.
+
+## KadNode External Console
+
+KadNode allows a limited set of commands to be send from any user from other consoles.
+
+`kadnode-ctl` [--port port] [status|lookup|announce|import|export|blacklist]
+
+  * `-p` *port*  
+    The port used to connect to the command shell of a local KadNode instance (Default: 1700).
+
+  * `-h`  
+    Print this help.
 
 ## Web Interface
 
