@@ -15,7 +15,7 @@ struct upnp_handle_t {
 	time_t retry;
 	struct UPNPUrls urls;
 	struct IGDdatas data;
-	char addr[16]; //local addr
+	char addr[16]; /* local address */
 };
 
 void upnp_init( struct upnp_handle_t **nat );
