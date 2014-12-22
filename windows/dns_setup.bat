@@ -1,4 +1,5 @@
-:: Set DNS settings and start KadNode so that KadNode can answer specific DNS queries
+:: Set DNS settings so that KadNode can answer specific DNS queries.
+:: This script is executed by KadNode.
 
 @ECHO OFF
 

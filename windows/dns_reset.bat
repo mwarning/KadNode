@@ -1,4 +1,6 @@
-:: Reset DNS settings and stop KadNode
+:: Reset DNS settings of all interfaces to DHCP.
+:: This script is executed by KadNode.
+
 @ECHO OFF
 
 
