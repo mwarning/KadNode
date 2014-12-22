@@ -73,7 +73,7 @@ $kadnode --value-id myname.p2p
 ```
 
 On other computers running KadNode, we can use myname.p2p to resolve
-the IP address of Node1 (e.g. in the Browser). It may take ~8 seconds on the first try.
+the IP address of Node1 (e.g. in the web browser). It may take ~8 seconds on the first try.
 The problem with this approach is that others could also announce the same identifier.
 This would result in multiple IP addresses to be found and used.
 To avoid this you can use secret/public key pairs. See the next examples.
