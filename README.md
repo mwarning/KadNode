@@ -284,7 +284,7 @@ When not started in background, KadNode accepts a variety of commands from stand
 
 KadNode allows a limited set of commands to be send from any user from other consoles.
 
-`kadnode-ctl` [--port port] [status|lookup|announce|import|export|blacklist]
+`kadnode-ctl` [-p port] [status|lookup|announce|import|export|blacklist]
 
   * `-p` *port*  
     The port used to connect to the command shell of a local KadNode instance (Default: 1700).
