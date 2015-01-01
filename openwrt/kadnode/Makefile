@@ -27,6 +27,7 @@ define Package/kadnode
 	SUBMENU:=IP Addresses and Names
 	URL:=https://github.com/mwarning/KadNode
 	MENU:=1
+        DEPENDS:=+libsodium +libnatpmp +libminiupnpc
 endef
 
 define Package/kadnode/description
@@ -45,6 +46,7 @@ endif
 
 ifeq ($(CONFIG_KADNODE_ENABLE_AUTH),y)
 FEATURES += auth
+DEPENDS:=+libsodium
 endif
 
 ifeq ($(CONFIG_KADNODE_ENABLE_DNS),y)
@@ -57,10 +59,12 @@ endif
 
 ifeq ($(CONFIG_KADNODE_ENABLE_UPNP),y)
 FEATURES += upnp
+DEPENDS:=+libminiupnpc
 endif
 
 ifeq ($(CONFIG_KADNODE_ENABLE_NATPMP),y)
 FEATURES += natpmp
+DEPENDS:=+libnatpmp
 endif
 
 ifeq ($(CONFIG_KADNODE_ENABLE_DEBUG),y)
@@ -85,4 +89,4 @@ define Package/kadnode/postinst
 	exit 0
 endef
 
-$(eval $(call BuildPackage,kadnode))
+$(eval $(call BuildPackage,kadnode,+libsodium,+libnatpmp,+libminiupnpc))
