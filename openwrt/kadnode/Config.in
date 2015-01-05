@@ -19,19 +19,16 @@ config KADNODE_ENABLE_WEB
 config KADNODE_ENABLE_AUTH
 	bool "Enable authentication support"
 	depends on PACKAGE_kadnode
-	select PACKAGE_libsodium
 	default n
 
 config KADNODE_ENABLE_UPNP
 	bool "Enable UPnP support to add port forwardings on other routers"
 	depends on PACKAGE_kadnode
-	select PACKAGE_libupnp
 	default n
 
 config KADNODE_ENABLE_NATPMP
 	bool "Enable NAT-PMP support to add port forwardings on other routers"
 	depends on PACKAGE_kadnode
-	select PACKAGE_libnatpmp
 	default n
 
 config KADNODE_ENABLE_DEBUG

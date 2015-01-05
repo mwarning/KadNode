@@ -27,6 +27,7 @@ define Package/kadnode
 	SUBMENU:=IP Addresses and Names
 	URL:=https://github.com/mwarning/KadNode
 	MENU:=1
+	DEPENDS:=+KADNODE_ENABLE_AUTH:libsodium +KADNODE_ENABLE_UPNP:libminiupnpc +KADNODE_ENABLE_NATPMP:libnatpmp
 endef
 
 define Package/kadnode/description
