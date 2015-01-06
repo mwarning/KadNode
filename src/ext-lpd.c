@@ -150,8 +150,8 @@ int mcast_send_packet( const char msg[], IP *src_addr, const char ifname[] ) {
 		goto skip;
 	}
 
-	const int optval = 1;
-	if( setsockopt( sock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval) ) < 0 ) {
+	const int opt_on = 1;
+	if( setsockopt( sock, SOL_SOCKET, SO_REUSEADDR, &opt_on, sizeof(opt_on) ) < 0 ) {
 		log_warn( "LPD: Unable to set SO_REUSEADDR: %s", strerror( errno ) );
 		goto skip;
 	}
@@ -372,6 +372,12 @@ int create_receive_socket( void ) {
 
 	if( multicast_set_loop( sock, gconf->af, 0 ) < 0 ) {
 		log_warn( "LPD: Failed to set IP_MULTICAST_LOOP: %s", strerror( errno ) );
+		goto fail;
+	}
+
+	const int opt_on = 1;
+	if( setsockopt( sock, SOL_SOCKET, SO_REUSEADDR, &opt_on, sizeof(opt_on) ) < 0 ) {
+		log_warn( "LPD: Unable to set SO_REUSEADDR: %s", strerror( errno ) );
 		goto fail;
 	}
 
