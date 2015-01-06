@@ -355,6 +355,12 @@ int create_receive_socket( void ) {
 		goto fail;
 	}
 
+	const int optval = 1;
+	if( setsockopt( sock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval) ) < 0 ) {
+		log_warn( "LPD: Unable to set SO_REUSEADDR: %s", strerror( errno ) );
+		goto fail;
+	}
+
 	return sock;
 
 fail:
