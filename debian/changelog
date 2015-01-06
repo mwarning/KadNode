@@ -1,3 +1,14 @@
+kadnode (1.1.0) UNRELEASED; urgency=medium
+
+  * fix dependency selection in OpenWrt package
+  * [LPD] fix an "Address already in use" warning
+  * [LPD] change message format to be compatible with common BT clients
+    * 239.192.152.143 / ff15::efc0:988f are the new multicast addresses
+    * KadNode now pretends to download the same torrent hash
+      as the other BT clients. This is needed to be accepted as peer.
+
+ -- mwarning <moritzwarning@web.de>  Tue, 06 Jan 2015 21:56:16 +0100
+
 kadnode (1.0.0) unstable; urgency=medium
 
   * rename --ifce to --ifname, it is less obscure
