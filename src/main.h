@@ -10,9 +10,9 @@
 #define SHA1_HEX_LENGTH (2 * SHA1_BIN_LENGTH)
 
 /* Default addresses and ports */
-#define DHT_ADDR4_MCAST "239.192.202.7"
-#define DHT_ADDR6_MCAST "ff08:ca:07::"
-#define DHT_PORT_MCAST "6771"
+#define LPD_ADDR4 "239.192.152.143"
+#define LPD_ADDR6 "ff15::efc0:988f"
+#define LPD_PORT "6771"
 #define DHT_ADDR4 "0.0.0.0"
 #define DHT_ADDR6 "::"
 #define DHT_PORT "6881"

@@ -9,6 +9,7 @@
 #include <ifaddrs.h>
 
 #include "main.h"
+#include "sha1.h"
 #include "conf.h"
 #include "log.h"
 #include "utils.h"
@@ -19,18 +20,33 @@
 
 /* Multicast message format - inspired by, but not compatible to the BitTorrent Local Peer Discovery (LPD) */
 const char msg_fmt[] =
-	"DHT-SEARCH * HTTP/1.0\r\n"
+	"BT-SEARCH * HTTP/1.0\r\n"
+	"Host: %s\r\n"
 	"Port: %u\r\n"
-	"Server: KadNode\r\n"
-	"Version: "MAIN_VERSION"\r\n"
+	"Infohash: %s\r\n"
 	"\r\n"
 	"\r\n";
 
-enum { PACKET_LIMIT_MAX =  20 }; /* Packets per minute to be handled */
+/*
+* The last infohash received via LPD,
+* KadNode uses it for its own requests
+* so that other clients will accept it as peer.
+*/
+#define LPD_DEFAULT_INFOHASH "0000000000000000000000000000000000000000"
+static char g_infohash[SHA1_HEX_LENGTH+1] = LPD_DEFAULT_INFOHASH;
+
+/* Packets per minute to be handled */
+enum { PACKET_LIMIT_MAX =  20 };
+
+/* Indicates if the multicast addresses has been registered */
+static int g_mcast_registered = 0;
+
+/* Next time to perform a multicast ping */
+static time_t g_mcast_time = 0;
+
 static int g_packet_limit = 0;
 static IP g_lpd_addr = {0};
-static int g_mcast_registered = 0; /* Indicates if the multicast addresses has been registered */
-static time_t g_mcast_time = 0; /* Next time to perform a multicast ping */
+
 
 /*
 * Join/leave a multicast group (ba mulitcast address) on the given interface.
@@ -230,26 +246,26 @@ int parse_packet( const char str[] ) {
 	const char *beg;
 	int port = 0;
 
-	/* Parse port */
+	/* Find port (required) */
 	beg = parse_packet_param( str, "Port: ");
 	if( beg == NULL ) {
 		return 0;
 	}
 
+	/* Read port */
 	if( sscanf( beg, "%d\r\n", &port ) != 1 && port > 0 && port < 65536 ) {
 		return 0;
 	}
 
-	/* Check for existence of server field */
-	beg = parse_packet_param( str, "Server: ");
-	if( beg == NULL ) {
-		return 0;
-	}
-
-	/* Check for existence of version field */
-	beg = parse_packet_param( str, "Version: ");
-	if( beg == NULL ) {
-		return 0;
+	/* Find infohash (optional) */
+	beg = parse_packet_param( str, "Infohash: " );
+	if( beg != NULL ) {
+		/* Read infohash for own request */
+		if( (strstr(beg, "\r\n") - beg) == SHA1_HEX_LENGTH
+			&& str_isHex( beg, SHA1_HEX_LENGTH )
+			&& memcmp( beg, LPD_DEFAULT_INFOHASH, SHA1_HEX_LENGTH ) != 0 ) {
+			memcpy( g_infohash, beg, SHA1_HEX_LENGTH );
+		}
 	}
 
 	return port;
@@ -274,7 +290,11 @@ void handle_mcast( int rc, int sock_recv ) {
 				log_info( "LPD: Send multicast message to find nodes." );
 
 				/* Create message */
-				snprintf( buf, sizeof(buf), msg_fmt, atoi( gconf->dht_port ) );
+				snprintf(
+					buf, sizeof(buf),
+					msg_fmt, str_addr( &g_lpd_addr, addrbuf ),
+					atoi( gconf->dht_port ), g_infohash
+				);
 
 				mcast_send_packets( buf, gconf->dht_ifname );
 			}
@@ -348,7 +368,7 @@ int create_receive_socket( void ) {
 	int sock;
 
 	any_addr = (gconf->af == AF_INET) ? "0.0.0.0" : "::";
-	sock = net_bind( "LPD", any_addr, DHT_PORT_MCAST, gconf->dht_ifname, IPPROTO_UDP, gconf->af );
+	sock = net_bind( "LPD", any_addr, LPD_PORT, gconf->dht_ifname, IPPROTO_UDP, gconf->af );
 
 	if( multicast_set_loop( sock, gconf->af, 0 ) < 0 ) {
 		log_warn( "LPD: Failed to set IP_MULTICAST_LOOP: %s", strerror( errno ) );
@@ -367,7 +387,7 @@ void lpd_setup( void ) {
 
 	g_packet_limit = PACKET_LIMIT_MAX;
 
-	if( addr_parse( &g_lpd_addr, gconf->lpd_addr, DHT_PORT_MCAST, gconf->af ) != 0 ) {
+	if( addr_parse( &g_lpd_addr, gconf->lpd_addr, LPD_PORT, gconf->af ) != 0 ) {
 		log_err( "BOOT: Failed to parse IP address for '%s'.", gconf->lpd_addr );
 	}
 

@@ -208,7 +208,7 @@ A ".p2p" at the end of every identifier is ignored. It is used to direct request
 
   * `--lpd-addr` *address*  
     Send LPD packets to this multicast address as long no peers were found.  
-    Default: 239.192.202.7:6771 / [ff08:ca:07::]:6771
+    Default: 239.192.152.143:6771 / [ff15::efc0:988f]:6771
 
   * `--lpd-disable`  
     Disable Local Peer Discovery (LPD).

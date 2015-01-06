@@ -85,7 +85,7 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 "				Default: "QUERY_TLD_DEFAULT"\n\n"
 #ifdef LPD
 " --lpd-addr <addr>		Set multicast address for Local Peer Discovery.\n"
-"				Default: "DHT_ADDR4_MCAST" / "DHT_ADDR6_MCAST"\n\n"
+"				Default: "LPD_ADDR4" / "LPD_ADDR6"\n\n"
 " --lpd-disable			Disable multicast to discover local peers.\n\n"
 #endif
 #ifdef AUTH
@@ -306,33 +306,33 @@ void conf_check( void ) {
 
 #ifdef LPD
 	char addrbuf[FULL_ADDSTRLEN+1];
-	IP mcast_addr;
+	IP lpd_addr;
 	UCHAR octet;
 
 	if( gconf->lpd_addr == NULL ) {
 		/* Set default multicast address string */
 		if( gconf->af == AF_INET ) {
-			gconf->lpd_addr = strdup( DHT_ADDR4_MCAST );
+			gconf->lpd_addr = strdup( LPD_ADDR4 );
 		} else {
-			gconf->lpd_addr = strdup( DHT_ADDR6_MCAST );
+			gconf->lpd_addr = strdup( LPD_ADDR6 );
 		}
 	}
 
 	/* Parse multicast address string */
-	if( addr_parse( &mcast_addr, gconf->lpd_addr, DHT_PORT_MCAST, gconf->af ) != 0 ) {
+	if( addr_parse( &lpd_addr, gconf->lpd_addr, LPD_PORT, gconf->af ) != 0 ) {
 		log_err( "CFG: Failed to parse IP address for '%s'.", gconf->lpd_addr );
 	}
 
 	/* Verifiy multicast address */
 	if( gconf->af == AF_INET ) {
-		octet = ((UCHAR *) &((IP4 *)&mcast_addr)->sin_addr)[0];
+		octet = ((UCHAR *) &((IP4 *)&lpd_addr)->sin_addr)[0];
 		if( octet != 224 && octet != 239 ) {
-			log_err( "CFG: Multicast address expected: %s", str_addr( &mcast_addr, addrbuf ) );
+			log_err( "CFG: Multicast address expected: %s", str_addr( &lpd_addr, addrbuf ) );
 		}
 	} else {
-		octet = ((UCHAR *) &((IP6 *)&mcast_addr)->sin6_addr)[0];
+		octet = ((UCHAR *) &((IP6 *)&lpd_addr)->sin6_addr)[0];
 		if( octet != 0xFF ) {
-			log_err( "CFG: Multicast address expected: %s", str_addr( &mcast_addr, addrbuf ) );
+			log_err( "CFG: Multicast address expected: %s", str_addr( &lpd_addr, addrbuf ) );
 		}
 	}
 #endif
