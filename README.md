@@ -139,7 +139,7 @@ Command line options can also be put inside a configuration file (see --config *
 ## IDENTIFIERS
 
 Identifiers are what you use to lookup IP addresses (e.g. "foo.p2p").
-They will reduced to 20 Byte representations based on the SHA-1 message digest algorithm.
+They will be reduced to a 20 Byte representation based on the SHA-1 message digest algorithm.
 The digest is what will be then used in the actual lookup process.
 KadNode allows four types of identifiers:
 
@@ -161,7 +161,8 @@ KadNode allows four types of identifiers:
   * E.g.:  `foo.p2p`
 
 All identifiers are converted to lowercase and are therefore case insensitive.
-A ".p2p" at the end of every identifier is ignored. It is used to direct requests to KadNode.
+A ".p2p" at the end of every identifier is ignored and not applied to the digest.
+It is used to direct requests to KadNode only.
 
 
 ## OPTIONS
