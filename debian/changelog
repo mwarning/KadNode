@@ -1,6 +1,7 @@
 kadnode (1.1.0) UNRELEASED; urgency=medium
 
   * fix dependency selection in OpenWrt package
+  * add new option --peer to add static peers
   * [LPD] fix an "Address already in use" problem
   * [LPD] change message format to be compatible with common BT clients
     * 239.192.152.143 / ff15::efc0:988f are the new multicast addresses

@@ -15,8 +15,7 @@ void peerfile_free( void );
 /* Write peers to peerfile */
 void peerfile_export( void );
 
-/* Ping peers from peerfile */
-void peerfile_import( void );
-
+/* Add a static peer */
+void peerfile_add_peer( const char *addr_str );
 
 #endif /* _PEERFILE_H */

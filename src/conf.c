@@ -13,6 +13,7 @@
 #include "utils.h"
 #include "conf.h"
 #include "values.h"
+#include "peerfile.h"
 #include "kad.h"
 #ifdef AUTH
 #include "ext-auth.h"
@@ -68,6 +69,8 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 " --value-id <id>[:<port>]	Add a value to be announced every 30 minutes.\n"
 "				This option may occur multiple times.\n\n"
 " --peerfile <file>		Import/Export peers from and to a file.\n\n"
+" --peer <addr>			Add a static peer address.\n"
+"				This option may occur multiple times.\n\n"
 " --user <user>			Change the UUID after start.\n\n"
 " --port	<port>			Bind DHT to this port.\n"
 "				Default: "DHT_PORT"\n\n"
@@ -449,6 +452,11 @@ int conf_handle_option( char opt[], char val[] ) {
 		conf_str( opt, &gconf->pidfile, val );
 	} else if( match( opt, "--peerfile" ) ) {
 		conf_str( opt, &gconf->peerfile, val );
+	} else if( match( opt, "--peer" ) ) {
+		if( val == NULL ) {
+			conf_arg_expected( opt );
+		}
+		peerfile_add_peer( val );
 	} else if( match( opt, "--verbosity" ) ) {
 		if( match( val, "quiet" ) ) {
 			gconf->verbosity = VERBOSITY_QUIET;

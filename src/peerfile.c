@@ -19,6 +19,14 @@ static time_t peerfile_import_time = 0;
 /* Next time to export peers to peer file  */
 static time_t peerfile_export_time = 0;
 
+struct peer {
+	struct peer *next;
+	char* addr_str;
+};
+
+/* A list of static peers */
+struct peer *g_peers = NULL;
+
 
 void peerfile_export( void ) {
 	char addrbuf[FULL_ADDSTRLEN+1];
@@ -73,15 +81,31 @@ void peerfile_export( void ) {
 	log_info( "PEERFILE: %d peers exported: %s", i, filename );
 }
 
-void peerfile_import( void ) {
+int peerfile_import_peer( const char* addr_str ) {
+	IP addr;
+	int rc;
+
+	if( (rc = addr_parse_full( &addr, addr_str, DHT_PORT, gconf->af )) == 0 ) {
+		if( kad_ping( &addr ) == 0 ) {
+			return 1;
+		} else {
+			log_warn( "PEERFILE: Cannot ping address '%s': %s", addr_str, strerror( errno ) );
+			return 0;
+		}
+	} else if( rc == -1 ) {
+		log_warn( "PEERFILE: Cannot parse address: '%s'", addr_str );
+	} else {
+		log_warn( "PEERFILE: Cannot resolve address: '%s'", addr_str );
+	}
+
+	return 0;
+}
+
+void peerfile_import( const char filename[] ) {
 	char linebuf[256];
-	const char *filename;
 	FILE *fp;
 	int num;
-	int rc;
-	IP addr;
 
-	filename = gconf->peerfile;
 	if( filename == NULL ) {
 		return;
 	}
@@ -100,31 +124,45 @@ void peerfile_import( void ) {
 			continue;
 		}
 
-		if( (rc = addr_parse_full( &addr, linebuf, DHT_PORT, gconf->af )) == 0 ) {
-			if( kad_ping( &addr ) == 0 ) {
-				num++;
-			} else {
-				log_warn( "PEERFILE: Cannot ping address '%s': %s", linebuf, strerror( errno ) );
-				goto end;
-			}
-		} else if( rc == -1 ) {
-			log_warn( "PEERFILE: Cannot parse address: '%s'", linebuf );
-		} else {
-			log_warn( "PEERFILE: Cannot resolve address: '%s'", linebuf );
-		}
+		num += peerfile_import_peer( linebuf );
 	}
 
-	end:;
 	fclose( fp );
 
 	log_info( "PEERFILE: Imported %d peers from: '%s'", num, filename );
+}
+
+void peerfile_import_static( struct peer *peers ) {
+	int num;
+
+	num = 0;
+	while( peers ) {
+		num += peerfile_import_peer( peers->addr_str );
+		peers = peers->next;
+	}
+
+	if( num ) {
+		log_info( "PEERFILE: Imported %d static peers.", num );
+	}
+}
+
+void peerfile_add_peer( const char *addr_str ) {
+	struct peer *new;
+
+	new = (struct peer *) malloc( sizeof(struct peer) );
+	new->addr_str = strdup( addr_str );
+	new->next = g_peers;
+	g_peers = new;
 }
 
 void peerfile_handle_peerfile( int _rc, int _sock ) {
 
 	if( peerfile_import_time <= time_now_sec() && kad_count_nodes( 0 ) == 0 ) {
 		/* Ping peers from peerfile, if present */
-		peerfile_import();
+		peerfile_import( gconf->peerfile );
+
+		/* Import static peers */
+		peerfile_import_static( g_peers );
 
 		/* Try again in ~5 minutes */
 		peerfile_import_time = time_add_min( 5 );
@@ -146,5 +184,14 @@ void peerfile_setup( void ) {
 }
 
 void peerfile_free( void ) {
-	/* Nothing to do */
+	struct peer *next;
+	struct peer *p;
+
+	p = g_peers;
+	while( p ) {
+		next = p->next;
+		free( p->addr_str );
+		free( p );
+		p = next;
+	}
 }

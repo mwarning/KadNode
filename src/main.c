@@ -108,6 +108,8 @@ int main_start( void ) {
 	/* Export peers if a file is provided */
 	peerfile_export();
 
+	peerfile_free();
+
 	results_free();
 
 	values_free();
