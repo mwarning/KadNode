@@ -1,7 +1,7 @@
 To inlcude KadNode into your OpenWRT image or to create
 an .ipk package (equivalent to Debians .deb files),
 you have to build an OpenWRT image.
-These steps were tested using OpenWRT-"Attitude Adjustment":
+These steps were tested using OpenWRT-"Barrier Breaker" (14.07):
 
 For building OpenWrt on Debian, you need to install these packages:
 <pre>
