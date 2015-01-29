@@ -416,19 +416,22 @@ int kad_lookup_value( const char _query[], IP addr_array[], size_t *addr_num ) {
 		rc = -1;
 	} else if( results->done ) {
 		/*
-		* Restart finished search when no results have been found
-		* or more than half of the search results lifetime has expired.
+		* The search exists already but has finished. Restart the search when
+		* no results have been found or more than half of the searches lifetime
+		* has expired.
 		*/
-		if( results_entries_count( results ) == 0 ||
+		if( results_entries_count( results, RESULT_STATE_UNKNOWN ) == 0 ||
 			(time_now_sec() - results->start_time) > (MAX_SEARCH_LIFETIME / 2)
 		) {
-			/* Restart search finished search */
+			/* Mark search as in progress */
 			results_done( results, 0 );
+
+			/* Start another search for this id */
 			dht_search( results->id, 0, gconf->af, dht_callback_func, NULL );
 		}
 		rc = 2;
 	} else if( is_new ) {
-		/* A new search was started */
+		/* Start a new DHT search */
 		dht_search( results->id, 0, gconf->af, dht_callback_func, NULL );
 		rc = 1;
 	} else {
@@ -436,6 +439,7 @@ int kad_lookup_value( const char _query[], IP addr_array[], size_t *addr_num ) {
 		rc = 0;
 	}
 
+	/* Collect addresses to be returned */
 	*addr_num = results_collect( results, addr_array, *addr_num );
 
 	dht_unlock();
