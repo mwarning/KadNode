@@ -420,7 +420,7 @@ int kad_lookup_value( const char _query[], IP addr_array[], size_t *addr_num ) {
 		* no results have been found or more than half of the searches lifetime
 		* has expired.
 		*/
-		if( results_entries_count( results, RESULT_STATE_UNKNOWN ) == 0 ||
+		if( results_entries_count( results ) == 0 ||
 			(time_now_sec() - results->start_time) > (MAX_SEARCH_LIFETIME / 2)
 		) {
 			/* Mark search as in progress */
