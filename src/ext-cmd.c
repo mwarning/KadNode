@@ -231,6 +231,7 @@ int cmd_exec( struct Reply *r, int argc, char **argv ) {
 			for( i = 0; i < num; ++i ) {
 				r_printf( r, "%s\n", str_addr( &addrs[i], addrbuf ) );
 			}
+			rc = 0;
 		} else if( rc < 0 ) {
 			r_printf( r ,"Some error occured.\n" );
 			rc = 1;
