@@ -1,5 +1,5 @@
 /*
-Kademlia dht-0.22 as used in Transmission
+Kademlia dht-0.24 as used in Transmission
 Source: https://github.com/jech/dht
 */
 /*
@@ -44,7 +44,7 @@ THE SOFTWARE.
 #include <fcntl.h>
 #include <sys/time.h>
 
-#ifndef WIN32
+#ifndef _WIN32
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -67,7 +67,7 @@ THE SOFTWARE.
 #define MSG_CONFIRM 0
 #endif
 
-#ifdef WIN32
+#ifdef _WIN32
 
 #define EAFNOSUPPORT WSAEAFNOSUPPORT
 static int
@@ -145,7 +145,7 @@ struct bucket {
     int af;
     unsigned char first[20];
     int count;                  /* number of nodes */
-    int time;                   /* time of last reply in this bucket */
+    time_t time;                /* time of last reply in this bucket */
     struct node *nodes;
     struct sockaddr_storage cached;  /* the address of a likely candidate */
     int cachedlen;
@@ -1713,6 +1713,8 @@ dht_init(int s, int s6, const unsigned char *id, const unsigned char *v)
  fail:
     free(buckets);
     buckets = NULL;
+    free(buckets6);
+    buckets6 = NULL;
     return -1;
 }
 
@@ -1911,9 +1913,9 @@ dht_periodic(const void *buf, size_t buflen,
     if(buflen > 0) {
         int message;
         unsigned char tid[16], id[20], info_hash[20], target[20];
-        unsigned char nodes[256], nodes6[1024], token[128];
+        unsigned char nodes[26*16], nodes6[38*16], token[128];
         int tid_len = 16, token_len = 128;
-        int nodes_len = 256, nodes6_len = 1024;
+        int nodes_len = 26*16, nodes6_len = 38*16;
         unsigned short port;
         unsigned char values[2048], values6[2048];
         int values_len = 2048, values6_len = 2048;
@@ -2857,7 +2859,7 @@ parse_message(const unsigned char *buf, int buflen,
             long l;
             char *q;
             l = strtol((char*)p + 7, &q, 10);
-            if(q && *q == ':' && l > 0 && l < *nodes_len) {
+            if(q && *q == ':' && l > 0 && l <= *nodes_len) {
                 CHECK(q + 1, l);
                 memcpy(nodes_return, q + 1, l);
                 *nodes_len = l;
@@ -2873,7 +2875,7 @@ parse_message(const unsigned char *buf, int buflen,
             long l;
             char *q;
             l = strtol((char*)p + 8, &q, 10);
-            if(q && *q == ':' && l > 0 && l < *nodes6_len) {
+            if(q && *q == ':' && l > 0 && l <= *nodes6_len) {
                 CHECK(q + 1, l);
                 memcpy(nodes6_return, q + 1, l);
                 *nodes6_len = l;
