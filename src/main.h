@@ -18,7 +18,7 @@
 #define DHT_PORT "6881"
 
 #define CMD_PORT "1700"
-#define DNS_PORT "5353"
+#define DNS_PORT "3535"
 #define NSS_PORT "4053"
 #define WEB_PORT "8053"
 

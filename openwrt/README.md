@@ -85,7 +85,7 @@ is not available on OpenWrt.
 To use the DNS interface you can hook up KadNode with the dnsmasq DNS server:
 
 <pre>
-uci add_list dhcp.@dnsmasq[0].server='/p2p/localhost#5353'
+uci add_list dhcp.@dnsmasq[0].server='/p2p/localhost#3535'
 uci commit dhcp
 </pre>
 

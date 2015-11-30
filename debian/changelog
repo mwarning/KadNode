@@ -7,6 +7,8 @@ kadnode (1.1.0) UNRELEASED; urgency=medium
     * 239.192.152.143 / ff15::efc0:988f are the new multicast addresses
     * KadNode now pretends to download the same torrent hash
       as the other BT clients. This is needed to be accepted as peer.
+  * change local DNS interface port from 5353 to 3535
+    * mdns already uses 5353
 
  -- mwarning <moritzwarning@web.de>  Tue, 06 Jan 2015 21:56:16 +0100
 
