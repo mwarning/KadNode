@@ -455,7 +455,7 @@ void cmd_setup( void ) {
 		return;
 	}
 
-	sock = net_bind( "CMD", "localhost", gconf->cmd_port, NULL, IPPROTO_UDP, AF_UNSPEC );
+	sock = net_bind( "CMD", "::1", gconf->cmd_port, NULL, IPPROTO_UDP, AF_UNSPEC );
 	net_add_handler( sock, &cmd_remote_handler );
 
 	if( gconf->is_daemon == 0 && gconf->cmd_disable_stdin == 0 ) {

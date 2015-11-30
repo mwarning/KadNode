@@ -119,7 +119,7 @@ int udp_send( char buffer[], const char port[] ) {
 	int sockfd;
 	int n;
 
-	if( addr_parse( &sockaddr, "localhost", CMD_PORT, AF_UNSPEC ) < 0 ) {
+	if( addr_parse( &sockaddr, "::1", CMD_PORT, AF_UNSPEC ) < 0 ) {
 		fprintf( stderr, "Failed to get localhost address: %s\n", strerror( errno ) );
 		return 1;
 	}

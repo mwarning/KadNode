@@ -72,7 +72,7 @@ int _nss_kadnode_lookup( const char hostname[], int hostlen, IP addrs[] ) {
 	int sockfd, size;
 	struct timeval tv;
 
-	if( _nss_kadnode_addr_parse( &sockaddr, "localhost", NSS_PORT, AF_UNSPEC ) < 0 ) {
+	if( _nss_kadnode_addr_parse( &sockaddr, "::1", NSS_PORT, AF_UNSPEC ) < 0 ) {
 		return 0;
 	}
 

@@ -78,7 +78,7 @@ void nss_setup( void ) {
 		return;
 	}
 
-	sock = net_bind( "NSS", "localhost", gconf->nss_port, NULL, IPPROTO_UDP, AF_UNSPEC );
+	sock = net_bind( "NSS", "::1", gconf->nss_port, NULL, IPPROTO_UDP, AF_UNSPEC );
 	net_add_handler( sock, &nss_handler );
 }
 

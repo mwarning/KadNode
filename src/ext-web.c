@@ -120,7 +120,7 @@ void web_setup( void ) {
 		return;
 	}
 
-	sock = net_bind( "WEB", "localhost", gconf->web_port, NULL, IPPROTO_TCP, AF_UNSPEC );
+	sock = net_bind( "WEB", "::1", gconf->web_port, NULL, IPPROTO_TCP, AF_UNSPEC );
 	net_add_handler( sock, &web_handler );
 }
 
