@@ -9,6 +9,7 @@ kadnode (1.1.0) UNRELEASED; urgency=medium
       as the other BT clients. This is needed to be accepted as peer.
   * change local DNS interface port from 5353 to 3535
     * mdns already uses 5353
+  * use IPv6 localhost address (::1) for all local interfaces
 
  -- mwarning <moritzwarning@web.de>  Tue, 06 Jan 2015 21:56:16 +0100
 
