@@ -2,7 +2,7 @@
 CC ?= gcc
 CFLAGS ?= -O2 -Wall -Wwrite-strings -pedantic
 CFLAGS += -std=gnu99 -I/usr/local/include
-LDFLAGS += -L/usr/local/lib -lc
+LFLAGS += -L/usr/local/lib -lc -I.
 FEATURES ?= auth cmd lpd nss dns #natpmp upnp debug web
 
 OBJS = build/main.o build/results.o build/kad.o build/log.o \
@@ -30,7 +30,7 @@ endif
 ifeq ($(findstring auth,$(FEATURES)),auth)
   OBJS += build/ext-auth.o
   CFLAGS += -DAUTH
-  LDFLAGS += -lsodium
+  LFLAGS += -lsodium
 endif
 
 ifeq ($(findstring cmd,$(FEATURES)),cmd)
@@ -62,20 +62,20 @@ endif
 ifeq ($(findstring upnp,$(FEATURES)),upnp)
   OBJS += build/upnp.o
   CFLAGS += -DFWD_UPNP
-  LDFLAGS += -Wl,-Bdynamic -lminiupnpc
+  LFLAGS += -Wl,-Bdynamic -lminiupnpc
   ENABLE_FORWARDING = 1
 endif
 
 ifeq ($(findstring natpmp,$(FEATURES)),natpmp)
   OBJS += build/natpmp.o
   CFLAGS += -DFWD_NATPMP
-  LDFLAGS += -Wl,-Bdynamic -lnatpmp
+  LFLAGS += -Wl,-Bdynamic -lnatpmp
   ENABLE_FORWARDING = 1
 endif
 
 ifeq ($(ENABLE_FORWARDING),1)
-	OBJS += build/ext-fwd.o
-	CFLAGS += -DFWD
+  OBJS += build/ext-fwd.o
+  CFLAGS += -DFWD
 endif
 
 
@@ -90,7 +90,7 @@ kadnode-ctl:
 	$(CC) $(CFLAGS) src/kadnode-ctl.c -o build/kadnode-ctl
 
 kadnode: $(OBJS) $(EXTRA)
-	$(CC) $(OBJS) -o build/kadnode $(LDFLAGS)
+	$(CC) $(OBJS) -o build/kadnode $(LFLAGS)
 
 clean:
 	rm -rf build/*

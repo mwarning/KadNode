@@ -12,24 +12,26 @@ depends=('libsodium')
 
 backup=('etc/kadnode/kadnode.conf' 'etc/kadnode/peers.txt')
 
-source=(https://github.com/mwarning/KadNode/archive/v${pkgver}.tar.gz)
+#source=(https://github.com/mwarning/KadNode/archive/v${pkgver}.tar.gz)
+source=(git+file:///home/mwarning/KadNode)
 
 md5sums=('SKIP')
 
 install="kadnode.install"
 
 build() {
-	cd KadNode-${pkgver}
+	cd $srcdir/KadNode*
+	echo "srcdir: $srcdir"
 	make FEATURES="auth lpd cmd nss"
 }
 
 package() {
-	cd KadNode-${pkgver}
+	cd $srcdir/KadNode*
 
 	install -Dm755 build/kadnode "$pkgdir"/usr/bin/kadnode
 	install -Dm755 build/kadnode-ctl "$pkgdir"/usr/bin/kadnode-ctl
 
-	install -Dm644 build/libnss_kadnode.so.2 "$pkgdir"/lib/libnss_kadnode.so.2
+	install -Dm644 build/libnss_kadnode.so.2 "$pkgdir"/usr/lib/libnss_kadnode.so.2
 
 	# package systemd units go to /usr/lib/systemd, /etc is for admin override
 	install -Dm644 archlinux/kadnode.service "$pkgdir"/usr/lib/systemd/system/kadnode.service

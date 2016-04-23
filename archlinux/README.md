@@ -12,11 +12,11 @@ The package kadnode-git-*.pkg.tar.xz will be created.
 To install the package, use:
 
 <pre>
-pacman -U kadnode-git-*.pkg.tar.xz 
+pacman -U kadnode-*.pkg.tar.xz 
 </pre>
 
 To remove the package, use:
 
 <pre>
-pacman -R kadnode-git
+pacman -R kadnode
 </pre>
