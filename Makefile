@@ -2,7 +2,7 @@
 CC ?= gcc
 CFLAGS ?= -O2 -Wall -Wwrite-strings -pedantic
 CFLAGS += -std=gnu99 -I/usr/local/include
-LFLAGS += -L/usr/local/lib -lc -I.
+LFLAGS += -L/usr/local/lib -lc
 FEATURES ?= auth cmd lpd nss dns #natpmp upnp debug web
 
 OBJS = build/main.o build/results.o build/kad.o build/log.o \
