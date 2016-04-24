@@ -21,7 +21,6 @@ install="kadnode.install"
 
 build() {
 	cd $srcdir/KadNode*
-	echo "srcdir: $srcdir"
 	make FEATURES="auth lpd cmd nss"
 }
 
