@@ -596,7 +596,7 @@ void dns_handler( int rc, int sock ) {
 			domain, str_addr( &clientaddr, addrbuf )
 		);
 	} else {
-		/* Check if ends with .p2p */
+		/* Check if hostname ends with .p2p */
 		if( !is_suffix( hostname, gconf->query_tld ) ) {
 			return;
 		}
