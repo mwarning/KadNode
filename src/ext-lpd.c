@@ -103,7 +103,7 @@ int mcast_set_group( int sock, IP *mcast_addr, const char ifname[], int join ) {
 			return 0;
 		}
 		case AF_INET6: {
-			struct ipv6_mreq	mreq6;
+			struct ipv6_mreq mreq6;
 
 			memcpy( &mreq6.ipv6mr_multiaddr, &((IP6*) mcast_addr)->sin6_addr, 16 );
 
