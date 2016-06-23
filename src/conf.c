@@ -64,9 +64,7 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 "\n"
 "Usage: kadnode [OPTIONS]*\n"
 "\n"
-" --node-id <id>			Set the node id. Use --value-id to announce values.\n"
-"				Default: <random>\n\n"
-" --value-id <id>[:<port>]	Add a value to be announced every 30 minutes.\n"
+" --value-id <id>[:<port>]	Add a value/domain to be announced every 30 minutes.\n"
 "				This option may occur multiple times.\n\n"
 " --peerfile <file>		Import/Export peers from and to a file.\n\n"
 " --peer <addr>			Add a static peer address.\n"
@@ -97,8 +95,8 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 "				It is used to verifiy that the other side has the secret\n"
 "				key when queries of the given pattern are requested.\n\n"
 " --auth-add-skey [<pat>:]<skey>	Assign a secret key to all values that match the pattern.\n"
-"				It is used to prove that you own the domain provided\n"
-"				the other side knows the public key.\n\n"
+"				It is used to prove that you own the matching domain.\n"
+"				The other side needs to knows the public key.\n\n"
 #endif
 #ifdef CMD
 " --cmd-disable-stdin		Disable the local control interface.\n\n"
@@ -438,15 +436,7 @@ void conf_str( const char opt[], char *dst[], const char src[] ) {
 
 int conf_handle_option( char opt[], char val[] ) {
 
-	if( match( opt, "--node-id" ) ) {
-		if( val == NULL ) {
-			conf_arg_expected( opt );
-		}
-		if( strlen( val ) != SHA1_HEX_LENGTH || !str_isHex( val, SHA1_HEX_LENGTH ) ) {
-			log_err( "CFG: Invalid hex string for --node-id." );
-		}
-		conf_str( opt, &gconf->node_id_str, val );
-	} else if( match( opt, "--query-tld" ) ) {
+	if( match( opt, "--query-tld" ) ) {
 		conf_str( opt, &gconf->query_tld, val );
 	} else if( match( opt, "--pidfile" ) ) {
 		conf_str( opt, &gconf->pidfile, val );

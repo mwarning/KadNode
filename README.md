@@ -166,12 +166,9 @@ It is used to direct requests to KadNode only.
 
 
 ## OPTIONS
-  * `--node-id` *id*  
-    Set the node identifier. This option is rarely needed.  
-	By default the node id is random.
 
   * `--value-id` *id[:port]*  
-    Add a value identifier and optional port to be announced every 30 minutes.  
+    Add a value identifier/domain and optional port to be announced every 30 minutes.  
     The announcement will associate this nodes IP address with this identifier.  
     This option may occur multiple times.
 
