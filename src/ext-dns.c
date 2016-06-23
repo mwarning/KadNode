@@ -612,7 +612,7 @@ void dns_handler( int rc, int sock ) {
 			return;
 		}
 
-		log_debug( "DNS: Send back %ul addresses to: %s",
+		log_debug( "DNS: Send back %lu addresses to: %s",
 			addrs_num, str_addr( &clientaddr, addrbuf )
 		);
 	}
@@ -621,7 +621,9 @@ void dns_handler( int rc, int sock ) {
 	buflen = dns_encode_msg( buffer, sizeof(buffer), &msg );
 
 	if( buflen > 0 ) {
-		sendto( sock, buffer, buflen, 0, (struct sockaddr*) &clientaddr, sizeof(IP) );
+		if( sendto( sock, buffer, buflen, 0, (struct sockaddr*) &clientaddr, addr_len(&clientaddr) ) < 0 ) {
+			log_warn( "DNS: Cannot send message to '%s': %s", str_addr( &clientaddr, addrbuf ), strerror( errno ) );
+		}
 	} else {
 		log_err( "DNS: Failed not create a response packet." );
 	}
