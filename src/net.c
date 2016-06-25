@@ -25,19 +25,19 @@ struct task_t {
 	net_callback *callback;
 };
 
-struct task_t tasks[16];
-int numtasks = 0;
+struct task_t g_tasks[16];
+int g_numtasks = 0;
 
 void net_add_handler( int fd, net_callback *callback ) {
 
-	if( numtasks >= 16 ) {
+	if( g_numtasks >= 16 ) {
 		log_err( "NET: Too many file descriptors registered." );
 		return;
 	}
 
-	tasks[numtasks].fd = fd;
-	tasks[numtasks].callback = callback;
-	numtasks++;
+	g_tasks[g_numtasks].fd = fd;
+	g_tasks[g_numtasks].callback = callback;
+	g_numtasks++;
 }
 
 /* Set a socket non-blocking */
@@ -172,8 +172,8 @@ void net_loop( void ) {
 
 	FD_ZERO( &fds );
 
-	for( i = 0; i < numtasks; ++i ) {
-		struct task_t *task = &tasks[i];
+	for( i = 0; i < g_numtasks; ++i ) {
+		struct task_t *task = &g_tasks[i];
 		if( task->fd >= 0 ) {
 			if( task->fd > max_fd ) {
 				max_fd = task->fd;
@@ -205,8 +205,8 @@ void net_loop( void ) {
 			}
 		}
 
-		for( i = 0; i < numtasks; ++i ) {
-			struct task_t *task = &tasks[i];
+		for( i = 0; i < g_numtasks; ++i ) {
+			struct task_t *task = &g_tasks[i];
 			if( task->fd >= 0 && FD_ISSET( task->fd, &fds_working ) ) {
 				task->callback( rc, task->fd );
 			} else {
@@ -216,7 +216,7 @@ void net_loop( void ) {
 	}
 
 	/* Close sockets and FDs */
-	for( i = 0; i < numtasks; ++i ) {
-		close( tasks[i].fd );
+	for( i = 0; i < g_numtasks; ++i ) {
+		close( g_tasks[i].fd );
 	}
 }
