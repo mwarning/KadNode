@@ -96,7 +96,8 @@ int mcast_set_group( int sock, IP *mcast_addr, const char ifname[], int join ) {
 				mreq.imr_ifindex = 0;
 			}
 
-			if( setsockopt(sock, IPPROTO_IP, join ? IP_ADD_MEMBERSHIP : IP_DROP_MEMBERSHIP, &mreq, sizeof(mreq)) < 0 ) {
+			int opt = join ? IP_ADD_MEMBERSHIP : IP_DROP_MEMBERSHIP;
+			if( setsockopt(sock, IPPROTO_IP, opt, &mreq, sizeof(mreq)) < 0 ) {
 				log_warn( "LPD: Failed to %s IPv4 multicast group on %s: %s", join ? "join" : "leave", ifname ? ifname : "<any>", strerror( errno ) );
 				return -1;
 			}
@@ -116,7 +117,8 @@ int mcast_set_group( int sock, IP *mcast_addr, const char ifname[], int join ) {
 				mreq6.ipv6mr_interface = 0;
 			}
 
-			if( setsockopt(sock, IPPROTO_IPV6, join ? IPV6_JOIN_GROUP : IPV6_LEAVE_GROUP, &mreq6, sizeof(mreq6)) < 0 ) {
+			int opt = join ? IPV6_JOIN_GROUP : IPV6_LEAVE_GROUP;
+			if( setsockopt(sock, IPPROTO_IPV6, opt, &mreq6, sizeof(mreq6)) < 0 ) {
 				log_warn( "LPD: Failed to %s IPv6 multicast group on %s: %s", join ? "join" : "leave", ifname ? ifname : "<any>", strerror( errno ) );
 				return -1;
 			}
@@ -165,6 +167,8 @@ int mcast_send_packet( const char msg[], IP *src_addr, const char ifname[] ) {
 		log_warn( "LPD: Cannot send message from '%s': %s", str_addr( &addr, addrbuf ), strerror( errno ) );
 		goto skip;
 	}
+
+	log_debug( "LPD: Send peer discovery packet from source address: %s", str_addr( src_addr, addrbuf ) );
 
 	skip:
 	close(sock);
@@ -370,7 +374,8 @@ int create_receive_socket( void ) {
 	any_addr = (gconf->af == AF_INET) ? "0.0.0.0" : "::";
 	sock = net_bind( "LPD", any_addr, LPD_PORT, gconf->dht_ifname, IPPROTO_UDP, gconf->af );
 
-	if( multicast_set_loop( sock, gconf->af, 0 ) < 0 ) {
+	const int opt_off = 0;
+	if( multicast_set_loop( sock, gconf->af, opt_off ) < 0 ) {
 		log_warn( "LPD: Failed to set IP_MULTICAST_LOOP: %s", strerror( errno ) );
 		goto fail;
 	}
