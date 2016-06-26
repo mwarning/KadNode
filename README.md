@@ -156,7 +156,7 @@ KadNode allows four types of identifiers:
   * E.g.:  `example.p2p`
 
 * Plain identifiers that match a given pattern and have a public key assigned to them.
-  * The SHA-1 digest of the string and public key is ued to find nodes.
+  * The SHA-1 digest of the string and public key is used to find nodes.
   * The public key is used to verify if the nodes found have the corresponding secret key.
   * E.g.:  `foo.p2p`
 
