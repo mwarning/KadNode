@@ -25,19 +25,38 @@ struct task_t {
 	net_callback *callback;
 };
 
-struct task_t g_tasks[16];
-int g_numtasks = 0;
+struct task_t g_tasks[16] = { 0 };
+int g_tasks_num = 0;
+int g_tasks_changed = 1;
 
 void net_add_handler( int fd, net_callback *callback ) {
 
-	if( g_numtasks >= 16 ) {
+	if( g_tasks_num >= 16 ) {
 		log_err( "NET: Too many file descriptors registered." );
 		exit( 1 );
 	}
 
-	g_tasks[g_numtasks].fd = fd;
-	g_tasks[g_numtasks].callback = callback;
-	g_numtasks++;
+	g_tasks[g_tasks_num].fd = fd;
+	g_tasks[g_tasks_num].callback = callback;
+	g_tasks_num++;
+	g_tasks_changed = 1;
+}
+
+void net_remove_handler( int fd, net_callback *callback ) {
+	int i;
+
+	for( i = 0; i < g_tasks_num; ++i ) {
+		struct task_t *task = &g_tasks[i];
+		if( task->fd == fd && task->callback == callback ) {
+			g_tasks_num--;
+			memmove( &g_tasks[i], &g_tasks[i+1], sizeof(struct task_t) * (g_tasks_num - i) );
+			g_tasks_changed = 1;
+			break;
+		}
+	}
+
+	log_err( "NET: Cannot remove handler" );
+	exit( 1 );
 }
 
 /* Set a socket non-blocking */
@@ -167,20 +186,10 @@ void net_loop( void ) {
 	fd_set fds_working;
 	fd_set fds;
 	int max_fd = -1;
-
 	struct timeval tv;
 
-	FD_ZERO( &fds );
-
-	for( i = 0; i < g_numtasks; ++i ) {
-		struct task_t *task = &g_tasks[i];
-		if( task->fd >= 0 ) {
-			if( task->fd > max_fd ) {
-				max_fd = task->fd;
-			}
-			FD_SET( task->fd, &fds );
-		}
-	}
+	/* Make sure we generate a new set */
+	g_tasks_changed = 1;
 
 	while( gconf->is_running ) {
 
@@ -190,6 +199,23 @@ void net_loop( void ) {
 
 		/* Update clock */
 		gettimeofday( &gconf->time_now, NULL );
+
+		if( g_tasks_changed ) {
+			/* Genreate new file descriptor set */
+			FD_ZERO( &fds );
+			max_fd = -1;
+
+			for( i = 0; i < g_tasks_num; ++i ) {
+				struct task_t *task = &g_tasks[i];
+				if( task->fd >= 0 ) {
+					if( task->fd > max_fd ) {
+						max_fd = task->fd;
+					}
+					FD_SET( task->fd, &fds );
+				}
+			}
+			g_tasks_changed = 0;
+		}
 
 		/* Get a fresh copy */
 		memcpy( &fds_working, &fds, sizeof(fd_set) );
@@ -201,12 +227,14 @@ void net_loop( void ) {
 				continue;
 			} else {
 				log_err( "NET: Error using select: %s", strerror( errno ) );
-				return;
+				exit( 1 );
 			}
 		}
 
-		for( i = 0; i < g_numtasks; ++i ) {
+		/* Call all callbacks */
+		for( i = 0; i < g_tasks_num; ++i ) {
 			struct task_t *task = &g_tasks[i];
+
 			if( task->fd >= 0 && FD_ISSET( task->fd, &fds_working ) ) {
 				task->callback( rc, task->fd );
 			} else {
@@ -220,7 +248,7 @@ void net_free( void ) {
 	int i;
 
 	/* Close sockets and FDs */
-	for( i = 0; i < g_numtasks; ++i ) {
+	for( i = 0; i < g_tasks_num; ++i ) {
 		close( g_tasks[i].fd );
 	}
 }
