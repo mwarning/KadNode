@@ -51,11 +51,11 @@ void net_remove_handler( int fd, net_callback *callback ) {
 			g_tasks_num--;
 			memmove( &g_tasks[i], &g_tasks[i+1], sizeof(struct task_t) * (g_tasks_num - i) );
 			g_tasks_changed = 1;
-			break;
+			return;
 		}
 	}
 
-	log_err( "NET: Cannot remove handler" );
+	log_err( "NET: Cannot find handler to remove." );
 	exit( 1 );
 }
 
