@@ -9,7 +9,6 @@
 #define VERBOSITY_VERBOSE 1
 #define VERBOSITY_DEBUG 2
 
-#define log_crit(...) if(_log_check(LOG_CRIT)) {_log_print(LOG_CRIT, __VA_ARGS__);}
 #define log_err(...) if(_log_check(LOG_ERR)) {_log_print(LOG_ERR, __VA_ARGS__);}
 #define log_info(...) if(_log_check(LOG_INFO)) {_log_print(LOG_INFO, __VA_ARGS__);}
 #define log_warn(...) if(_log_check(LOG_WARNING)) {_log_print(LOG_WARNING, __VA_ARGS__);}

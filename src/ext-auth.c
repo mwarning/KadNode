@@ -195,17 +195,17 @@ int auth_parse_key( char pattern[], size_t patternsize, UCHAR key[], size_t keys
 	/* Validate key string format */
 	if( strlen( hexkey ) != 2*keysize ) {
 		log_err( "AUTH: Invalid key length. %d hex characters expected: %s", 2*keysize, hexkey );
-		return 1;
+		exit( 1 );
 	}
 
 	if( !str_isHex( hexkey, 2*keysize ) ) {
 		log_err( "AUTH: Invalid key format. Only hex characters expected: %s", hexkey );
-		return 1;
+		exit( 1 );
 	}
 
 	if( strchr( pattern+1, '*' ) ) {
 		log_err( "AUTH: The '*' is only allowed at the front of a pattern: '%s'", pattern );
-		return 1;
+		exit( 1 );
 	}
 
 	bytes_from_hex( key, hexkey, strlen( hexkey ) );
@@ -221,7 +221,7 @@ void auth_add_key( const char pattern[], const UCHAR key[], size_t keysize, stru
 	while( item ) {
 		if( is_pattern_conflict( item->pattern, pattern ) ) {
 			log_err( "AUTH: conflicting patterns: '%s' <=> '%s'", pattern, item->pattern );
-			return;
+			exit( 1 );
 		}
 		item = item->next;
 	}

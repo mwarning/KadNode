@@ -279,29 +279,34 @@ void conf_check( void ) {
 
 	if( port_parse( gconf->dht_port, -1 ) < 1 ) {
 		log_err( "CFG: Invalid DHT port '%s'.", gconf->dht_port );
+		exit( 1 );
 	}
 
 #ifdef CMD
 	if( port_parse( gconf->cmd_port, -1 ) < 0 ) {
 		log_err( "CFG: Invalid CMD port '%s'.", gconf->cmd_port );
+		exit( 1 );
 	}
 #endif
 
 #ifdef DNS
 	if( port_parse( gconf->dns_port, -1 ) < 0 ) {
 		log_err( "CFG: Invalid DNS port '%s'.", gconf->dns_port );
+		exit( 1 );
 	}
 #endif
 
 #ifdef NSS
 	if( port_parse( gconf->nss_port, -1 ) < 0 ) {
 		log_err( "CFG: Invalid NSS port '%s'.", gconf->nss_port );
+		exit( 1 );
 	}
 #endif
 
 #ifdef WEB
 	if( port_parse( gconf->web_port, -1 ) < 0 ) {
 		log_err( "CFG: Invalid WEB port '%s'.", gconf->web_port );
+		exit( 1 );
 	}
 #endif
 
@@ -322,6 +327,7 @@ void conf_check( void ) {
 	/* Parse multicast address string */
 	if( addr_parse( &lpd_addr, gconf->lpd_addr, LPD_PORT, gconf->af ) != 0 ) {
 		log_err( "CFG: Failed to parse IP address for '%s'.", gconf->lpd_addr );
+		exit( 1 );
 	}
 
 	/* Verifiy multicast address */
@@ -329,11 +335,13 @@ void conf_check( void ) {
 		octet = ((UCHAR *) &((IP4 *)&lpd_addr)->sin_addr)[0];
 		if( octet != 224 && octet != 239 ) {
 			log_err( "CFG: Multicast address expected: %s", str_addr( &lpd_addr, addrbuf ) );
+			exit( 1 );
 		}
 	} else {
 		octet = ((UCHAR *) &((IP6 *)&lpd_addr)->sin6_addr)[0];
 		if( octet != 0xFF ) {
 			log_err( "CFG: Multicast address expected: %s", str_addr( &lpd_addr, addrbuf ) );
+			exit( 1 );
 		}
 	}
 #endif
@@ -370,6 +378,7 @@ void conf_info( void ) {
 			break;
 		default:
 			log_err( "Invalid verbosity level." );
+			exit( 1 );
 	}
 
 	log_info( "Query TLD: %s", gconf->query_tld );
@@ -411,14 +420,17 @@ void conf_free( void ) {
 
 void conf_arg_expected( const char opt[] ) {
 	log_err( "CFG: Argument expected for option: %s", opt );
+	exit( 1 );
 }
 
 void conf_no_arg_expected( const char opt[] ) {
 	log_err( "CFG: No argument expected for option: %s", opt );
+	exit( 1 );
 }
 
 void conf_duplicate_option( const char opt[] ) {
 	log_err( "CFG: Option was already set: %s", opt );
+	exit( 1 );
 }
 
 /* Set a string once - error when already set */
@@ -456,6 +468,7 @@ int conf_handle_option( char opt[], char val[] ) {
 			gconf->verbosity = VERBOSITY_DEBUG;
 		} else {
 			log_err( "CFG: Invalid argument for %s.", opt );
+			exit( 1 );
 		}
 #ifdef CMD
 	} else if( match( opt, "--cmd-disable-stdin" ) ) {
@@ -494,6 +507,7 @@ int conf_handle_option( char opt[], char val[] ) {
 			gconf->af = AF_INET6;
 		} else {
 			log_err("CFG: Invalid argument for %s. Use 'ipv4' or 'ipv6'.", opt );
+			exit( 1 );
 		}
 	} else if( match( opt, "--port" ) ) {
 		conf_str( opt, &gconf->dht_port, val );
@@ -634,6 +648,7 @@ void conf_load_settings( void ) {
 		log_err( "CFG: Unknown command line argument: '%s'",
 			g_settings->name ? g_settings->name : g_settings->value
 		);
+		exit( 1 );
 	}
 }
 
@@ -687,6 +702,7 @@ void conf_load_file( const char filename[] ) {
 			} else {
 				fclose( file );
 				log_err( "CFG: Too many arguments in line %ld.", n );
+				exit( 1 );
 			}
 			pch = strtok( NULL, " \t\n\r" );
 		}

@@ -45,7 +45,52 @@
 #endif
 
 
+/* Cleanup resources on any non crash program exit */
+void main_cleanup( void ) {
+
+#ifdef CMD
+	cmd_free();
+#endif
+#ifdef NSS
+	nss_free();
+#endif
+#ifdef WEB
+	web_free();
+#endif
+#ifdef DNS
+	dns_free();
+#endif
+#ifdef AUTH
+	auth_free();
+#endif
+#ifdef LPD
+	lpd_free();
+#endif
+
+	/* Export peers if a file is provided */
+	peerfile_export();
+
+	peerfile_free();
+
+	results_free();
+
+	values_free();
+
+	kad_free();
+
+#ifdef FWD
+	fwd_free();
+#endif
+
+	conf_free();
+
+	net_free();
+}
+
 int main_start( void ) {
+
+	atexit( main_cleanup );
+
 	/* Setup port-forwarding */
 #ifdef FWD
 	fwd_setup();
@@ -86,42 +131,6 @@ int main_start( void ) {
 	/* Loop over all sockets and FDs */
 	net_loop();
 
-#ifdef CMD
-	cmd_free();
-#endif
-#ifdef NSS
-	nss_free();
-#endif
-#ifdef WEB
-	web_free();
-#endif
-#ifdef DNS
-	dns_free();
-#endif
-#ifdef AUTH
-	auth_free();
-#endif
-#ifdef LPD
-	lpd_free();
-#endif
-
-	/* Export peers if a file is provided */
-	peerfile_export();
-
-	peerfile_free();
-
-	results_free();
-
-	values_free();
-
-	kad_free();
-
-#ifdef FWD
-	fwd_free();
-#endif
-
-	conf_free();
-
 	return 0;
 }
 
@@ -140,6 +149,7 @@ int main( int argc, char **argv ) {
 			*(p+1) = 0;
 		} else {
 			log_err( "MAIN: Can not get location of KadNode binary." );
+			exit( 1 );
 		}
 
 		/* Set DNS server to localhost */
@@ -203,6 +213,7 @@ int main( int argc, char **argv ) {
 
 		if( chdir( "/" ) != 0 ) {
 			log_err( "UNX: Changing working directory to / failed: %s", strerror( errno ) );
+			exit( 1 );
 		}
 
 		/* Close pipes */

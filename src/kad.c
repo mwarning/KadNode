@@ -173,6 +173,7 @@ void dht_handler( int rc, int sock ) {
 		if( rc < 0 && errno != EINTR ) {
 			if( rc == EINVAL || rc == EFAULT ) {
 				log_err( "KAD: Error calling dht_periodic." );
+				exit( 1 );
 			}
 			g_dht_maintenance = time_now_sec() + 1;
 		} else {
@@ -262,6 +263,7 @@ void kad_setup( void ) {
 	/* Init the DHT.  Also set the sockets into non-blocking mode. */
 	if( dht_init( s4, s6, node_id, (UCHAR*) "KN\0\0") < 0 ) {
 		log_err( "KAD: Failed to initialize the DHT." );
+		exit( 1 );
 	}
 }
 

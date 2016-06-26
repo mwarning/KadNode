@@ -32,7 +32,7 @@ void net_add_handler( int fd, net_callback *callback ) {
 
 	if( g_numtasks >= 16 ) {
 		log_err( "NET: Too many file descriptors registered." );
-		return;
+		exit( 1 );
 	}
 
 	g_tasks[g_numtasks].fd = fd;
@@ -214,6 +214,10 @@ void net_loop( void ) {
 			}
 		}
 	}
+}
+
+void net_free( void ) {
+	int i;
 
 	/* Close sockets and FDs */
 	for( i = 0; i < g_numtasks; ++i ) {

@@ -26,4 +26,7 @@ void net_add_handler( int fd, net_callback *callback );
 /* Start loop for all network events */
 void net_loop( void );
 
+/* Close sockets */
+void net_free( void );
+
 #endif /* _NET_H */

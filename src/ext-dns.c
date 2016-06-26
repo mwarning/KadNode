@@ -625,7 +625,8 @@ void dns_handler( int rc, int sock ) {
 			log_warn( "DNS: Cannot send message to '%s': %s", str_addr( &clientaddr, addrbuf ), strerror( errno ) );
 		}
 	} else {
-		log_err( "DNS: Failed not create a response packet." );
+		log_err( "DNS: Failed to create a response packet." );
+		exit( 1 );
 	}
 }
 

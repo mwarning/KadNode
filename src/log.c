@@ -46,9 +46,6 @@ void _log_print( int priority, const char *format, ... ) {
 		case LOG_ERR:
 			prefix = "(E)";
 			break;
-		case LOG_CRIT:
-			prefix = "(C)";
-			break;
 		default:
 			prefix = "(?)";
 	}
@@ -60,9 +57,5 @@ void _log_print( int priority, const char *format, ... ) {
 		closelog();
 	} else {
 		fprintf( stderr, "%s %s\n", prefix, buffer );
-	}
-
-	if( priority == LOG_CRIT || priority == LOG_ERR ) {
-		exit( 1 );
 	}
 }
