@@ -16,6 +16,7 @@
 #include "sha1.h"
 #include "utils.h"
 
+
 /* Also matches on equality */
 int is_suffix( const char str[], const char suffix[] ) {
 	size_t suffix_len;
