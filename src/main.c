@@ -67,9 +67,6 @@ void main_cleanup( void ) {
 	lpd_free();
 #endif
 
-	/* Export peers if a file is provided */
-	peerfile_export();
-
 	peerfile_free();
 
 	results_free();
@@ -130,6 +127,9 @@ int main_start( void ) {
 
 	/* Loop over all sockets and FDs */
 	net_loop();
+
+	/* Export peers if a file is provided */
+	peerfile_export();
 
 	return 0;
 }
