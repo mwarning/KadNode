@@ -57,7 +57,7 @@ only contains stale entries.
 For most use cases you first need to create a secret/public key pair:
 
 ```
-$kadnode --auth-genkey
+$kadnode --auth-gen-keys
 public key: <public-key>
 secret key: <secret-key>
 ```
