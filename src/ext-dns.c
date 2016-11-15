@@ -490,7 +490,7 @@ int dns_setup_msg( struct Message *msg, IP addrs[], size_t addrs_num, const char
 
 		for( i = 0; i < addrs_num; i++, c++ ) {
 			setAddressRecord( &msg->answers[c], g_names[i], &addrs[i] );
-			msg->arCount++;
+			msg->anCount++;
 		}
 	} else if( msg->question.qType == PTR_Resource_RecordType ) {
 		setPointerRecord( &msg->answers[c], qName, hostname );
@@ -500,7 +500,7 @@ int dns_setup_msg( struct Message *msg, IP addrs[], size_t addrs_num, const char
 		/* Assume AAAA or A Record Type */
 		for( i = 0; i < addrs_num; i++, c++ ) {
 			setAddressRecord( &msg->answers[c], qName, &addrs[i] );
-			msg->arCount++;
+			msg->anCount++;
 		}
 	}
 
