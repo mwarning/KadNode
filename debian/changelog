@@ -1,5 +1,6 @@
 kadnode (1.1.0) UNRELEASED; urgency=medium
 
+  * DNS answers were in additional records, not answer records
   * fix dependency selection in OpenWrt package
   * add new option --peer to add static peers
   * [LPD] fix an "Address already in use" problem
