@@ -3,7 +3,7 @@ set -e
 
 case "$1" in
 	install|upgrade)
-		sed -i -e '/kadnode/!s/^\(hosts:.*\)dns\(.*\)/\1kadnode dns\2/' /etc/nsswitch.conf 2> /dev/null
+		sed -i -e '/kadnode/!s/^\(hosts:.*\)\s\{1,\}dns\(.*\)/\1 kadnode dns\2/' /etc/nsswitch.conf 2> /dev/null
 		;;
 esac
 
