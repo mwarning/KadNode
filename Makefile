@@ -123,4 +123,3 @@ uninstall:
 	-rm $(DESTDIR)/usr/bin/kadnode-ctl
 	-rm $(DESTDIR)/lib/libnss_kadnode.so.2
 	-sed -i -e 's/^\(hosts:.*\)kadnode \(.*\)/\1\2/' $(DESTDIR)/etc/nsswitch.conf 2> /dev/null
-        
