@@ -81,7 +81,7 @@ void fwd_debug( int fd ) {
 		cur = cur->next;
 	}
 
-	dprintf( fd, " Found %d forwardings.\n", (int)counter );
+	dprintf( fd, " Found %zu forwardings.\n", counter );
 }
 
 void fwd_add( int port, time_t lifetime ) {
