@@ -7,8 +7,8 @@ Homepage: https://github.com/mwarning/kadnode
 Package: kadnode
 Architecture: any
 Depends: base-files (>=3.1.10), ${shlibs:Depends},
-  libminiupnpc5 (>=1.5), libnatpmp1 (>=20110808),
-  hardening-wrapper (>=2.2), libsodium13 (>=1.0.0)
+  libminiupnpc10 (>=1.9), libnatpmp1 (>=20110808),
+  libsodium13 (>=1.0.0)
 #libsodium (>=0.4.5)
 Description: A P2P based DNS service
  This tool translates hostnames to IPv6/IPv4 addresses
