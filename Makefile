@@ -116,11 +116,11 @@ install:
 	cp build/kadnode $(DESTDIR)/usr/bin/
 	-cp build/kadnode-ctl $(DESTDIR)/usr/bin/
 	-cp build/libnss_kadnode.so.2 $(DESTDIR)/lib/
-	-sed -i -e '/kadnode/!s/^\(hosts:.*\)\s\{1,\}dns\(.*\)/\1 kadnode dns\2/' $(DESTDIR)/etc/nsswitch.conf 2> /dev/null ;  \
+	-sed -i -e '/kadnode/!s/^\(hosts:.*\)\s\{1,\}dns\(.*\)/\1 kadnode dns\2/' $(DESTDIR)/etc/nsswitch.conf 2> /dev/null
 
 uninstall:
 	rm $(DESTDIR)/usr/bin/kadnode
 	-rm $(DESTDIR)/usr/bin/kadnode-ctl
 	-rm $(DESTDIR)/lib/libnss_kadnode.so.2
-	-sed -i -e 's/^\(hosts:.*\)kadnode \(.*\)/\1\2/' $(DESTDIR)/etc/nsswitch.conf 2> /dev/null ; \
+	-sed -i -e 's/^\(hosts:.*\)kadnode \(.*\)/\1\2/' $(DESTDIR)/etc/nsswitch.conf 2> /dev/null
         
