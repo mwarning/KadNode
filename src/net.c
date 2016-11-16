@@ -25,7 +25,7 @@ struct task_t {
 	net_callback *callback;
 };
 
-struct task_t g_tasks[16] = { 0 };
+struct task_t g_tasks[16] = { {0} };
 int g_tasks_num = 0;
 int g_tasks_changed = 1;
 
