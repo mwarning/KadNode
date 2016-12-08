@@ -4,6 +4,8 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <arpa/inet.h>
+#include <unistd.h>
 
 #include "main.h"
 #include "conf.h"
@@ -389,7 +391,7 @@ int dns_encode_msg( UCHAR *buffer, size_t size, const struct Message *msg ) {
 	return (buffer - beg);
 }
 
-int dns_lookup_addr( const char hostname[], IP addr[], size_t addr_num ) {
+int kadns_lookup_addr( const char hostname[], IP addr[], size_t addr_num ) {
 
 	/* Start lookup for one address */
 	if( kad_lookup_value( hostname, addr, &addr_num ) >= 0 && addr_num > 0 ) {
@@ -547,6 +549,92 @@ void dns_handler( int rc, int sock ) {
 		return;
 	}
 
+
+	/* Decode message */
+	if( dns_decode_msg( &msg, buffer ) < 0 ) {
+		return;
+	  }
+
+	hostname = msg.question.qName;
+
+/* ----------- DNS proxy ------------*///
+	if( !is_suffix( hostname, gconf->query_tld ) ) {
+
+	  struct sockaddr_in extdns;
+	  int extdns_socket;
+	  socklen_t extdns_len, extbuffer_len;
+	  int nscount;
+	  UCHAR extbuffer[1472];
+
+	  extbuffer_len=sizeof(extbuffer);
+
+	  buflen=sizeof(buffer);
+	  while (buffer[--buflen] == 0) {}
+	  buflen++;
+
+	  //List of DNS Servers
+	  char dns_servers[3][100];
+
+	  strcpy(dns_servers[0] , gconf->extdns_servers[0]);
+	  strcpy(dns_servers[1] , gconf->extdns_servers[1]);
+	  strcpy(dns_servers[2] , gconf->extdns_servers[2]);
+
+	  extdns_socket = socket(gconf->af , SOCK_DGRAM , IPPROTO_UDP);
+
+	  extdns.sin_family = gconf->af;
+	  extdns.sin_port = htons(53);
+
+	  struct timeval tv;
+	  tv.tv_sec = atol(gconf->extdns_timeout);
+
+	  //---- try DNS servers
+	  for (nscount=0; nscount < 3; nscount++) {
+		extdns.sin_addr.s_addr = inet_addr( dns_servers[nscount] );
+
+		if (extdns.sin_addr.s_addr == -1 && nscount <2 ) {
+			extdns.sin_addr.s_addr = inet_addr( EXTDNS_SERVER );
+			}
+		if (extdns.sin_addr.s_addr == -1 && nscount >1 ) {
+			break;
+			}
+
+		bind (extdns_socket, (struct sockaddr*)&extdns, extdns_len);
+
+		extdns_len = sizeof(extdns);
+
+		//-- send DNS query to external server
+		setsockopt (extdns_socket, SOL_SOCKET, SO_SNDTIMEO, (struct timeval *)&tv, sizeof(struct timeval));
+		if( sendto(extdns_socket,buffer,buflen,0,(struct sockaddr*)&extdns,extdns_len) < 0) {
+			log_warn("send DNS request failed to server %s", dns_servers[nscount] );
+			continue;
+			}
+		log_debug("Done DNS request to server %s", dns_servers[nscount] );
+
+		memset( extbuffer, 0, extbuffer_len );
+
+		//-- read response from external DNS server
+		setsockopt (extdns_socket, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)&tv, sizeof(struct timeval));
+		if ( recvfrom (extdns_socket, extbuffer, extbuffer_len, 0 , (struct sockaddr*)&extdns , &extdns_len ) < 0 ) {
+			log_warn("receive DNS response failed from %s", dns_servers[nscount]);
+			if( nscount < 2 ) { continue; }
+			}
+		log_debug("Received DNS response from %s", dns_servers[nscount]);
+		break;
+		}
+		//--- try DNS servers
+
+	  close(extdns_socket);
+
+	  //-- return DNS response to client
+	  if( sendto( sock, extbuffer, extbuffer_len, 0, (struct sockaddr*) &clientaddr, addr_len(&clientaddr) ) < 0 ) {
+		log_debug( "DNS: Cannot send message to '%s': %s", str_addr( &clientaddr, addrbuf ), strerror( errno ) );
+		}
+
+	  return;
+	  }
+	  //-----end of DNS proxy
+
+
 	/* Decode message */
 	if( dns_decode_msg( &msg, buffer ) < 0 ) {
 		return;
@@ -562,13 +650,6 @@ void dns_handler( int rc, int sock ) {
 		return;
 	}
 
-	hostname = msg.question.qName;
-
-	if ( hostname == NULL ) {
-		log_warn( "DNS: Empty hostname in question record." );
-		return;
-	}
-
 	if ( !str_isValidHostname( hostname ) ) {
 		log_warn( "DNS: Invalid hostname for lookup: '%s'", hostname );
 		return;
@@ -581,10 +662,6 @@ void dns_handler( int rc, int sock ) {
 	);
 
 	if( msg.question.qType == PTR_Resource_RecordType ) {
-		if( !is_suffix( hostname, ".arpa" )) {
-			return;
-		}
-
 		if( (domain = dns_lookup_ptr( hostname )) == NULL ) {
 			log_debug( "DNS: No domain found for PTR question." );
 			return;
@@ -603,7 +680,7 @@ void dns_handler( int rc, int sock ) {
 			return;
 		}
 
-		if( (addrs_num = dns_lookup_addr( hostname, addrs, MAX_ADDR_RECORDS )) == 0 ) {
+		if( (addrs_num = kadns_lookup_addr( hostname, addrs, MAX_ADDR_RECORDS )) == 0 ) {
 			log_debug( "DNS: Failed to resolve hostname: %s", hostname );
 			return;
 		}
