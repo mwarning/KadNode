@@ -106,9 +106,9 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 #ifdef DNS
 " --dns-port <port>		Bind the DNS server to this local port.\n"
 "				Default: "DNS_PORT"\n\n"
-" --extdns-server <ip_addr>	IP address of external DNS server. You can use this option three times.\n"
+" --dns-server <ip_addr>	IP address of external DNS server. You can use this option three times.\n"
 "				Default: "EXTDNS_SERVER"\n\n"
-" --extdns-timeout <seconds>	Timeout to query external DNS server.\n"
+" --dns-timeout <seconds>	Timeout to query external DNS server.\n"
 "				Default: "EXTDNS_TIMEOUT"\n\n"
 #endif
 #ifdef NSS
@@ -498,17 +498,17 @@ int conf_handle_option( char opt[], char val[] ) {
 #ifdef DNS
 	} else if( match( opt, "--dns-port" ) ) {
 		conf_str( opt, &gconf->dns_port, val );
-	} else if( match( opt, "--extdns-timeout" ) ) {
+	} else if( match( opt, "--dns-timeout" ) ) {
 		conf_str( opt, &gconf->extdns_timeout, val );
-	} else if( match( opt, "--extdns-server" ) ) {
+	} else if( match( opt, "--dns-server" ) ) {
 		if (val == NULL) { val = strdup( EXTDNS_SERVER ); }
 		if ( strlen(gconf->extdns_servers[0]) == 0 ) {
 			strcpy(gconf->extdns_servers[0] , val);
 			} else if ( strlen(gconf->extdns_servers[1]) == 0 ) {
 					strcpy(gconf->extdns_servers[1] , val);
-				} else if ( strlen(gconf->extdns_servers[2]) == 0 ) {
-						strcpy(gconf->extdns_servers[2] , val);
-						}
+					} else if ( strlen(gconf->extdns_servers[2]) == 0 ) {
+							strcpy(gconf->extdns_servers[2] , val);
+							}
 #endif
 #ifdef NSS
 	} else if( match( opt, "--nss-port" ) ) {
