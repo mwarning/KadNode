@@ -501,7 +501,9 @@ int conf_handle_option( char opt[], char val[] ) {
 	} else if( match( opt, "--dns-timeout" ) ) {
 		conf_str( opt, &gconf->extdns_timeout, val );
 	} else if( match( opt, "--dns-server" ) ) {
-		if (val == NULL) { val = strdup( EXTDNS_SERVER ); }
+		if (val == NULL) { 
+			val = strdup( EXTDNS_SERVER );
+			}
 		if ( strlen(gconf->extdns_servers[0]) == 0 ) {
 			strcpy(gconf->extdns_servers[0] , val);
 			} else if ( strlen(gconf->extdns_servers[1]) == 0 ) {
