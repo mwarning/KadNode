@@ -566,7 +566,7 @@ void dns_handler( int rc, int sock ) {
 	  int nscount;
 	  UCHAR extbuffer[1472];
 
-	  extbuffer_len=sizeof(extbuffer);
+	  extbuffer_len = sizeof(extbuffer);
 
 	  buflen=sizeof(buffer);
 	  while (buffer[--buflen] == 0) {}
