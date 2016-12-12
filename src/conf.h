@@ -94,6 +94,12 @@ struct gconf_t {
 
 #ifdef DNS
 	char *dns_port;
+
+	/* query DNS timeout */
+	char *extdns_timeout;
+
+	/* List of DNS servers */
+	char extdns_servers[3][100];
 #endif
 
 #ifdef NSS

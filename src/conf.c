@@ -106,6 +106,10 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 #ifdef DNS
 " --dns-port <port>		Bind the DNS server to this local port.\n"
 "				Default: "DNS_PORT"\n\n"
+" --dns-server <ip_addr>	IP address of external DNS server. You can use this option three times.\n"
+"				Default: "EXTDNS_SERVER"\n\n"
+" --dns-timeout <seconds>	Timeout to query external DNS server.\n"
+"				Default: "EXTDNS_TIMEOUT"\n\n"
 #endif
 #ifdef NSS
 " --nss-port <port>		Bind the Network Service Switch to this local port.\n"
@@ -263,6 +267,13 @@ void conf_check( void ) {
 	if( gconf->dns_port == NULL ) {
 		gconf->dns_port = strdup( DNS_PORT );
 	}
+
+	if( gconf->extdns_timeout == NULL ) {
+		gconf->extdns_timeout = strdup ( EXTDNS_TIMEOUT );
+	}
+	if( strlen( gconf->extdns_servers[0] ) == 0 ) {
+		strcpy ( gconf->extdns_servers[0], EXTDNS_SERVER );
+	}
 #endif
 
 #ifdef NSS
@@ -407,6 +418,10 @@ void conf_free( void ) {
 #endif
 #ifdef DNS
 	free( gconf->dns_port );
+	free( gconf->extdns_timeout );
+	strcpy( gconf->extdns_servers[0] , "" );
+	strcpy( gconf->extdns_servers[1] , "" );
+	strcpy( gconf->extdns_servers[2] , "" );
 #endif
 #ifdef NSS
 	free( gconf->nss_port );
@@ -483,6 +498,19 @@ int conf_handle_option( char opt[], char val[] ) {
 #ifdef DNS
 	} else if( match( opt, "--dns-port" ) ) {
 		conf_str( opt, &gconf->dns_port, val );
+	} else if( match( opt, "--dns-timeout" ) ) {
+		conf_str( opt, &gconf->extdns_timeout, val );
+	} else if( match( opt, "--dns-server" ) ) {
+		if( val == NULL ) { 
+			val = strdup( EXTDNS_SERVER );
+			}
+		if( strlen( gconf->extdns_servers[0] ) == 0 ) {
+			strcpy( gconf->extdns_servers[0] , val );
+			} else if( strlen( gconf->extdns_servers[1] ) == 0 ) {
+						strcpy( gconf->extdns_servers[1] , val );
+			} else if( strlen( gconf->extdns_servers[2] ) == 0 ) {
+						strcpy( gconf->extdns_servers[2] , val );
+						}
 #endif
 #ifdef NSS
 	} else if( match( opt, "--nss-port" ) ) {
