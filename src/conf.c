@@ -507,10 +507,10 @@ int conf_handle_option( char opt[], char val[] ) {
 		if( strlen( gconf->extdns_servers[0] ) == 0 ) {
 			strcpy( gconf->extdns_servers[0] , val );
 			} else if( strlen( gconf->extdns_servers[1] ) == 0 ) {
-						strcpy( gconf->extdns_servers[1] , val );
+				  strcpy( gconf->extdns_servers[1] , val );
 			} else if( strlen( gconf->extdns_servers[2] ) == 0 ) {
-						strcpy( gconf->extdns_servers[2] , val );
-						}
+				  strcpy( gconf->extdns_servers[2] , val );
+				  }
 #endif
 #ifdef NSS
 	} else if( match( opt, "--nss-port" ) ) {
