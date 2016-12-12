@@ -568,8 +568,8 @@ void dns_handler( int rc, int sock ) {
 
 	  extbuffer_len = sizeof(extbuffer);
 
-	  buflen=sizeof(buffer);
-	  while (buffer[--buflen] == 0) {}
+	  buflen = sizeof(buffer);
+	  while ( buffer[--buflen] == 0 ) { }
 	  buflen++;
 
 	  //List of DNS Servers
@@ -588,15 +588,15 @@ void dns_handler( int rc, int sock ) {
 	  tv.tv_sec = atol(gconf->extdns_timeout);
 
 	  //---- try DNS servers
-	  for (nscount=0; nscount < 3; nscount++) {
+	  for ( nscount = 0; nscount < 3; nscount++ ) {
 		extdns.sin_addr.s_addr = inet_addr( dns_servers[nscount] );
 
-		if (extdns.sin_addr.s_addr == -1 && nscount <2 ) {
-			extdns.sin_addr.s_addr = inet_addr( EXTDNS_SERVER );
-			}
-		if (extdns.sin_addr.s_addr == -1 && nscount >1 ) {
-			break;
-			}
+		if ( extdns.sin_addr.s_addr == -1 && nscount <2 ) {
+			 extdns.sin_addr.s_addr = inet_addr( EXTDNS_SERVER );
+			 }
+		if ( extdns.sin_addr.s_addr == -1 && nscount >1 ) {
+			 break;
+			 }
 
 		bind (extdns_socket, (struct sockaddr*)&extdns, extdns_len);
 

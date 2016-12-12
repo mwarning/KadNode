@@ -271,7 +271,7 @@ void conf_check( void ) {
 	if( gconf->extdns_timeout == NULL ) {
 		gconf->extdns_timeout = strdup ( EXTDNS_TIMEOUT );
 	}
-	if( strlen(gconf->extdns_servers[0]) == 0 ) {
+	if( strlen( gconf->extdns_servers[0] ) == 0 ) {
 		strcpy ( gconf->extdns_servers[0], EXTDNS_SERVER );
 	}
 #endif
@@ -418,10 +418,10 @@ void conf_free( void ) {
 #endif
 #ifdef DNS
 	free( gconf->dns_port );
-	free( gconf->extdns_timeout);
-	strcpy(gconf->extdns_servers[0] , "");
-	strcpy(gconf->extdns_servers[1] , "");
-	strcpy(gconf->extdns_servers[2] , "");
+	free( gconf->extdns_timeout );
+	strcpy( gconf->extdns_servers[0] , "" );
+	strcpy( gconf->extdns_servers[1] , "" );
+	strcpy( gconf->extdns_servers[2] , "" );
 #endif
 #ifdef NSS
 	free( gconf->nss_port );
@@ -501,16 +501,16 @@ int conf_handle_option( char opt[], char val[] ) {
 	} else if( match( opt, "--dns-timeout" ) ) {
 		conf_str( opt, &gconf->extdns_timeout, val );
 	} else if( match( opt, "--dns-server" ) ) {
-		if (val == NULL) { 
+		if( val == NULL ) { 
 			val = strdup( EXTDNS_SERVER );
 			}
-		if ( strlen(gconf->extdns_servers[0]) == 0 ) {
-			strcpy(gconf->extdns_servers[0] , val);
-			} else if ( strlen(gconf->extdns_servers[1]) == 0 ) {
-					strcpy(gconf->extdns_servers[1] , val);
-					} else if ( strlen(gconf->extdns_servers[2]) == 0 ) {
-							strcpy(gconf->extdns_servers[2] , val);
-							}
+		if( strlen( gconf->extdns_servers[0] ) == 0 ) {
+			strcpy( gconf->extdns_servers[0] , val );
+			} else if( strlen( gconf->extdns_servers[1] ) == 0 ) {
+						strcpy( gconf->extdns_servers[1] , val );
+			} else if( strlen( gconf->extdns_servers[2] ) == 0 ) {
+						strcpy( gconf->extdns_servers[2] , val );
+						}
 #endif
 #ifdef NSS
 	} else if( match( opt, "--nss-port" ) ) {

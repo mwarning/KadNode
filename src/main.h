@@ -22,6 +22,9 @@
 #define NSS_PORT "4053"
 #define WEB_PORT "8053"
 
+#define EXTDNS_SERVER "8.8.8.8"
+#define EXTDNS_TIMEOUT "3"
+
 #define QUERY_TLD_DEFAULT ".p2p"
 #define QUERY_MAX_SIZE 512
 
