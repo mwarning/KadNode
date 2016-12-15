@@ -269,6 +269,18 @@ char *str_addr4( const IP4 *addr, char addrbuf[] ) {
 	return str_addr( (const IP *)addr, addrbuf );
 }
 
+int addr_is_multicast( const IP *addr )
+{
+	switch( addr->ss_family ) {
+		case AF_INET:
+			return IN_MULTICAST(ntohl(((IP4*) addr)->sin_addr.s_addr));
+		case AF_INET6:
+			return IN6_IS_ADDR_MULTICAST(&((IP6*) addr)->sin6_addr);
+		default:
+			return 0;
+	}
+}
+
 int addr_port( const IP *addr ) {
 	switch( addr->ss_family ) {
 		case AF_INET:
