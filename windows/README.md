@@ -9,16 +9,16 @@ The following packages and its dependencies need to be selected:
 * All => Devel => gcc-core
 * All => Devel => make
 * All => Devel => git
-* All => Devel => wget
+* All => Web   => wget
 
 If you want to use auth extension (for public/private keys),
 you need to download and install [libsodium](https://github.com/jedisct1/libsodium).
 Open the Cygwin terminal and execute:
 
 ```
-wget https://github.com/jedisct1/libsodium/releases/download/1.0.0/libsodium-1.0.0.tar.gz
-tar -xvzf libsodium-1.0.0.tar.gz
-cd libsodium-1.0.0
+wget https://github.com/jedisct1/libsodium/releases/download/1.0.11/libsodium-1.0.11.tar.gz
+tar -xvzf libsodium-1.0.11.tar.gz
+cd libsodium-1.0.11
 ./configure
 make
 make install
