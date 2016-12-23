@@ -561,10 +561,14 @@ void dns_handler( int rc, int sock ) {
 	if( !is_suffix( hostname, gconf->query_tld ) ) {
 
 	  struct sockaddr_in extdns;
-	  int extdns_socket;
+	  int extdns_socket, nscount;
 	  socklen_t extdns_len, extbuffer_len;
-	  int nscount;
 	  UCHAR extbuffer[1472];
+	  char *dns_server;
+
+	  struct timeval tv;
+	  tv.tv_sec = atol(gconf->extdns_timeout);
+	  tv.tv_usec = 0;
 
 	  extbuffer_len = sizeof(extbuffer);
 
@@ -572,57 +576,51 @@ void dns_handler( int rc, int sock ) {
 	  while ( buffer[--buflen] == 0 ) { }
 	  buflen++;
 
-	  //List of DNS Servers
-	  char dns_servers[3][100];
-
-	  strcpy(dns_servers[0] , gconf->extdns_servers[0]);
-	  strcpy(dns_servers[1] , gconf->extdns_servers[1]);
-	  strcpy(dns_servers[2] , gconf->extdns_servers[2]);
-
 	  extdns_socket = socket(gconf->af , SOCK_DGRAM , IPPROTO_UDP);
-
-	  extdns.sin_family = gconf->af;
-	  extdns.sin_port = htons(53);
-
-	  struct timeval tv;
-	  tv.tv_sec = atol(gconf->extdns_timeout);
 
 	  //---- try DNS servers
 	  for ( nscount = 0; nscount < 3; nscount++ ) {
-		extdns.sin_addr.s_addr = inet_addr( dns_servers[nscount] );
+
+		dns_server = strdup( gconf->extdns_servers[nscount] );
+
+		memset(&extdns, 0, sizeof(struct sockaddr_in));
+		extdns.sin_family = gconf->af;
+		extdns.sin_port = htons(53);
+		extdns.sin_addr.s_addr = inet_addr( dns_server );
 
 		if ( extdns.sin_addr.s_addr == -1 && nscount <2 ) {
-			 extdns.sin_addr.s_addr = inet_addr( EXTDNS_SERVER );
+			 dns_server = strdup( EXTDNS_SERVER );
+			 extdns.sin_addr.s_addr = inet_addr( dns_server );
 			 }
 		if ( extdns.sin_addr.s_addr == -1 && nscount >1 ) {
 			 break;
 			 }
 
-		bind (extdns_socket, (struct sockaddr*)&extdns, extdns_len);
-
 		extdns_len = sizeof(extdns);
+
+		bind (extdns_socket, (struct sockaddr*)&extdns, extdns_len);
 
 		//-- send DNS query to external server
 		setsockopt (extdns_socket, SOL_SOCKET, SO_SNDTIMEO, (struct timeval *)&tv, sizeof(struct timeval));
 		if( sendto(extdns_socket,buffer,buflen,0,(struct sockaddr*)&extdns,extdns_len) < 0) {
-			log_warn("send DNS request failed to server %s", dns_servers[nscount] );
+			log_warn("send DNS request failed to server %s", dns_server );
 			continue;
 			}
-		log_debug("Done DNS request to server %s", dns_servers[nscount] );
+		log_debug("Done DNS request to server %s", dns_server );
 
 		memset( extbuffer, 0, extbuffer_len );
 
 		//-- read response from external DNS server
 		setsockopt (extdns_socket, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)&tv, sizeof(struct timeval));
 		if ( recvfrom (extdns_socket, extbuffer, extbuffer_len, 0 , (struct sockaddr*)&extdns , &extdns_len ) < 0 ) {
-			log_warn("receive DNS response failed from %s", dns_servers[nscount]);
+			log_warn("receive DNS response failed from %s", dns_server );
 			if( nscount < 2 ) { continue; }
 			}
-		log_debug("Received DNS response from %s", dns_servers[nscount]);
+		log_debug("Received DNS response from %s", dns_server );
 		break;
 		}
 		//--- try DNS servers
-
+	  free(dns_server);
 	  close(extdns_socket);
 
 	  //-- return DNS response to client
