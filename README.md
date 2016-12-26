@@ -218,7 +218,10 @@ It is used to direct requests to KadNode only.
     Bind the remote control interface to this local port (Default: 1700).
 
   * `--dns-port` *port*  
-    Bind the DNS server to this local port (Default: 3535).
+    Bind the DNS server interface to this local port (Default: 3535).
+
+  * `--dns-server` *address*  
+    IP address of an external DNS server. Enables DNS proxy mode (Default: none).
 
   * `--nss-port` *port*  
     Bind the "Name Service Switch" to this local port (Default: 4053).

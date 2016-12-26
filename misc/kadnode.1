@@ -1,7 +1,7 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "README" "" "December 2014" "" ""
+.TH "README" "" "December 2016" "" ""
 .
 .SH "NAME"
 \fBREADME\fR
@@ -81,7 +81,7 @@ For most use cases you first need to create a secret/public key pair:
 .
 .nf
 
-$kadnode \-\-auth\-genkey
+$kadnode \-\-auth\-gen\-keys
 public key: <public\-key>
 secret key: <secret\-key>
 .
@@ -96,7 +96,7 @@ secret key: <secret\-key>
 A typical use case would be to reach a computer (Node1) from another (Node2)\. On Node 1 we announce an identifier (\fBsha1(myname)\fR): \fB$kadnode \-\-value\-id myname\.p2p\fR
 .
 .P
-On other computers running KadNode, we can use myname\.p2p to resolve the IP address of Node1 (e\.g\. in the Browser)\. It may take ~8 seconds on the first try\. The problem with this approach is that others could also announce the same identifier\. This would result in multiple IP addresses to be found and used\. To avoid this you can use secret/public key pairs\. See the next examples\.
+On other computers running KadNode, we can use myname\.p2p to resolve the IP address of Node1 (e\.g\. in the web browser)\. It may take ~8 seconds on the first try\. The problem with this approach is that others could also announce the same identifier\. This would result in multiple IP addresses to be found and used\. To avoid this you can use secret/public key pairs\. See the next examples\.
 .
 .SS "EXAMPLE 2"
 Now we want to reach a computer (Node1) from another (Node2) using cryptographic keys\. We tell KadNode on Node1 to \fIannounce\fR its secret key\. \fB$kadnode \-\-value\-id <secret\-key>\.p2p\fR What is actually announced is the SHA1 hash of the derived public key (\fBsha1(<public\-key>)\fR), not the secret key itself\.
@@ -132,7 +132,7 @@ On Node3, resolving "node1\.p2p", "node2\.p2p" and "foobar\.p2p" to its IP addre
 Multiple \-\-auth\-add\-key and multiple \-\-value\-id arguments are possible\. Pattern conflicts will result in an error message on startup\. Command line options can also be put inside a configuration file (see \-\-config \fIfile\fR)\.
 .
 .SH "IDENTIFIERS"
-Identifiers are what you use to lookup IP addresses (e\.g\. "foo\.p2p")\. They will reduced to 20 Byte representations based on the SHA\-1 message digest algorithm\. The digest is what will be then used in the actual lookup process\. KadNode allows four types of identifiers:
+Identifiers are what you use to lookup IP addresses (e\.g\. "foo\.p2p")\. They will be reduced to a 20 Byte representation based on the SHA\-1 message digest algorithm\. The digest is what will be then used in the actual lookup process\. KadNode allows four types of identifiers:
 .
 .IP "\(bu" 4
 Raw identifiers are 20 Byte identifiers written as hex strings\. No digest will be applied\.
@@ -174,7 +174,7 @@ E\.g\.: \fBexample\.p2p\fR
 Plain identifiers that match a given pattern and have a public key assigned to them\.
 .
 .IP "\(bu" 4
-The SHA\-1 digest of the string and public key is ued to find nodes\.
+The SHA\-1 digest of the string and public key is used to find nodes\.
 .
 .IP "\(bu" 4
 The public key is used to verify if the nodes found have the corresponding secret key\.
@@ -188,24 +188,15 @@ E\.g\.: \fBfoo\.p2p\fR
 .IP "" 0
 .
 .P
-All identifiers are converted to lowercase and are therefore case insensitive\. A "\.p2p" at the end of every identifier is ignored\. It is used to direct requests to KadNode\.
+All identifiers are converted to lowercase and are therefore case insensitive\. A "\.p2p" at the end of every identifier is ignored and not applied to the digest\. It is used to direct requests to KadNode only\.
 .
 .SH "OPTIONS"
-.
-.IP "\(bu" 4
-\fB\-\-node\-id\fR \fIid\fR
-.
-.br
-Set the node identifier\. This option is rarely needed\.
-.
-.br
-By default the node id is random\.
 .
 .IP "\(bu" 4
 \fB\-\-value\-id\fR \fIid[:port]\fR
 .
 .br
-Add a value identifier and optional port to be announced every 30 minutes\.
+Add a value identifier/domain and optional port to be announced every 30 minutes\.
 .
 .br
 The announcement will associate this nodes IP address with this identifier\.
@@ -286,7 +277,7 @@ Write process pid to a file\.
 Send LPD packets to this multicast address as long no peers were found\.
 .
 .br
-Default: 239\.192\.202\.7:6771 / [ff08:ca:07::]:6771
+Default: 239\.192\.152\.143:6771 / [ff15::efc0:988f]:6771
 .
 .IP "\(bu" 4
 \fB\-\-lpd\-disable\fR
@@ -310,7 +301,13 @@ Bind the remote control interface to this local port (Default: 1700)\.
 \fB\-\-dns\-port\fR \fIport\fR
 .
 .br
-Bind the DNS server to this local port (Default: 3535)\.
+Bind the DNS server interface to this local port (Default: 3535)\.
+.
+.IP "\(bu" 4
+\fB\-\-dns\-server\fR \fIaddress\fR
+.
+.br
+IP address of an external DNS server\. Enables DNS proxy mode (Default: none)\.
 .
 .IP "\(bu" 4
 \fB\-\-nss\-port\fR \fIport\fR
@@ -374,24 +371,8 @@ Print program version and included features\.
 .
 .IP "" 0
 .
-.SH "kadnode\-ctl"
-\fBkadnode\-ctl\fR allows to control KadNode from the command line\.
-.
-.IP "\(bu" 4
-\fB\-p\fR \fIport\fR
-.
-.br
-The port used to connect to the command shell of a local KadNode instance (Default: 1700)\.
-.
-.IP "\(bu" 4
-\fB\-h\fR
-.
-.br
-Print this help\.
-.
-.IP "" 0
-.
 .SS "KadNode Console Commands"
+When not started in background, KadNode accepts a variety of commands from standard input\.
 .
 .IP "\(bu" 4
 \fBstatus\fR
@@ -449,6 +430,26 @@ List various internal data structures\.
 .
 .br
 Blacklist a specifc IP address\.
+.
+.IP "" 0
+.
+.SH "KadNode External Console"
+KadNode allows a limited set of commands to be send from any user from other consoles\.
+.
+.P
+\fBkadnode\-ctl\fR [\-p port] [status|lookup|announce|import|export|blacklist]
+.
+.IP "\(bu" 4
+\fB\-p\fR \fIport\fR
+.
+.br
+The port used to connect to the command shell of a local KadNode instance (Default: 1700)\.
+.
+.IP "\(bu" 4
+\fB\-h\fR
+.
+.br
+Print this help\.
 .
 .IP "" 0
 .
