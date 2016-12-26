@@ -115,14 +115,13 @@ void cmd_to_args( char *str, int *argc, char **argv, int max_argv ) {
 }
 
 int cmd_import( struct Reply *r, const char *addr_str) {
-	char addrbuf[FULL_ADDSTRLEN+1];
 	IP addr;
 	int rc;
 
 	/* If the address contains no port - use the default port */
 	if( (rc = addr_parse_full( &addr, addr_str, DHT_PORT, gconf->af )) == 0 ) {
 		if( kad_ping( &addr ) == 0 ) {
-			r_printf( r, "Send ping to: %s\n", str_addr( &addr, addrbuf ) );
+			r_printf( r, "Send ping to: %s\n", str_addr( &addr ) );
 			return 0;
 		} else {
 			r_printf( r, "Failed to send ping.\n" );
@@ -142,12 +141,11 @@ void cmd_print_status( struct Reply *r ) {
 }
 
 int cmd_blacklist( struct Reply *r, const char *addr_str ) {
-	char addrbuf[FULL_ADDSTRLEN+1];
 	IP addr;
 
 	if( addr_parse( &addr, addr_str, NULL, gconf->af ) == 0 ) {
 		kad_blacklist( &addr );
-		r_printf( r, "Added to blacklist: %s\n", str_addr( &addr, addrbuf ) );
+		r_printf( r, "Added to blacklist: %s\n", str_addr( &addr ) );
 		return 0;
 	} else {
 		r_printf( r, "Invalid address.\n" );
@@ -157,7 +155,6 @@ int cmd_blacklist( struct Reply *r, const char *addr_str ) {
 
 /* Export up to 32 peer addresses - more would not fit into one UDP packet */
 int cmd_export( struct Reply *r ) {
-	char addrbuf[FULL_ADDSTRLEN+1];
 	IP addr_array[32];
 	size_t addr_num;
 	size_t i;
@@ -168,7 +165,7 @@ int cmd_export( struct Reply *r ) {
 	}
 
 	for( i = 0; i < addr_num; ++i ) {
-		r_printf( r, "%s\n", str_addr( &addr_array[i], addrbuf ) );
+		r_printf( r, "%s\n", str_addr( &addr_array[i] ) );
 	}
 
 	if( i == 0 ) {
@@ -180,7 +177,6 @@ int cmd_export( struct Reply *r ) {
 }
 
 int cmd_exec( struct Reply *r, int argc, char **argv ) {
-	char addrbuf[FULL_ADDSTRLEN+1];
 	time_t lifetime;
 	int minutes;
 	IP addrs[32];
@@ -208,7 +204,7 @@ int cmd_exec( struct Reply *r, int argc, char **argv ) {
 		/* Check searches for node */
 		rc = kad_lookup_node( argv[1], &addrs[0] );
 		if( rc == 0 ) {
-			r_printf( r, "%s\n", str_addr( &addrs[0], addrbuf ) );
+			r_printf( r, "%s\n", str_addr( &addrs[0] ) );
 		} else if( rc == 1 ) {
 			r_printf( r ,"No search found.\n" );
 			rc = 1;
@@ -229,7 +225,7 @@ int cmd_exec( struct Reply *r, int argc, char **argv ) {
 
 		if( rc >= 0 && num > 0 ) {
 			for( i = 0; i < num; ++i ) {
-				r_printf( r, "%s\n", str_addr( &addrs[i], addrbuf ) );
+				r_printf( r, "%s\n", str_addr( &addrs[i] ) );
 			}
 			rc = 0;
 		} else if( rc < 0 ) {

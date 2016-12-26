@@ -14,7 +14,6 @@
 
 
 void nss_lookup( int sock, IP *clientaddr, const char hostname[] ) {
-	char addrbuf[FULL_ADDSTRLEN+1];
 	socklen_t addrlen;
 	IP addrs[MAX_ADDRS];
 	size_t num;
@@ -26,7 +25,7 @@ void nss_lookup( int sock, IP *clientaddr, const char hostname[] ) {
 	if( kad_lookup_value( hostname, addrs, &num ) >= 0 && num > 0 ) {
 		/* Found addresses */
 		log_debug( "NSS: Send %lu addresses to %s. Packet has %d bytes.",
-		   num, str_addr( clientaddr, addrbuf ), sizeof(IP)
+		   num, str_addr( clientaddr ), sizeof(IP)
 		);
 	} else {
 		num = 0;

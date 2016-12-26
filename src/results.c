@@ -120,7 +120,7 @@ void results_debug( int fd ) {
 		result_counter = 0;
 		result = results->entries;
 		while( result ) {
-			dprintf( fd, "   addr: %s\n", str_addr( &result->addr, buf ) );
+			dprintf( fd, "   addr: %s\n", str_addr_buf( &result->addr, buf ) );
 #ifdef AUTH
 			if( results->pkey ) {
 				dprintf( fd, "    challenge: %s\n",  result->challenge ? bytes_to_hex( buf, result->challenge, CHALLENGE_BIN_LENGTH ) : "done" );

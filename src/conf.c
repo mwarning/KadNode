@@ -321,7 +321,6 @@ void conf_check( void ) {
 #endif
 
 #ifdef LPD
-	char addrbuf[FULL_ADDSTRLEN+1];
 	IP lpd_addr;
 	UCHAR octet;
 
@@ -344,13 +343,13 @@ void conf_check( void ) {
 	if( gconf->af == AF_INET ) {
 		octet = ((UCHAR *) &((IP4 *)&lpd_addr)->sin_addr)[0];
 		if( octet != 224 && octet != 239 ) {
-			log_err( "CFG: Multicast address expected: %s", str_addr( &lpd_addr, addrbuf ) );
+			log_err( "CFG: Multicast address expected: %s", str_addr( &lpd_addr ) );
 			exit( 1 );
 		}
 	} else {
 		octet = ((UCHAR *) &((IP6 *)&lpd_addr)->sin6_addr)[0];
 		if( octet != 0xFF ) {
-			log_err( "CFG: Multicast address expected: %s", str_addr( &lpd_addr, addrbuf ) );
+			log_err( "CFG: Multicast address expected: %s", str_addr( &lpd_addr ) );
 			exit( 1 );
 		}
 	}

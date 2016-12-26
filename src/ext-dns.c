@@ -536,12 +536,11 @@ const char* qtype_str( int qType ) {
 
 /* Forward request to external DNS server */
 void proxy_forward_request( UCHAR *buffer, ssize_t buflen, IP *clientaddr, unsigned short id ) {
-	char addrbuf[FULL_ADDSTRLEN+1];
 	int sock;
 
 	sock = (gconf->dns_server_addr.ss_family == AF_INET) ? g_sock4 : g_sock6;
 	if( sendto( sock, buffer, buflen, 0, (struct sockaddr*) &gconf->dns_server_addr, sizeof(IP) ) < 0 ) {
-		log_warn( "DNS: Failed to send request to dns server %s", str_addr( &gconf->dns_server_addr, addrbuf ) );
+		log_warn( "DNS: Failed to send request to dns server %s", str_addr( &gconf->dns_server_addr ) );
 		return;
 	}
 
@@ -577,7 +576,6 @@ void dns_handler( int rc, int sock ) {
 	socklen_t addrlen_ret;
 	ssize_t buflen;
 	UCHAR buffer[1472];
-	char addrbuf[FULL_ADDSTRLEN+1];
 	const char *hostname;
 	const char *domain;
 
@@ -633,7 +631,7 @@ void dns_handler( int rc, int sock ) {
 
 	log_debug( "DNS: Received %s query from %s for: %s",
 		qtype_str( msg.question.qType ),
-		str_addr( &clientaddr, addrbuf ),
+		str_addr( &clientaddr ),
 		hostname
 	);
 
@@ -648,7 +646,7 @@ void dns_handler( int rc, int sock ) {
 		}
 
 		log_debug( "DNS: Send back hostname '%s' to: %s",
-			domain, str_addr( &clientaddr, addrbuf )
+			domain, str_addr( &clientaddr )
 		);
 	} else {
 		/* Check if hostname ends with .p2p */
@@ -666,7 +664,7 @@ void dns_handler( int rc, int sock ) {
 		}
 
 		log_debug( "DNS: Send back %lu addresses to: %s",
-			addrs_num, str_addr( &clientaddr, addrbuf )
+			addrs_num, str_addr( &clientaddr )
 		);
 	}
 
@@ -675,7 +673,7 @@ void dns_handler( int rc, int sock ) {
 
 	if( buflen > 0 ) {
 		if( sendto( sock, buffer, buflen, 0, (struct sockaddr*) &clientaddr, addr_len(&clientaddr) ) < 0 ) {
-			log_warn( "DNS: Cannot send message to '%s': %s", str_addr( &clientaddr, addrbuf ), strerror( errno ) );
+			log_warn( "DNS: Cannot send message to '%s': %s", str_addr( &clientaddr ), strerror( errno ) );
 		}
 	} else {
 		log_err( "DNS: Failed to create response packet." );
