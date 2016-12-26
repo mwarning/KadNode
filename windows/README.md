@@ -1,7 +1,6 @@
 ##Compilation on Windows
 
 KadNode can be build for Window systems using the [Cygwin](http://www.cygwin.com/) environment.
-These instruction do not include packaging. That's work in progress for now.
 
 To build KadNode on Windows you need to download an execute the Cygwin installer.
 The following packages and its dependencies need to be selected:
