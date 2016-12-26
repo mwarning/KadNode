@@ -29,7 +29,6 @@ struct peer *g_peers = NULL;
 
 
 void peerfile_export( void ) {
-	char addrbuf[FULL_ADDSTRLEN+1];
 	const char *filename;
 	IP addrs[150];
 	size_t i, num;
@@ -66,11 +65,11 @@ void peerfile_export( void ) {
 	/* Write peers to file */
 	for( i = 0; i < num; ++i ) {
 #ifdef __CYGWIN__
-		if( fprintf( fp, "%s\r\n", str_addr( &addrs[i], addrbuf ) ) < 0 ) {
+		if( fprintf( fp, "%s\r\n", str_addr( &addrs[i] ) ) < 0 ) {
 			break;
 		}
 #else
-		if( fprintf( fp, "%s\n", str_addr( &addrs[i], addrbuf ) ) < 0 ) {
+		if( fprintf( fp, "%s\n", str_addr( &addrs[i] ) ) < 0 ) {
 			break;
 		}
 #endif

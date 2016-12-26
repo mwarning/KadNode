@@ -119,7 +119,6 @@ void dht_callback_func( void *closure, int event, const UCHAR *info_hash, const 
 * Useful for networks of only one node, also faster.
 */
 void kad_lookup_local_values( struct results_t *results ) {
-	char addrbuf[FULL_ADDSTRLEN+1];
 	struct value_t* value;
 	IP addr;
 
@@ -133,7 +132,7 @@ void kad_lookup_local_values( struct results_t *results ) {
 		} else {
 			to_addr( &addr, &inaddr_loopback, 4, htons( value->port ) ); // 127.0.0.1
 		}
-		log_debug( "KAD: Address found in local values: %s\n", str_addr( &addr, addrbuf ) );
+		log_debug( "KAD: Address found in local values: %s\n", str_addr( &addr ) );
 		results_add_addr( results, &addr );
 	}
 }
@@ -542,7 +541,6 @@ int kad_export_nodes( IP addr_array[], size_t *num ) {
 
 /* Print buckets (leaf/finger table) */
 void kad_debug_buckets( int fd ) {
-	char addrbuf[FULL_ADDSTRLEN+1];
 	char hexbuf[SHA1_HEX_LENGTH+1];
 	struct bucket *b;
 	struct node *n;
@@ -557,7 +555,7 @@ void kad_debug_buckets( int fd ) {
 		n = b->nodes;
 		for( i = 0; n != NULL; ++i ) {
 			dprintf( fd, "   Node: %s\n", str_id( n->id, hexbuf ) );
-			dprintf( fd, "    addr: %s\n", str_addr( &n->ss, addrbuf ) );
+			dprintf( fd, "    addr: %s\n", str_addr( &n->ss ) );
 			dprintf( fd, "    pinged: %d\n", n->pinged );
 			n = n->next;
 		}
@@ -571,7 +569,6 @@ void kad_debug_buckets( int fd ) {
 
 /* Print searches */
 void kad_debug_searches( int fd ) {
-	char addrbuf[FULL_ADDSTRLEN+1];
 	char hexbuf[SHA1_HEX_LENGTH+1];
 	struct search *s = searches;
 	int i, j;
@@ -586,7 +583,7 @@ void kad_debug_searches( int fd ) {
 		for(i = 0; i < s->numnodes; ++i) {
 			struct search_node *sn = &s->nodes[i];
 			dprintf( fd, "   Node: %s\n", str_id(sn->id, hexbuf ) );
-			dprintf( fd, "    addr: %s\n", str_addr( &sn->ss, addrbuf ) );
+			dprintf( fd, "    addr: %s\n", str_addr( &sn->ss ) );
 			dprintf( fd, "    pinged: %d\n", sn->pinged );
 			dprintf( fd, "    replied: %d\n", sn->replied );
 			dprintf( fd, "    acked: %d\n", sn->acked );
@@ -601,7 +598,6 @@ void kad_debug_searches( int fd ) {
 
 /* Print announced ids we have received */
 void kad_debug_storage( int fd ) {
-	char addrbuf[FULL_ADDSTRLEN+1];
 	char hexbuf[SHA1_HEX_LENGTH+1];
 	struct storage *s;
 	struct peer* p;
@@ -616,7 +612,7 @@ void kad_debug_storage( int fd ) {
 		for( i = 0; i < s->numpeers; ++i ) {
 			p = &s->peers[i];
 			to_addr( &addr, &p->ip, p->len, htons( p->port ) );
-			dprintf( fd, "   Peer: %s\n", str_addr( &addr, addrbuf)  );
+			dprintf( fd, "   Peer: %s\n", str_addr( &addr )  );
 		}
 		dprintf( fd, "  Found %d peers.\n", i );
 		s = s->next;
@@ -627,13 +623,12 @@ void kad_debug_storage( int fd ) {
 }
 
 void kad_debug_blacklist( int fd ) {
-	char addrbuf[FULL_ADDSTRLEN+1];
 	int i;
 
 	dht_lock();
 
 	for( i = 0; i < (next_blacklisted % DHT_MAX_BLACKLISTED); i++ ) {
-		dprintf( fd, " %s\n", str_addr( &blacklist[i], addrbuf ) );
+		dprintf( fd, " %s\n", str_addr( &blacklist[i] ) );
 	}
 
 	dprintf( fd, " Found %d blacklisted addresses.\n", i );

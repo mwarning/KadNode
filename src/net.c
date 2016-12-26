@@ -130,7 +130,6 @@ int net_bind(
 	const char ifname[],
 	int protocol, int af
 ) {
-	char addrbuf[FULL_ADDSTRLEN+1];
 	const int opt_on = 1;
 	int sock;
 	socklen_t addrlen;
@@ -151,7 +150,7 @@ int net_bind(
 		if( setsockopt( sock, IPPROTO_IPV6, IPV6_V6ONLY, &opt_on, sizeof(opt_on) ) < 0 ) {
 			close( sock );
 			log_err( "%s: Failed to set socket option IPV6_V6ONLY: '%s' (%s)",
-				name, strerror( errno ), str_addr( &sockaddr, addrbuf ) );
+				name, strerror( errno ), str_addr( &sockaddr ) );
 			return -1;
 		}
 	}
@@ -160,7 +159,7 @@ int net_bind(
 	if( bind( sock, (struct sockaddr*) &sockaddr, addrlen ) < 0 ) {
 		close( sock );
 		log_err( "%s: Failed to bind socket to address: '%s' (%s)",
-			name, strerror( errno ), str_addr( &sockaddr, addrbuf )
+			name, strerror( errno ), str_addr( &sockaddr )
 		);
 		return -1;
 	}
@@ -168,13 +167,13 @@ int net_bind(
 	if( protocol == IPPROTO_TCP && listen( sock, 5 ) < 0 ) {
 		close( sock );
 		log_err( "%s: Failed to listen on socket: '%s' (%s)",
-			name, strerror( errno ), str_addr( &sockaddr, addrbuf )
+			name, strerror( errno ), str_addr( &sockaddr )
 		);
 		return -1;
 	}
 
 	log_info( ifname ? "%s: Bind to %s, interface %s" : "%s: Bind to %s",
-		name, str_addr( &sockaddr, addrbuf ), ifname
+		name, str_addr( &sockaddr ), ifname
 	);
 
 	return sock;

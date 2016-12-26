@@ -131,7 +131,6 @@ int mcast_set_group( int sock, IP *mcast_addr, const char ifname[], int join ) {
 }
 
 int mcast_send_packet( const char msg[], IP *src_addr, const char ifname[] ) {
-	char addrbuf[FULL_ADDSTRLEN+1];
 	int sock;
 	IP addr;
 
@@ -164,11 +163,11 @@ int mcast_send_packet( const char msg[], IP *src_addr, const char ifname[] ) {
 	}
 
 	if( sendto( sock, msg, strlen( msg ), 0, (struct sockaddr*) &g_lpd_addr, addr_len( &g_lpd_addr ) ) < 0 ) {
-		log_warn( "LPD: Cannot send message from '%s': %s", str_addr( &addr, addrbuf ), strerror( errno ) );
+		log_warn( "LPD: Cannot send message from '%s': %s", str_addr( &addr ), strerror( errno ) );
 		goto skip;
 	}
 
-	log_debug( "LPD: Send peer discovery packet from source address: %s", str_addr( src_addr, addrbuf ) );
+	log_debug( "LPD: Send peer discovery packet from source address: %s", str_addr( src_addr ) );
 
 	skip:
 	close(sock);
@@ -276,7 +275,6 @@ int parse_packet( const char str[] ) {
 }
 
 void handle_mcast( int rc, int sock_recv ) {
-	char addrbuf[FULL_ADDSTRLEN+1];
 	char buf[512];
 	IP c_addr;
 	socklen_t addrlen;
@@ -296,7 +294,7 @@ void handle_mcast( int rc, int sock_recv ) {
 				/* Create message */
 				snprintf(
 					buf, sizeof(buf),
-					msg_fmt, str_addr( &g_lpd_addr, addrbuf ),
+					msg_fmt, str_addr( &g_lpd_addr ),
 					atoi( gconf->dht_port ), g_infohash
 				);
 
@@ -343,7 +341,7 @@ void handle_mcast( int rc, int sock_recv ) {
 	int port = parse_packet( buf );
 	if( port > 0 ) {
 		port_set( &c_addr, port );
-		log_debug( "LPD: Ping lonely peer at %s", str_addr( &c_addr, addrbuf ) );
+		log_debug( "LPD: Ping lonely peer at %s", str_addr( &c_addr ) );
 		kad_ping( &c_addr );
 	} else {
 		log_debug( "LPD: Received invalid packet on multicast group." );

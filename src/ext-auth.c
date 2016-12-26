@@ -323,7 +323,6 @@ UCHAR *auth_handle_pkey( UCHAR pkey[], UCHAR id[], const char query[] ) {
 /* Send challenges */
 void auth_send_challenges( int sock ) {
 	UCHAR buf[4+SHA1_BIN_LENGTH+CHALLENGE_BIN_LENGTH];
-	char addrbuf[FULL_ADDSTRLEN+1];
 	struct results_t *results;
 	struct result_t *result;
 	time_t now;
@@ -346,7 +345,7 @@ void auth_send_challenges( int sock ) {
 				memcpy( buf+4, results->id, SHA1_BIN_LENGTH );
 				memcpy( buf+4+SHA1_BIN_LENGTH, result->challenge, CHALLENGE_BIN_LENGTH );
 
-				log_debug( "AUTH: Send challenge: %s", str_addr( &result->addr, addrbuf ) );
+				log_debug( "AUTH: Send challenge: %s", str_addr( &result->addr ) );
 				sendto( sock, buf, sizeof(buf), 0, (struct sockaddr*) &result->addr, sizeof(IP) );
 
 				result->challenges_send++;
@@ -359,7 +358,6 @@ void auth_send_challenges( int sock ) {
 
 /* Receive a solved challenge and verify it */
 void auth_verify_challenge( int sock, UCHAR buf[], size_t buflen, IP *addr, time_t now ) {
-	char addrbuf[FULL_ADDSTRLEN+1];
 	UCHAR m[CHALLENGE_BIN_LENGTH+crypto_sign_BYTES];
 	unsigned long long smlen;
 	unsigned long long mlen;
@@ -401,17 +399,17 @@ void auth_verify_challenge( int sock, UCHAR buf[], size_t buflen, IP *addr, time
 	}
 
 	if( crypto_sign_open( m, &mlen, sm, smlen, results->pkey ) != 0 ) {
-		log_debug(  "AUTH: Challenge response does not verify: %s", str_addr( addr, addrbuf ) );
+		log_debug(  "AUTH: Challenge response does not verify: %s", str_addr( addr ) );
 		return;
 	}
 
 	/* Check challenge */
 	if( mlen != CHALLENGE_BIN_LENGTH || memcmp( m, result->challenge, CHALLENGE_BIN_LENGTH ) != 0 ) {
-		log_debug(  "AUTH: Challenge response is invalid: %s", str_addr( addr, addrbuf ) );
+		log_debug(  "AUTH: Challenge response is invalid: %s", str_addr( addr ) );
 		return;
 	}
 
-	log_debug( "AUTH: Challenge response is valid: %s", str_addr(addr, addrbuf ) );
+	log_debug( "AUTH: Challenge response is valid: %s", str_addr( addr ) );
 
 	/* Mark result as verified (no challenge set) */
 	free( result->challenge );
@@ -420,7 +418,6 @@ void auth_verify_challenge( int sock, UCHAR buf[], size_t buflen, IP *addr, time
 
 /* Receive a challenge and solve it using a secret key */
 void auth_receive_challenge( int sock, UCHAR buf[], size_t buflen, IP *addr, time_t now ) {
-	char addrbuf[FULL_ADDSTRLEN+1];
 	UCHAR outbuf[1500];
 	UCHAR sm[CHALLENGE_BIN_LENGTH+crypto_sign_BYTES];
 	UCHAR *m;
@@ -453,7 +450,7 @@ void auth_receive_challenge( int sock, UCHAR buf[], size_t buflen, IP *addr, tim
 	memcpy( outbuf+4, id, SHA1_BIN_LENGTH );
 	memcpy( outbuf+4+SHA1_BIN_LENGTH, sm, smlen );
 
-	log_debug( "AUTH: Received challenge from %s and send back response.", str_addr(addr, addrbuf ) );
+	log_debug( "AUTH: Received challenge from %s and send back response.", str_addr( addr ) );
 	sendto( sock, outbuf, 4+SHA1_BIN_LENGTH+smlen, 0, (struct sockaddr*) addr, sizeof(IP) );
 }
 

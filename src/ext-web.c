@@ -16,7 +16,6 @@
 
 /* handle 'GET /lookup?foo.p2p' */
 void handle_lookup( char *reply_buf, const char *params ) {
-	char addrbuf[FULL_ADDSTRLEN+1];
 	IP addrs[MAX_ADDRS];
 	size_t num;
 	size_t i, n;
@@ -25,7 +24,7 @@ void handle_lookup( char *reply_buf, const char *params ) {
 	num = N_ELEMS(addrs);
 	if( kad_lookup_value( params, addrs, &num ) >= 0 && num > 0 ) {
 		for( n = 0, i = 0; i < num; i++ ) {
-			n += sprintf( reply_buf + n, "%s\n", str_addr( &addrs[i], addrbuf ) );
+			n += sprintf( reply_buf + n, "%s\n", str_addr( &addrs[i] ) );
 		}
 	}
 }

@@ -239,7 +239,7 @@ char *str_id( const UCHAR id[], char buf[] ) {
 	return bytes_to_hex( buf, id, SHA1_BIN_LENGTH );
 }
 
-char *str_addr( const IP *addr, char addrbuf[] ) {
+char *str_addr_buf( const IP *addr, char addrbuf[] ) {
 	char buf[INET6_ADDRSTRLEN+1];
 	unsigned short port;
 
@@ -261,14 +261,9 @@ char *str_addr( const IP *addr, char addrbuf[] ) {
 	return addrbuf;
 }
 
-char *str_addr1( const IP *addr ) {
+char *str_addr( const IP *addr ) {
 	static char addrbuf[FULL_ADDSTRLEN+1];
-	return str_addr( addr, addrbuf) ;
-}
-
-char *str_addr2( const IP *addr ) {
-	static char addrbuf[FULL_ADDSTRLEN+1];
-	return str_addr( addr, addrbuf) ;
+	return str_addr_buf( addr, addrbuf );
 }
 
 int addr_is_multicast( const IP *addr )
