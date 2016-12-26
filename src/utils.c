@@ -261,12 +261,14 @@ char *str_addr( const IP *addr, char addrbuf[] ) {
 	return addrbuf;
 }
 
-char *str_addr6( const IP6 *addr, char addrbuf[] ) {
-	return str_addr( (const IP *)addr, addrbuf );
+char *str_addr1( const IP *addr ) {
+	static char addrbuf[FULL_ADDSTRLEN+1];
+	return str_addr( addr, addrbuf) ;
 }
 
-char *str_addr4( const IP4 *addr, char addrbuf[] ) {
-	return str_addr( (const IP *)addr, addrbuf );
+char *str_addr2( const IP *addr ) {
+	static char addrbuf[FULL_ADDSTRLEN+1];
+	return str_addr( addr, addrbuf) ;
 }
 
 int addr_is_multicast( const IP *addr )

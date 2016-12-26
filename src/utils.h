@@ -34,8 +34,8 @@ int str_isZero( const char str[] );
 
 char *str_id( const UCHAR id[], char idbuf[] );
 char *str_addr( const IP *addr, char addrbuf[] );
-char *str_addr4( const IP4 *addr, char addrbuf[] );
-char *str_addr6( const IP6 *addr, char addrbuf[] );
+char *str_addr1( const IP *addr );
+char *str_addr2( const IP *addr );
 
 int addr_is_multicast( const IP *addr );
 int addr_parse( IP *addr, const char addr_str[], const char port_str[], int af );
