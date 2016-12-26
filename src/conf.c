@@ -104,8 +104,10 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 "				Default: "CMD_PORT"\n\n"
 #endif
 #ifdef DNS
-" --dns-port <port>		Bind the DNS server to this local port.\n"
+" --dns-port <port>		Bind the DNS server interface to this local port.\n"
 "				Default: "DNS_PORT"\n\n"
+" --dns-server <ip_addr>	IP address of an external DNS server. Enables DNS proxy mode.\n"
+"				Default: none\n\n"
 #endif
 #ifdef NSS
 " --nss-port <port>		Bind the Network Service Switch to this local port.\n"
@@ -182,6 +184,7 @@ struct setting_t *conf_remove_setting( struct setting_t *cur ) {
 	return next;
 }
 
+/* Parse a <id>[:<port>] value */
 void conf_apply_value( const char val[] ) {
 	int port;
 	int rc;
@@ -262,6 +265,13 @@ void conf_check( void ) {
 #ifdef DNS
 	if( gconf->dns_port == NULL ) {
 		gconf->dns_port = strdup( DNS_PORT );
+	}
+
+	if( gconf->dns_server ) {
+		if( addr_parse( &gconf->dns_server_addr, gconf->dns_server, "53", AF_UNSPEC ) != 0 ) {
+			log_err( "CFG: Failed to parse IP address '%s'.", gconf->dns_server );
+			exit( 1 );
+		}
 	}
 #endif
 
@@ -386,6 +396,11 @@ void conf_info( void ) {
 #ifdef LPD
 	log_info( "LPD Address: %s", (gconf->lpd_disable == 0) ? gconf->lpd_addr : "Disabled" );
 #endif
+#ifdef DNS
+	if (gconf->dns_server) {
+		log_info( "Forward foreign DNS requests to %s", gconf->dns_server );
+	}
+#endif
 }
 
 void conf_free( void ) {
@@ -407,6 +422,7 @@ void conf_free( void ) {
 #endif
 #ifdef DNS
 	free( gconf->dns_port );
+	free( gconf->dns_server );
 #endif
 #ifdef NSS
 	free( gconf->nss_port );
@@ -483,6 +499,8 @@ int conf_handle_option( char opt[], char val[] ) {
 #ifdef DNS
 	} else if( match( opt, "--dns-port" ) ) {
 		conf_str( opt, &gconf->dns_port, val );
+	} else if( match( opt, "--dns-server" ) ) {
+		conf_str( opt, &gconf->dns_server, val );
 #endif
 #ifdef NSS
 	} else if( match( opt, "--nss-port" ) ) {

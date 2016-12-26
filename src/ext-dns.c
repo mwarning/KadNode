@@ -4,6 +4,8 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <arpa/inet.h>
+#include <unistd.h>
 
 #include "main.h"
 #include "conf.h"
@@ -14,6 +16,15 @@
 #include "ext-dns.h"
 
 #define MAX_ADDR_RECORDS 32
+
+
+int g_sock4 = -1;
+int g_sock6 = -1;
+
+/* A simple ring buffer for DNS proxy requests. */
+unsigned short proxy_entries_id[16] = {0};
+IP proxy_entries_addr[16] = {0};
+unsigned proxy_entries_count = 0;
 
 /*
 * DNS-Server interface for KadNode.
@@ -389,7 +400,7 @@ int dns_encode_msg( UCHAR *buffer, size_t size, const struct Message *msg ) {
 	return (buffer - beg);
 }
 
-int dns_lookup_addr( const char hostname[], IP addr[], size_t addr_num ) {
+int kadnode_lookup_addr( const char hostname[], IP addr[], size_t addr_num ) {
 
 	/* Start lookup for one address */
 	if( kad_lookup_value( hostname, addr, &addr_num ) >= 0 && addr_num > 0 ) {
@@ -523,14 +534,48 @@ const char* qtype_str( int qType ) {
 	}
 }
 
+/* Forward request to external DNS server */
+void proxy_forward_request( UCHAR *buffer, ssize_t buflen, IP *clientaddr, unsigned short id ) {
+	char addrbuf[FULL_ADDSTRLEN+1];
+	int sock;
+
+	sock = (gconf->dns_server_addr.ss_family == AF_INET) ? g_sock4 : g_sock6;
+	if( sendto( sock, buffer, buflen, 0, (struct sockaddr*) &gconf->dns_server_addr, sizeof(IP) ) < 0 ) {
+		log_warn( "DNS: Failed to send request to dns server %s", str_addr( &gconf->dns_server_addr, addrbuf ) );
+		return;
+	}
+
+	/* Remember DNS request id and client address */
+	proxy_entries_id[proxy_entries_count] = id;
+	proxy_entries_addr[proxy_entries_count] = *clientaddr;
+	proxy_entries_count = (proxy_entries_count + 1) % N_ELEMS(proxy_entries_id);
+}
+
+/* Forward DNS response back to client address */
+void proxy_forward_response( UCHAR *buffer, ssize_t buflen, unsigned short id ) {
+	int sock;
+	int i;
+
+	for ( i = 0; i < N_ELEMS(proxy_entries_id); ++i ) {
+		if( proxy_entries_id[i] == id ) {
+			sock = (proxy_entries_addr[i].ss_family == AF_INET) ? g_sock4 : g_sock6;
+			if( sendto( sock, buffer, buflen, 0, (struct sockaddr*) &proxy_entries_addr[i], sizeof(IP) ) < 0 ) {
+				/* Ignore failure, client may went down */
+			}
+			return;
+		}
+	}
+
+	log_warn( "DNS: Failed to find client for request." );
+}
+
 void dns_handler( int rc, int sock ) {
-	ssize_t buflen;
 	struct Message msg;
 	IP clientaddr;
-	IP addrs[MAX_ADDR_RECORDS];
 	size_t addrs_num;
+	IP addrs[MAX_ADDR_RECORDS];
 	socklen_t addrlen_ret;
-
+	ssize_t buflen;
 	UCHAR buffer[1472];
 	char addrbuf[FULL_ADDSTRLEN+1];
 	const char *hostname;
@@ -543,12 +588,31 @@ void dns_handler( int rc, int sock ) {
 	memset( buffer, 0, sizeof(buffer) );
 	addrlen_ret = sizeof(IP);
 	buflen = recvfrom( sock, buffer, sizeof(buffer), 0, (struct sockaddr *) &clientaddr, &addrlen_ret );
+
 	if( buflen < 0 ) {
 		return;
 	}
 
 	/* Decode message */
 	if( dns_decode_msg( &msg, buffer ) < 0 ) {
+		return;
+	}
+
+	hostname = msg.question.qName;
+
+	/* Got DNS response */
+	if( msg.qr == 1 ) {
+		if ( gconf->dns_server ) {
+			proxy_forward_response( buffer, buflen, msg.id);
+		}
+		return;
+	}
+
+	/* Got foreign DNS request */
+	if( !is_suffix( hostname, gconf->query_tld ) ) {
+		if ( gconf->dns_server ) {
+			proxy_forward_request( buffer, buflen, &clientaddr, msg.id);
+		}
 		return;
 	}
 
@@ -559,13 +623,6 @@ void dns_handler( int rc, int sock ) {
 
 	if( msg.question.qType == AAAA_Resource_RecordType && gconf->af != AF_INET6 ) {
 		log_debug( "DNS: Received request for IPv6 record (AAAA), but DHT uses IPv4." );
-		return;
-	}
-
-	hostname = msg.question.qName;
-
-	if ( hostname == NULL ) {
-		log_warn( "DNS: Empty hostname in question record." );
 		return;
 	}
 
@@ -581,10 +638,6 @@ void dns_handler( int rc, int sock ) {
 	);
 
 	if( msg.question.qType == PTR_Resource_RecordType ) {
-		if( !is_suffix( hostname, ".arpa" )) {
-			return;
-		}
-
 		if( (domain = dns_lookup_ptr( hostname )) == NULL ) {
 			log_debug( "DNS: No domain found for PTR question." );
 			return;
@@ -603,7 +656,7 @@ void dns_handler( int rc, int sock ) {
 			return;
 		}
 
-		if( (addrs_num = dns_lookup_addr( hostname, addrs, MAX_ADDR_RECORDS )) == 0 ) {
+		if( (addrs_num = kadnode_lookup_addr( hostname, addrs, MAX_ADDR_RECORDS )) == 0 ) {
 			log_debug( "DNS: Failed to resolve hostname: %s", hostname );
 			return;
 		}
@@ -625,20 +678,20 @@ void dns_handler( int rc, int sock ) {
 			log_warn( "DNS: Cannot send message to '%s': %s", str_addr( &clientaddr, addrbuf ), strerror( errno ) );
 		}
 	} else {
-		log_err( "DNS: Failed to create a response packet." );
-		exit( 1 );
+		log_err( "DNS: Failed to create response packet." );
 	}
 }
 
 void dns_setup( void ) {
-	int sock;
-
 	if( str_isZero( gconf->dns_port ) ) {
 		return;
 	}
 
-	sock = net_bind( "DNS", "::1", gconf->dns_port, NULL, IPPROTO_UDP, AF_UNSPEC );
-	net_add_handler( sock, &dns_handler );
+	g_sock4 = net_bind( "DNS", "0.0.0.0", gconf->dns_port, NULL, IPPROTO_UDP, AF_UNSPEC );
+	net_add_handler( g_sock4, &dns_handler );
+
+	g_sock6 = net_bind( "DNS", "::1", gconf->dns_port, NULL, IPPROTO_UDP, AF_UNSPEC );
+	net_add_handler( g_sock6, &dns_handler );
 }
 
 void dns_free( void ) {
