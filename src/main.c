@@ -47,6 +47,14 @@
 
 /* Cleanup resources on any non crash program exit */
 void main_cleanup( void ) {
+	static volatile int clean_in_progress = 0;
+
+	/* Prevent recursive calls */
+	if( clean_in_progress ) {
+		return;
+	} else {
+		clean_in_progress = 1;
+	}
 
 #ifdef CMD
 	cmd_free();
