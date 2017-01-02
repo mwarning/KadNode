@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <netdb.h>
 
 #include "main.h"
 #include "conf.h"
@@ -91,10 +92,8 @@ int peerfile_import_peer( const char* addr_str ) {
 			log_warn( "PEERFILE: Cannot ping address '%s': %s", addr_str, strerror( errno ) );
 			return 0;
 		}
-	} else if( rc == -1 ) {
-		log_warn( "PEERFILE: Cannot parse address: '%s'", addr_str );
 	} else {
-		log_warn( "PEERFILE: Cannot resolve address: '%s'", addr_str );
+		log_warn( "PEERFILE: Cannot resolve address '%s': %s", addr_str, gai_strerror(rc) );
 	}
 
 	return 0;
