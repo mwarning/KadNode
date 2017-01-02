@@ -1,14 +1,14 @@
 
-#include "windows.h"
-#include "main.h"
-#include "conf.h"
-#include "log.h"
-
 #include <windows.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+
+#include "main.h"
+#include "conf.h"
+#include "log.h"
+
 
 static SERVICE_STATUS sStatus;
 static SERVICE_STATUS_HANDLE hServiceStatus = 0;
