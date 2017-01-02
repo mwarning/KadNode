@@ -114,9 +114,13 @@ int upnp_handler( struct upnp_handle_t *handle, unsigned short port, time_t life
 #if (MINIUPNPC_API_VERSION <= 5)
 		devlist = upnpDiscover( 1000, NULL, NULL, 0 );
 		if( devlist == NULL ) {
-#else
+#elif (MINIUPNPC_API_VERSION <= 13)
 		int err = UPNPDISCOVER_SUCCESS;
 		devlist = upnpDiscover( 1000, NULL, NULL, 0, 0, &err );
+		if( err != UPNPDISCOVER_SUCCESS ) {
+#else
+		int err = UPNPDISCOVER_SUCCESS;
+		devlist = upnpDiscover( 1000, NULL, NULL, 0, 0, 2, &err );
 		if( err != UPNPDISCOVER_SUCCESS ) {
 #endif
 			log_debug( "UPnP: Method upnpDiscover failed." );
