@@ -112,7 +112,7 @@ to filter out all nodes that do not know the secret key.
 
 ### EXAMPLE 4
 
-Instead of just one name, it is possible to use patterns with a wildcard in front:
+It is possible to associate a secret/public key to multiple domains using patterns:
 
 Node1 will be reachable using node1.p2p and foobar.p2p.
 ```
