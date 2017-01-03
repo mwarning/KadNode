@@ -330,7 +330,7 @@ int kad_status( char *buf, int size ) {
 		(gconf->af == AF_INET) ? "0.0.0.0" : "::",
 		gconf->dht_port,
 		(gconf->dht_ifname == NULL) ? "<any device>" : gconf->dht_ifname
-   );
+	);
 
 	bprintf( "DHT Nodes: %d (%d good) (%s)\n",
 		kad_count_nodes( 0 ), kad_count_nodes( 1 ), (gconf->af == AF_INET) ? "IPv4" : "IPv6" );
