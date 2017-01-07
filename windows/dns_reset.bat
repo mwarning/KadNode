@@ -15,8 +15,17 @@ SET adapterName=!adapterName:~17!
 REM Removes the colon from the end of the adapter name
 SET adapterName=!adapterName:~0,-1!
 
-netsh interface ip set address "!adapterName!" dhcp
-netsh interface ip delete dnsserver "!adapterName!" all
+set skip=0
+
+ECHO.!adapterName!| FIND /I "vpn">Nul && ( set skip=1 )
+ECHO.!adapterName!| FIND /I "virtual">Nul && ( set skip=1 )
+
+if !skip! == 0 (
+    netsh interface ipv4 set dnsservers name="!adapterName!" source= dhcp
+    netsh interface ipv6 set dnsservers name="!adapterName!" source= dhcp
+    )
 )
 
-ipconfig /flushdns
+start sc config dnscache start= auto
+start net start dnscache
+start ipconfig /flushdns
