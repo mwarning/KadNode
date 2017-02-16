@@ -27,7 +27,7 @@ Features:
 * command line interface (kadnode-ctl)
 * NSS support through /etc/nsswitch.conf
 * integrated simplified DNS server (handles A, AAAA, and SRV requests)
-* packages for ArchLinux/Debian/FreeBSD/MacOSX/OpenWrt/Windows
+* packages for ArchLinux/Debian/FreeBSD/MacOSX/LEDE/Windows
 * peer file import/export on startup/shutdown and every 24h
 
 Most features are optional and can be left out to reduce the binary size.
