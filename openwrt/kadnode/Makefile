@@ -1,6 +1,4 @@
 #
-# Copyright (C) 2013-2014 OpenWrt.org
-#
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
 #
@@ -9,6 +7,8 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=kadnode
 PKG_VERSION:=1.0.0
 PKG_RELEASE:=1
+
+PKG_LICENSE:=MIT
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
