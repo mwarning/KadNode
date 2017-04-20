@@ -161,15 +161,20 @@ void results_remove( struct results_t *target ) {
 void results_expire( void ) {
 	struct results_t *results;
 	time_t now;
+	int rcount;
 
 	now = time_now_sec();
 	results = g_results;
+	rcount = 0;
 	while( results ) {
 		if( results->start_time < (now - MAX_SEARCH_LIFETIME) ) {
-			results_remove( results );
-			return;
+            if(rcount > KEEP_RESULTS) {
+                results_remove( results );
+                return;
+			}
 		}
 		results = results->next;
+		rcount++;
 	}
 }
 

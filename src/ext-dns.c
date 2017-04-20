@@ -23,7 +23,7 @@ int g_sock6 = -1;
 
 /* A simple ring buffer for DNS proxy requests. */
 unsigned short proxy_entries_id[16] = {0};
-IP proxy_entries_addr[16] = {0};
+IP proxy_entries_addr[16] = {{0}};
 unsigned proxy_entries_count = 0;
 
 /*
