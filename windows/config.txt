@@ -3,6 +3,14 @@
 #
 #--value-id mycomputer.p2p
 #
+#
+# Option to proxy DNS queries.
+# This option is required on Windows.
+# You can point Your own DNS server.
+#
+--dns-server 8.8.8.8
+#
+#
 # To prevent others from claiming the same domain you should
 # use cryptographic keys for authentication:
 #
