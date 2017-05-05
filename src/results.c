@@ -21,40 +21,29 @@
 * searches are collected and stored here until they expire.
 */
 
-static struct results_t *g_results = NULL;
-static size_t g_results_num = 0;
-static time_t g_results_expire = 0;
+static struct results_t *g_results[MAX_SEARCHES] = {NULL};
+/* Index of next slot to be used */
+static size_t g_results_idx = 0;
 
-struct results_t* results_get( void ) {
-	return g_results;
+struct results_t** results_get( void ) {
+	return &g_results[0];
 }
 
 /* Find a value search result */
 struct results_t *results_find( const UCHAR id[] ) {
-	struct results_t *results;
+	struct results_t **results;
+	struct results_t *bucket;
 
-	results = g_results;
+	results = results_get();
 	while( results != NULL ) {
-		if( id_equal( results->id, id ) ) {
-			return results;
+		bucket = *results;
+		if( id_equal( bucket->id, id ) ) {
+			return bucket;
 		}
-		results = results->next;
+		results++;
 	}
 
 	return NULL;
-}
-
-int results_count( struct results_t *results ) {
-	struct result_t *result;
-	int count;
-
-	count = 0;
-	result = results->entries;
-	while( result ) {
-		count++;
-		result = result->next;
-	}
-	return count;
 }
 
 int results_entries_count( struct results_t *result ) {
@@ -79,11 +68,11 @@ int results_entries_count( struct results_t *result ) {
 }
 
 /* Free a results_t item and all its result_t entries */
-void results_item_free( struct results_t *results ) {
+void results_item_free( struct results_t *bucket ) {
 	struct result_t *cur;
 	struct result_t *next;
 
-	cur = results->entries;
+	cur = bucket->entries;
 	while( cur ) {
 		next = cur->next;
 #ifdef AUTH
@@ -94,35 +83,37 @@ void results_item_free( struct results_t *results ) {
 	}
 
 #ifdef AUTH
-	free( results->pkey );
+	free( bucket->pkey );
 #endif
-	free( results );
+	free( bucket );
 }
 
 void results_debug( int fd ) {
 	char buf[256+1];
-	struct results_t *results;
+	struct results_t **results;
+	struct results_t *bucket;
 	struct result_t *result;
 	int results_counter;
 	int result_counter;
 
 	results_counter = 0;
-	results = g_results;
+	results = results_get();
 	dprintf( fd, "Result buckets:\n" );
 	while( results != NULL ) {
-		dprintf( fd, " id: %s\n", str_id( results->id, buf ) );
-		dprintf( fd, "  done: %d\n", results->done );
+		bucket = *results;
+		dprintf( fd, " id: %s\n", str_id( bucket->id, buf ) );
+		dprintf( fd, "  done: %d\n", bucket->done );
 #ifdef AUTH
-		if( results->pkey ) {
-			dprintf( fd, "  pkey: %s\n", bytes_to_hex( buf, results->pkey, crypto_sign_PUBLICKEYBYTES ) );
+		if( bucket->pkey ) {
+			dprintf( fd, "  pkey: %s\n", bytes_to_hex( buf, bucket->pkey, crypto_sign_PUBLICKEYBYTES ) );
 		}
 #endif
 		result_counter = 0;
-		result = results->entries;
+		result = bucket->entries;
 		while( result ) {
 			dprintf( fd, "   addr: %s\n", str_addr_buf( &result->addr, buf ) );
 #ifdef AUTH
-			if( results->pkey ) {
+			if( bucket->pkey ) {
 				dprintf( fd, "    challenge: %s\n",  result->challenge ? bytes_to_hex( buf, result->challenge, CHALLENGE_BIN_LENGTH ) : "done" );
 				dprintf( fd, "    challenges_send: %d\n", result->challenges_send );
 			}
@@ -132,45 +123,9 @@ void results_debug( int fd ) {
 		}
 		dprintf( fd, "  Found %d results.\n", result_counter );
 		results_counter++;
-		results = results->next;
+		results++;
 	}
 	dprintf( fd, " Found %d result buckets.\n", results_counter );
-}
-
-void results_remove( struct results_t *target ) {
-	struct results_t *pre;
-	struct results_t *cur;
-
-	cur = g_results;
-	pre = NULL;
-	while( cur ) {
-		if( cur == target ) {
-			if( pre ) {
-				pre->next = cur->next;
-			} else {
-				g_results = NULL;
-			}
-			results_item_free( target );
-			return;
-		}
-		pre = cur;
-		cur = cur->next;
-	}
-}
-
-void results_expire( void ) {
-	struct results_t *results;
-	time_t now;
-
-	now = time_now_sec();
-	results = g_results;
-	while( results ) {
-		if( results->start_time < (now - MAX_SEARCH_LIFETIME) ) {
-			results_remove( results );
-			return;
-		}
-		results = results->next;
-	}
 }
 
 /* Add a new bucket to collect results */
@@ -179,10 +134,6 @@ struct results_t* results_add( const char query[], int *is_new ) {
 	UCHAR id[SHA1_BIN_LENGTH];
 	struct results_t* new;
 	struct results_t* results;
-
-	if( g_results_num > MAX_SEARCHES ) {
-		return NULL;
-	}
 
 #ifdef AUTH
 	UCHAR pkey[crypto_sign_PUBLICKEYBYTES];
@@ -210,11 +161,13 @@ struct results_t* results_add( const char query[], int *is_new ) {
 
 	log_debug( "Results: Add results bucket for query '%s', id '%s'.", query, str_id( id, hexbuf ) );
 
-	/* Prepend to list */
-	new->next = g_results;
-	g_results = new;
+	/* Free slot if taken */
+	if( g_results[g_results_idx] != NULL ) {
+		results_item_free( g_results[g_results_idx] );
+	}
 
-	g_results_num++;
+	g_results[g_results_idx] = new;
+	g_results_idx = (g_results_idx + 1) % MAX_SEARCHES;
 
 	return new;
 }
@@ -228,7 +181,7 @@ int results_add_addr( struct results_t *results, const IP *addr ) {
 		return -1;
 	}
 
-	if( results_count( results ) > MAX_RESULTS_PER_SEARCH ) {
+	if( results_entries_count( results ) > MAX_RESULTS_PER_SEARCH ) {
 		return -1;
 	}
 
@@ -270,9 +223,10 @@ int results_done( struct results_t *results, int done ) {
 	if( done ) {
 		results->done = 1;
 		/* Remove search if no results have been found */
+		/*
 		if( results_entries_count( results ) == 0 ) {
 			results_remove( results );
-		}
+		}*/
 	} else {
 		results->start_time = time_now_sec();
 		results->done = 0;
@@ -306,30 +260,18 @@ int results_collect( struct results_t *results, IP addr_array[], size_t addr_num
 	return i;
 }
 
-void results_handle( int _rc, int _sock ) {
-	/* Expire value search results */
-	if( g_results_expire <= time_now_sec() ) {
-		results_expire();
-
-		/* Try again in ~2 minutes */
-		g_results_expire = time_add_min( 2 );
-	}
-}
 
 void results_setup( void ) {
-	net_add_handler( -1, &results_handle );
+	/* Nothing to do */
 }
 
 void results_free( void ) {
-	struct results_t *cur;
-	struct results_t *next;
+	struct results_t **results;
 
-	cur = g_results;
-	while( cur ) {
-		next = cur->next;
-		results_item_free( cur );
-		cur = next;
+	results = results_get();
+	while( results != NULL ) {
+		results_item_free( *results );
+		*results = NULL;
+		results++;
 	}
-
-	g_results = NULL;
 }

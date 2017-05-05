@@ -323,7 +323,7 @@ UCHAR *auth_handle_pkey( UCHAR pkey[], UCHAR id[], const char query[] ) {
 /* Send challenges */
 void auth_send_challenges( int sock ) {
 	UCHAR buf[4+SHA1_BIN_LENGTH+CHALLENGE_BIN_LENGTH];
-	struct results_t *results;
+	struct results_t **results;
 	struct result_t *result;
 	time_t now;
 
@@ -337,12 +337,12 @@ void auth_send_challenges( int sock ) {
 	}
 
 	results = results_get();
-	while( results ) {
-		result = results->entries;
+	while( results != NULL ) {
+		result = (*results)->entries;
 		while( result ) {
 			if( result->challenge && result->challenges_send < MAX_AUTH_CHALLENGE_SEND ) {
 				memcpy( buf, "AUTH", 4 );
-				memcpy( buf+4, results->id, SHA1_BIN_LENGTH );
+				memcpy( buf+4, (*results)->id, SHA1_BIN_LENGTH );
 				memcpy( buf+4+SHA1_BIN_LENGTH, result->challenge, CHALLENGE_BIN_LENGTH );
 
 				log_debug( "AUTH: Send challenge: %s", str_addr( &result->addr ) );
@@ -352,7 +352,7 @@ void auth_send_challenges( int sock ) {
 			}
 			result = result->next;
 		}
-		results = results->next;
+		results++;
 	}
 }
 

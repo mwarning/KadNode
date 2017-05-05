@@ -34,7 +34,7 @@ struct results_t {
 	int done;
 };
 
-struct results_t *results_get( void );
+struct results_t **results_get( void );
 struct results_t *results_find( const UCHAR id[] );
 
 /* Register a handler to call results_expire in intervalls */
