@@ -337,7 +337,7 @@ void auth_send_challenges( int sock ) {
 	}
 
 	results = results_get();
-	while( results != NULL ) {
+	while( *results != NULL ) {
 		result = (*results)->entries;
 		while( result ) {
 			if( result->challenge && result->challenges_send < MAX_AUTH_CHALLENGE_SEND ) {

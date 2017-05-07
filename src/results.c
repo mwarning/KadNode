@@ -21,7 +21,7 @@
 * searches are collected and stored here until they expire.
 */
 
-static struct results_t *g_results[MAX_SEARCHES] = {NULL};
+static struct results_t *g_results[MAX_SEARCHES+1] = {NULL};
 /* Index of next slot to be used */
 static size_t g_results_idx = 0;
 
@@ -35,7 +35,7 @@ struct results_t *results_find( const UCHAR id[] ) {
 	struct results_t *bucket;
 
 	results = results_get();
-	while( results != NULL ) {
+	while( *results != NULL ) {
 		bucket = *results;
 		if( id_equal( bucket->id, id ) ) {
 			return bucket;
@@ -99,7 +99,7 @@ void results_debug( int fd ) {
 	results_counter = 0;
 	results = results_get();
 	dprintf( fd, "Result buckets:\n" );
-	while( results != NULL ) {
+	while( *results != NULL ) {
 		bucket = *results;
 		dprintf( fd, " id: %s\n", str_id( bucket->id, buf ) );
 		dprintf( fd, "  done: %d\n", bucket->done );
@@ -269,7 +269,7 @@ void results_free( void ) {
 	struct results_t **results;
 
 	results = results_get();
-	while( results != NULL ) {
+	while( *results != NULL ) {
 		results_item_free( *results );
 		*results = NULL;
 		results++;
