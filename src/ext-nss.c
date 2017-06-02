@@ -57,7 +57,6 @@ void nss_handler( int rc, int sock ) {
 	/* Add missing null terminator */
 	hostname[rc] = '\0';
 
-return;
 	if( !is_suffix( hostname, gconf->query_tld ) ) {
 		return;
 	}
