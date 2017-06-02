@@ -14,10 +14,10 @@
 #include "peerfile.h"
 
 
-/* Next time to import peers from peer file */
+// Next time to import peers from peer file
 static time_t peerfile_import_time = 0;
 
-/* Next time to export peers to peer file  */
+// Next time to export peers to peer file
 static time_t peerfile_export_time = 0;
 
 struct peer {
@@ -25,7 +25,7 @@ struct peer {
 	char* addr_str;
 };
 
-/* A list of static peers */
+// A list of static peers
 struct peer *g_peers = NULL;
 
 
@@ -46,7 +46,7 @@ void peerfile_export( void ) {
 		return;
 	}
 
-	/* No peers to export */
+	// No peers to export
 	if( num == 0 ) {
 		log_info( "PEERFILE: No peers to export." );
 		return;
@@ -63,7 +63,7 @@ void peerfile_export( void ) {
 		return;
 	}
 
-	/* Write peers to file */
+	// Write peers to file
 	for( i = 0; i < num; ++i ) {
 #ifdef __CYGWIN__
 		if( fprintf( fp, "%s\r\n", str_addr( &addrs[i] ) ) < 0 ) {
@@ -156,21 +156,21 @@ void peerfile_add_peer( const char *addr_str ) {
 void peerfile_handle_peerfile( int _rc, int _sock ) {
 
 	if( peerfile_import_time <= time_now_sec() && kad_count_nodes( 0 ) == 0 ) {
-		/* Ping peers from peerfile, if present */
+		// Ping peers from peerfile, if present
 		peerfile_import( gconf->peerfile );
 
-		/* Import static peers */
+		// Import static peers
 		peerfile_import_static( g_peers );
 
-		/* Try again in ~5 minutes */
+		// Try again in ~5 minutes
 		peerfile_import_time = time_add_min( 5 );
 	}
 
 	if( peerfile_export_time <= time_now_sec() && kad_count_nodes( 1 ) != 0 ) {
-		/* Export peers */
+		// Export peers
 		peerfile_export();
 
-		/* Try again in 24 hours */
+		// Try again in 24 hours
 		peerfile_export_time = time_add_hour( 24 );
 	}
 }

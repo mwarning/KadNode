@@ -3,8 +3,8 @@
 #define _EXT_CMD_H_
 
 
-/* Start the remote console interface */
+// Start the remote console interface
 void cmd_setup( void );
 void cmd_free( void );
 
-#endif /* _EXT_CMD_H_ */
+#endif // _EXT_CMD_H_

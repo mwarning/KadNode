@@ -9,6 +9,11 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <ctype.h>
+#ifdef TLS
+#include "mbedtls/sha1.h"
+#else
+
+#endif
 
 #include "main.h"
 #include "log.h"
@@ -17,7 +22,19 @@
 #include "utils.h"
 
 
-/* Also matches on equality */
+// Convert a hash into an 64 bit value
+uint64_t id_from_hash( const char hash[] ) {
+	union {
+		uint64_t number;
+		char data[8];
+	} id;
+
+	memcpy(&id.data, hash, sizeof(id.data));
+
+	return id.number;
+}
+
+// Also matches on equality
 int is_suffix( const char str[], const char suffix[] ) {
 	size_t suffix_len;
 	size_t str_len;
@@ -31,35 +48,33 @@ int is_suffix( const char str[], const char suffix[] ) {
 	}
 }
 
-UCHAR *memdup( const UCHAR *src, size_t size ) {
-	UCHAR *dst;
+uint8_t *memdup( const uint8_t *src, size_t size ) {
+	uint8_t *dst;
 
-	dst = (UCHAR*) malloc( size );
+	dst = (uint8_t*) malloc( size );
 	memcpy( dst, src, size );
 
 	return dst;
 }
 
-/*
-* Remove .p2p suffix and convert to lowercase.
-*/
+//Remove .p2p suffix and convert to lowercase.
 int query_sanitize( char buf[], size_t buflen, const char query[] ) {
 	size_t len;
 	size_t i;
 
 	len = strlen( query );
 
-	/* Remove .p2p suffix */
+	// Remove .p2p suffix
 	if( is_suffix( query, gconf->query_tld ) ) {
 		len -= strlen( gconf->query_tld );
 	}
 
-	/* Buffer too small */
+	// Buffer too small
 	if( (len+1) >= buflen ) {
 		return 1;
 	}
 
-	/* Convert to lower case */
+	// Convert to lower case
 	for( i = 0; i < len; ++i ) {
 		buf[i] = tolower( (unsigned char) query[i] );
 	}
@@ -68,18 +83,18 @@ int query_sanitize( char buf[], size_t buflen, const char query[] ) {
 	return 0;
 }
 
-/* Create a random port != 0 */
+// Create a random port != 0
 int port_random( void ) {
 	unsigned short port;
 
 	do {
-		bytes_random( (UCHAR*) &port, sizeof(port) );
+		bytes_random( (uint8_t*) &port, sizeof(port) );
 	} while( port == 0 );
 
 	return port;
 }
 
-/* Parse a port - treats 0 as valid port */
+// Parse a port - treats 0 as valid port
 int port_parse( const char *pstr, int err ) {
 	int port;
 	size_t i;
@@ -113,8 +128,8 @@ int port_set( IP *addr, unsigned short port ) {
 	}
 }
 
-/* Fill buffer with random bytes */
-int bytes_random( UCHAR buffer[], size_t size ) {
+// Fill buffer with random bytes
+int bytes_random( uint8_t buffer[], size_t size ) {
 	int fd;
 	int rc;
 
@@ -124,14 +139,14 @@ int bytes_random( UCHAR buffer[], size_t size ) {
 		exit( 1 );
 	}
 
-	if( (rc = read( fd, buffer, size )) >= 0 ) {
-		close( fd );
-	}
+	rc = read( fd, buffer, size );
+
+	close( fd );
 
 	return rc;
 }
 
-void bytes_from_hex( UCHAR bin[], const char hex[], size_t length ) {
+void bytes_from_hex( uint8_t bin[], const char hex[], size_t length ) {
 	size_t i;
 	size_t xv = 0;
 
@@ -154,9 +169,9 @@ void bytes_from_hex( UCHAR bin[], const char hex[], size_t length ) {
 	}
 }
 
-char *bytes_to_hex( char hex[], const UCHAR bin[], size_t length ) {
+char *bytes_to_hex( char hex[], const uint8_t bin[], size_t length ) {
 	size_t i;
-	UCHAR *p0 = (UCHAR *)bin;
+	uint8_t *p0 = (uint8_t *)bin;
 	char *p1 = hex;
 
 	for( i = 0; i < length; i++ ) {
@@ -172,26 +187,33 @@ char *bytes_to_hex( char hex[], const UCHAR bin[], size_t length ) {
 * Compute the id of a string using the sha1 digest.
 * In case of a 20 Byte hex string, the id converted directly.
 */
-void id_compute( UCHAR id[], const char str[] ) {
-	SHA1_CTX ctx;
+void id_compute( uint8_t id[], const char str[] ) {
 	size_t size;
 
 	size = strlen( str );
 	if( size == SHA1_HEX_LENGTH && str_isHex( str, SHA1_HEX_LENGTH ) ) {
-		/* Treat hostname as hex string */
+		// Treat hostname as hex string
 		bytes_from_hex( id, str, SHA1_HEX_LENGTH );
 	} else {
+#ifdef TLS
+		mbedtls_sha1_context ctx;
+		mbedtls_sha1_init(&ctx);
+		mbedtls_sha1_update( &ctx, (const uint8_t *) str, size );
+		mbedtls_sha1_finish(&ctx, id);
+#else
+		SHA1_CTX ctx;
 		SHA1_Init( &ctx );
-		SHA1_Update( &ctx, (const UCHAR *) str, size);
+		SHA1_Update( &ctx, (const uint8_t *) str, size);
 		SHA1_Final( &ctx, id );
+#endif
 	}
 }
 
-int id_equal( const UCHAR id1[], const UCHAR id2[] ) {
+int id_equal( const uint8_t id1[], const uint8_t id2[] ) {
 	return (memcmp( id1, id2, SHA1_BIN_LENGTH ) == 0);
 }
 
-/* Check if string consist of hexdecimal characters */
+// Check if string consist of hexdecimal characters
 int str_isHex( const char str[], size_t size ) {
 	size_t i = 0;
 
@@ -235,7 +257,7 @@ int str_isZero( const char str[] ) {
 	return (str == NULL) || (strcmp( str, "0" ) == 0);
 }
 
-char *str_id( const UCHAR id[], char buf[] ) {
+char *str_id( const uint8_t id[], char buf[] ) {
 	return bytes_to_hex( buf, id, SHA1_BIN_LENGTH );
 }
 
@@ -357,7 +379,7 @@ int addr_parse_full( IP *addr, const char full_addr_str[], const char default_po
 
 	len = strlen( full_addr_str );
 	if( len >= (sizeof(addr_buf) - 1) ) {
-		/* address too long */
+		// address too long
 		return -1;
 	} else {
 		addr_beg = addr_buf;
@@ -369,11 +391,11 @@ int addr_parse_full( IP *addr, const char full_addr_str[], const char default_po
 	last_colon = strrchr( addr_buf, ':' );
 
 	if( addr_beg[0] == '[' ) {
-		/* [<addr>] or [<addr>]:<port> */
+		// [<addr>] or [<addr>]:<port>
 		addr_tmp = strrchr( addr_beg, ']' );
 
 		if( addr_tmp == NULL ) {
-			/* broken format */
+			// broken format
 			return -1;
 		}
 
@@ -385,11 +407,11 @@ int addr_parse_full( IP *addr, const char full_addr_str[], const char default_po
 		} else if( *(addr_tmp+1) == ':' ) {
 			port_str = addr_tmp + 2;
 		} else {
-			/* port expected */
+			// port expected
 			return -1;
 		}
 	} else if( last_colon && last_colon == strchr( addr_buf, ':' ) ) {
-		/* <non-ipv6-addr>:<port> */
+		// <non-ipv6-addr>:<port>
 		addr_tmp = last_colon;
 		if( addr_tmp ) {
 			*addr_tmp = '\0';
@@ -400,7 +422,7 @@ int addr_parse_full( IP *addr, const char full_addr_str[], const char default_po
 			port_str = default_port;
 		}
 	} else {
-		/* <addr> */
+		// <addr>
 		addr_str = addr_buf;
 		port_str = default_port;
 	}
@@ -408,7 +430,7 @@ int addr_parse_full( IP *addr, const char full_addr_str[], const char default_po
 	return addr_parse( addr, addr_str, port_str, af );
 }
 
-/* Compare two ip addresses, ignore port */
+// Compare two ip addresses, ignore port
 int addr_equal( const IP *addr1, const IP *addr2 ) {
 	if( addr1->ss_family != addr2->ss_family ) {
 		return 0;

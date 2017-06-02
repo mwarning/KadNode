@@ -32,7 +32,7 @@ void nss_lookup( int sock, IP *clientaddr, const char hostname[] ) {
 	}
 
 	addrlen = addr_len( clientaddr );
-	sendto( sock, (UCHAR *) addrs, num * sizeof(IP), 0, (const struct sockaddr *) clientaddr, addrlen );
+	sendto( sock, (uint8_t *) addrs, num * sizeof(IP), 0, (const struct sockaddr *) clientaddr, addrlen );
 }
 
 /*
@@ -57,6 +57,7 @@ void nss_handler( int rc, int sock ) {
 	/* Add missing null terminator */
 	hostname[rc] = '\0';
 
+return;
 	if( !is_suffix( hostname, gconf->query_tld ) ) {
 		return;
 	}

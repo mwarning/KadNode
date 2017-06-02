@@ -3,7 +3,7 @@ CC ?= gcc
 CFLAGS ?= -O2 -Wall -Wwrite-strings -pedantic
 CFLAGS += -std=gnu99 -I/usr/local/include
 LFLAGS += -L/usr/local/lib -lc
-FEATURES ?= auth cmd lpd nss dns #natpmp upnp debug web
+FEATURES ?= bob cmd dns debug #nss lpd natpmp upnp web tls
 
 OBJS = build/main.o build/results.o build/kad.o build/log.o \
 	build/conf.o build/sha1.o build/net.o build/utils.o \
@@ -27,9 +27,9 @@ ifeq ($(findstring lpd,$(FEATURES)),lpd)
   CFLAGS += -DLPD
 endif
 
-ifeq ($(findstring auth,$(FEATURES)),auth)
-  OBJS += build/ext-auth.o
-  CFLAGS += -DAUTH
+ifeq ($(findstring bob,$(FEATURES)),bob)
+  OBJS += build/ext-bob.o
+  CFLAGS += -DBOB
   LFLAGS += -lsodium
 endif
 
@@ -57,6 +57,12 @@ endif
 ifeq ($(findstring web,$(FEATURES)),web)
   OBJS += build/ext-web.o
   CFLAGS += -DWEB
+endif
+
+ifeq ($(findstring tls,$(FEATURES)),tls)
+  OBJS += build/ext-tls.o
+  CFLAGS += -DTLS
+  LFLAGS += -lmbedtls -lmbedx509 -lmbedcrypto
 endif
 
 ifeq ($(findstring upnp,$(FEATURES)),upnp)

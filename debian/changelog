@@ -1,3 +1,8 @@
+kadnode (2.0.0) UNRELEASED; urgency=medium
+
+  * rename previous authentication scheme to bob (uses libsodium)
+  * introduce new TLS based authentication scheme (uses mbedtls)
+
 kadnode (1.1.0) UNRELEASED; urgency=medium
 
   * DNS answers were in additional records, not answer records

@@ -3,9 +3,6 @@
 #define _EXT_VALUES_H_
 
 #include <sys/time.h>
-#ifdef AUTH
-#include <sodium.h>
-#endif
 
 /*
 * Announce a value id / port pair in regular
@@ -14,10 +11,7 @@
 
 struct value_t {
 	struct value_t *next;
-	UCHAR id[SHA1_BIN_LENGTH];
-#ifdef AUTH
-	UCHAR *skey;
-#endif
+	uint8_t id[SHA1_BIN_LENGTH];
 	int port;
 	time_t lifetime; /* Keep entry refreshed until the lifetime expires */
 	time_t refresh; /* Next time the entry need to be refreshed */
@@ -27,7 +21,7 @@ void values_setup( void );
 void values_free( void );
 
 struct value_t* values_get( void );
-struct value_t* values_find( UCHAR id[] );
+struct value_t* values_find( uint8_t id[] );
 
 /* List all entries */
 void values_debug( int fd );

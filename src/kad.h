@@ -11,10 +11,10 @@
 void kad_setup( void );
 void kad_free( void );
 
-/* Ping this node to add it to the node table */
+// Ping this node to add it to the node table
 int kad_ping( const IP *addr );
 
-/* Blacklist a specific address */
+// Blacklist a specific address
 int kad_blacklist( const IP* addr );
 
 /*
@@ -29,29 +29,29 @@ int kad_lookup_node( const char query[], IP *addr_return );
 */
 int kad_lookup_value( const char query[], IP addr_array[], size_t *addr_num );
 
-/* Export good nodes */
+// Export good nodes
 int kad_export_nodes( IP addr_array[], size_t *addr_num );
 
-/* Print status information */
+// Print status information
 int kad_status( char *buf, int len );
 
-/* Count good or all known peers */
+// Count good or all known peers
 int kad_count_nodes( int good );
 
 /*
 * Announce that the resource identified by id can
 * be served by this computer using the given port.
 */
-int kad_announce_once( const UCHAR id[], int port );
+int kad_announce_once( const uint8_t id[], int port );
 
-/* Announce query until lifetime expires. */
+// Announce query until lifetime expires.
 int kad_announce( const char query[], int port, time_t lifetime );
 
-/* Various debug functions */
+// Various debug functions
 void kad_debug_buckets( int fd );
 void kad_debug_searches( int fd );
 void kad_debug_storage( int fd );
 void kad_debug_blacklist( int fd );
 void kad_debug_constants( int fd );
 
-#endif /* _KAD_H_ */
+#endif // _KAD_H_

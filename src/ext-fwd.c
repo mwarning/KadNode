@@ -108,10 +108,10 @@ void fwd_add( int port, time_t lifetime ) {
 	new->next = g_fwds;
 
 	g_fwds = new;
-	g_fwd_retry = 0; /* Trigger quick handling */
+	g_fwd_retry = 0; // Trigger quick handling
 }
 
-/* Remove a port from the list - internal use only */
+// Remove a port from the list - internal use only
 void fwd_remove( struct forwarding_t *item ) {
 	struct forwarding_t *pre;
 	struct forwarding_t *cur;
@@ -142,7 +142,7 @@ void fwd_remove( struct forwarding_t *item ) {
 * We do not actually check if we are in a private network.
 * This function is called in intervals.
 */
-void fwd_handle( int _rc, int _sock ) {
+void fwd_handle( int _rc, int _sock, void *_data ) {
 	struct forwarding_t *item;
 	int rc;
 	time_t lifespan;
@@ -151,7 +151,7 @@ void fwd_handle( int _rc, int _sock ) {
 	now = time_now_sec();
 	item = g_fwd_cur;
 
-	/* Handle current forwarding entry or wait 60 seconds to select a new one to process */
+	// Handle current forwarding entry or wait 60 seconds to select a new one to process
 	if( item == NULL ) {
 		if( g_fwd_retry > now ) {
 			return;
@@ -244,11 +244,11 @@ void fwd_setup( void ) {
 	upnp_init( &upnp );
 #endif
 
-	/* Add a port forwarding for the DHT for the entire run time */
+	// Add a port forwarding for the DHT for the entire run time
 	int port = atoi( gconf->dht_port );
 	fwd_add( port, LONG_MAX );
 
-	/* Cause the callback to be called in intervals */
+	// Cause the callback to be called in intervals
 	net_add_handler( -1, &fwd_handle );
 }
 

@@ -51,7 +51,7 @@ const char* cmd_usage_debug =
 
 #define REPLY_DATA_SIZE 1472
 
-/* A UDP packet sized reply */
+// A UDP packet sized reply
 struct Reply {
 	char data[REPLY_DATA_SIZE];
 	ssize_t size;
@@ -64,7 +64,7 @@ void r_init( struct Reply *r, bool allow_debug ) {
 	r->allow_debug = allow_debug;
 }
 
-/* Append a formatted string to the packet buffer */
+// Append a formatted string to the packet buffer
 void r_printf( struct Reply *r, const char *format, ... ) {
 	va_list vlist;
 	int written;
@@ -73,7 +73,7 @@ void r_printf( struct Reply *r, const char *format, ... ) {
 	written = vsnprintf( r->data + r->size, REPLY_DATA_SIZE - 1 , format, vlist );
 	va_end( vlist );
 
-	/* Ignore characters that do not fit into packet */
+	// Ignore characters that do not fit into packet
 	if( written > 0 ) {
 		r->size += written;
 	} else {
@@ -81,21 +81,21 @@ void r_printf( struct Reply *r, const char *format, ... ) {
 	}
 }
 
-/* Partition a string to the common argc/argv arguments */
+// Partition a string to the common argc/argv arguments
 void cmd_to_args( char *str, int *argc, char **argv, int max_argv ) {
 	size_t len, i;
 
 	len = strlen( str );
 	*argc = 0;
 
-	/* Zero out white/control characters  */
+	// Zero out white/control characters
 	for( i = 0; i <= len; i++ ) {
 		if( str[i] <= ' ') {
 			str[i] = '\0';
 		}
 	}
 
-	/* Record strings */
+	// Record strings
 	for( i = 0; i <= len; i++ ) {
 
 		if( str[i] == '\0') {
@@ -118,7 +118,7 @@ int cmd_import( struct Reply *r, const char *addr_str) {
 	IP addr;
 	int rc;
 
-	/* If the address contains no port - use the default port */
+	// If the address contains no port - use the default port
 	if( (rc = addr_parse_full( &addr, addr_str, DHT_PORT, gconf->af )) == 0 ) {
 		if( kad_ping( &addr ) == 0 ) {
 			r_printf( r, "Send ping to: %s\n", str_addr( &addr ) );
@@ -153,7 +153,7 @@ int cmd_blacklist( struct Reply *r, const char *addr_str ) {
 	}
 }
 
-/* Export up to 32 peer addresses - more would not fit into one UDP packet */
+// Export up to 32 peer addresses - more would not fit into one UDP packet
 int cmd_export( struct Reply *r ) {
 	IP addr_array[32];
 	size_t addr_num;
@@ -188,7 +188,7 @@ int cmd_exec( struct Reply *r, int argc, char **argv ) {
 
 	if( argc == 0 ) {
 
-		/* Print usage */
+		// Print usage
 		r_printf( r, cmd_usage );
 		if( r->allow_debug ) {
 			r_printf( r, cmd_usage_debug );
@@ -201,7 +201,7 @@ int cmd_exec( struct Reply *r, int argc, char **argv ) {
 #if 0
 	} else if( match( argv[0], "lookup_node" ) && argc == 2 ) {
 
-		/* Check searches for node */
+		// Check searches for node
 		rc = kad_lookup_node( argv[1], &addrs[0] );
 		if( rc == 0 ) {
 			r_printf( r, "%s\n", str_addr( &addrs[0] ) );
@@ -220,7 +220,7 @@ int cmd_exec( struct Reply *r, int argc, char **argv ) {
 		size_t num = N_ELEMS(addrs);
 		size_t i;
 
-		/* Check searches for node */
+		// Check searches for node
 		rc = kad_lookup_value( argv[1], addrs, &num );
 
 		if( rc >= 0 && num > 0 ) {
@@ -240,13 +240,13 @@ int cmd_exec( struct Reply *r, int argc, char **argv ) {
 		}
 	} else if( match( argv[0], "status" ) && argc == 1 ) {
 
-		/* Print node id and statistics */
+		// Print node id and statistics
 		cmd_print_status( r );
 
 	} else if( match( argv[0], "announce" ) && (argc == 1 || argc == 2 || argc == 3) ) {
 
 		if( argc == 1 ) {
-			/* Announce all values; does not update value.refreshed */
+			// Announce all values; does not update value.refreshed
 			count = 0;
 			value = values_get();
 			while( value ) {
@@ -266,25 +266,25 @@ int cmd_exec( struct Reply *r, int argc, char **argv ) {
 				minutes = 0;
 				lifetime = LONG_MAX;
 			} else {
-				/* Round up to multiple of 30 minutes */
+				// Round up to multiple of 30 minutes
 				minutes = (30 * (minutes/30 + 1));
 				lifetime = (time_now_sec() + (minutes * 60));
 			}
 		} else {
-			/* Make compilers happy */
+			// Make compilers happy
 			exit( 1 );
 		}
 
 		int is_random_port = 0;
 
-		/* Find <id>:<port> delimiter */
+		// Find <id>:<port> delimiter
 		p = strchr( argv[1], ':' );
 
 		if( p ) {
 			*p = '\0';
 			port = port_parse( p + 1, -1 );
 		} else {
-			/* A valid port will be choosen inside kad_announce() */
+			// A valid port will be choosen inside kad_announce()
 			port = 0;
 			is_random_port = 1;
 		}
@@ -362,7 +362,7 @@ int cmd_exec( struct Reply *r, int argc, char **argv ) {
 		r_printf( r ,"\nOutput send to console.\n" );
 
 	} else {
-		/* print usage */
+		// print usage
 		r_printf( r, cmd_usage );
 		if( r->allow_debug ) {
 			r_printf( r, cmd_usage_debug );
@@ -393,17 +393,17 @@ void cmd_remote_handler( int rc, int sock ) {
 		request[rc] = '\0';
 	}
 
-	/* Initialize reply and reserve room for return status */
+	// Initialize reply and reserve room for return status
 	r_init( &reply, false );
 	r_printf( &reply, "_" );
 
-	/* Split up the command line into an argument array */
+	// Split up the command line into an argument array
 	cmd_to_args( request, &argc, &argv[0], N_ELEMS(argv) );
 
-	/* Execute command line */
+	// Execute command line
 	rc = cmd_exec( &reply, argc, argv );
 
-	/* Insert return code */
+	// Insert return code
 	reply.data[0] = (rc == 0) ? '0' : '1';
 
 	addrlen = addr_len( &clientaddr );
@@ -421,20 +421,20 @@ void cmd_console_handler( int rc, int fd ) {
 		return;
 	}
 
-	/* Read line */
+	// Read line
 	req = fgets( request, sizeof(request), stdin );
 
 	if( req == NULL ) {
 		return;
 	}
 
-	/* Split up the command line into an argument array */
+	// Split up the command line into an argument array
 	cmd_to_args( request, &argc, &argv[0], N_ELEMS(argv) );
 
-	/* Initialize reply */
+	// Initialize reply
 	r_init( &reply, true );
 
-	/* Execute command line */
+	// Execute command line
 	rc = cmd_exec( &reply, argc, argv );
 
 	if( rc == 0 ) {
@@ -455,7 +455,7 @@ void cmd_setup( void ) {
 	net_add_handler( sock, &cmd_remote_handler );
 
 	if( gconf->is_daemon == 0 && gconf->cmd_disable_stdin == 0 ) {
-		/* Wait for other messages to be displayed */
+		// Wait for other messages to be displayed
 		sleep( 1 );
 
 		fprintf( stdout, "Press Enter for help.\n" );
@@ -464,5 +464,5 @@ void cmd_setup( void ) {
 }
 
 void cmd_free( void ) {
-	/* Nothing to do */
+	// Nothing to do
 }

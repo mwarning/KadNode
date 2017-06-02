@@ -10,23 +10,25 @@
 #include "utils.h"
 #include "net.h"
 #include "kad.h"
-#ifdef AUTH
-#include "ext-auth.h"
+#ifdef BOB
+#include "ext-bob.h"
 #endif
 #include "values.h"
 
-/* Announce values every 20 minutes */
+// Announce values every 20 minutes
 #define ANNOUNCE_INTERVAL (20*60)
+
 
 static time_t g_values_expire = 0;
 static time_t g_values_announce = 0;
 static struct value_t *g_values = NULL;
 
+
 struct value_t* values_get( void ) {
 	return g_values;
 }
 
-struct value_t* values_find( UCHAR id[] ) {
+struct value_t* values_find( uint8_t id[] ) {
 	struct value_t *value;
 
 	value = g_values;
@@ -78,13 +80,6 @@ void values_debug( int fd ) {
 			dprintf( fd, "  lifetime: %ld min left\n", (value->lifetime -  now) / 60 );
 		}
 
-#ifdef AUTH
-		if( value->skey ) {
-			char sbuf[2*crypto_sign_SECRETKEYBYTES+1];
-			dprintf( fd, "  skey: %s\n", bytes_to_hex( sbuf, value->skey, crypto_sign_SECRETKEYBYTES ) );
-		}
-#endif
-
 		value_counter++;
 		value = value->next;
 	}
@@ -94,26 +89,28 @@ void values_debug( int fd ) {
 
 struct value_t *values_add( const char query[], int port, time_t lifetime ) {
 	char hexbuf[SHA1_HEX_LENGTH+1];
-	UCHAR id[SHA1_BIN_LENGTH];
+	uint8_t id[SHA1_BIN_LENGTH];
 	struct value_t *cur;
 	struct value_t *new;
 	time_t now;
 
-#ifdef AUTH
-	UCHAR skey[crypto_sign_SECRETKEYBYTES];
-	UCHAR *skey_ptr = auth_handle_skey( skey, id, query );
+#if 0
+//ifdef BOB
+	uint8_t skey[crypto_sign_SECRETKEYBYTES];
+	uint8_t *skey_ptr = bob_handle_skey( skey, id, query );
 
 	if( skey_ptr ) {
 		if( port == 0 ) {
-			/* Authenticationis is done over the DHT port */
+			// Authenticationis is done over the DHT port
 			port = atoi( gconf->dht_port );
 		} else {
 			return NULL;
 		}
 	}
-#else
-	id_compute( id, query );
+//else
 #endif
+
+	id_compute( id, query );
 
 	if( port == 0 ) {
 		port = port_random();
@@ -125,7 +122,7 @@ struct value_t *values_add( const char query[], int port, time_t lifetime ) {
 
 	now = time_now_sec();
 
-	/* Value already exists - refresh */
+	// Value already exists - refresh
 	if( (cur = values_find( id )) != NULL ) {
 		cur->refresh = now - 1;
 
@@ -133,48 +130,37 @@ struct value_t *values_add( const char query[], int port, time_t lifetime ) {
 			cur->lifetime = lifetime;
 		}
 
-		/* Trigger immediate handling */
+		// Trigger immediate handling
 		g_values_announce= 0;
 
 		return cur;
 	}
 
-	/* Prepend new entry */
+	// Prepend new entry
 	new = (struct value_t*) calloc( 1, sizeof(struct value_t) );
 	memcpy( new->id, id, SHA1_BIN_LENGTH );
-#ifdef AUTH
-	if( skey_ptr ) {
-		new->skey = memdup( skey_ptr, crypto_sign_SECRETKEYBYTES );
-	}
-#endif
+
 	new->port = port;
 	new->refresh = now - 1;
 	new->lifetime = (lifetime > now) ? lifetime : (now + 100);
 
 	log_debug( "VAL: Add value id %s:%hu.",  str_id( id, hexbuf ), port );
 
-	/* Prepend to list */
+	// Prepend to list
 	new->next = g_values;
 	g_values = new;
 
-	/* Trigger immediate handling */
+	// Trigger immediate handling
 	g_values_announce= 0;
 
 	return new;
 }
 
 void value_free( struct value_t *value ) {
-#ifdef AUTH
-	/* Secure erase */
-	if( value->skey ) {
-		memset( value->skey, '\0', crypto_sign_SECRETKEYBYTES );
-		free( value->skey );
-	}
-#endif
 	free( value );
 }
 
-/* Remove an element from the list - internal use only */
+// Remove an element from the list - internal use only
 void values_remove( struct value_t *value ) {
 	struct value_t *pre;
 	struct value_t *cur;
@@ -239,24 +225,24 @@ void values_announce( void ) {
 }
 
 void values_handle( int _rc, int _sock ) {
-	/* Expire search results */
+	// Expire search results
 	if( g_values_expire <= time_now_sec() ) {
 		values_expire();
 
-		/* Try again in ~1 minute */
+		// Try again in ~1 minute
 		g_values_expire = time_add_min( 1 );
 	}
 
 	if( g_values_announce <= time_now_sec() && kad_count_nodes( 0 ) != 0 ) {
 		values_announce();
 
-		/* Try again in ~1 minute */
+		// Try again in ~1 minute
 		g_values_announce = time_add_min( 1 );
 	}
 }
 
 void values_setup( void ) {
-	/* Cause the callback to be called in intervals */
+	// Cause the callback to be called in intervals
 	net_add_handler( -1, &values_handle );
 }
 

@@ -12,7 +12,7 @@
 */
 
 
-/* Return values for UPNP/NAT-PMP */
+// Return values for UPNP/NAT-PMP
 enum {
 	PF_DONE = 1,
 	PF_RETRY = 0,
@@ -21,9 +21,9 @@ enum {
 
 struct forwarding_t {
 	struct forwarding_t *next;
-	int port; /* the port to be forwarded on the router */
-	time_t lifetime; /* keep entry until lifetime expires */
-	time_t refreshed; /* last time the entry was refreshed */
+	int port; // Port to be forwarded on the router
+	time_t lifetime; // Keep entry until lifetime expires
+	time_t refreshed; // Last time the entry was refreshed
 };
 
 void fwd_setup( void );
@@ -31,14 +31,14 @@ void fwd_free( void );
 
 struct forwarding_t *fwd_get( void );
 
-/* List all entries */
+// List all entries
 void fwd_debug( int fd );
 
-/* Count all entries */
+// Count all entries
 int fwd_count( void );
 
-/* Add a port forwarding from external port to the same local port. */
+// Add a port forwarding from external port to the same local port
 void fwd_add( int port, time_t host_lifetime );
 
 
-#endif /* _EXT_FWD_H_ */
+#endif // _EXT_FWD_H_

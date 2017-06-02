@@ -19,6 +19,17 @@
 
 #define MAX_ADDRS 32
 
+static int g_sock = -1;
+static IP g_sockaddr = {0};
+
+
+void debug_write(const char msg[]) {
+	FILE *file = fopen("/tmp/kadnodenss.txt", "a");
+	if(file) {
+		fprintf(file, "%s\n", msg);
+		fclose(file);
+	}
+}
 
 /*
 * Parse/Resolve an IP address.
@@ -55,6 +66,38 @@ int _nss_kadnode_addr_parse( IP *addr, const char addr_str[], const char port_st
 	return -3;
 }
 
+int _nss_kadnode_init() {
+	struct timeval tv;
+	const int opt_on = 1;
+
+debug_write("nss init start");
+
+	if( _nss_kadnode_addr_parse( &g_sockaddr, "::1", NSS_PORT, AF_UNSPEC ) < 0 ) {
+		return 0;
+	}
+
+	/* Setup UDP socket */
+	if( (g_sock = socket( g_sockaddr.ss_family, SOCK_DGRAM, IPPROTO_UDP )) < 0 ) {
+		return 0;
+	}
+
+	/* Set receive timeout to 0.1 seconds */
+	tv.tv_sec = 0;
+	tv.tv_usec = 100000;
+
+	if( setsockopt( g_sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(struct timeval) ) < 0 ) {
+		return 0;
+	}
+
+	if( setsockopt( g_sock, SOL_SOCKET, SO_REUSEADDR, &opt_on, sizeof(opt_on) ) < 0 ) {
+		return 0;
+	}
+
+debug_write("nss init done");
+
+	return 1;
+}
+
 int _nss_kadnode_addr_len( const IP *addr ) {
 	switch( addr->ss_family ) {
 		case AF_INET:
@@ -67,34 +110,26 @@ int _nss_kadnode_addr_len( const IP *addr ) {
 }
 
 int _nss_kadnode_lookup( const char hostname[], int hostlen, IP addrs[] ) {
-	IP sockaddr;
 	socklen_t addrlen;
-	int sockfd, size;
-	struct timeval tv;
+	IP clientaddr;
+	int size;
 
-	if( _nss_kadnode_addr_parse( &sockaddr, "::1", NSS_PORT, AF_UNSPEC ) < 0 ) {
-		return 0;
+	if( g_sock < 0 ) {
+		if( !_nss_kadnode_init() ) {
+			/* Socket setup failed */
+			return 0;
+		}
 	}
 
-	/* Setup UDP socket */
-	if( (sockfd = socket( sockaddr.ss_family, SOCK_DGRAM, IPPROTO_UDP )) < 0 ) {
-		return 0;
-	}
+debug_write(hostname);
 
-	/* Set receive timeout to 0.1 seconds */
-	tv.tv_sec = 0;
-	tv.tv_usec = 100000;
-	if( setsockopt( sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(struct timeval) ) < 0 ) {
-		return 0;
-	}
-
-	addrlen = _nss_kadnode_addr_len( &sockaddr );
-	size = sendto( sockfd, hostname, hostlen, 0, (struct sockaddr *)&sockaddr, addrlen );
+	addrlen = _nss_kadnode_addr_len( &g_sockaddr );
+	size = sendto( g_sock, hostname, hostlen, 0, (struct sockaddr *)&g_sockaddr, addrlen );
 	if( size != hostlen ) {
 		return 0;
 	}
 
-	size = recvfrom( sockfd, addrs, MAX_ADDRS * sizeof(IP), 0, (struct sockaddr *)&sockaddr, &addrlen );
+	size = recvfrom( g_sock, addrs, MAX_ADDRS * sizeof(IP), 0, (struct sockaddr *)&clientaddr, &addrlen );
 
 	if( size > 0 && (size % sizeof(IP)) == 0 ) {
 		/* Return number of addresses */

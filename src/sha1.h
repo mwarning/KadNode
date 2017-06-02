@@ -5,10 +5,15 @@
 #include <inttypes.h>
 #include <string.h>
 
+/*
+* SHA1 hash implementation.
+* Not needed if embedtls is used.
+*/
+
 typedef struct {
 	uint32_t state[5];
 	uint32_t count[2];
-	uint8_t  buffer[64];
+	uint8_t buffer[64];
 } SHA1_CTX;
 
 #define SHA1_DIGEST_SIZE 20

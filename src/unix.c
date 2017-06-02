@@ -27,7 +27,7 @@ void unix_signals( void ) {
 	struct sigaction sig_stop;
 	struct sigaction sig_term;
 
-	/* STRG+C aka SIGINT => Stop the program */
+	// STRG+C aka SIGINT => Stop the program
 	sig_stop.sa_handler = unix_sig_stop;
 	sig_stop.sa_flags = 0;
 	if( ( sigemptyset( &sig_stop.sa_mask ) == -1) || (sigaction( SIGINT, &sig_stop, NULL ) != 0) ) {
@@ -35,7 +35,7 @@ void unix_signals( void ) {
 		exit( 1 );
 	}
 
-	/* SIGTERM => Stop the program gracefully */
+	// SIGTERM => Stop the program gracefully
 	sig_term.sa_handler = unix_sig_term;
 	sig_term.sa_flags = 0;
 	if( ( sigemptyset( &sig_term.sa_mask ) == -1) || (sigaction( SIGTERM, &sig_term, NULL ) != 0) ) {
@@ -54,17 +54,17 @@ void unix_fork( void ) {
 		log_err( "UNX: Failed to fork." );
 		exit( 1 );
 	} else if( pid != 0 ) {
-		/* Child process */
+		// Child process
 		exit( 0 );
 	}
 
-	/* Become session leader */
+	// Become session leader
 	sid = setsid();
 	if( sid < 0 ) {
 		exit( 1);
 	}
 
-	/* Clear out the file mode creation mask */
+	// Clear out the file mode creation mask
 	umask( 0 );
 }
 
@@ -98,17 +98,17 @@ void unix_write_pidfile( int pid, const char* pidfile ) {
 void unix_dropuid0( void ) {
 	struct passwd *pw;
 
-	/* Return if no user is set */
+	// Return if no user is set
 	if( gconf->user == NULL ) {
 		return;
 	}
 
-	/* Return if we are not root */
+	// Return if we are not root
 	if( getuid() != 0 ) {
 		return;
 	}
 
-	/* Process is running as root, drop privileges */
+	// Process is running as root, drop privileges
 	if( (pw = getpwnam( gconf->user )) == NULL ) {
 		log_err( "UNX: Dropping uid 0 failed. Set a valid user." );
 		exit( 1 );
@@ -129,7 +129,7 @@ void unix_dropuid0( void ) {
 		exit( 1 );
 	}
 
-	/* Test permissions */
+	// Test permissions
 	if( setuid( 0 ) != -1 || setgid( 0 ) != -1 ) {
 		log_err( "UNX: We still have root privileges" );
 		exit( 1 );

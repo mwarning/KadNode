@@ -11,16 +11,16 @@
 #include "net.h"
 #include "ext-web.h"
 
-#define MAX_ADDRS 32
+#define MAX_ADDRS 16
 
 
-/* handle 'GET /lookup?foo.p2p' */
+// handle 'GET /lookup?foo.p2p'
 void handle_lookup( char *reply_buf, const char *params ) {
 	IP addrs[MAX_ADDRS];
 	size_t num;
 	size_t i, n;
 
-	/* Lookup id - starts search when not already done */
+	// Lookup id - starts search when not already done
 	num = N_ELEMS(addrs);
 	if( kad_lookup_value( params, addrs, &num ) >= 0 && num > 0 ) {
 		for( n = 0, i = 0; i < num; i++ ) {
@@ -29,8 +29,8 @@ void handle_lookup( char *reply_buf, const char *params ) {
 	}
 }
 
-/* handle 'GET /announce?foo.p2p' */
-void handle_announce( char *reply_buf, char *params ) {
+// handle 'GET /announce?foo.p2p'
+void handle_announce( char reply_buf[], char params[] ) {
 
 	if( kad_announce( params, 0, (time_now_sec() + 60) ) >= 0 ) {
 		sprintf( reply_buf , "done\n" );
@@ -39,8 +39,8 @@ void handle_announce( char *reply_buf, char *params ) {
 	}
 }
 
-/* handle 'GET /blacklist?1.2.3.4' */
-void handle_blacklist( char *reply_buf, char *params ) {
+// handle 'GET /blacklist?1.2.3.4'
+void handle_blacklist( char reply_buf[], char params[] ) {
 	IP addr;
 
 	if( addr_parse( &addr, params, NULL, AF_UNSPEC ) == 0 ) {
@@ -56,7 +56,7 @@ void web_handler( int rc, int sock ) {
 	IP clientaddr;
 	socklen_t addrlen_ret;
 	char request_buf[1024];
-	char reply_buf[(MAX_ADDRS+1)*FULL_ADDSTRLEN+2];
+	char reply_buf[(MAX_ADDRS + 1) * FULL_ADDSTRLEN + 2];
 	char *cmd, *params;
 	char *space, *delim;
 	size_t n;
@@ -65,14 +65,14 @@ void web_handler( int rc, int sock ) {
 	clientfd = accept( sock, (struct sockaddr*)&clientaddr, &addrlen_ret );
 	n = recv( clientfd, request_buf, sizeof(request_buf) - 1, 0 );
 
-	/* Only handle GET requests. */
+	// Only handle GET requests
 	if( n < 6 || strncmp( "GET /", request_buf, 5 ) != 0 ) {
 		goto done;
 	} else {
 		cmd = request_buf + 5;
 	}
 
-	/* Safety first */
+	// Safety first
 	request_buf[n] = '\0';
 
 	space = strchr( cmd, ' ' );
@@ -124,5 +124,5 @@ void web_setup( void ) {
 }
 
 void web_free( void ) {
-	/* Nothing to do */
+	// Nothing to do
 }

@@ -12,19 +12,23 @@
 #include "results.h"
 #include "net.h"
 #include "values.h"
-#ifdef AUTH
-#include "ext-auth.h"
+#ifdef BOB
+#include "ext-bob.h"
+#endif
+#ifdef TLS
+#include "mbedtls/sha1.h"
 #endif
 
 #include "dht.c"
 
 
 /*
-The interface that is used to interact with the DHT.
+* The interface that is used to interact with the DHT.
 */
 
-/* Next time to do DHT maintenance */
+// Next time to do DHT maintenance
 static time_t g_dht_maintenance = 0;
+
 
 void dht_lock_init( void ) {
 #ifdef PTHREAD
@@ -77,8 +81,8 @@ typedef struct {
 } dht_addr4_t;
 
 
-/* This callback is called when a search result arrives or a search completes */
-void dht_callback_func( void *closure, int event, const UCHAR *info_hash, const void *data, size_t data_len ) {
+// This callback is called when a search result arrives or a search completes
+void dht_callback_func( void *closure, int event, const uint8_t *info_hash, const void *data, size_t data_len ) {
 	struct results_t *results;
 	IP addr;
 	size_t i;
@@ -109,7 +113,7 @@ void dht_callback_func( void *closure, int event, const UCHAR *info_hash, const 
 			break;
 		case DHT_EVENT_SEARCH_DONE:
 		case DHT_EVENT_SEARCH_DONE6:
-			results_done( results, 1 );
+			//results_done( results, 1 );
 			break;
 	}
 }
@@ -122,7 +126,7 @@ void kad_lookup_local_values( struct results_t *results ) {
 	struct value_t* value;
 	IP addr;
 
-	/* 127.0.0.1 */
+	// 127.0.0.1
 	unsigned int inaddr_loopback = htonl( INADDR_LOOPBACK );
 
 	value = values_find( results->id );
@@ -137,36 +141,40 @@ void kad_lookup_local_values( struct results_t *results ) {
 	}
 }
 
-/* Handle incoming packets and pass them to the DHT code */
+// Handle incoming packets and pass them to the DHT code
 void dht_handler( int rc, int sock ) {
-	UCHAR buf[1500];
+	uint8_t buf[1500];
+	uint32_t buflen;
 	IP from;
 	socklen_t fromlen;
 	time_t time_wait = 0;
 
-
 	if( rc > 0 ) {
-		/* Check which socket received the data */
+		// Check which socket received the data
 		fromlen = sizeof(from);
-		rc = recvfrom( sock, buf, sizeof(buf) - 1, 0, (struct sockaddr*) &from, &fromlen );
+		buflen = recvfrom( sock, buf, sizeof(buf) - 1, 0, (struct sockaddr*) &from, &fromlen );
 
-		if( rc <= 0 || rc >= sizeof(buf) ) {
+		if( buflen <= 0 || buflen >= sizeof(buf) ) {
 			goto end;
 		}
 
-		/* The DHT code expects the message to be null-terminated. */
-		buf[rc] = '\0';
+		// The DHT code expects the message to be null-terminated.
+		buf[buflen] = '\0';
+	} else {
+		buflen = 0;
+	}
 
-#ifdef AUTH
-		/* Hook up AUTH extension on the DHT socket */
-		if( auth_handle_challenges( sock, buf, rc, &from ) == 0 ) {
-			return;
-		}
+#ifdef BOB
+	// Hook up BOB extension on the DHT socket
+	if( bob_handler( sock, buf, buflen, &from ) == 0 ) {
+		return;
+	}
 #endif
 
-		/* Handle incoming data */
+	if( buflen > 0 ) {
+		// Handle incoming data
 		dht_lock();
-		rc = dht_periodic( buf, rc, (struct sockaddr*) &from, fromlen, &time_wait, dht_callback_func, NULL );
+		rc = dht_periodic( buf, buflen, (struct sockaddr*) &from, fromlen, &time_wait, dht_callback_func, NULL );
 		dht_unlock();
 
 		if( rc < 0 && errno != EINTR ) {
@@ -179,12 +187,12 @@ void dht_handler( int rc, int sock ) {
 			g_dht_maintenance = time_now_sec() + time_wait;
 		}
 	} else if( g_dht_maintenance <= time_now_sec() ) {
-		/* Do a maintenance call */
+		// Do a maintenance call
 		dht_lock();
 		rc = dht_periodic( NULL, 0, NULL, 0, &time_wait, dht_callback_func, NULL );
 		dht_unlock();
 
-		/* Wait for the next maintenance call */
+		// Wait for the next maintenance call
 		g_dht_maintenance = time_now_sec() + time_wait;
 		log_debug( "KAD: Next maintenance call in %u seconds.", (unsigned int) time_wait );
 	} else {
@@ -203,9 +211,6 @@ void dht_handler( int rc, int sock ) {
 	}
 
 	end:;
-#ifdef AUTH
-	auth_send_challenges( sock );
-#endif
 }
 
 /*
@@ -216,19 +221,30 @@ int dht_blacklisted( const struct sockaddr *sa, int salen ) {
 	return 0;
 }
 
-/* Hashing for the DHT - implementation does not matter for interoperability */
+// Hashing for the DHT - implementation does not matter for interoperability
 void dht_hash( void *hash_return, int hash_size,
 		const void *v1, int len1,
 		const void *v2, int len2,
 		const void *v3, int len3 ) {
-	SHA1_CTX ctx;
+	unsigned char hash[SHA1_BIN_LENGTH];
 
+#ifdef TLS
+	mbedtls_sha1_context ctx;
+	mbedtls_sha1_init(&ctx);
+	if(v1) mbedtls_sha1_update( &ctx, v1, len1 );
+	if(v2) mbedtls_sha1_update( &ctx, v2, len2 );
+	if(v3) mbedtls_sha1_update( &ctx, v3, len3 );
+	mbedtls_sha1_finish(&ctx, hash);
+#else
+	SHA1_CTX ctx;
 	SHA1_Init( &ctx );
 	if(v1) SHA1_Update( &ctx, v1, len1 );
 	if(v2) SHA1_Update( &ctx, v2, len2 );
 	if(v3) SHA1_Update( &ctx, v3, len3 );
+	SHA1_Final( &ctx, hash );
+#endif
 
-	SHA1_Final( &ctx, hash_return );
+	memcpy( hash_return, hash, MIN(SHA1_BIN_LENGTH, hash_size) );
 }
 
 int dht_random_bytes( void *buf, size_t size ) {
@@ -236,13 +252,13 @@ int dht_random_bytes( void *buf, size_t size ) {
 }
 
 void kad_setup( void ) {
-	UCHAR node_id[SHA1_BIN_LENGTH];
+	uint8_t node_id[SHA1_BIN_LENGTH];
 	int s4, s6;
 
 	s4 = -1;
 	s6 = -1;
 
-	/* Let the DHT output debug text */
+	// Let the DHT output debug text
 	if( gconf->verbosity == VERBOSITY_DEBUG ) {
 		dht_debug = stdout;
 	}
@@ -251,16 +267,17 @@ void kad_setup( void ) {
 
 	dht_lock_init();
 
+	//gconf->dht_addr
 	if( gconf->af == AF_INET ) {
-		s4 = net_bind( "KAD", DHT_ADDR4, gconf->dht_port, gconf->dht_ifname, IPPROTO_UDP, AF_INET );
+		s4 = net_bind( "KAD", gconf->dht_addr, gconf->dht_port, gconf->dht_ifname, IPPROTO_UDP, AF_INET );
 		net_add_handler( s4, &dht_handler );
 	} else {
-		s6 = net_bind( "KAD", DHT_ADDR6, gconf->dht_port, gconf->dht_ifname, IPPROTO_UDP, AF_INET6 );
+		s6 = net_bind( "KAD", gconf->dht_addr, gconf->dht_port, gconf->dht_ifname, IPPROTO_UDP, AF_INET6 );
 		net_add_handler( s6, &dht_handler );
 	}
 
-	/* Init the DHT.  Also set the sockets into non-blocking mode. */
-	if( dht_init( s4, s6, node_id, (UCHAR*) "KN\0\0") < 0 ) {
+	// Init the DHT.  Also set the sockets into non-blocking mode.
+	if( dht_init( s4, s6, node_id, (uint8_t*) "KN\0\0") < 0 ) {
 		log_err( "KAD: Failed to initialize the DHT." );
 		exit( 1 );
 	}
@@ -298,25 +315,27 @@ int kad_status( char *buf, int size ) {
 	char hexbuf[SHA1_HEX_LENGTH+1];
 	struct storage *strg = storage;
 	struct search *srch = searches;
-	int numsearches_active = 0;
-	int numsearches_done = 0;
+	//int numsearches_active = 0;
+	//int numsearches_done = 0;
+	int numsearches = 0;
 	int numstorage = 0;
 	int numstorage_peers = 0;
 	int numvalues = 0;
 	int written = 0;
 
-	/* count searches */
-	while( srch != NULL ) {
-		if( srch->done ) {
-			numsearches_done++;
-		} else {
-			numsearches_active++;
-		}
+	// count searches
+	while( srch ) {
+		//if( srch->done ) {
+		//	numsearches_done++;
+		//} else {
+		//	numsearches_active++;
+		//}
+		numsearches++;
 		srch = srch->next;
 	}
 
-	/* count storage and peers */
-	while( strg != NULL ) {
+	// count storage and peers
+	while( strg ) {
 		numstorage_peers += strg->numpeers;
 		numstorage++;
 		strg = strg->next;
@@ -336,8 +355,9 @@ int kad_status( char *buf, int size ) {
 		kad_count_nodes( 0 ), kad_count_nodes( 1 ), (gconf->af == AF_INET) ? "IPv4" : "IPv6" );
 	bprintf( "DHT Storage: %d (max %d), %d peers (max %d per storage)\n",
 		numstorage, DHT_MAX_HASHES, numstorage_peers, DHT_MAX_PEERS );
-	bprintf( "DHT Searches: %d active, %d completed (max %d)\n",
-		numsearches_active, numsearches_done, DHT_MAX_SEARCHES );
+	//bprintf( "DHT Searches: %d active, %d completed (max %d)\n",
+	//	numsearches_active, numsearches_done, DHT_MAX_SEARCHES );
+	bprintf( "DHT Searches: %d (max %d)\n", numsearches, DHT_MAX_SEARCHES );
 	bprintf( "DHT Blacklist: %d (max %d)\n",
 		(next_blacklisted % DHT_MAX_BLACKLISTED), DHT_MAX_BLACKLISTED );
 	bprintf( "DHT Values to announce: %d\n", numvalues );
@@ -359,7 +379,7 @@ int kad_ping( const IP* addr ) {
 * Find nodes that are near the given id and announce to them
 * that this node can satisfy the given id on the given port.
 */
-int kad_announce_once( const UCHAR id[], int port ) {
+int kad_announce_once( const uint8_t id[], int port ) {
 
 	if( port < 1 || port > 65535 ) {
 		return -1;
@@ -378,12 +398,12 @@ int kad_announce_once( const UCHAR id[], int port ) {
 int kad_announce( const char _query[], int port, time_t lifetime ) {
 	char query[QUERY_MAX_SIZE];
 
-	/* Remove .p2p suffix and convert to lowercase */
+	// Remove .p2p suffix and convert to lowercase
 	if( query_sanitize( query, sizeof(query), _query ) != 0 ) {
 		return -1;
 	}
 
-	/* Store query to call kad_announce_once() later/multiple times */
+	// Store query to call kad_announce_once() later/multiple times
 	return values_add( query, port, lifetime ) ? 0 : -2;
 }
 
@@ -391,7 +411,7 @@ int kad_announce( const char _query[], int port, time_t lifetime ) {
 * Lookup known nodes that are nearest to the given id.
 */
 int kad_lookup_value( const char _query[], IP addr_array[], size_t *addr_num ) {
-	char query[QUERY_MAX_SIZE];
+	char query[QUERY_MAX_SIZE + 1];
 	struct results_t *results;
 	int is_new;
 	int rc;
@@ -404,18 +424,20 @@ int kad_lookup_value( const char _query[], IP addr_array[], size_t *addr_num ) {
 
 	dht_lock();
 
-	/* Find existing or create new item */
+	// Find existing or create new item
 	results = results_add( query, &is_new );
 
-	if( results && is_new ) {
-		/* Search own announced values */
-		kad_lookup_local_values( results );
+	if( results == NULL ) {
+		// Failed to create a new search
+		return -1;
 	}
 
-	if( results == NULL ) {
-		/* Failed to create a new search */
-		rc = -1;
-	} else if( results->done ) {
+	if( is_new ) {
+		// Search own announced values
+		kad_lookup_local_values( results );
+	}
+#if 0
+	if( results->done ) {
 		/*
 		* The search exists already but has finished. Restart the search when
 		* no results have been found or more than half of the searches lifetime
@@ -424,23 +446,25 @@ int kad_lookup_value( const char _query[], IP addr_array[], size_t *addr_num ) {
 		if( results_entries_count( results ) == 0 ||
 			(time_now_sec() - results->start_time) > (MAX_SEARCH_LIFETIME / 2)
 		) {
-			/* Mark search as in progress */
-			results_done( results, 0 );
+			// Mark search as in progress
+			//results_done( results, 0 );
 
-			/* Start another search for this id */
+			// Start another search for this id
 			dht_search( results->id, 0, gconf->af, dht_callback_func, NULL );
 		}
 		rc = 2;
-	} else if( is_new ) {
-		/* Start a new DHT search */
+	} else
+#endif
+	if( is_new ) {
+		// Start a new DHT search
 		dht_search( results->id, 0, gconf->af, dht_callback_func, NULL );
 		rc = 1;
 	} else {
-		/* Search is still running */
+		// Search is still running
 		rc = 0;
 	}
 
-	/* Collect addresses to be returned */
+	// Collect addresses to be returned
 	*addr_num = results_collect( results, addr_array, *addr_num );
 
 	dht_unlock();
@@ -453,7 +477,7 @@ int kad_lookup_value( const char _query[], IP addr_array[], size_t *addr_num ) {
 * The port refers to the kad instance.
 */
 int kad_lookup_node( const char query[], IP *addr_return ) {
-	UCHAR id[SHA1_BIN_LENGTH];
+	uint8_t id[SHA1_BIN_LENGTH];
 	struct search *sr;
 	int i, rc;
 
@@ -497,7 +521,7 @@ int kad_blacklist( const IP* addr ) {
 	return 0;
 }
 
-/* Export known nodes; the maximum is 200 nodes */
+// Export known nodes; the maximum is 200 nodes
 int kad_export_nodes( IP addr_array[], size_t *num ) {
 	IP4 *addr4;
 	IP6 *addr6;
@@ -533,13 +557,13 @@ int kad_export_nodes( IP addr_array[], size_t *num ) {
 		free( addr4 );
 	}
 
-	/* Store number of nodes we have actually found */
+	// Store number of nodes we have actually found
 	*num = i;
 
 	return 0;
 }
 
-/* Print buckets (leaf/finger table) */
+// Print buckets (leaf/finger table)
 void kad_debug_buckets( int fd ) {
 	char hexbuf[SHA1_HEX_LENGTH+1];
 	struct bucket *b;
@@ -549,11 +573,11 @@ void kad_debug_buckets( int fd ) {
 	dht_lock();
 
 	b = (gconf->af == AF_INET) ? buckets : buckets6;
-	for( j = 0; b != NULL; ++j ) {
+	for( j = 0; b; ++j ) {
 		dprintf( fd, " Bucket: %s\n", str_id( b->first, hexbuf ) );
 
 		n = b->nodes;
-		for( i = 0; n != NULL; ++i ) {
+		for( i = 0; n; ++i ) {
 			dprintf( fd, "   Node: %s\n", str_id( n->id, hexbuf ) );
 			dprintf( fd, "    addr: %s\n", str_addr( &n->ss ) );
 			dprintf( fd, "    pinged: %d\n", n->pinged );
@@ -567,7 +591,7 @@ void kad_debug_buckets( int fd ) {
 	dht_unlock();
 }
 
-/* Print searches */
+// Print searches
 void kad_debug_searches( int fd ) {
 	char hexbuf[SHA1_HEX_LENGTH+1];
 	struct search *s = searches;
@@ -575,11 +599,11 @@ void kad_debug_searches( int fd ) {
 
 	dht_lock();
 
-	for( j = 0; s != NULL; ++j ) {
+	for( j = 0; s; ++j ) {
 		dprintf( fd, " Search: %s\n", str_id( s->id, hexbuf ) );
 		dprintf( fd, "  af: %s\n", (s->af == AF_INET) ? "AF_INET" : "AF_INET6" );
 		dprintf( fd, "  port: %hu\n", s->port );
-		dprintf( fd, "  done: %d\n", s->done );
+		//dprintf( fd, "  done: %d\n", s->done );
 		for(i = 0; i < s->numnodes; ++i) {
 			struct search_node *sn = &s->nodes[i];
 			dprintf( fd, "   Node: %s\n", str_id(sn->id, hexbuf ) );
@@ -596,7 +620,7 @@ void kad_debug_searches( int fd ) {
 	dht_unlock();
 }
 
-/* Print announced ids we have received */
+// Print announced ids we have received
 void kad_debug_storage( int fd ) {
 	char hexbuf[SHA1_HEX_LENGTH+1];
 	struct storage *s;
@@ -607,7 +631,7 @@ void kad_debug_storage( int fd ) {
 	dht_lock();
 
 	s = storage;
-	for( j = 0; s != NULL; ++j ) {
+	for( j = 0; s; ++j ) {
 		dprintf( fd, " ID: %s\n", str_id(s->id, hexbuf ));
 		for( i = 0; i < s->numpeers; ++i ) {
 			p = &s->peers[i];
@@ -640,12 +664,12 @@ void kad_debug_constants( int fd ) {
 	dprintf( fd, "DHT_SEARCH_EXPIRE_TIME: %d\n", DHT_SEARCH_EXPIRE_TIME );
 	dprintf( fd, "DHT_MAX_SEARCHES: %d\n", DHT_MAX_SEARCHES );
 
-	/* maximum number of announced hashes we track */
+	// Maximum number of announced hashes we track
 	dprintf( fd, "DHT_MAX_HASHES: %d\n", DHT_MAX_HASHES );
 
-	/* maximum number of peers for each announced hash we track */
+	// Maximum number of peers for each announced hash we track
 	dprintf( fd, "DHT_MAX_PEERS: %d\n", DHT_MAX_PEERS );
 
-	/* maximum number of blacklisted nodes */
+	// Maximum number of blacklisted nodes
 	dprintf( fd, "DHT_MAX_BLACKLISTED: %d\n", DHT_MAX_BLACKLISTED );
 }

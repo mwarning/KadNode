@@ -274,7 +274,7 @@ int parse_packet( const char str[] ) {
 	return port;
 }
 
-void handle_mcast( int rc, int sock_recv ) {
+void handle_mcast( int rc, int sock_recv, void *_data ) {
 	char buf[512];
 	IP c_addr;
 	socklen_t addrlen;

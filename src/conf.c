@@ -15,8 +15,8 @@
 #include "values.h"
 #include "peerfile.h"
 #include "kad.h"
-#ifdef AUTH
-#include "ext-auth.h"
+#ifdef BOB
+#include "ext-bob.h"
 #endif
 #ifdef FWD
 #include "ext-fwd.h"
@@ -25,15 +25,15 @@
 #include "windows.h"
 #endif
 
-/* Global object variables */
+// Global object variables
 struct gconf_t *gconf = NULL;
 
 const char *kadnode_version_str = "KadNode v"MAIN_VERSION" ("
 #ifdef LPD
 " lpd"
 #endif
-#ifdef AUTH
-" auth"
+#ifdef BOB
+" bob"
 #endif
 #ifdef CMD
 " cmd"
@@ -52,6 +52,9 @@ const char *kadnode_version_str = "KadNode v"MAIN_VERSION" ("
 #endif
 #ifdef FWD_UPNP
 " upnp"
+#endif
+#ifdef TLS
+" tls"
 #endif
 #ifdef WEB
 " web"
@@ -72,6 +75,8 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 " --user <user>			Change the UUID after start.\n\n"
 " --port	<port>			Bind DHT to this port.\n"
 "				Default: "DHT_PORT"\n\n"
+" --addr	<addr>			Bind DHT to this address.\n"
+"				Default: "DHT_ADDR4" / "DHT_ADDR6"\n\n"
 " --config <file>		Provide a configuration file with one command line\n"
 "				option on each line. Comments start after '#'.\n\n"
 " --ifname <interface>		Bind to this interface.\n"
@@ -89,14 +94,10 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 "				Default: "LPD_ADDR4" / "LPD_ADDR6"\n\n"
 " --lpd-disable			Disable multicast to discover local peers.\n\n"
 #endif
-#ifdef AUTH
-" --auth-gen-keys		Generate a new public/secret key pair and exit.\n\n"
-" --auth-add-pkey [<pat>:]<pkey>	Assign a public key to all values that match the pattern.\n"
-"				It is used to verifiy that the other side has the secret\n"
-"				key when queries of the given pattern are requested.\n\n"
-" --auth-add-skey [<pat>:]<skey>	Assign a secret key to all values that match the pattern.\n"
-"				It is used to prove that you own the matching domain.\n"
-"				The other side needs to knows the public key.\n\n"
+#ifdef BOB
+" --bob-gen-pair		Generate a new public/secret key pair and exit.\n\n"
+" --bob-add-skey <key>	Add a secret key. The derived public key will be announced.\n"
+"				The secret key will be used to prove that you have it.\n"
 #endif
 #ifdef CMD
 " --cmd-disable-stdin		Disable the local control interface.\n\n"
@@ -120,6 +121,9 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 #ifdef FWD
 " --fwd-disable			Disable UPnP/NAT-PMP to forward router ports.\n\n"
 #endif
+#ifdef TLS
+" --tls-path			Path with CA certificates.\n\n"
+#endif
 #ifdef __CYGWIN__
 " --service-start		Start, install and remove KadNode as Windows service.\n"
 " --service-install		KadNode will be started/shut down along with Windows\n"
@@ -135,10 +139,10 @@ struct setting_t {
 	struct setting_t *next;
 };
 
-/* Temporary list of all settings */
+// Temporary list of all settings
 struct setting_t *g_settings = NULL;
 
-/* Append to temporary storage */
+// Append to temporary storage
 void conf_append_setting( char name[], char value[] ) {
 	struct setting_t *end, *new;
 
@@ -184,7 +188,7 @@ struct setting_t *conf_remove_setting( struct setting_t *cur ) {
 	return next;
 }
 
-/* Parse a <id>[:<port>] value */
+// Parse a <id>[:<port>] value
 void conf_apply_value( const char val[] ) {
 	int port;
 	int rc;
@@ -194,14 +198,14 @@ void conf_apply_value( const char val[] ) {
 	int is_random_port = 0;
 #endif
 
-	/* Find <id>:<port> delimiter */
+	// Find <id>:<port> delimiter
 	p = strchr( val, ':' );
 
 	if( p ) {
 		*p = '\0';
 		port = port_parse( p + 1, -1 );
 	} else {
-		/* A valid port will be choosen inside kad_announce() */
+		// A valid port will be choosen inside kad_announce()
 		port = 0;
 #ifdef FWD
 		is_random_port = 1;
@@ -233,9 +237,9 @@ void conf_init( void ) {
 #endif
 }
 
-/* Set default if setting was not set and validate settings */
+// Set default if setting was not set and validate settings
 void conf_check( void ) {
-	UCHAR node_id[SHA1_BIN_LENGTH];
+	uint8_t node_id[SHA1_BIN_LENGTH];
 	char hexbuf[SHA1_HEX_LENGTH+1];
 
 	if( gconf->af == 0 ) {
@@ -254,6 +258,12 @@ void conf_check( void ) {
 
 	if( gconf->dht_port == NULL ) {
 		gconf->dht_port = strdup( DHT_PORT );
+	}
+
+	if( gconf->dht_addr == NULL ) {
+		gconf->dht_addr = strdup(
+			(gconf->af == AF_INET) ? DHT_ADDR4 : DHT_ADDR6
+		);
 	}
 
 #ifdef CMD
@@ -322,10 +332,10 @@ void conf_check( void ) {
 
 #ifdef LPD
 	IP lpd_addr;
-	UCHAR octet;
+	uint8_t octet;
 
 	if( gconf->lpd_addr == NULL ) {
-		/* Set default multicast address string */
+		// Set default multicast address string
 		if( gconf->af == AF_INET ) {
 			gconf->lpd_addr = strdup( LPD_ADDR4 );
 		} else {
@@ -333,21 +343,21 @@ void conf_check( void ) {
 		}
 	}
 
-	/* Parse multicast address string */
+	// Parse multicast address string
 	if( addr_parse( &lpd_addr, gconf->lpd_addr, LPD_PORT, gconf->af ) != 0 ) {
 		log_err( "CFG: Failed to parse IP address for '%s'.", gconf->lpd_addr );
 		exit( 1 );
 	}
 
-	/* Verifiy multicast address */
+	// Verifiy multicast address
 	if( gconf->af == AF_INET ) {
-		octet = ((UCHAR *) &((IP4 *)&lpd_addr)->sin_addr)[0];
+		octet = ((uint8_t *) &((IP4 *)&lpd_addr)->sin_addr)[0];
 		if( octet != 224 && octet != 239 ) {
 			log_err( "CFG: Multicast address expected: %s", str_addr( &lpd_addr ) );
 			exit( 1 );
 		}
 	} else {
-		octet = ((UCHAR *) &((IP6 *)&lpd_addr)->sin6_addr)[0];
+		octet = ((uint8_t *) &((IP6 *)&lpd_addr)->sin6_addr)[0];
 		if( octet != 0xFF ) {
 			log_err( "CFG: Multicast address expected: %s", str_addr( &lpd_addr ) );
 			exit( 1 );
@@ -355,7 +365,7 @@ void conf_check( void ) {
 	}
 #endif
 
-	/* Store startup time */
+	// Store startup time
 	gettimeofday( &gconf->time_now, NULL );
 	gconf->startup_time = time_now_sec();
 }
@@ -403,7 +413,6 @@ void conf_info( void ) {
 }
 
 void conf_free( void ) {
-
 	free( gconf->query_tld );
 	free( gconf->node_id_str );
 	free( gconf->user );
@@ -425,6 +434,9 @@ void conf_free( void ) {
 #endif
 #ifdef NSS
 	free( gconf->nss_port );
+#endif
+#ifdef TLS
+	free( gconf->tls_path );
 #endif
 #ifdef WEB
 	free( gconf->web_port );
@@ -448,7 +460,7 @@ void conf_duplicate_option( const char opt[] ) {
 	exit( 1 );
 }
 
-/* Set a string once - error when already set */
+// Set a string once - error when already set
 void conf_str( const char opt[], char *dst[], const char src[] ) {
 	if( src == NULL ) {
 		conf_arg_expected( opt );
@@ -461,7 +473,7 @@ void conf_str( const char opt[], char *dst[], const char src[] ) {
 	*dst = strdup( src );
 }
 
-int conf_handle_option( char opt[], char val[] ) {
+int conf_handle_option( const char opt[], const char val[] ) {
 
 	if( match( opt, "--query-tld" ) ) {
 		conf_str( opt, &gconf->query_tld, val );
@@ -505,6 +517,10 @@ int conf_handle_option( char opt[], char val[] ) {
 	} else if( match( opt, "--nss-port" ) ) {
 		conf_str( opt, &gconf->nss_port, val );
 #endif
+#ifdef TLS
+	} else if( match( opt, "--tls-path" ) ) {
+		conf_str( opt, &gconf->tls_path, val );
+#endif
 #ifdef WEB
 	} else if( match( opt, "--web-port" ) ) {
 		conf_str( opt, &gconf->web_port, val );
@@ -528,6 +544,8 @@ int conf_handle_option( char opt[], char val[] ) {
 		}
 	} else if( match( opt, "--port" ) ) {
 		conf_str( opt, &gconf->dht_port, val );
+	} else if( match( opt, "--addr" ) ) {
+		conf_str( opt, &gconf->dht_addr, val );
 #ifdef LPD
 	} else if( match( opt, "--lpd-addr" ) ) {
 		conf_str( opt, &gconf->lpd_addr, val );
@@ -588,7 +606,7 @@ int conf_handle_option( char opt[], char val[] ) {
 	return 1;
 }
 
-int conf_handle_value( char opt[], char val[] ) {
+int conf_handle_value( const char opt[], const char val[] ) {
 	if( match( opt, "--value-id" ) ) {
 		if( val == NULL ) {
 			conf_arg_expected( opt );
@@ -600,21 +618,18 @@ int conf_handle_value( char opt[], char val[] ) {
 	return 1;
 }
 
-#ifdef AUTH
-int conf_handle_key( char opt[], char val[] ) {
-
-	if( match( opt, "--auth-gen-keys" ) ) {
-		exit( auth_generate_key_pair() );
-	} else if( match( opt, "--auth-add-skey" ) ) {
+#ifdef BOB
+int conf_handle_key( const char opt[], const char val[] ) {
+	if( match( opt, "--bob-gen-keys" ) ) {
+		exit( bob_generate_key_pair() );
+	} else if( match( opt, "--bob-add-skey" ) ) {
 		if( val == NULL ) {
 			conf_arg_expected( opt );
 		}
-		auth_add_skey( val );
-	} else if( match( opt, "--auth-add-pkey" ) ) {
-		if( val == NULL ) {
-			conf_arg_expected( opt );
+		if( bob_add_skey( val ) < 0 ) {
+			printf( "Invalid secret key: %s\n", val );
+			exit( 1 );
 		}
-		auth_add_pkey( val );
 	} else {
 		return 0;
 	}
@@ -625,7 +640,7 @@ int conf_handle_key( char opt[], char val[] ) {
 void conf_load_settings( void ) {
 	struct setting_t *setting;
 
-	/* Handle common settings */
+	// Handle common settings
 	setting = g_settings;
 	while( setting ) {
 		if( conf_handle_option( setting->name, setting->value ) ) {
@@ -635,11 +650,11 @@ void conf_load_settings( void ) {
 		}
 	}
 
-	/* Set defaults and check common settings */
+	// Set defaults and check common settings
 	conf_check();
 
-#ifdef AUTH
-	/* Handle public/secret keys */
+#ifdef BOB
+	// Handle secret keys
 	setting = g_settings;
 	while( setting ) {
 		if( conf_handle_key( setting->name, setting->value ) ) {
@@ -650,7 +665,7 @@ void conf_load_settings( void ) {
 	}
 #endif
 
-	/* Handle values IDs */
+	// Handle values IDs
 	setting = g_settings;
 	while( setting ) {
 		if( conf_handle_value( setting->name, setting->value ) ) {
@@ -660,7 +675,7 @@ void conf_load_settings( void ) {
 		}
 	}
 
-	/* Error on unhandled settings */
+	// Error on unhandled settings
 	if( g_settings ) {
 		log_err( "CFG: Unknown command line argument: '%s'",
 			g_settings->name ? g_settings->name : g_settings->value
@@ -695,12 +710,12 @@ void conf_load_file( const char filename[] ) {
 		option = NULL;
 		value = NULL;
 
-		/* End line early at '#' */
+		// End line early at '#'
 		if( (p = strchr( line, '#' )) != NULL ) {
 			*p =  '\0';
 		}
 
-		/* Replace quotation marks with spaces */
+		// Replace quotation marks with spaces
 		p = line;
 		while( *p ) {
 			if( *p == '\'' || *p == '\"' ) {
@@ -709,7 +724,7 @@ void conf_load_file( const char filename[] ) {
 			p++;
 		}
 
-		/* Parse "--option [<value>]" */
+		// Parse "--option [<value>]"
 		char *pch = strtok( line," \t\n\r" );
 		while( pch != NULL ) {
 			if( option == NULL ) {
@@ -750,15 +765,15 @@ void conf_load_args( int argc, char **argv ) {
 	for( i = 1; i < argc; i++ ) {
 		if( argv[i][0] == '-' ) {
 			if( i+1 < argc && argv[i+1][0] != '-' ) {
-				/* -x abc */
+				// -x abc
 				conf_append_setting( argv[i], argv[i+1] );
 				i++;
 			} else {
-				/* -x -y => -x */
+				// -x -y => -x
 				conf_append_setting( argv[i], NULL );
 			}
 		} else {
-			/* x */
+			// x
 			conf_append_setting( NULL, argv[i] );
 		}
 	}

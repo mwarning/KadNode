@@ -5,7 +5,7 @@
 #include <netinet/in.h>
 
 #define MAIN_SRVNAME "kadnode"
-#define MAIN_VERSION "1.0.0"
+#define MAIN_VERSION "2.0.0"
 #define SHA1_BIN_LENGTH 20
 #define SHA1_HEX_LENGTH (2 * SHA1_BIN_LENGTH)
 
@@ -25,7 +25,6 @@
 #define QUERY_TLD_DEFAULT ".p2p"
 #define QUERY_MAX_SIZE 512
 
-typedef unsigned char UCHAR;
 typedef struct sockaddr_storage IP;
 typedef struct sockaddr_in IP4;
 typedef struct sockaddr_in6 IP6;
