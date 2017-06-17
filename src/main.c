@@ -96,11 +96,15 @@ void main_cleanup( void ) {
 	conf_free();
 
 	net_free();
+
+	log_free();
 }
 
 int main_start( void ) {
 
 	atexit( main_cleanup );
+
+	log_setup();
 
 	// Setup port-forwarding
 #ifdef FWD

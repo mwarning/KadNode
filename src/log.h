@@ -15,6 +15,9 @@
 #define log_debug(...) if(_log_check(LOG_DEBUG)) {_log_print(LOG_DEBUG, __VA_ARGS__);}
 
 
+void log_setup( void );
+void log_free( void );
+
 /* Check if the log message is going to be printed */
 int _log_check( int priority );
 
