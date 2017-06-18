@@ -10,11 +10,13 @@
 #include "log.h"
 
 
-static struct timespec log_start = {0,0};
+// Program start time
+static struct timespec log_start = { 0, 0 };
+
 
 char *log_time() {
-	struct timespec now = {0,0};
-	clock_gettime(CLOCK_MONOTONIC, &now);
+	struct timespec now = { 0, 0 };
+	clock_gettime( CLOCK_MONOTONIC, &now );
 
 	static char buf[16];
 	sprintf( buf, "%.5f",
@@ -39,7 +41,7 @@ int _log_check( int priority ) {
 	return 1;
 }
 
-void _log_print( int priority, const char *format, ... ) {
+void _log_print( int priority, const char format[], ... ) {
 	char buf[512];
 	const char *prefix;
 	va_list vlist;
