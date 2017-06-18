@@ -159,14 +159,14 @@ void tls_handle( int rc, int fd ) {
 
 	if( rc < 0 ) {
 		if( errno != EINPROGRESS ) {
-	        // Failed to make TCP/IP connection.
+			// Failed to make TCP/IP connection.
 			log_warn("TLS: Socket error for '%s': %s", query, strerror( errno ) );
 			auth_end( resource, AUTH_ERROR );
 		} else {
-	        // Still connecting.
+			// Still connecting.
 		}
 	} else if( (ret = mbedtls_ssl_handshake( ssl ) ) == 0) {
-	        // TLS handshake done
+			// TLS handshake done
 		log_debug( "TLS: Protocol [%s], Ciphersuite [%s] and fragment length %u: %s",
 			mbedtls_ssl_get_version( ssl ), mbedtls_ssl_get_ciphersuite( ssl ),
 			(unsigned int) mbedtls_ssl_get_max_frag_len( ssl ), query
@@ -306,7 +306,7 @@ void tls_add_ca_entry( const char ca_path[] ) {
 
 	if( ((ret = mbedtls_x509_crt_parse_file( &g_cacert, ca_path )) < 0) &&
 		((ret = mbedtls_x509_crt_parse_path( &g_cacert, ca_path )) < 0)) {
-	    mbedtls_strerror( ret, error_buf, sizeof(error_buf) );
+		mbedtls_strerror( ret, error_buf, sizeof(error_buf) );
 		log_err( "TLS: Failed to load the CA root certificate(s) from %s - %s", ca_path, error_buf );
 		exit(1);
 	}
