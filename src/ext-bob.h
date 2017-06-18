@@ -12,7 +12,7 @@ int bob_handler( int sock, uint8_t buf[], uint32_t buflen, IP *from );
 /*
 * Add secret key.
 */
-int bob_add_skey( const char arg[] );
+void bob_add_skey( const char arg[] );
 
 /*
 * Print secret/public keys to stdout.

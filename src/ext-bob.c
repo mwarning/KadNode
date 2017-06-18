@@ -248,31 +248,30 @@ void bob_debug_keys( int fd ) {
 }
 
 // Add secret key
-int bob_add_skey( const char arg[] ) {
+void bob_add_skey( const char arg[] ) {
 	uint8_t skey[crypto_sign_SECRETKEYBYTES];
 	uint8_t pkey[crypto_sign_PUBLICKEYBYTES];
 
-	if( bob_is_skey( arg ) ) {
-		bytes_from_hex( skey, arg, 2 * crypto_sign_SECRETKEYBYTES );
-
-		// Extract public key
-		bob_skey_to_pkey( skey, pkey );
-
-		struct key_t *key = (struct key_t*) calloc( 1, sizeof(struct key_t) );
-		memcpy( key->pkey, pkey, crypto_sign_PUBLICKEYBYTES );
-		memcpy( key->skey, skey, crypto_sign_SECRETKEYBYTES );
-
-		// Prepend to list
-		if( g_keys ) {
-			key->next = g_keys;
-		}
-
-		g_keys = key;
-
-		return 0;
+	if( !bob_is_skey( arg ) ) {
+		log_err( "BOB: Invalid secret key: %s", arg );
+		exit( 1 );
 	}
 
-	return -1;
+	bytes_from_hex( skey, arg, 2 * crypto_sign_SECRETKEYBYTES );
+
+	// Extract public key
+	bob_skey_to_pkey( skey, pkey );
+
+	struct key_t *key = (struct key_t*) calloc( 1, sizeof(struct key_t) );
+	memcpy( key->pkey, pkey, crypto_sign_PUBLICKEYBYTES );
+	memcpy( key->skey, skey, crypto_sign_SECRETKEYBYTES );
+
+	// Prepend to list
+	if( g_keys ) {
+		key->next = g_keys;
+	}
+
+	g_keys = key;
 }
 
 uint8_t *find_skey( uint8_t pkey[] ) {
