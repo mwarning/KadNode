@@ -41,7 +41,7 @@ const char* natpmp_statestr( int state ) {
 #endif
 
 void natpmp_init( struct natpmp_handle_t **handle ) {
-	/* Initialize data structure */
+	// Initialize data structure
 	struct natpmp_handle_t *m = calloc( 1, sizeof(struct natpmp_handle_t) );
 	m->state = 0;
 	m->retry = 0;
@@ -50,7 +50,7 @@ void natpmp_init( struct natpmp_handle_t **handle ) {
 }
 
 void natpmp_uninit( struct natpmp_handle_t **handle ) {
-	/* Remove all port mapping associated with this host */
+	// Remove all port mapping associated with this host
 	struct natpmp_handle_t *m = *handle;
 	sendnewportmappingrequest( &m->natpmp, NATPMP_PROTOCOL_TCP, 0, 0, 0 );
 	sendnewportmappingrequest( &m->natpmp, NATPMP_PROTOCOL_UDP, 0, 0, 0 );
@@ -62,7 +62,7 @@ void natpmp_uninit( struct natpmp_handle_t **handle ) {
 int natpmp_handler( struct natpmp_handle_t *handle, unsigned short port, time_t lifespan, time_t now ) {
 	natpmpresp_t response;
 
-	/* Retry later if we want to wait longer */
+	// Retry later if we want to wait longer
 	if( handle->retry > now ) {
 		return PF_RETRY;
 	}
@@ -71,7 +71,7 @@ int natpmp_handler( struct natpmp_handle_t *handle, unsigned short port, time_t 
 	log_debug( "NAT-PMP: Handle port: %hu, lifespan: %ld, state: %s", port, lifespan, natpmp_statestr( handle->state ) );
 #endif
 
-	/* Initialize data structure / socket */
+	// Initialize data structure / socket
 	if( handle->state == NATPMP_STATE_INIT ) {
 		int rc = initnatpmp( &handle->natpmp, 0, 0 );
 		if( rc >= 0 ) {
@@ -83,7 +83,7 @@ int natpmp_handler( struct natpmp_handle_t *handle, unsigned short port, time_t 
 		}
 	}
 
-	/* Request gateway address */
+	// Request gateway address
 	if( handle->state == NATPMP_STATE_REQUEST_GATEWAY ) {
 		int rc = sendpublicaddressrequest( &handle->natpmp );
 		if( rc >= 0 ) {
@@ -96,7 +96,7 @@ int natpmp_handler( struct natpmp_handle_t *handle, unsigned short port, time_t 
 		}
 	}
 
-	/* Read public gateway address */
+	// Read public gateway address
 	if( handle->state == NATPMP_STATE_RECEIVE_GATEWAY ) {
 		int rc = readnatpmpresponseorretry( &handle->natpmp, &response );
 		
@@ -116,7 +116,7 @@ int natpmp_handler( struct natpmp_handle_t *handle, unsigned short port, time_t 
 		}
 	}
 
-	/* Add/Remove port mappings */
+	// Add/Remove port mappings
 	if( handle->state == NATPMP_STATE_REQUEST_PORTMAPPING ) {
 		int rc_udp = sendnewportmappingrequest( &handle->natpmp, NATPMP_PROTOCOL_UDP, port, port, lifespan );
 		int rc_tcp = sendnewportmappingrequest( &handle->natpmp, NATPMP_PROTOCOL_TCP, port, port, lifespan );
@@ -133,7 +133,7 @@ int natpmp_handler( struct natpmp_handle_t *handle, unsigned short port, time_t 
 		}
 	}
 
-	/* Check port mapping */
+	// Check port mapping
 	if( handle->state == NATPMP_STATE_RECEIVE_PORTMAPPING ) {
 		int rc = readnatpmpresponseorretry( &handle->natpmp, &response );
 		if( rc >= 0 ) {

@@ -18,7 +18,8 @@
 #include "ext-lpd.h"
 
 
-/* Multicast message format - inspired by, but not compatible to the BitTorrent Local Peer Discovery (LPD) */
+// Multicast message format - inspired by, but not
+// compatible to the BitTorrent Local Peer Discovery (LPD)
 const char msg_fmt[] =
 	"BT-SEARCH * HTTP/1.0\r\n"
 	"Host: %s\r\n"
@@ -35,13 +36,13 @@ const char msg_fmt[] =
 #define LPD_DEFAULT_INFOHASH "0000000000000000000000000000000000000000"
 static char g_infohash[SHA1_HEX_LENGTH+1] = LPD_DEFAULT_INFOHASH;
 
-/* Packets per minute to be handled */
-enum { PACKET_LIMIT_MAX =  20 };
+// Packets per minute to be handled
+enum { PACKET_LIMIT_MAX = 20 };
 
-/* Indicates if the multicast addresses has been registered */
+// Indicates if the multicast addresses has been registered
 static int g_mcast_registered = 0;
 
-/* Next time to perform a multicast ping */
+// Next time to perform a multicast ping
 static time_t g_mcast_time = 0;
 
 static int g_packet_limit = 0;
@@ -63,7 +64,7 @@ int mcast_set_group( int sock, IP *mcast_addr, const char ifname[], int join ) {
 			return -1;
 		}
 	} else {
-		/* Register to first interface */
+		// Register to first interface
 		req.gr_interface = 0;
 	}
 
@@ -134,11 +135,11 @@ int mcast_send_packet( const char msg[], IP *src_addr, const char ifname[] ) {
 	int sock;
 	IP addr;
 
-	/* Copy address to separate field and set port */
+	// Copy address to separate field and set port
 	memcpy( &addr, src_addr, addr_len( (IP*) src_addr ) );
 	port_set( &addr, addr_port(&g_lpd_addr) );
 
-	/* For IPv6, only send from link local addresses */
+	// For IPv6, only send from link local addresses
 	if( addr.ss_family == AF_INET6) {
 		unsigned char* a = &((IP6*) &addr)->sin6_addr.s6_addr[0];
 		if( !(a[0] == 0xFE && a[1] == 0x80) ) {
@@ -175,7 +176,7 @@ int mcast_send_packet( const char msg[], IP *src_addr, const char ifname[] ) {
 	return 0;
 }
 
-/* Register to multicast group on all specified interfaces */
+// Register to multicast group on all specified interfaces
 int multicast_set_groups( int sock, IP *mcast_addr, const char ifname[], int join ) {
 	const struct ifaddrs *cur;
 	struct ifaddrs *addrs;
@@ -185,7 +186,7 @@ int multicast_set_groups( int sock, IP *mcast_addr, const char ifname[], int joi
 		return -1;
 	}
 
-	/* Iterate all interfaces */
+	// Iterate all interfaces
 	cur = addrs;
 	while( cur != NULL ) {
 		if( cur->ifa_addr && (cur->ifa_addr->sa_family == gconf->af)
@@ -204,7 +205,7 @@ int multicast_set_groups( int sock, IP *mcast_addr, const char ifname[], int joi
 	return 0;
 }
 
-/* Send packet to all specified interfaces */
+// Send packet to all specified interfaces
 int mcast_send_packets( const char msg[], const char ifname[] ) {
 	const struct ifaddrs *cur;
 	struct ifaddrs *addrs;
@@ -214,7 +215,7 @@ int mcast_send_packets( const char msg[], const char ifname[] ) {
 		return -1;
 	}
 
-	/* Iterate all interfaces */
+	// Iterate all interfaces
 	cur = addrs;
 	while( cur != NULL ) {
 		if( cur->ifa_addr && (cur->ifa_addr->sa_family == gconf->af)
@@ -233,7 +234,7 @@ int mcast_send_packets( const char msg[], const char ifname[] ) {
 	return 0;
 }
 
-/* Parse received packet */
+// Parse received packet
 const char *parse_packet_param( const char str[], const char param[] ) {
 	const char* pos;
 
@@ -249,21 +250,21 @@ int parse_packet( const char str[] ) {
 	const char *beg;
 	int port = 0;
 
-	/* Find port (required) */
+	// Find port (required)
 	beg = parse_packet_param( str, "Port: ");
 	if( beg == NULL ) {
 		return 0;
 	}
 
-	/* Read port */
+	// Read port
 	if( sscanf( beg, "%d\r\n", &port ) != 1 && port > 0 && port < 65536 ) {
 		return 0;
 	}
 
-	/* Find infohash (optional) */
+	// Find infohash (optional)
 	beg = parse_packet_param( str, "Infohash: " );
 	if( beg != NULL ) {
-		/* Read infohash for own request */
+		// Read infohash for own request
 		if( (strstr(beg, "\r\n") - beg) == SHA1_HEX_LENGTH
 			&& str_isHex( beg, SHA1_HEX_LENGTH )
 			&& memcmp( beg, LPD_DEFAULT_INFOHASH, SHA1_HEX_LENGTH ) != 0 ) {
@@ -282,7 +283,7 @@ void handle_mcast( int rc, int sock_recv, void *_data ) {
 
 	if( g_mcast_time <= time_now_sec() ) {
 		if( kad_count_nodes( 0 ) == 0 ) {
-			/* Join multicast group if possible */
+			// Join multicast group if possible
 			if( g_mcast_registered == 0 && multicast_set_groups( sock_recv, &g_lpd_addr, gconf->dht_ifname, 1 ) == 0 ) {
 				log_info( "LPD: No peers known. Joined multicast group." );
 				g_mcast_registered = 1;
@@ -291,7 +292,7 @@ void handle_mcast( int rc, int sock_recv, void *_data ) {
 			if( g_mcast_registered == 1 ) {
 				log_info( "LPD: Send multicast message to find nodes." );
 
-				/* Create message */
+				// Create message
 				snprintf(
 					buf, sizeof(buf),
 					msg_fmt, str_addr( &g_lpd_addr ),
@@ -302,10 +303,10 @@ void handle_mcast( int rc, int sock_recv, void *_data ) {
 			}
 		}
 
-		/* Cap number of received packets to 10 per minute */
+		// Cap number of received packets to 10 per minute
 		g_packet_limit = 5 * PACKET_LIMIT_MAX;
 
-		/* Try again in ~5 minutes */
+		// Try again in ~5 minutes
 		g_mcast_time = time_add_min( 5 );
 	}
 
@@ -313,7 +314,7 @@ void handle_mcast( int rc, int sock_recv, void *_data ) {
 		return;
 	}
 
-	/* Reveice multicast ping */
+	// Reveice multicast ping
 	addrlen = sizeof(IP);
 	rc_recv = recvfrom( sock_recv, buf, sizeof(buf), 0, (struct sockaddr*) &c_addr, (socklen_t*) &addrlen );
 	if( rc_recv < 0 ) {
@@ -322,7 +323,7 @@ void handle_mcast( int rc, int sock_recv, void *_data ) {
 	}
 
 	if( g_packet_limit < 0 ) {
-		/* Too much traffic - leave multicast group for now */
+		// Too much traffic - leave multicast group for now
 		if( g_mcast_registered == 1 && multicast_set_groups( sock_recv, &g_lpd_addr, gconf->dht_ifname, 0 ) == 0 ) {
 			log_warn( "LPD: Too much traffic. Left multicast group." );
 			g_mcast_registered = 0;
@@ -409,5 +410,5 @@ void lpd_setup( void ) {
 }
 
 void lpd_free( void ) {
-	/* Nothing to do */
+	// Nothing to do
 }

@@ -18,12 +18,12 @@ void nss_lookup( int sock, IP *clientaddr, const char hostname[] ) {
 	IP addrs[MAX_ADDRS];
 	size_t num;
 
-	/* Return at most MAX_ADDRS addresses */
+	// Return at most MAX_ADDRS addresses
 	num = MAX_ADDRS;
 
-	/* Lookup id. Starts search when not already started. */
+	// Lookup id. Starts search when not already started.
 	if( kad_lookup_value( hostname, addrs, &num ) >= 0 && num > 0 ) {
-		/* Found addresses */
+		// Found addresses
 		log_debug( "NSS: Send %lu addresses to %s. Packet has %d bytes.",
 		   num, str_addr( clientaddr ), sizeof(IP)
 		);
@@ -35,9 +35,7 @@ void nss_lookup( int sock, IP *clientaddr, const char hostname[] ) {
 	sendto( sock, (uint8_t *) addrs, num * sizeof(IP), 0, (const struct sockaddr *) clientaddr, addrlen );
 }
 
-/*
-* Handle a local connection
-*/
+// Handle a local connection
 void nss_handler( int rc, int sock ) {
 	IP clientaddr;
 	socklen_t addrlen_ret;
@@ -54,14 +52,14 @@ void nss_handler( int rc, int sock ) {
 		return;
 	}
 
-	/* Add missing null terminator */
+	// Add missing null terminator
 	hostname[rc] = '\0';
 
 	if( !is_suffix( hostname, gconf->query_tld ) ) {
 		return;
 	}
 
-	/* Validate hostname */
+	// Validate hostname
 	if( !str_isValidHostname( hostname ) ) {
 		log_warn( "NSS: Invalid hostname for lookup: '%s'", hostname );
 		return;
@@ -82,5 +80,5 @@ void nss_setup( void ) {
 }
 
 void nss_free( void ) {
-	/* Nothing to do */
+	// Nothing to do
 }

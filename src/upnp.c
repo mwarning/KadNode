@@ -100,7 +100,7 @@ int upnpAddPortMapping( struct upnp_handle_t *handle, const char *proto, unsigne
 int upnp_handler( struct upnp_handle_t *handle, unsigned short port, time_t lifespan, time_t now ) {
 	struct UPNPDev * devlist;
 
-	/* Retry later if we want to wait longer */
+	// Retry later if we want to wait longer
 	if( handle->retry > now ) {
 		return PF_RETRY;
 	}
@@ -109,7 +109,7 @@ int upnp_handler( struct upnp_handle_t *handle, unsigned short port, time_t life
 	log_debug( "UPnP: Handle port: %hu, lifespan: %ld, state: %s", port, lifespan, upnp_statestr( handle->state ) );
 #endif
 
-	/* Get gateway address */
+	// Get gateway address
 	if( handle->state == UPNP_STATE_DISCOVER_GATEWAY ) {
 #if (MINIUPNPC_API_VERSION <= 5)
 		devlist = upnpDiscover( 1000, NULL, NULL, 0 );
@@ -141,7 +141,7 @@ int upnp_handler( struct upnp_handle_t *handle, unsigned short port, time_t life
 
 	if( handle->state == UPNP_STATE_GET_PORTMAPPING ) {
 		if( lifespan == 0 ) {
-			/* Remove port forwarding */
+			// Remove port forwarding
 			int rc_tcp = upnpDeletePortMapping( handle, "TCP", port );
 			int rc_udp = upnpDeletePortMapping( handle, "UDP", port );
 
@@ -154,7 +154,7 @@ int upnp_handler( struct upnp_handle_t *handle, unsigned short port, time_t life
 				goto error;
 			}
 		} else {
-			/* Check port forwarding */
+			// Check port forwarding
 			int rc_tcp = upnpGetSpecificPortMappingEntry( handle, "TCP", port );
 			int rc_udp = upnpGetSpecificPortMappingEntry( handle, "UDP", port );
 
@@ -170,7 +170,7 @@ int upnp_handler( struct upnp_handle_t *handle, unsigned short port, time_t life
 		}
 	}
 
-	/* Add port forwarding */
+	// Add port forwarding
 	if( handle->state == UPNP_STATE_ADD_PORTMAPPING ) {
 		if ( handle->urls.controlURL && handle->data.first.servicetype ) {
 			int rc_tcp = upnpAddPortMapping( handle, "TCP", port );

@@ -76,12 +76,12 @@ debug_write("nss init start");
 		return 0;
 	}
 
-	/* Setup UDP socket */
+	// Setup UDP socket
 	if( (g_sock = socket( g_sockaddr.ss_family, SOCK_DGRAM, IPPROTO_UDP )) < 0 ) {
 		return 0;
 	}
 
-	/* Set receive timeout to 0.1 seconds */
+	// Set receive timeout to 0.1 seconds
 	tv.tv_sec = 0;
 	tv.tv_usec = 100000;
 
@@ -116,7 +116,7 @@ int _nss_kadnode_lookup( const char hostname[], int hostlen, IP addrs[] ) {
 
 	if( g_sock < 0 ) {
 		if( !_nss_kadnode_init() ) {
-			/* Socket setup failed */
+			// Socket setup failed
 			return 0;
 		}
 	}
@@ -132,7 +132,7 @@ debug_write(hostname);
 	size = recvfrom( g_sock, addrs, MAX_ADDRS * sizeof(IP), 0, (struct sockaddr *)&clientaddr, &addrlen );
 
 	if( size > 0 && (size % sizeof(IP)) == 0 ) {
-		/* Return number of addresses */
+		// Return number of addresses
 		return (size / sizeof(IP));
 	} else {
 		return 0;
@@ -197,7 +197,7 @@ enum nss_status _nss_kadnode_gaih_addrtuple(
 		addrlen = sizeof(struct in_addr);
 	}
 
-	/* Check upper bound */
+	// Check upper bound
 	if( buflen < ((hostlen + 1) + sizeof(char*) + (addrsnum * sizeof(struct gaih_addrtuple))) ) {
 		*errnop = ENOMEM;
 		*h_errnop = NO_RECOVERY;
@@ -206,11 +206,11 @@ enum nss_status _nss_kadnode_gaih_addrtuple(
 
 	memset( buf, '\0', buflen );
 
-	/* Hostname */
+	// Hostname
 	p_name = buf;
 	memcpy( p_name, hostname, hostlen );
 
-	/* Object */
+	// Object
 	p_idx = p_name + hostlen + 1;
 	p_start = (struct gaih_addrtuple*) p_idx;
 	for( i = 0; i < addrsnum; i++ ) {
@@ -224,7 +224,7 @@ enum nss_status _nss_kadnode_gaih_addrtuple(
 		}
 		p_tuple->scopeid = 0;
 
-		/* Linked list */
+		// Linked list
 		if( i == addrsnum - 1 ) {
 			p_tuple->next = NULL;
 		} else {
@@ -282,7 +282,7 @@ enum nss_status _nss_kadnode_hostent(
 		return NSS_STATUS_NOTFOUND;
 	}
 
-	/* Check upper bound */
+	// Check upper bound
 	if( buflen < ((hostlen + 1) + sizeof(char*) + (addrsnum * sizeof(struct in6_addr)) + (addrsnum + 1) * sizeof(char*)) ) {
 		*errnop = ENOMEM;
 		*h_errnop = NO_RECOVERY;
@@ -297,17 +297,17 @@ enum nss_status _nss_kadnode_hostent(
 
 	memset( buf, '\0', buflen );
 
-	/* Hostname */
+	// Hostname
 	p_name = buf;
 	memcpy( p_name, hostname, hostlen );
 	p_idx = p_name + hostlen + 1;
 
-	/* Alias */
+	// Alias
 	p_aliases = p_idx;
 	*(char**) p_aliases = NULL;
 	p_idx += sizeof(char*);
 
-	/* Address data */
+	// Address data
 	p_addr = p_idx;
 	for( i = 0; i < addrsnum; i++ ) {
 		if( af == AF_INET6 ) {
@@ -318,7 +318,7 @@ enum nss_status _nss_kadnode_hostent(
 	}
 	p_idx += addrsnum * addrlen;
 
-	/* Address pointer */
+	// Address pointer
 	p_addr_list = p_idx;
 	p_idx = p_addr;
 	for( i = 0; i < addrsnum; i++ ) {

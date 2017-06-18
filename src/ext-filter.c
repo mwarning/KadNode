@@ -28,7 +28,7 @@ filter returns verified, unverified, blacklist
 
 struct action {
 	struct action *next;
-	int state; /* state to set */ 
+	int state; // state to set
 	uint8_t id[SHA1_BIN_LENGTH];
 	IP addr;
 };
