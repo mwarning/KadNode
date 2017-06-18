@@ -12,7 +12,7 @@
 #ifdef TLS
 #include "mbedtls/sha1.h"
 #else
-
+#include "sha1.h"
 #endif
 
 #include "main.h"
@@ -441,7 +441,7 @@ int addr_equal( const IP *addr1, const IP *addr2 ) {
 }
 
 time_t time_now_sec( void ) {
-	return gconf->time_now.tv_sec;
+	return gconf->time_now;
 }
 
 time_t time_add_min( unsigned int minutes ) {

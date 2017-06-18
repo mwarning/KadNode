@@ -187,7 +187,7 @@ void net_loop( void ) {
         tv.tv_usec = 0;
 
         // Update clock
-        gettimeofday( &gconf->time_now, NULL );
+        gconf->time_now = time( NULL );
 
         if( g_tasks_changed ) {
             // Create new file descriptor set

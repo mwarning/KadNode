@@ -2,8 +2,9 @@
 #ifndef _CONF_H_
 #define _CONF_H_
 
-#include <sys/time.h>
+#include <time.h>
 #include "main.h"
+
 
 extern const char *kadnode_version_str;
 
@@ -25,7 +26,7 @@ struct value {
 struct gconf_t {
 
 	// Current time
-	struct timeval time_now;
+	time_t time_now;
 
 	// Node identifier as hex string
 	char *node_id_str;
