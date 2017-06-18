@@ -4,7 +4,6 @@
 #include <sys/time.h>
 
 #include "log.h"
-#include "sha1.h"
 #include "main.h"
 #include "utils.h"
 #include "conf.h"
@@ -17,6 +16,8 @@
 #endif
 #ifdef TLS
 #include "mbedtls/sha1.h"
+#else
+#include "sha1.h"
 #endif
 
 #include "dht.c"
