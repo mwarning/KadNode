@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <errno.h>
+#include <unistd.h> /* close */
 
 #include "mbedtls/config.h"
 #include "mbedtls/platform.h"
@@ -16,6 +17,7 @@
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/certs.h"
 #include "mbedtls/x509.h"
+#include "mbedtls/error.h"
 #include "mbedtls/debug.h"
 
 #include "main.h"
@@ -83,8 +85,21 @@ int tls_connect( mbedtls_ssl_context *ssl, mbedtls_net_context *fd, const char q
 	return 0;
 }
 
+struct tls_resource *tls_find_resource( int fd ) {
+	int i;
+
+	for( i = 0; i < N_ELEMS(g_tls_resources); i++ ) {
+		if( g_tls_resources[i].fd.fd == fd ) {
+			return &g_tls_resources[i];
+		}
+	}
+
+	return NULL;
+}
+
+
 // forward declartion
-void tls_handle( int rc, int fd, void *data );
+void tls_handle( int rc, int fd );
 
 void auth_end( struct tls_resource* resource, int state ) {
 	struct results_t *results;
@@ -123,7 +138,7 @@ void auth_end( struct tls_resource* resource, int state ) {
 	}
 }
 
-void tls_handle( int rc, int fd, void *data ) {
+void tls_handle( int rc, int fd ) {
 	struct tls_resource* resource; // = (struct tls_resource*) data;
 	mbedtls_ssl_context* ssl; // = &resource->ssl;
 	const char *query; // = resource->results->query;
@@ -200,18 +215,6 @@ void tls_handle( int rc, int fd, void *data ) {
 
 int tls_decide_auth( const char query[] ) {
 	return 0;
-}
-
-struct tls_resource *tls_find_resource( int fd ) {
-	int i;
-
-	for( i = 0; i < N_ELEMS(g_tls_resources); i++ ) {
-		if( g_tls_resources[i].fd.fd == fd ) {
-			return &g_tls_resources[i];
-		}
-	}
-
-	return NULL;
 }
 
 // Find a resource instance that is currently not in use
@@ -296,10 +299,25 @@ int tls_conf_verify( void *data, mbedtls_x509_crt *crt, int depth, uint32_t *fla
 	return 0;
 }
 
-int auth_conf( const char *ca_path ) {
+// Load the trusted CA
+void tls_add_ca_entry( const char ca_path[] ) {
+	char error_buf[100];
+	int ret;
+
+	if( ((ret = mbedtls_x509_crt_parse_file( &g_cacert, ca_path )) < 0) &&
+		((ret = mbedtls_x509_crt_parse_path( &g_cacert, ca_path )) < 0)) {
+	    mbedtls_strerror( ret, error_buf, sizeof(error_buf) );
+		log_err( "TLS: Failed to load the CA root certificate(s) from %s - %s", ca_path, error_buf );
+		exit(1);
+	}
+
+	log_info( "TLS: Loaded certificates from: %s (%d skipped)", ret );
+}
+
+int auth_conf( /*const char ca_path[]*/ ) {
 	int ret;
 	int i;
-
+/*
 	if( ca_path == NULL ) {
 		ca_path = "/usr/share/ca-certificates/mozilla/";
 	}
@@ -309,7 +327,7 @@ int auth_conf( const char *ca_path ) {
 
 	ret = mbedtls_x509_crt_parse_path( &g_cacert, ca_path );
 	log_info( "TLS: Loaded certificates: ok (%d skipped)", ret );
-
+*/
 	// Setting up the SSL/TLS structure.
 	if( ( ret = mbedtls_ssl_config_defaults( &g_conf,
 		MBEDTLS_SSL_IS_CLIENT,
@@ -373,7 +391,7 @@ void tls_setup( void ) {
 	mbedtls_ssl_config_init( &g_conf );
 	mbedtls_x509_crt_init( &g_cacert );
 
-	auth_conf( gconf->tls_path );
+	auth_conf( /*gconf->tls_path*/ );
 }
 
 void tls_free( void ) {

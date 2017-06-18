@@ -60,7 +60,7 @@ ifeq ($(findstring web,$(FEATURES)),web)
 endif
 
 ifeq ($(findstring tls,$(FEATURES)),tls)
-  OBJS += build/ext-tls.o
+  OBJS += build/ext-tls.o build/ext-tls-server.o
   CFLAGS += -DTLS
   LFLAGS += -lmbedtls -lmbedx509 -lmbedcrypto
 endif

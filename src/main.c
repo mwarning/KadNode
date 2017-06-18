@@ -45,6 +45,7 @@
 #endif
 #ifdef TLS
 #include "ext-tls.h"
+#include "ext-tls-server.h"
 #endif
 
 
@@ -141,6 +142,7 @@ int main_start( void ) {
 #endif
 #ifdef TLS
 	tls_setup();
+	tls_server_setup();
 #endif
 #ifdef CMD
 	cmd_setup();
