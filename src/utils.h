@@ -8,11 +8,9 @@
 // Number of elements in an array
 #define N_ELEMS(x)  (sizeof(x) / sizeof(x[0]))
 
-// Simple string match
-#define match(opt, arg) ((opt != NULL) && (strcmp( opt, arg ) == 0))
-
 // IPv6 address length including port, e.g. [::1]:12345
 #define FULL_ADDSTRLEN (INET6_ADDRSTRLEN + 8)
+
 
 uint64_t id_from_hash( const char hash[] );
 int is_suffix( const char str[], const char suffix[] );

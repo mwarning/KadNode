@@ -195,11 +195,11 @@ int cmd_exec( struct Reply *r, int argc, char **argv ) {
 		}
 		rc = 1;
 
-	} else if( match( argv[0], "import" ) && argc == 2 ) {
+	} else if( strcmp( argv[0], "import" ) == 0 && argc == 2 ) {
 
 		rc = cmd_import( r, argv[1] );
 #if 0
-	} else if( match( argv[0], "lookup_node" ) && argc == 2 ) {
+	} else if( strcmp( argv[0], "lookup_node" ) == 0 && argc == 2 ) {
 
 		// Check searches for node
 		rc = kad_lookup_node( argv[1], &addrs[0] );
@@ -215,7 +215,7 @@ int cmd_exec( struct Reply *r, int argc, char **argv ) {
 			rc = 1;
 		}
 #endif
-	} else if( match( argv[0], "lookup" ) && argc == 2 ) {
+	} else if( strcmp( argv[0], "lookup" ) == 0 && argc == 2 ) {
 
 		size_t num = N_ELEMS(addrs);
 		size_t i;
@@ -238,12 +238,12 @@ int cmd_exec( struct Reply *r, int argc, char **argv ) {
 			r_printf( r ,"Search started.\n" );
 			rc = 1;
 		}
-	} else if( match( argv[0], "status" ) && argc == 1 ) {
+	} else if( strcmp( argv[0], "status" ) == 0 && argc == 1 ) {
 
 		// Print node id and statistics
 		cmd_print_status( r );
 
-	} else if( match( argv[0], "announce" ) && (argc == 1 || argc == 2 || argc == 3) ) {
+	} else if( strcmp( argv[0], "announce" ) == 0 && (argc == 1 || argc == 2 || argc == 3) ) {
 
 		if( argc == 1 ) {
 			// Announce all values; does not update value.refreshed
@@ -307,52 +307,52 @@ int cmd_exec( struct Reply *r, int argc, char **argv ) {
 			rc = 1;
 		}
 
-	} else if( match( argv[0], "blacklist" ) && argc == 2 ) {
+	} else if( argc == 2 && strcmp( argv[0], "blacklist" ) == 0 ) {
 
 		rc = cmd_blacklist( r, argv[1] );
 
-	} else if( match( argv[0], "export" ) && argc == 1 ) {
+	} else if( argc == 1 && strcmp( argv[0], "export" ) == 0 ) {
 
 		rc = cmd_export( r );
 
-	} else if( match( argv[0], "list" ) && argc == 2 && r->allow_debug ) {
+	} else if( argc == 2 && strcmp( argv[0], "list" ) == 0 && r->allow_debug ) {
 
 		if( gconf->is_daemon == 1 ) {
 			r_printf( r ,"The 'list' command is not available while KadNode runs as daemon.\n" );
 			rc = 1;
 			goto end;
-		} else if( match( argv[1], "blacklist" ) ) {
+		} else if( strcmp( argv[1], "blacklist" ) == 0 ) {
 			kad_debug_blacklist( STDOUT_FILENO );
 			rc = 0;
-		} else if( match( argv[1], "buckets" ) ) {
+		} else if( strcmp( argv[1], "buckets" ) == 0 ) {
 			kad_debug_buckets( STDOUT_FILENO );
 			rc = 0;
-		} else if( match( argv[1], "constants" ) ) {
+		} else if( strcmp( argv[1], "constants") == 0 ) {
 			kad_debug_constants( STDOUT_FILENO );
 			rc = 0;
 #ifdef FWD
-		} else if( match( argv[1], "forwardings" ) ) {
+		} else if( strcmp( argv[1], "forwardings") == 0 ) {
 			fwd_debug( STDOUT_FILENO );
 			rc = 0;
 #endif
 #ifdef AUTH
-		} else if( match( argv[1], "pkeys" ) ) {
+		} else if( strcmp( argv[1], "pkeys") == 0 ) {
 			auth_debug_pkeys( STDOUT_FILENO );
 			rc = 0;
-		} else if( match( argv[1], "skeys" ) ) {
+		} else if( strcmp( argv[1], "skeys") == 0 ) {
 			auth_debug_skeys( STDOUT_FILENO );
 			rc = 0;
 #endif
-		} else if( match( argv[1], "results" ) ) {
+		} else if( strcmp( argv[1], "results") == 0 ) {
 			results_debug( STDOUT_FILENO );
 			rc = 0;
-		} else if( match( argv[1], "searches" ) ) {
+		} else if( strcmp( argv[1], "searches") == 0 ) {
 			kad_debug_searches( STDOUT_FILENO );
 			rc = 0;
-		} else if( match( argv[1], "storage" ) ) {
+		} else if( strcmp( argv[1], "storage") == 0 ) {
 			kad_debug_storage( STDOUT_FILENO );
 			rc = 0;
-		} else if( match( argv[1], "values" ) ) {
+		} else if( strcmp( argv[1], "values" ) == 0 ) {
 			values_debug( STDOUT_FILENO );
 			rc = 0;
 		} else {

@@ -95,11 +95,11 @@ void web_handler( int rc, int sock ) {
 	reply_buf[0] = '\n';
 	reply_buf[1] = '\0';
 
-	if( match( cmd, "lookup" ) ) {
+	if( strcmp( cmd, "lookup" ) == 0 ) {
 		handle_lookup( reply_buf, params );
-	} else if( match( cmd, "announce" ) ) {
+	} else if( strcmp( cmd, "announce" ) ) == 0 {
 		handle_announce( reply_buf, params );
-	} else if( match( cmd, "blacklist" ) ) {
+	} else if( strcmp( cmd, "blacklist" ) ) == 0 {
 		handle_blacklist( reply_buf, params );
 	} else {
 		reply_buf[0] = '\0';

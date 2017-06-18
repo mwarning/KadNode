@@ -568,11 +568,11 @@ void conf_handle_option( const char opt[], const char val[] ) {
 			if( val == NULL ) {
 				conf_arg_expected( opt );
 				break;
-			} else if( match( val, "quiet" ) ) {
+			} else if( strcmp( val, "quiet" ) == 0 ) {
 				gconf->verbosity = VERBOSITY_QUIET;
-			} else if( match( val, "verbose" ) ) {
+			} else if( strcmp( val, "verbose" ) == 0 ) {
 				gconf->verbosity = VERBOSITY_VERBOSE;
-			} else if( match( val, "debug" ) ) {
+			} else if( strcmp( val, "debug" ) == 0 ) {
 				gconf->verbosity = VERBOSITY_DEBUG;
 			} else {
 				log_err( "CFG: Invalid argument for %s.", opt );
@@ -646,9 +646,9 @@ void conf_handle_option( const char opt[], const char val[] ) {
 				break;
 			} else if( gconf->af != 0 ) {
 				conf_duplicate_option( opt );
-			} else if( match( val, "ipv4" ) ) {
+			} else if( strcmp( val, "ipv4" ) == 0 ) {
 				gconf->af = AF_INET;
-			} else if( match( val, "ipv6" ) ) {
+			} else if( strcmp( val, "ipv6" ) == 0 ) {
 				gconf->af = AF_INET6;
 			} else {
 				log_err("CFG: Invalid argument for %s. Use 'ipv4' or 'ipv6'.", opt );
