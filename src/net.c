@@ -25,8 +25,8 @@ struct task_t {
     net_callback *callback;
 };
 
-struct task_t g_tasks[16] = { {0} };
-int g_tasks_changed = 1;
+static struct task_t g_tasks[16] = { { 0 } };
+static int g_tasks_changed = 1;
 
 
 void net_add_handler( int fd, net_callback *callback ) {

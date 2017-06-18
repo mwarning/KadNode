@@ -27,7 +27,7 @@
 #include "ext-cmd.h"
 
 
-const char* cmd_usage =
+static const char* cmd_usage =
 	"Usage:\n"
 	"	status\n"
 	"	lookup <query>\n"

@@ -40,13 +40,13 @@ struct tls_resource {
 };
 
 // Global TLS resources
-mbedtls_x509_crt g_cacert;
-mbedtls_entropy_context g_entropy;
-mbedtls_ctr_drbg_context g_drbg;
-mbedtls_ssl_config g_conf;
+static mbedtls_x509_crt g_cacert;
+static mbedtls_entropy_context g_entropy;
+static mbedtls_ctr_drbg_context g_drbg;
+static mbedtls_ssl_config g_conf;
 
 // Allow two parallel authentications at once
-struct tls_resource g_tls_resources[2];
+static struct tls_resource g_tls_resources[2];
 
 
 // Start TLS connection

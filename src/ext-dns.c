@@ -18,8 +18,8 @@
 #define MAX_ADDR_RECORDS 32
 
 
-int g_sock4 = -1;
-int g_sock6 = -1;
+static int g_sock4 = -1;
+static int g_sock6 = -1;
 
 // A simple ring buffer for DNS proxy.
 unsigned short proxy_entries_id[16] = {0};

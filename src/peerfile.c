@@ -26,7 +26,7 @@ struct peer {
 };
 
 // A list of static peers
-struct peer *g_peers = NULL;
+static struct peer *g_peers = NULL;
 
 
 void peerfile_export( void ) {

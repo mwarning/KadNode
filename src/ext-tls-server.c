@@ -30,10 +30,10 @@
 #include "ext-tls-server.h"
 
 
-mbedtls_entropy_context entropy;
-mbedtls_ctr_drbg_context ctr_drbg;
-mbedtls_ssl_context g_ssl;
-mbedtls_ssl_config g_conf;
+static mbedtls_entropy_context g_entropy;
+static mbedtls_ctr_drbg_context g_drbg;
+static mbedtls_ssl_context g_ssl;
+static mbedtls_ssl_config g_conf;
 
 static mbedtls_net_context g_listen_fd;
 static mbedtls_net_context g_client_fd;
@@ -229,13 +229,13 @@ void tls_server_setup( void ) {
 	mbedtls_net_init( &g_listen_fd );
 	mbedtls_ssl_init( &g_ssl );
 	mbedtls_ssl_config_init( &g_conf );
-	mbedtls_ctr_drbg_init( &ctr_drbg );
+	mbedtls_ctr_drbg_init( &g_drbg );
 
 
 mbedtls_debug_set_threshold( 0 );
 
- mbedtls_entropy_init( &entropy );
-	if( ( ret = mbedtls_ctr_drbg_seed( &ctr_drbg, mbedtls_entropy_func, &entropy,
+ mbedtls_entropy_init( &g_entropy );
+	if( ( ret = mbedtls_ctr_drbg_seed( &g_drbg, mbedtls_entropy_func, &g_entropy,
 							   (const unsigned char *) pers,
 							   strlen( pers ) ) ) != 0 ) {
 		printf( "mbedtls_ctr_drbg_seed returned -0x%x\n", -ret );
@@ -258,7 +258,7 @@ mbedtls_debug_set_threshold( 0 );
 		}
 
 		mbedtls_ssl_conf_authmode( &g_conf, MBEDTLS_SSL_VERIFY_REQUIRED );
-		mbedtls_ssl_conf_rng( &g_conf, mbedtls_ctr_drbg_random, &ctr_drbg );
+		mbedtls_ssl_conf_rng( &g_conf, mbedtls_ctr_drbg_random, &g_drbg );
 		//mbedtls_ssl_conf_dbg( &g_conf, my_debug, stdout );
 
 		mbedtls_ssl_conf_sni( &g_conf, sni_callback, g_sni_entries );
