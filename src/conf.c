@@ -432,83 +432,77 @@ enum OpCode {
 	oUnknown
 };
 
-static const struct {
+struct Option {
 	const char *name;
+	int num_args;
 	enum OpCode code;
-} options[] = {
-	{"--query-tld", oQueryTld},
-	{"--pidfile", oPidFile},
-	{"--peerfile", oPeerFile},
-	{"--peer", oPeer},
-	{"--verbosity", oVerbosity},
-#ifdef CMD
-	{"--cmd-disable-stdin", oCmdDisableStdin},
-	{"--cmd-port", oCmdPort},
-#endif
-#ifdef DNS
-	{"--dns-port", oDnsPort},
-	{"--dns-server", oDnsServer},
-#endif
-#ifdef NSS
-	{"--nss-port", oNssPort},
-#endif
-#ifdef TLS
-	{"--tls-client-entry", oTlsClientEntry},
-	{"--tls-server-entry", oTlsServerEntry},
-#endif
-#ifdef WEB
-	{"--web-port", oWebPort},
-#endif
-	{"--config", oConfig},
-	{"--mode", oMode},
-	{"--port", oPort},
-	{"--addr", oAddr},
-#ifdef LPD
-	{"--lpd-addr", oLpdAddr},
-	{"--lpd-disable", oLpdDisable},
-#endif
-#ifdef FWD
-	{"--fwd-disable", oFwdDisable},
-#endif
-#ifdef __CYGWIN__
-	{"--service-install", oServiceInstall},
-	{"--service-remove", oServiceRemove},
-	{"--service-start", oServiceStart},
-#endif
-#ifdef BOB
-	{"--bob-gen-keys", oBobGenKeys},
-	{"--bob-add-skey", oBobAddSkey},
-#endif
-	{"--value-id", oValueId},
-	{"--ifname", oIfname},
-	{"--user", oUser},
-	{"--daemon", oDaemon},
-	{"-h", oHelp},
-	{"--help", oHelp},
-	{"-v", oVersion},
-	{"--version", oVersion},
 };
 
-unsigned findCode(const char name[]) {
+static struct Option options[] = {
+	{"", 0, oUnknown},
+	{"--query-tld", 1, oQueryTld},
+	{"--pidfile", 1, oPidFile},
+	{"--peerfile", 1, oPeerFile},
+	{"--peer", 1, oPeer},
+	{"--verbosity", 1, oVerbosity},
+#ifdef CMD
+	{"--cmd-disable-stdin", 0, oCmdDisableStdin},
+	{"--cmd-port", 1, oCmdPort},
+#endif
+#ifdef DNS
+	{"--dns-port", 1, oDnsPort},
+	{"--dns-server", 1, oDnsServer},
+#endif
+#ifdef NSS
+	{"--nss-port", 1, oNssPort},
+#endif
+#ifdef TLS
+	{"--tls-client-entry", 1, oTlsClientEntry},
+	{"--tls-server-entry", 1, oTlsServerEntry},
+#endif
+#ifdef WEB
+	{"--web-port", 1, oWebPort},
+#endif
+	{"--config", 1, oConfig},
+	{"--mode", 1, oMode},
+	{"--port", 1, oPort},
+	{"--addr", 1, oAddr},
+#ifdef LPD
+	{"--lpd-addr", 1, oLpdAddr},
+	{"--lpd-disable", 0, oLpdDisable},
+#endif
+#ifdef FWD
+	{"--fwd-disable", 0, oFwdDisable},
+#endif
+#ifdef __CYGWIN__
+	{"--service-install", 0, oServiceInstall},
+	{"--service-remove", 0, oServiceRemove},
+	{"--service-start", 0, oServiceStart},
+#endif
+#ifdef BOB
+	{"--bob-gen-keys", 1, oBobGenKeys},
+	{"--bob-add-skey", 1, oBobAddSkey},
+#endif
+	{"--value-id", 1, oValueId},
+	{"--ifname", 1, oIfname},
+	{"--user", 1, oUser},
+	{"--daemon", 1, oDaemon},
+	{"-h", 0, oHelp},
+	{"--help", 0, oHelp},
+	{"-v", 0, oVersion},
+	{"--version", 0, oVersion},
+};
+
+const struct Option *findOption(const char name[]) {
 	int i;
 
 	for( i = 0; i < N_ELEMS(options); i++) {
 		if( strcmp( name, options[i].name ) == 0 ) {
-			return options[i].code;
+			return &options[i];
 		}
 	}
 
-	return oUnknown;
-}
-
-void conf_arg_expected( const char opt[] ) {
-	log_err( "CFG: Argument expected for option: %s", opt );
-	exit( 1 );
-}
-
-void conf_no_arg_expected( const char opt[] ) {
-	log_err( "CFG: No argument expected for option: %s", opt );
-	exit( 1 );
+	return &options[0];
 }
 
 void conf_duplicate_option( const char opt[] ) {
@@ -518,11 +512,6 @@ void conf_duplicate_option( const char opt[] ) {
 
 // Set a string once - error when already set
 void conf_str( const char opt[], char *dst[], const char src[] ) {
-	if( src == NULL ) {
-		conf_arg_expected( opt );
-		return;
-	}
-
 	if( *dst != NULL ) {
 		conf_duplicate_option( opt );
 		return;
@@ -531,23 +520,24 @@ void conf_str( const char opt[], char *dst[], const char src[] ) {
 	*dst = strdup( src );
 }
 
-// Add SNI entry for the TLS server
-void tls_add_server_entry( const char opt[], const char val[] ) {
-	char name[128];
-	char crt_file[128];
-	char key_file[128];
-
-	if( sscanf( val, "%127[^,],%127[^,],%127[^,]", name, crt_file, key_file ) == 3 ) {
-		tls_add_sni_entry( name, crt_file, key_file );
-	} else {
-		log_err( "CFG: Invalid option format: %s", val );
-		exit(1);
-	}
-}
-
 void conf_handle_option( const char opt[], const char val[] ) {
+	const struct Option *option;
 
-	switch( findCode(opt) ) {
+	option = findOption( opt );
+
+	if( option->num_args == 1 && val == NULL ) {
+		log_err( "CFG: Argument expected for option: %s", opt );
+		exit( 1 );
+		return;
+	}
+
+	if( option->num_args == 0 && val != NULL ) {
+		log_err( "CFG: No argument expected for option: %s", opt );
+		exit( 1 );
+		return;
+	}
+
+	switch( option->code ) {
 		case oQueryTld:
 			conf_str( opt, &gconf->query_tld, val );
 			break;
@@ -558,34 +548,23 @@ void conf_handle_option( const char opt[], const char val[] ) {
 			conf_str( opt, &gconf->peerfile, val );
 			break;
 		case oPeer:
-			if( val == NULL ) {
-				conf_arg_expected( opt );
-				break;
-			}
 			peerfile_add_peer( val );
 			break;
 		case oVerbosity:
-			if( val == NULL ) {
-				conf_arg_expected( opt );
-				break;
-			} else if( strcmp( val, "quiet" ) == 0 ) {
+			if( strcmp( val, "quiet" ) == 0 ) {
 				gconf->verbosity = VERBOSITY_QUIET;
 			} else if( strcmp( val, "verbose" ) == 0 ) {
 				gconf->verbosity = VERBOSITY_VERBOSE;
 			} else if( strcmp( val, "debug" ) == 0 ) {
 				gconf->verbosity = VERBOSITY_DEBUG;
 			} else {
-				log_err( "CFG: Invalid argument for %s.", opt );
+				log_err( "CFG: Invalid argument for %s", opt );
 				exit( 1 );
 			}
 			break;
 #ifdef CMD
 		case oCmdDisableStdin:
-			if( val != NULL ) {
-				conf_no_arg_expected( opt );
-			} else {
-				gconf->cmd_disable_stdin = 1;
-			}
+			gconf->cmd_disable_stdin = 1;
 			break;
 		case oCmdPort:
 			conf_str( opt, &gconf->cmd_port, val );
@@ -607,9 +586,7 @@ void conf_handle_option( const char opt[], const char val[] ) {
 #ifdef TLS
 		case oTlsClientEntry:
 			// Add Certificate Authority (CA) entries for the TLS client
-			if( tls_add_ca_entry( val ) != 0 ) {
-				exit(1);
-			}
+			tls_add_ca_entry( val );
 			break;
 		case oTlsServerEntry:
 		{
@@ -621,7 +598,7 @@ void conf_handle_option( const char opt[], const char val[] ) {
 			if( sscanf( val, "%127[^,],%127[^,],%127[^,]", name, crt_file, key_file ) == 3 ) {
 				tls_add_sni_entry( name, crt_file, key_file );
 			} else {
-				log_err( "CFG: Invalid option format: %s", val );
+				log_err( "CFG: Invalid value format: %s", val );
 				exit(1);
 			}
 			break;
@@ -633,18 +610,11 @@ void conf_handle_option( const char opt[], const char val[] ) {
 			break;
 #endif
 		case oConfig:
-			if( val == NULL ) {
-				conf_arg_expected( opt );
-				break;
-			}
 			conf_load_file( val );
 			conf_str( opt, &gconf->configfile, val );
 			break;
 		case oMode:
-			if( val == NULL ) {
-				conf_arg_expected( opt );
-				break;
-			} else if( gconf->af != 0 ) {
+			if( gconf->af != 0 ) {
 				conf_duplicate_option( opt );
 			} else if( strcmp( val, "ipv4" ) == 0 ) {
 				gconf->af = AF_INET;
@@ -666,45 +636,25 @@ void conf_handle_option( const char opt[], const char val[] ) {
 			conf_str( opt, &gconf->lpd_addr, val );
 			break;
 		case oLpdDisable:
-			if( val != NULL ) {
-				conf_no_arg_expected( opt );
-			} else {
-				gconf->lpd_disable = 1;
-			}
+			gconf->lpd_disable = 1;
 			break;
 #endif
 #ifdef FWD
 		case oFwdDisable:
-			if( val != NULL ) {
-				conf_no_arg_expected( opt );
-			} else {
-				gconf->fwd_disable = 1;
-			}
+			gconf->fwd_disable = 1;
 			break;
 #endif
 #ifdef __CYGWIN__
 		case oServiceInstall:
-			if( val != NULL ) {
-				conf_no_arg_expected( opt );
-			} else {
-				windows_service_install();
-				exit(0);
-			}
+			windows_service_install();
+			exit(0);
 			break;
 		case oServiceRemove:
-			if( val != NULL ) {
-				conf_no_arg_expected( opt );
-			} else {
-				windows_service_remove();
-				exit(0);
-			}
+			windows_service_remove();
+			exit(0);
 			break;
 		case oServiceStart:
-			if( val != NULL ) {
-				conf_no_arg_expected( opt );
-			} else {
-				gconf->service_start = 1;
-			}
+			gconf->service_start = 1;
 			break;
 #endif
 		case oIfname:
@@ -714,11 +664,7 @@ void conf_handle_option( const char opt[], const char val[] ) {
 			conf_str( opt, &gconf->user, val );
 			break;
 		case oDaemon:
-			if( val != NULL ) {
-				conf_no_arg_expected( opt );
-			} else {
-				gconf->is_daemon = 1;
-			}
+			gconf->is_daemon = 1;
 			break;
 		case oHelp:
 			printf( "%s\n", kadnode_usage_str );
@@ -733,34 +679,23 @@ void conf_handle_option( const char opt[], const char val[] ) {
 			exit( bob_generate_key_pair() );
 			break;
 		case oBobAddSkey:
-			if( val == NULL ) {
-				conf_arg_expected( opt );
-				return;
-			}
-			if( bob_add_skey( val ) < 0 ) {
-				printf( "Invalid secret key: %s\n", val );
-				exit( 1 );
-			}
+			bob_add_skey( val );
 			break;
 #endif
 // Dependend on other settings? 
 		case oValueId:
-			if( val == NULL ) {
-				conf_arg_expected( opt );
-				return;
-			}
 			conf_apply_value( val );
 			break;
 		default:
-			log_err( "CFG: Unkown option: %s", opt );
+			log_err( "CFG: Unkown parameter: %s", opt );
 			exit(1);
 	}
 }
 
-void conf_append(const char opt[], const char val[]) {
-	// Account for both new entries and NULL delimiter
+// Append an option and optional value to the g_argv array
+void conf_append( const char opt[], const char val[] ) {
 	g_argv = (char**) realloc(g_argv, (g_argc + 3) * sizeof(char*));
-	g_argv[g_argc] = opt ? strdup(opt) : NULL;
+	g_argv[g_argc] = strdup(opt);
 	g_argv[g_argc + 1] = val ? strdup(val) : NULL;
 	g_argv[g_argc + 2] = NULL;
 	g_argc += 2;
@@ -841,21 +776,20 @@ void conf_load_file( const char filename[] ) {
 void conf_load_args( int argc, char **argv ) {
 	int i;
 
+	// Duplicate memory to get an array that can be appended to
 	g_argv = (char**) memdup(argv, argc * sizeof(char*));
 	g_argc = argc;
 
 	for( i = 1; i < g_argc; i++ ) {
 		const char *opt = g_argv[i];
 		const char *val = g_argv[i+1];
-		if( opt ) {
-			if( val && val[0] != '-') {
-				// -x abc
-				conf_handle_option( opt, val );
-				i++;
-			} else {
-				// -x
-				conf_handle_option( opt, NULL );
-			}
+		if( val && val[0] != '-') {
+			// -x abc
+			conf_handle_option( opt, val );
+			i++;
+		} else {
+			// -x
+			conf_handle_option( opt, NULL );
 		}
 	}
 
