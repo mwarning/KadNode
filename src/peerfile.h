@@ -8,14 +8,15 @@
 * Good nodes need also be written back to a peerfile on shutdown.
 */
 
-/* Setup callbacks */
+// Setup callbacks
 void peerfile_setup( void );
 void peerfile_free( void );
 
-/* Write peers to peerfile */
+// Write peers to peerfile
 void peerfile_export( void );
 
-/* Add a static peer */
-void peerfile_add_peer( const char *addr_str );
+// Add a static peer
+int peerfile_add_peer( const char *addr_str );
 
-#endif /* _PEERFILE_H */
+
+#endif // _PEERFILE_H
