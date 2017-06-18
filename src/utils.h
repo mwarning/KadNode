@@ -16,7 +16,8 @@
 
 uint64_t id_from_hash( const char hash[] );
 int is_suffix( const char str[], const char suffix[] );
-uint8_t *memdup( const uint8_t src[], size_t size );
+void* memdup(const void* src, size_t size);
+
 int query_sanitize( char buf[], size_t buflen, const char query[] );
 
 int port_random( void );

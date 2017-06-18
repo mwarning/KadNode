@@ -111,10 +111,6 @@ struct gconf_t {
 	char *web_port;
 #endif
 
-#ifdef TLS
-	char *tls_path;
-#endif
-
 #ifdef PTHREAD
 	// DHT thread stuff
 	pthread_t dht_thread;

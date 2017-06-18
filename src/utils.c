@@ -48,13 +48,10 @@ int is_suffix( const char str[], const char suffix[] ) {
 	}
 }
 
-uint8_t *memdup( const uint8_t *src, size_t size ) {
-	uint8_t *dst;
-
-	dst = (uint8_t*) malloc( size );
-	memcpy( dst, src, size );
-
-	return dst;
+void* memdup(const void* src, size_t size) {
+	void* out = malloc(size);
+	memcpy(out, src, size);
+	return out;
 }
 
 //Remove .p2p suffix and convert to lowercase.

@@ -15,6 +15,10 @@
 #include "values.h"
 #include "peerfile.h"
 #include "kad.h"
+#ifdef TLS
+#include "ext-tls.h"
+#include "ext-tls-server.h"
+#endif
 #ifdef BOB
 #include "ext-bob.h"
 #endif
@@ -27,6 +31,10 @@
 
 // Global object variables
 struct gconf_t *gconf = NULL;
+
+static int g_argc = NULL;
+static char **g_argv = NULL;
+
 
 const char *kadnode_version_str = "KadNode v"MAIN_VERSION" ("
 #ifdef LPD
@@ -122,7 +130,9 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 " --fwd-disable			Disable UPnP/NAT-PMP to forward router ports.\n\n"
 #endif
 #ifdef TLS
-" --tls-path			Path with CA certificates.\n\n"
+"--tls-client-entry		Path to file or folder of CA certificates for TLS client.\n\n"
+"--tls-server-entry		Comma separated triples of domain, certificate and key for TLS server.\n"
+"				Example: kanode.p2p,kadnode.crt,kadnode.key\n\n"
 #endif
 #ifdef __CYGWIN__
 " --service-start		Start, install and remove KadNode as Windows service.\n"
@@ -132,61 +142,6 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 " -h, --help			Print this help.\n\n"
 " -v, --version			Print program version.\n";
 
-struct setting_t {
-	char *name;
-	char *value;
-	struct setting_t *prev;
-	struct setting_t *next;
-};
-
-// Temporary list of all settings
-struct setting_t *g_settings = NULL;
-
-// Append to temporary storage
-void conf_append_setting( char name[], char value[] ) {
-	struct setting_t *end, *new;
-
-	end = g_settings;
-	while( end && end->next  ) {
-		end = end->next;
-	}
-
-	new = calloc( 1, sizeof(struct setting_t) );
-	new->name = name ? strdup( name ) : NULL;
-	new->value = value ? strdup( value ) : NULL;
-	new->prev = end;
-
-	if( end == NULL ) {
-		g_settings = new;
-	} else {
-		end->next = new;
-	}
-}
-
-struct setting_t *conf_remove_setting( struct setting_t *cur ) {
-	struct setting_t *next, *prev;
-
-	prev = cur->prev;
-	next = cur->next;
-
-	if( prev ) {
-		prev->next = next;
-	}
-
-	if( next ) {
-		next->prev = prev;
-	}
-
-	if( cur == g_settings ) {
-		g_settings = next;
-	}
-
-	free( cur->value );
-	free( cur->name );
-	free( cur );
-
-	return next;
-}
 
 // Parse a <id>[:<port>] value
 void conf_apply_value( const char val[] ) {
@@ -435,14 +390,115 @@ void conf_free( void ) {
 #ifdef NSS
 	free( gconf->nss_port );
 #endif
-#ifdef TLS
-	free( gconf->tls_path );
-#endif
 #ifdef WEB
 	free( gconf->web_port );
 #endif
 
 	free( gconf );
+}
+
+enum OpCode {
+	oQueryTld,
+	oPidFile,
+	oPeerFile,
+	oPeer,
+	oVerbosity,
+	oCmdDisableStdin,
+	oCmdPort,
+	oDnsPort,
+	oDnsServer,
+	oNssPort,
+	oTlsClientEntry,
+	oTlsServerEntry,
+	oWebPort,
+	oConfig,
+	oMode,
+	oPort,
+	oAddr,
+	oLpdAddr,
+	oLpdDisable,
+	oFwdDisable,
+	oServiceInstall,
+	oServiceRemove,
+	oServiceStart,
+	oBobGenKeys,
+	oBobAddSkey,
+	oValueId,
+	oIfname,
+	oUser,
+	oDaemon,
+	oHelp,
+	oVersion,
+	oUnknown
+};
+
+static const struct {
+	const char *name;
+	enum OpCode code;
+} options[] = {
+	{"--query-tld", oQueryTld},
+	{"--pidfile", oPidFile},
+	{"--peerfile", oPeerFile},
+	{"--peer", oPeer},
+	{"--verbosity", oVerbosity},
+#ifdef CMD
+	{"--cmd-disable-stdin", oCmdDisableStdin},
+	{"--cmd-port", oCmdPort},
+#endif
+#ifdef DNS
+	{"--dns-port", oDnsPort},
+	{"--dns-server", oDnsServer},
+#endif
+#ifdef NSS
+	{"--nss-port", oNssPort},
+#endif
+#ifdef TLS
+	{"--tls-client-entry", oTlsClientEntry},
+	{"--tls-server-entry", oTlsServerEntry},
+#endif
+#ifdef WEB
+	{"--web-port", oWebPort},
+#endif
+	{"--config", oConfig},
+	{"--mode", oMode},
+	{"--port", oPort},
+	{"--addr", oAddr},
+#ifdef LPD
+	{"--lpd-addr", oLpdAddr},
+	{"--lpd-disable", oLpdDisable},
+#endif
+#ifdef FWD
+	{"--fwd-disable", oFwdDisable},
+#endif
+#ifdef __CYGWIN__
+	{"--service-install", oServiceInstall},
+	{"--service-remove", oServiceRemove},
+	{"--service-start", oServiceStart},
+#endif
+#ifdef BOB
+	{"--bob-gen-keys", oBobGenKeys},
+	{"--bob-add-skey", oBobAddSkey},
+#endif
+	{"--value-id", oValueId},
+	{"--ifname", oIfname},
+	{"--user", oUser},
+	{"--daemon", oDaemon},
+	{"-h", oHelp},
+	{"--help", oHelp},
+	{"-v", oVersion},
+	{"--version", oVersion},
+};
+
+unsigned findCode(const char name[]) {
+	int i;
+
+	for( i = 0; i < N_ELEMS(options); i++) {
+		if( strcmp( name, options[i].name ) == 0 ) {
+			return options[i].code;
+		}
+	}
+
+	return oUnknown;
 }
 
 void conf_arg_expected( const char opt[] ) {
@@ -464,228 +520,254 @@ void conf_duplicate_option( const char opt[] ) {
 void conf_str( const char opt[], char *dst[], const char src[] ) {
 	if( src == NULL ) {
 		conf_arg_expected( opt );
+		return;
 	}
 
-	if( *dst ) {
+	if( *dst != NULL ) {
 		conf_duplicate_option( opt );
+		return;
 	}
 
 	*dst = strdup( src );
 }
 
-int conf_handle_option( const char opt[], const char val[] ) {
+// Add SNI entry for the TLS server
+void tls_add_server_entry( const char opt[], const char val[] ) {
+	char name[128];
+	char crt_file[128];
+	char key_file[128];
 
-	if( match( opt, "--query-tld" ) ) {
-		conf_str( opt, &gconf->query_tld, val );
-	} else if( match( opt, "--pidfile" ) ) {
-		conf_str( opt, &gconf->pidfile, val );
-	} else if( match( opt, "--peerfile" ) ) {
-		conf_str( opt, &gconf->peerfile, val );
-	} else if( match( opt, "--peer" ) ) {
-		if( val == NULL ) {
-			conf_arg_expected( opt );
-		}
-		peerfile_add_peer( val );
-	} else if( match( opt, "--verbosity" ) ) {
-		if( match( val, "quiet" ) ) {
-			gconf->verbosity = VERBOSITY_QUIET;
-		} else if( match( val, "verbose" ) ) {
-			gconf->verbosity = VERBOSITY_VERBOSE;
-		} else if( match( val, "debug" ) ) {
-			gconf->verbosity = VERBOSITY_DEBUG;
-		} else {
-			log_err( "CFG: Invalid argument for %s.", opt );
-			exit( 1 );
-		}
+	if( sscanf( val, "%127[^,],%127[^,],%127[^,]", name, crt_file, key_file ) == 3 ) {
+		tls_add_sni_entry( name, crt_file, key_file );
+	} else {
+		log_err( "CFG: Invalid option format: %s", val );
+		exit(1);
+	}
+}
+
+void conf_handle_option( const char opt[], const char val[] ) {
+
+	switch( findCode(opt) ) {
+		case oQueryTld:
+			conf_str( opt, &gconf->query_tld, val );
+			break;
+		case oPidFile:
+			conf_str( opt, &gconf->pidfile, val );
+			break;
+		case oPeerFile:
+			conf_str( opt, &gconf->peerfile, val );
+			break;
+		case oPeer:
+			if( val == NULL ) {
+				conf_arg_expected( opt );
+				break;
+			}
+			peerfile_add_peer( val );
+			break;
+		case oVerbosity:
+			if( val == NULL ) {
+				conf_arg_expected( opt );
+				break;
+			} else if( match( val, "quiet" ) ) {
+				gconf->verbosity = VERBOSITY_QUIET;
+			} else if( match( val, "verbose" ) ) {
+				gconf->verbosity = VERBOSITY_VERBOSE;
+			} else if( match( val, "debug" ) ) {
+				gconf->verbosity = VERBOSITY_DEBUG;
+			} else {
+				log_err( "CFG: Invalid argument for %s.", opt );
+				exit( 1 );
+			}
+			break;
 #ifdef CMD
-	} else if( match( opt, "--cmd-disable-stdin" ) ) {
-		if( val != NULL ) {
-			conf_no_arg_expected( opt );
-		} else {
-			gconf->cmd_disable_stdin = 1;
-		}
-	} else if( match( opt, "--cmd-port" ) ) {
-		conf_str( opt, &gconf->cmd_port, val );
+		case oCmdDisableStdin:
+			if( val != NULL ) {
+				conf_no_arg_expected( opt );
+			} else {
+				gconf->cmd_disable_stdin = 1;
+			}
+			break;
+		case oCmdPort:
+			conf_str( opt, &gconf->cmd_port, val );
+			break;
 #endif
 #ifdef DNS
-	} else if( match( opt, "--dns-port" ) ) {
-		conf_str( opt, &gconf->dns_port, val );
-	} else if( match( opt, "--dns-server" ) ) {
-		conf_str( opt, &gconf->dns_server, val );
+		case oDnsPort:
+			conf_str( opt, &gconf->dns_port, val );
+			break;
+		case oDnsServer:
+			conf_str( opt, &gconf->dns_server, val );
+			break;
 #endif
 #ifdef NSS
-	} else if( match( opt, "--nss-port" ) ) {
-		conf_str( opt, &gconf->nss_port, val );
+		case oNssPort:
+			conf_str( opt, &gconf->nss_port, val );
+			break;
 #endif
 #ifdef TLS
-	} else if( match( opt, "--tls-path" ) ) {
-		conf_str( opt, &gconf->tls_path, val );
+		case oTlsClientEntry:
+			// Add Certificate Authority (CA) entries for the TLS client
+			if( tls_add_ca_entry( val ) != 0 ) {
+				exit(1);
+			}
+			break;
+		case oTlsServerEntry:
+		{
+			// Add SNI entries for the TLS server (e.g. foo.p2p,my.cert,my.key)
+			char name[128];
+			char crt_file[128];
+			char key_file[128];
+
+			if( sscanf( val, "%127[^,],%127[^,],%127[^,]", name, crt_file, key_file ) == 3 ) {
+				tls_add_sni_entry( name, crt_file, key_file );
+			} else {
+				log_err( "CFG: Invalid option format: %s", val );
+				exit(1);
+			}
+			break;
+		}
 #endif
 #ifdef WEB
-	} else if( match( opt, "--web-port" ) ) {
-		conf_str( opt, &gconf->web_port, val );
+		case oWebPort:
+			conf_str( opt, &gconf->web_port, val );
+			break;
 #endif
-	} else if( match( opt, "--config" ) ) {
-		if( val == NULL ) {
-			conf_arg_expected( opt );
-		}
-		conf_load_file( val );
-		conf_str( opt, &gconf->configfile, val );
-	} else if( match( opt, "--mode" ) ) {
-		if( gconf->af != 0 ) {
-			conf_duplicate_option( opt );
-		} else if( val && match( val, "ipv4" ) ) {
-			gconf->af = AF_INET;
-		} else if( val && match( val, "ipv6" ) ) {
-			gconf->af = AF_INET6;
-		} else {
-			log_err("CFG: Invalid argument for %s. Use 'ipv4' or 'ipv6'.", opt );
-			exit( 1 );
-		}
-	} else if( match( opt, "--port" ) ) {
-		conf_str( opt, &gconf->dht_port, val );
-	} else if( match( opt, "--addr" ) ) {
-		conf_str( opt, &gconf->dht_addr, val );
+		case oConfig:
+			if( val == NULL ) {
+				conf_arg_expected( opt );
+				break;
+			}
+			conf_load_file( val );
+			conf_str( opt, &gconf->configfile, val );
+			break;
+		case oMode:
+			if( val == NULL ) {
+				conf_arg_expected( opt );
+				break;
+			} else if( gconf->af != 0 ) {
+				conf_duplicate_option( opt );
+			} else if( match( val, "ipv4" ) ) {
+				gconf->af = AF_INET;
+			} else if( match( val, "ipv6" ) ) {
+				gconf->af = AF_INET6;
+			} else {
+				log_err("CFG: Invalid argument for %s. Use 'ipv4' or 'ipv6'.", opt );
+				exit( 1 );
+			}
+			break;
+		case oPort:
+			conf_str( opt, &gconf->dht_port, val );
+			break;
+		case oAddr:
+			conf_str( opt, &gconf->dht_addr, val );
+			break;
 #ifdef LPD
-	} else if( match( opt, "--lpd-addr" ) ) {
-		conf_str( opt, &gconf->lpd_addr, val );
-	} else if( match( opt, "--lpd-disable" ) ) {
-		if( val != NULL ) {
-			conf_no_arg_expected( opt );
-		} else {
-			gconf->lpd_disable = 1;
-		}
+		case oLpdAddr:
+			conf_str( opt, &gconf->lpd_addr, val );
+			break;
+		case oLpdDisable:
+			if( val != NULL ) {
+				conf_no_arg_expected( opt );
+			} else {
+				gconf->lpd_disable = 1;
+			}
+			break;
 #endif
 #ifdef FWD
-	} else if( match( opt, "--fwd-disable" ) ) {
-		if( val != NULL ) {
-			conf_no_arg_expected( opt );
-		} else {
-			gconf->fwd_disable = 1;
-		}
+		case oFwdDisable:
+			if( val != NULL ) {
+				conf_no_arg_expected( opt );
+			} else {
+				gconf->fwd_disable = 1;
+			}
+			break;
 #endif
 #ifdef __CYGWIN__
-	} else if( match( opt, "--service-install" ) ) {
-		if( val != NULL ) {
-			conf_no_arg_expected( opt );
-		} else {
-			windows_service_install();
-		}
-	} else if( match( opt, "--service-remove" ) ) {
-		if( val != NULL ) {
-			conf_no_arg_expected( opt );
-		} else {
-			windows_service_remove();
-		}
-	} else if( match( opt, "--service-start" ) ) {
-		if( val != NULL ) {
-			conf_no_arg_expected( opt );
-		} else {
-			gconf->service_start = 1;
-		}
+		case oServiceInstall:
+			if( val != NULL ) {
+				conf_no_arg_expected( opt );
+			} else {
+				windows_service_install();
+				exit(0);
+			}
+			break;
+		case oServiceRemove:
+			if( val != NULL ) {
+				conf_no_arg_expected( opt );
+			} else {
+				windows_service_remove();
+				exit(0);
+			}
+			break;
+		case oServiceStart:
+			if( val != NULL ) {
+				conf_no_arg_expected( opt );
+			} else {
+				gconf->service_start = 1;
+			}
+			break;
 #endif
-	} else if( match( opt, "--ifname" ) ) {
-		conf_str( opt, &gconf->dht_ifname, val );
-	} else if( match( opt, "--user" ) ) {
-		conf_str( opt, &gconf->user, val );
-	} else if( match( opt, "--daemon" ) ) {
-		if( val != NULL ) {
-			conf_no_arg_expected( opt );
-		} else {
-			gconf->is_daemon = 1;
-		}
-	} else if( match( opt, "-h" ) || match( opt, "--help" ) ) {
-		printf( "%s\n", kadnode_usage_str );
-		exit( 0 );
-	} else if( match( opt, "-v" ) || match( opt, "--version" ) ) {
-		printf( "%s\n", kadnode_version_str );
-		exit( 0 );
-	} else {
-		return 0;
-	}
-	return 1;
-}
-
-int conf_handle_value( const char opt[], const char val[] ) {
-	if( match( opt, "--value-id" ) ) {
-		if( val == NULL ) {
-			conf_arg_expected( opt );
-		}
-		conf_apply_value( val );
-	} else {
-		return 0;
-	}
-	return 1;
-}
-
+		case oIfname:
+			conf_str( opt, &gconf->dht_ifname, val );
+			break;
+		case oUser:
+			conf_str( opt, &gconf->user, val );
+			break;
+		case oDaemon:
+			if( val != NULL ) {
+				conf_no_arg_expected( opt );
+			} else {
+				gconf->is_daemon = 1;
+			}
+			break;
+		case oHelp:
+			printf( "%s\n", kadnode_usage_str );
+			exit( 0 );
+			break;
+		case oVersion:
+			printf( "%s\n", kadnode_version_str );
+			exit( 0 );
+			break;
 #ifdef BOB
-int conf_handle_key( const char opt[], const char val[] ) {
-	if( match( opt, "--bob-gen-keys" ) ) {
-		exit( bob_generate_key_pair() );
-	} else if( match( opt, "--bob-add-skey" ) ) {
-		if( val == NULL ) {
-			conf_arg_expected( opt );
-		}
-		if( bob_add_skey( val ) < 0 ) {
-			printf( "Invalid secret key: %s\n", val );
-			exit( 1 );
-		}
-	} else {
-		return 0;
+		case oBobGenKeys:
+			exit( bob_generate_key_pair() );
+			break;
+		case oBobAddSkey:
+			if( val == NULL ) {
+				conf_arg_expected( opt );
+				return;
+			}
+			if( bob_add_skey( val ) < 0 ) {
+				printf( "Invalid secret key: %s\n", val );
+				exit( 1 );
+			}
+			break;
+#endif
+// Dependend on other settings? 
+		case oValueId:
+			if( val == NULL ) {
+				conf_arg_expected( opt );
+				return;
+			}
+			conf_apply_value( val );
+			break;
+		default:
+			log_err( "CFG: Unkown option: %s", opt );
+			exit(1);
 	}
-	return 1;
 }
-#endif
 
-void conf_load_settings( void ) {
-	struct setting_t *setting;
-
-	// Handle common settings
-	setting = g_settings;
-	while( setting ) {
-		if( conf_handle_option( setting->name, setting->value ) ) {
-			setting = conf_remove_setting( setting );
-		} else {
-			setting = setting->next;
-		}
-	}
-
-	// Set defaults and check common settings
-	conf_check();
-
-#ifdef BOB
-	// Handle secret keys
-	setting = g_settings;
-	while( setting ) {
-		if( conf_handle_key( setting->name, setting->value ) ) {
-			setting = conf_remove_setting( setting );
-		} else {
-			setting = setting->next;
-		}
-	}
-#endif
-
-	// Handle values IDs
-	setting = g_settings;
-	while( setting ) {
-		if( conf_handle_value( setting->name, setting->value ) ) {
-			setting = conf_remove_setting( setting );
-		} else {
-			setting = setting->next;
-		}
-	}
-
-	// Error on unhandled settings
-	if( g_settings ) {
-		log_err( "CFG: Unknown command line argument: '%s'",
-			g_settings->name ? g_settings->name : g_settings->value
-		);
-		exit( 1 );
-	}
+void conf_append(const char opt[], const char val[]) {
+	// Account for both new entries and NULL delimiter
+	g_argv = (char**) realloc(g_argv, (g_argc + 3) * sizeof(char*));
+	g_argv[g_argc] = opt ? strdup(opt) : NULL;
+	g_argv[g_argc + 1] = val ? strdup(val) : NULL;
+	g_argv[g_argc + 2] = NULL;
+	g_argc += 2;
 }
 
 void conf_load_file( const char filename[] ) {
-	char line[1000];
+	char line[512];
 	size_t n;
 	struct stat s;
 	FILE *file;
@@ -749,34 +831,33 @@ void conf_load_file( const char filename[] ) {
 			exit( 1 );
 		}
 
-		conf_append_setting( option, value );
+		conf_append( option, value );
 	}
 
 	fclose( file );
 }
 
+
 void conf_load_args( int argc, char **argv ) {
-	unsigned int i;
+	int i;
 
-	if( argv == NULL ) {
-		return;
-	}
+	g_argv = (char**) memdup(argv, argc * sizeof(char*));
+	g_argc = argc;
 
-	for( i = 1; i < argc; i++ ) {
-		if( argv[i][0] == '-' ) {
-			if( i+1 < argc && argv[i+1][0] != '-' ) {
+	for( i = 1; i < g_argc; i++ ) {
+		const char *opt = g_argv[i];
+		const char *val = g_argv[i+1];
+		if( opt ) {
+			if( val && val[0] != '-') {
 				// -x abc
-				conf_append_setting( argv[i], argv[i+1] );
+				conf_handle_option( opt, val );
 				i++;
 			} else {
-				// -x -y => -x
-				conf_append_setting( argv[i], NULL );
+				// -x
+				conf_handle_option( opt, NULL );
 			}
-		} else {
-			// x
-			conf_append_setting( NULL, argv[i] );
 		}
 	}
 
-	conf_load_settings();
+	conf_check();
 }
