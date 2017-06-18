@@ -144,7 +144,7 @@ void peerfile_import_static( struct peer *peers ) {
 	}
 }
 
-void peerfile_add_peer( const char *addr_str ) {
+void peerfile_add_peer( const char addr_str[] ) {
 	struct peer *new;
 
 	new = (struct peer *) malloc( sizeof(struct peer) );
