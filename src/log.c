@@ -10,13 +10,14 @@
 #include "log.h"
 
 
+
 // Program start time
 static struct timespec log_start = { 0, 0 };
 
 
 char *log_time() {
 	struct timespec now = { 0, 0 };
-	clock_gettime( CLOCK_MONOTONIC, &now );
+	clock_gettime( CLOCK_MONOTONIC_COARSE, &now );
 
 	static char buf[16];
 	sprintf( buf, "%.5f",
@@ -79,7 +80,7 @@ void _log_print( int priority, const char format[], ... ) {
 }
 
 void log_setup( void ) {
-	clock_gettime(CLOCK_MONOTONIC, &log_start);
+	clock_gettime( CLOCK_MONOTONIC_COARSE, &log_start );
 }
 
 void log_free( void ) {
