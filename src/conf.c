@@ -321,7 +321,7 @@ void conf_check( void ) {
 #endif
 
 	// Store startup time
-	gettimeofday( &gconf->time_now, NULL );
+	gconf->time_now = time( NULL );
 	gconf->startup_time = time_now_sec();
 }
 
