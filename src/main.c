@@ -168,7 +168,9 @@ int main( int argc, char **argv ) {
 		gconf->use_syslog = 1;
 
 		// Get kadnode.exe binary lcoation
-		char cmd[MAX_PATH], path[MAX_PATH], *p;
+		char cmd[MAX_PATH];
+		char path[MAX_PATH];
+		char *p;
 		if( GetModuleFileNameA( NULL, path, sizeof(path) ) && (p = strrchr( path, '\\' )) ) {
 			*(p+1) = 0;
 		} else {
