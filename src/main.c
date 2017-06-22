@@ -236,7 +236,7 @@ int main( int argc, char **argv ) {
 		unix_fork();
 
 		if( chdir( "/" ) != 0 ) {
-			log_err( "UNX: Changing working directory to / failed: %s", strerror( errno ) );
+			log_err( "UNX: Changing working directory to '/' failed: %s", strerror( errno ) );
 			exit( 1 );
 		}
 
