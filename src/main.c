@@ -44,7 +44,7 @@
 #include "ext-fwd.h"
 #endif
 #ifdef TLS
-#include "ext-tls.h"
+#include "ext-tls-client.h"
 #include "ext-tls-server.h"
 #endif
 
@@ -79,7 +79,8 @@ void main_cleanup( void ) {
 	lpd_free();
 #endif
 #ifdef TLS
-	tls_free();
+	tls_server_free();
+	tls_client_free();
 #endif
 
 	peerfile_free();
@@ -141,32 +142,12 @@ int main_start( void ) {
 	nss_setup();
 #endif
 #ifdef TLS
-	tls_setup();
+	tls_client_setup();
 	tls_server_setup();
 #endif
 #ifdef CMD
 	cmd_setup();
 #endif
-
-//for testing
-if(strcmp(gconf->dht_addr, "127.0.0.1") == 0)
-{
-	printf("start search");
-	IP addr_array[3];
-	size_t addr_num = 3;
-
-//public key: 53e2e30f2c01cfd823b30a07d5ad0b9072e2b3db2e28ebffc70b16694cc637f0
-//secret key: 6392c538eac4dd6e5eec23ecde855160334135df93e47cc56b68b41cf3215dde53e2e30f2c01cfd823b30a07d5ad0b9072e2b3db2e28ebffc70b16694cc637f0
-
-	int i = kad_lookup_value( "53e2e30f2c01cfd823b30a07d5ad0b9072e2b3db2e28ebffc70b16694cc637f0.p2p", &addr_array[0], &addr_num );
-	printf("lookup test: %d\n", i);
-
-	IP addr;
-	addr_parse( &addr, "127.0.0.2", gconf->dht_port, AF_INET );
-	struct results_t **results = results_get();
-	results_add_addr( *results, &addr);
-}
-
 
 	// Loop over all sockets and file descriptors
 	net_loop();

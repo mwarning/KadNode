@@ -16,7 +16,7 @@
 #include "peerfile.h"
 #include "kad.h"
 #ifdef TLS
-#include "ext-tls.h"
+#include "ext-tls-client.h"
 #include "ext-tls-server.h"
 #endif
 #ifdef BOB
@@ -131,8 +131,9 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 #endif
 #ifdef TLS
 "--tls-client-entry		Path to file or folder of CA certificates for TLS client.\n\n"
+"						Example: "
 "--tls-server-entry		Comma separated triples of domain, certificate and key for TLS server.\n"
-"				Example: kanode.p2p,kadnode.crt,kadnode.key\n\n"
+"						Example: kanode.p2p,kadnode.crt,kadnode.key\n\n"
 #endif
 #ifdef __CYGWIN__
 " --service-start		Start, install and remove KadNode as Windows service.\n"
@@ -140,7 +141,8 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 " --service-remove		or on request by using the Service Control Manager.\n\n"
 #endif
 " -h, --help			Print this help.\n\n"
-" -v, --version			Print program version.\n";
+" -v, --version			Print program version.\n\n"
+"Printed messages are prefixed by (I)nformation, (W)arning, (E)rror or (D)ebug.\n";
 
 
 // Parse a <id>[:<port>] value
@@ -195,7 +197,7 @@ void conf_init( void ) {
 // Set default if setting was not set and validate settings
 void conf_check( void ) {
 	uint8_t node_id[SHA1_BIN_LENGTH];
-	char hexbuf[SHA1_HEX_LENGTH+1];
+	char hexbuf[SHA1_HEX_LENGTH + 1];
 
 	if( gconf->af == 0 ) {
 		gconf->af = AF_INET;
@@ -586,7 +588,7 @@ void conf_handle_option( const char opt[], const char val[] ) {
 #ifdef TLS
 		case oTlsClientEntry:
 			// Add Certificate Authority (CA) entries for the TLS client
-			tls_add_ca_entry( val );
+			tls_client_add_ca( val );
 			break;
 		case oTlsServerEntry:
 		{
@@ -596,7 +598,7 @@ void conf_handle_option( const char opt[], const char val[] ) {
 			char key_file[128];
 
 			if( sscanf( val, "%127[^,],%127[^,],%127[^,]", name, crt_file, key_file ) == 3 ) {
-				tls_add_sni_entry( name, crt_file, key_file );
+				tls_server_add_sni( name, crt_file, key_file );
 			} else {
 				log_err( "CFG: Invalid value format: %s", val );
 				exit(1);

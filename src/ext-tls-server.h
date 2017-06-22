@@ -5,7 +5,7 @@
 #include "results.h"
 
 
-void tls_add_sni_entry( const char name[], const char crt_file[], const char key_file[] );
+void tls_server_add_sni( const char name[], const char crt_file[], const char key_file[] );
 
 void tls_server_setup( void );
 void tls_server_free( void );

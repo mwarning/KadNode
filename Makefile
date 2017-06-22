@@ -1,9 +1,9 @@
 
 CC ?= gcc
-CFLAGS ?= -O2 -Wall -Wwrite-strings -pedantic
+CFLAGS ?= -Os -Wall -Wwrite-strings -pedantic
 CFLAGS += -std=gnu99 -I/usr/local/include
 LFLAGS += -L/usr/local/lib -lc
-FEATURES ?= bob cmd dns debug #nss lpd natpmp upnp web tls
+FEATURES ?= cmd dns tls #bob nss lpd natpmp upnp web
 
 OBJS = build/main.o build/results.o build/kad.o build/log.o \
 	build/conf.o build/sha1.o build/net.o build/utils.o \
@@ -60,7 +60,7 @@ ifeq ($(findstring web,$(FEATURES)),web)
 endif
 
 ifeq ($(findstring tls,$(FEATURES)),tls)
-  OBJS += build/ext-tls.o build/ext-tls-server.o
+  OBJS += build/ext-tls-client.o build/ext-tls-server.o
   CFLAGS += -DTLS
   LFLAGS += -lmbedtls -lmbedx509 -lmbedcrypto
 endif

@@ -14,7 +14,7 @@
 #include "ext-bob.h"
 #endif
 #ifdef TLS
-#include "ext-tls.h"
+#include "ext-tls-client.h"
 #endif
 #include "results.h"
 

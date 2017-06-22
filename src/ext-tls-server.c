@@ -196,7 +196,7 @@ int sni_callback( void *p_info, mbedtls_ssl_context *ssl, const unsigned char *n
 	return -1;
 }
 
-void tls_add_sni_entry( const char name[], const char crt_file[], const char key_file[] ) {
+void tls_server_add_sni( const char name[], const char crt_file[], const char key_file[] ) {
 	char error_buf[100];
 	struct sni_entry *new;
 
@@ -279,4 +279,8 @@ void tls_server_setup( void ) {
 	//mbedtls_ssl_set_bio( &g_ssl, &g_client_fd, mbedtls_net_send, mbedtls_net_recv, NULL );
 	//mbedtls_net_free( &g_client_fd );
 	//mbedtls_ssl_session_reset( &g_ssl );
+}
+
+void tls_server_free( void ) {
+	// Do something?
 }

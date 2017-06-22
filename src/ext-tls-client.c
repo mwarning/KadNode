@@ -28,7 +28,7 @@
 #include "net.h"
 #include "values.h"
 #include "results.h"
-#include "ext-tls.h"
+#include "ext-tls-client.h"
 
 
 // SSL structures for parallel connection handling.
@@ -300,7 +300,7 @@ int tls_conf_verify( void *data, mbedtls_x509_crt *crt, int depth, uint32_t *fla
 #endif
 
 // Load the trusted CA
-void tls_add_ca_entry( const char ca_path[] ) {
+void tls_client_add_ca( const char ca_path[] ) {
 	char error_buf[100];
 	int ret;
 
@@ -323,7 +323,7 @@ su6 = net_bind( "KAD", DHT_ADDR6, gconf->dht_port, gconf->dht_ifname, IPPROTO_TC
 ... make global and share between KAD, BOB and TLS
 
 */
-void tls_setup( void ) {
+void tls_client_setup( void ) {
 	const char *pers = "kadnode";
 	int ret;
 	int i;
@@ -373,7 +373,7 @@ void tls_setup( void ) {
 	}
 }
 
-void tls_free( void ) {
+void tls_client_free( void ) {
 	int i;
 
 	for( i = 0; i < N_ELEMS(g_tls_resources); i++ ) {
