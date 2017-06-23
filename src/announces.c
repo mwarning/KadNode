@@ -13,22 +13,22 @@
 #ifdef BOB
 #include "ext-bob.h"
 #endif
-#include "values.h"
+#include "announces.h"
 
 // Announce values every 20 minutes
-#define ANNOUNCE_INTERVAL (20*60)
+#define announces_INTERVAL (20*60)
 
 
-static time_t g_values_expire = 0;
-static time_t g_values_announce = 0;
+static time_t g_announces_expire = 0;
+static time_t g_announces_announce = 0;
 static struct value_t *g_values = NULL;
 
 
-struct value_t* values_get( void ) {
+struct value_t* announces_get( void ) {
 	return g_values;
 }
 
-struct value_t* values_find( uint8_t id[] ) {
+struct value_t* announces_find( uint8_t id[] ) {
 	struct value_t *value;
 
 	value = g_values;
@@ -41,7 +41,7 @@ struct value_t* values_find( uint8_t id[] ) {
 	return NULL;
 }
 
-int values_count( void ) {
+int announces_count( void ) {
 	struct value_t *value;
 	int count;
 
@@ -55,7 +55,7 @@ int values_count( void ) {
 	return count;
 }
 
-void values_debug( int fd ) {
+void announces_debug( int fd ) {
 	char hexbuf[SHA1_HEX_LENGTH+1];
 	struct value_t *value;
 	time_t now;
@@ -87,7 +87,7 @@ void values_debug( int fd ) {
 	dprintf( fd, " Found %d values.\n", value_counter );
 }
 
-struct value_t *values_add( const char query[], int port, time_t lifetime ) {
+struct value_t *announces_add( const char query[], int port, time_t lifetime ) {
 	char hexbuf[SHA1_HEX_LENGTH+1];
 	uint8_t id[SHA1_BIN_LENGTH];
 	struct value_t *cur;
@@ -123,7 +123,7 @@ struct value_t *values_add( const char query[], int port, time_t lifetime ) {
 	now = time_now_sec();
 
 	// Value already exists - refresh
-	if( (cur = values_find( id )) != NULL ) {
+	if( (cur = announces_find( id )) != NULL ) {
 		cur->refresh = now - 1;
 
 		if( lifetime > now ) {
@@ -131,7 +131,7 @@ struct value_t *values_add( const char query[], int port, time_t lifetime ) {
 		}
 
 		// Trigger immediate handling
-		g_values_announce= 0;
+		g_announces_announce= 0;
 
 		return cur;
 	}
@@ -151,7 +151,7 @@ struct value_t *values_add( const char query[], int port, time_t lifetime ) {
 	g_values = new;
 
 	// Trigger immediate handling
-	g_values_announce= 0;
+	g_announces_announce= 0;
 
 	return new;
 }
@@ -161,7 +161,7 @@ void value_free( struct value_t *value ) {
 }
 
 // Remove an element from the list - internal use only
-void values_remove( struct value_t *value ) {
+void announces_remove( struct value_t *value ) {
 	struct value_t *pre;
 	struct value_t *cur;
 
@@ -182,7 +182,7 @@ void values_remove( struct value_t *value ) {
 	}
 }
 
-void values_expire( void ) {
+void announces_expire( void ) {
 	struct value_t *pre;
 	struct value_t *cur;
 	time_t now;
@@ -205,7 +205,7 @@ void values_expire( void ) {
 	}
 }
 
-void values_announce( void ) {
+void announces_announce( void ) {
 	struct value_t *value;
 	time_t now;
 
@@ -218,35 +218,35 @@ void values_announce( void ) {
 			log_debug( "VAL: Announce %s:%hu",  str_id( value->id, hexbuf ), value->port );
 #endif
 			kad_announce_once( value->id, value->port );
-			value->refresh = now + ANNOUNCE_INTERVAL;
+			value->refresh = now + announces_INTERVAL;
 		}
 		value = value->next;
 	}
 }
 
-void values_handle( int _rc, int _sock ) {
+void announces_handle( int _rc, int _sock ) {
 	// Expire search results
-	if( g_values_expire <= time_now_sec() ) {
-		values_expire();
+	if( g_announces_expire <= time_now_sec() ) {
+		announces_expire();
 
 		// Try again in ~1 minute
-		g_values_expire = time_add_min( 1 );
+		g_announces_expire = time_add_min( 1 );
 	}
 
-	if( g_values_announce <= time_now_sec() && kad_count_nodes( 0 ) != 0 ) {
-		values_announce();
+	if( g_announces_announce <= time_now_sec() && kad_count_nodes( 0 ) != 0 ) {
+		announces_announce();
 
 		// Try again in ~1 minute
-		g_values_announce = time_add_min( 1 );
+		g_announces_announce = time_add_min( 1 );
 	}
 }
 
-void values_setup( void ) {
+void announces_setup( void ) {
 	// Cause the callback to be called in intervals
-	net_add_handler( -1, &values_handle );
+	net_add_handler( -1, &announces_handle );
 }
 
-void values_free( void ) {
+void announces_free( void ) {
 	struct value_t *cur;
 	struct value_t *next;
 

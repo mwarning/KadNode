@@ -15,7 +15,7 @@
 #include "utils.h"
 #include "unix.h"
 #include "net.h"
-#include "values.h"
+#include "announces.h"
 #include "results.h"
 #include "peerfile.h"
 #ifdef __CYGWIN__
@@ -87,7 +87,7 @@ void main_cleanup( void ) {
 
 	results_free();
 
-	values_free();
+	announces_free();
 
 	kad_free();
 
@@ -116,8 +116,8 @@ int main_start( void ) {
 	// Setup the Kademlia DHT
 	kad_setup();
 
-	// Setup handler to announce values
-	values_setup();
+	// Setup handler to announces
+	announces_setup();
 
 	// Setup handler to expire results
 	results_setup();

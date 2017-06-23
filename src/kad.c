@@ -10,7 +10,7 @@
 #include "utils.h"
 #include "results.h"
 #include "net.h"
-#include "values.h"
+#include "announces.h"
 #ifdef BOB
 #include "ext-bob.h"
 #endif
@@ -130,7 +130,7 @@ void kad_lookup_local_values( struct results_t *results ) {
 	// 127.0.0.1
 	unsigned int inaddr_loopback = htonl( INADDR_LOOPBACK );
 
-	value = values_find( results->id );
+	value = announces_find( results->id );
 	if( value ) {
 		if( gconf->af == AF_INET6 ) {
 			to_addr( &addr, &in6addr_loopback, 16, htons( value->port ) ); // ::1
@@ -342,7 +342,7 @@ int kad_status( char *buf, int size ) {
 		strg = strg->next;
 	}
 
-	numvalues = values_count();
+	numvalues = announces_count();
 
 	bprintf( "Version: %s\n", kadnode_version_str );
 	bprintf( "DHT id: %s\n", str_id( myid, hexbuf ) );
@@ -405,7 +405,7 @@ int kad_announce( const char _query[], int port, time_t lifetime ) {
 	}
 
 	// Store query to call kad_announce_once() later/multiple times
-	return values_add( query, port, lifetime ) ? 0 : -2;
+	return announces_add( query, port, lifetime ) ? 0 : -2;
 }
 
 /*

@@ -7,7 +7,7 @@ FEATURES ?= cmd dns tls #bob nss lpd natpmp upnp web
 
 OBJS = build/main.o build/results.o build/kad.o build/log.o \
 	build/conf.o build/sha1.o build/net.o build/utils.o \
-	build/values.o build/peerfile.o
+	build/announces.o build/peerfile.o
 
 ifeq ($(OS),Windows_NT)
   OBJS += build/unix.o build/windows.o

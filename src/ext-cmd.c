@@ -16,7 +16,7 @@
 #include "log.h"
 #include "kad.h"
 #include "net.h"
-#include "values.h"
+#include "announces.h"
 #include "results.h"
 #ifdef AUTH
 #include "ext-auth.h"
@@ -248,7 +248,7 @@ int cmd_exec( struct Reply *r, int argc, char **argv ) {
 		if( argc == 1 ) {
 			// Announce all values; does not update value.refreshed
 			count = 0;
-			value = values_get();
+			value = announces_get();
 			while( value ) {
 				kad_announce_once( value->id, value->port );
 				count++;
@@ -353,7 +353,7 @@ int cmd_exec( struct Reply *r, int argc, char **argv ) {
 			kad_debug_storage( STDOUT_FILENO );
 			rc = 0;
 		} else if( strcmp( argv[1], "values" ) == 0 ) {
-			values_debug( STDOUT_FILENO );
+			announces_debug( STDOUT_FILENO );
 			rc = 0;
 		} else {
 			dprintf( STDERR_FILENO, "Unknown argument.\n" );
