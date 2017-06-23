@@ -178,22 +178,23 @@ static const char g_names[MAX_ADDR_RECORDS][3] = {
 size_t get16bits( const uint8_t** buffer ) {
 	uint16_t value;
 
-	value = ntohs( *((uint16_t *) *buffer) );
+	memcpy( &value, *buffer, 2 );
 	*buffer += 2;
 
-	return value;
+	return ntohs( value );
 }
 
 void put16bits( uint8_t** buffer, uint16_t value ) {
-	*((uint16_t *) *buffer) = htons( value );
+	value = htons( value );
+	memcpy( *buffer, &value, 2 );
 	*buffer += 2;
 }
 
 void put32bits( uint8_t** buffer, uint32_t value ) {
-	*((uint32_t *) *buffer) = htonl( value );
+	value = htons( value );
+	memcpy( *buffer, &value, 4 );
 	*buffer += 4;
 }
-
 
 /*
 * Decoding/Encoding functions
