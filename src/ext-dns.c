@@ -22,8 +22,8 @@ static int g_sock4 = -1;
 static int g_sock6 = -1;
 
 // A simple ring buffer for DNS proxy.
-unsigned short proxy_entries_id[16] = {0};
-IP proxy_entries_addr[16] = {{0}};
+uint16_t proxy_entries_id[16] = { 0 };
+IP proxy_entries_addr[16] = { { 0 } };
 unsigned proxy_entries_count = 0;
 
 /*
@@ -93,8 +93,8 @@ enum {
 // Question Section
 struct Question {
 	const char *qName;
-	unsigned short qType;
-	unsigned short qClass;
+	uint16_t qType;
+	uint16_t qClass;
 };
 
 // Data part of a Resource Record
@@ -103,7 +103,7 @@ union ResourceData {
 		const char *txt_data;
 	} txt_record;
 	struct {
-		unsigned char addr[4];
+		uint8_t addr[4];
 	} a_record;
 	struct {
 		const char *name;
@@ -115,16 +115,16 @@ union ResourceData {
 		const char *name;
 	} ptr_record;
 	struct {
-		unsigned short preference;
+		uint16_t preference;
 		const char *exchange;
 	} mx_record;
 	struct {
-		unsigned char addr[16];
+		uint8_t addr[16];
 	} aaaa_record;
 	struct {
-		unsigned short priority;
-		unsigned short weight;
-		unsigned short port;
+		uint16_t priority;
+		uint16_t weight;
+		uint16_t port;
 		const char *target;
 	} srv_record;
 };
@@ -132,29 +132,29 @@ union ResourceData {
 // Resource Record Section
 struct ResourceRecord {
 	const char *name;
-	unsigned short type;
-	unsigned short class;
-	unsigned short ttl;
-	unsigned short rd_length;
+	uint16_t type;
+	uint16_t class;
+	uint16_t ttl;
+	uint16_t rd_length;
 	union ResourceData rd_data;
 };
 
 struct Message {
-	unsigned short id; // Identifier
+	uint16_t id; // Identifier
 
 	// Flags
-	unsigned short qr; // Query/Response Flag
-	unsigned short opcode; // Operation Code
-	unsigned short aa; // Authoritative Answer Flag
-	unsigned short tc; // Truncation Flag
-	unsigned short rd; // Recursion Desired
-	unsigned short ra; // Recursion Available
-	unsigned short rcode; // Response Code
+	uint16_t qr; // Query/Response Flag
+	uint16_t opcode; // Operation Code
+	uint16_t aa; // Authoritative Answer Flag
+	uint16_t tc; // Truncation Flag
+	uint16_t rd; // Recursion Desired
+	uint16_t ra; // Recursion Available
+	uint16_t rcode; // Response Code
 
-	unsigned short qdCount; // Question Count
-	unsigned short anCount; // Answer Record Count
-	unsigned short nsCount; // Authority Record Count
-	unsigned short arCount; // Additional Record Count
+	uint16_t qdCount; // Question Count
+	uint16_t anCount; // Answer Record Count
+	uint16_t nsCount; // Authority Record Count
+	uint16_t arCount; // Additional Record Count
 
 	// We only handle one question and multiple answers
 	struct Question question;
@@ -176,21 +176,21 @@ static const char g_names[MAX_ADDR_RECORDS][3] = {
 * Basic memory operations.
 */
 size_t get16bits( const uint8_t** buffer ) {
-	unsigned short value;
+	uint16_t value;
 
-	value = ntohs( *((unsigned short *) *buffer) );
+	value = ntohs( *((uint16_t *) *buffer) );
 	*buffer += 2;
 
 	return value;
 }
 
-void put16bits( uint8_t** buffer, unsigned short value ) {
-	*((unsigned short *) *buffer) = htons( value );
+void put16bits( uint8_t** buffer, uint16_t value ) {
+	*((uint16_t *) *buffer) = htons( value );
 	*buffer += 2;
 }
 
-void put32bits( uint8_t** buffer, unsigned long long value ) {
-	*((unsigned long long *) *buffer) = htonl( value );
+void put32bits( uint8_t** buffer, uint32_t value ) {
+	*((uint32_t *) *buffer) = htonl( value );
 	*buffer += 4;
 }
 
@@ -535,7 +535,7 @@ const char* qtype_str( int qType ) {
 }
 
 // Forward request to external DNS server
-void proxy_forward_request( uint8_t *buffer, ssize_t buflen, IP *clientaddr, unsigned short id ) {
+void proxy_forward_request( uint8_t *buffer, ssize_t buflen, IP *clientaddr, uint16_t id ) {
 	int sock;
 
 	sock = (gconf->dns_server_addr.ss_family == AF_INET) ? g_sock4 : g_sock6;
@@ -551,7 +551,7 @@ void proxy_forward_request( uint8_t *buffer, ssize_t buflen, IP *clientaddr, uns
 }
 
 // Forward DNS response back to client address
-void proxy_forward_response( uint8_t *buffer, ssize_t buflen, unsigned short id ) {
+void proxy_forward_response( uint8_t *buffer, ssize_t buflen, uint16_t id ) {
 	int sock;
 	int i;
 

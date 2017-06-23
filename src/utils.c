@@ -54,7 +54,7 @@ void* memdup(const void* src, size_t size) {
 	return out;
 }
 
-//Remove .p2p suffix and convert to lowercase.
+// Remove .p2p suffix and convert to lowercase.
 int query_sanitize( char buf[], size_t buflen, const char query[] ) {
 	size_t len;
 	size_t i;
@@ -259,8 +259,8 @@ char *str_id( const uint8_t id[], char buf[] ) {
 }
 
 char *str_addr_buf( const IP *addr, char addrbuf[] ) {
-	char buf[INET6_ADDRSTRLEN+1];
-	unsigned short port;
+	char buf[INET6_ADDRSTRLEN + 1];
+	uint16_t port;
 
 	switch( addr->ss_family ) {
 		case AF_INET6:
@@ -281,7 +281,7 @@ char *str_addr_buf( const IP *addr, char addrbuf[] ) {
 }
 
 char *str_addr( const IP *addr ) {
-	static char addrbuf[FULL_ADDSTRLEN+1];
+	static char addrbuf[FULL_ADDSTRLEN + 1];
 	return str_addr_buf( addr, addrbuf );
 }
 
