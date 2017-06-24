@@ -48,14 +48,14 @@ struct results_t** results_get( void ) {
 }
 
 // Find a value search result
-struct results_t *results_find( const uint8_t id[] ) {
+struct results_t *results_find( const char query[] ) {
 	struct results_t **results;
 	struct results_t *bucket;
 
 	results = &g_results[0];
 	while( *results ) {
 		bucket = *results;
-		if( id_equal( bucket->id, id ) ) {
+		if( strcmp( query, bucket->query ) == 0 ) {
 			return bucket;
 		}
 		results++;
@@ -95,7 +95,6 @@ void results_item_free( struct results_t *bucket ) {
 }
 
 void results_debug( int fd ) {
-	char buf[256+1];
 	struct results_t **results;
 	struct results_t *bucket;
 	struct result_t *result;
@@ -112,7 +111,7 @@ void results_debug( int fd ) {
 		result_counter = 0;
 		result = bucket->entries;
 		while( result ) {
-			dprintf( fd, "   addr: %s\n", str_addr_buf( &result->addr, buf ) );
+			dprintf( fd, "   addr: %s\n", str_addr( &result->addr ) );
 			dprintf( fd, "   state: %s\n", str_state( result->state ) );
 			result_counter++;
 			result = result->next;
@@ -125,41 +124,38 @@ void results_debug( int fd ) {
 }
 
 // Add a new bucket to collect results
+// The query is expected to be sanitized (lower case and without query TLS)
 struct results_t* results_add( const char query[], int *is_new ) {
 	uint8_t id[SHA1_BIN_LENGTH];
+	auth_callback *callback;
 	struct results_t* new;
 	struct results_t* results;
 
-	id_compute( id, query );
-
-	// Search already exists
-	if( (results = results_find( id )) != NULL ) {
+	// Find existing search
+	if( (results = results_find( query )) != NULL ) {
 		*is_new = 0;
 		return results;
 	} else {
 		*is_new = 1;
 	}
 
+	if( bob_get_id( id, sizeof(id), query ) ) {
+		// Use Bob authentication
+		callback = &bob_trigger_auth;
+	} else if( tls_client_get_id( id, sizeof(id), query ) ) {
+		// Use TLS authentication
+		callback = &tls_client_trigger_auth;
+	} else {
+		callback = NULL;
+	}
+
 	new = calloc( 1, sizeof(struct results_t) );
-	memcpy( new->id, id, SHA1_BIN_LENGTH );
+	memcpy( new->id, id, sizeof(id) );
+	new->callback = callback;
 	new->query = strdup( query );
 	new->start_time = time_now_sec();
 
-#ifdef BOB
-	if( bob_decide_auth( query ) ) {
-		// Use Bob authentication
-		new->callback = &bob_trigger_auth;
-	}
-#endif
-
-#ifdef TLS
-	if( tls_decide_auth( query ) ) {
-		// Use TLS authentication
-		new->callback = &tls_trigger_auth;
-	}
-#endif
-
-	log_debug( "Results: Add results bucket for query '%s', id '%s'.", query, str_id( id, hexbuf ) );
+	log_debug( "Results: Add results bucket for query '%s', id '%s'.", query, str_id( id ) );
 
 	// Free slot if taken
 	if( g_results[g_results_idx] != NULL ) {
@@ -176,11 +172,7 @@ struct results_t* results_add( const char query[], int *is_new ) {
 int results_add_addr( struct results_t *results, const IP *addr ) {
 	struct result_t *result;
 	struct result_t *new;
-/*
-	if( results->done == 1 ) {
-		return -1;
-	}
-*/
+
 	if( results_entries_count( results ) > MAX_RESULTS_PER_SEARCH ) {
 		return -1;
 	}
@@ -192,10 +184,6 @@ int results_add_addr( struct results_t *results, const IP *addr ) {
 			// Address already listed
 			return 0;
 		}
-
-		//if( result->next == NULL ) {
-		//	break;
-		//}
 
 		result = result->next;
 	}
@@ -217,18 +205,6 @@ int results_add_addr( struct results_t *results, const IP *addr ) {
 
 	return 0;
 }
-
-/*
-int results_done( struct results_t *results, int done ) {
-	if( done ) {
-		results->done = 1;
-	} else {
-		results->start_time = time_now_sec();
-		results->done = 0;
-	}
-	return 0;
-}
-*/
 
 int results_collect( struct results_t *results, IP addr_array[], size_t addr_num ) {
 	struct result_t *result;

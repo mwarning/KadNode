@@ -1,33 +1,27 @@
 
-#ifndef _EXT_AUTH_H_
-#define _EXT_AUTH_H_
+#ifndef _EXT_BOB_H_
+#define _EXT_BOB_H_
 
 #include "results.h"
 
 
-int bob_decide_auth( const char query[] );
+// Decide if the query is meant to be authorized via BOB
+int bob_get_id( uint8_t id[], size_t len, const char query[] );
 void bob_trigger_auth( struct results_t *results );
+
+// .. for kad.c - remove?
 int bob_handler( int sock, uint8_t buf[], uint32_t buflen, IP *from );
 
-/*
-* Add secret key.
-*/
+// Add secret key
 void bob_add_skey( const char arg[] );
 
-/*
-* Print secret/public keys to stdout.
-*/
-void bob_debug_skeys( int fd );
-void bob_debug_pkeys( int fd );
+// Print secret/public keys to file descriptor
+void bob_debug_keys( int fd );
 
-/* Functions that are hooked up the DHT socket */
-//void bob_send_challenges( int sock );
-//int bob_handle_challenges( int sock, uint8_t buf[], size_t buflen, IP *from );
-
-/* Generate a public/secret key pair and print it to stdout */
+// Generate a public/secret key pair and print it to stdout
 int bob_generate_key_pair( void );
 
 void bob_setup( void );
 void bob_free( void );
 
-#endif /* _EXT_AUTH_H_ */
+#endif // _EXT_BOB_H_

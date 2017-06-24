@@ -13,6 +13,9 @@
 #ifdef BOB
 #include "ext-bob.h"
 #endif
+#ifdef TLS
+#include "ext-tls-client.h"
+#endif
 #include "announces.h"
 
 // Announce values every 20 minutes
@@ -92,23 +95,10 @@ struct value_t *announces_add( const char query[], int port, time_t lifetime ) {
 	struct value_t *new;
 	time_t now;
 
-#if 0
-//ifdef BOB
-	uint8_t skey[crypto_sign_SECRETKEYBYTES];
-	uint8_t *skey_ptr = bob_handle_skey( skey, id, query );
-
-	if( skey_ptr ) {
-		if( port == 0 ) {
-			// Authenticationis is done over the DHT port
-			port = atoi( gconf->dht_port );
-		} else {
-			return NULL;
-		}
+	if( !bob_get_id( id, sizeof(id), query )
+		|| !tls_client_get_id( id, sizeof(id), query ) ) {
+		return NULL;
 	}
-//else
-#endif
-
-	id_compute( id, query );
 
 	if( port == 0 ) {
 		port = port_random();

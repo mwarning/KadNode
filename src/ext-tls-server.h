@@ -4,7 +4,7 @@
 
 #include "results.h"
 
-
+// Add domain with cert and key file
 void tls_server_add_sni( const char name[], const char crt_file[], const char key_file[] );
 
 void tls_server_setup( void );

@@ -33,7 +33,6 @@
 // Maximum retries per address to send the challenge
 #define MAX_AUTH_CHALLENGE_SEND 3
 
-int bob_test_socket = -1;
 
 struct key_t {
 	struct key_t *next;
@@ -49,10 +48,25 @@ struct bob_resource {
 	uint8_t challenges_send;
 };
 
+static int bob_test_socket = -1;
 static struct key_t *g_keys = NULL;
 static time_t g_send_challenges = 0;
 static struct bob_resource g_bob_resources[8];
 
+
+int bob_get_id( uint8_t id[], size_t len, const char query[] ) {
+	size_t query_len;
+
+	query_len = strlen( query );
+	if( (query_len & 1) || !str_isHex( query, query_len ) ) {
+		return 1;
+	}
+
+	memset( id, 0, len );
+	bytes_from_hex( id, query, query_len );
+
+	return 0;
+}
 
 static struct bob_resource *bob_find_resource( IP *addr, uint8_t pkey[] ) {
 	struct bob_resource *resource;

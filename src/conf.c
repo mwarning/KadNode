@@ -397,6 +397,7 @@ void conf_free( void ) {
 	free( gconf );
 }
 
+// Enumerate all options to keep binary size smaller
 enum OpCode {
 	oQueryTld,
 	oPidFile,

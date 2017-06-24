@@ -21,6 +21,7 @@ enum AUTH_STATE {
 	AUTH_WAITING // Not yet started
 };
 
+// Forward declaration
 struct results_t;
 
 typedef void auth_callback(struct results_t *results);
@@ -43,7 +44,7 @@ struct results_t {
 };
 
 struct results_t **results_get( void );
-struct results_t *results_find( const uint8_t id[] );
+struct results_t *results_find( const char query[] );
 
 // Register a handler to call results_expire in intervalls
 void results_setup( void );

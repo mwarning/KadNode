@@ -22,7 +22,7 @@ void handle_lookup( char *reply_buf, const char *params ) {
 
 	// Lookup id - starts search when not already done
 	num = N_ELEMS(addrs);
-	if( kad_lookup_value( params, addrs, &num ) >= 0 && num > 0 ) {
+	if( kad_lookup( params, addrs, &num ) >= 0 && num > 0 ) {
 		for( n = 0, i = 0; i < num; i++ ) {
 			n += sprintf( reply_buf + n, "%s\n", str_addr( &addrs[i] ) );
 		}

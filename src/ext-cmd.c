@@ -221,7 +221,7 @@ int cmd_exec( struct Reply *r, int argc, char **argv ) {
 		size_t i;
 
 		// Check searches for node
-		rc = kad_lookup_value( argv[1], addrs, &num );
+		rc = kad_lookup( argv[1], addrs, &num );
 
 		if( rc >= 0 && num > 0 ) {
 			for( i = 0; i < num; ++i ) {

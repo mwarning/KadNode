@@ -15,20 +15,21 @@
 #include "net.h"
 #include "ext-dns.h"
 
-#define MAX_ADDR_RECORDS 32
 
+/*
+* DNS-Server interface for KadNode.
+*/
+
+#define MAX_ADDR_RECORDS 32
 
 static int g_sock4 = -1;
 static int g_sock6 = -1;
 
 // A simple ring buffer for DNS proxy.
-uint16_t proxy_entries_id[16] = { 0 };
-IP proxy_entries_addr[16] = { { 0 } };
-unsigned proxy_entries_count = 0;
+static uint16_t proxy_entries_id[16] = { 0 };
+static IP proxy_entries_addr[16] = { { 0 } };
+static uint32_t proxy_entries_count = 0;
 
-/*
-* DNS-Server interface for KadNode.
-*/
 
 // DNS Header Masks
 enum {
@@ -401,16 +402,6 @@ int dns_encode_msg( uint8_t *buffer, size_t size, const struct Message *msg ) {
 	return (buffer - beg);
 }
 
-int kadnode_lookup_addr( const char hostname[], IP addr[], size_t addr_num ) {
-
-	// Start lookup for one address
-	if( kad_lookup_value( hostname, addr, &addr_num ) >= 0 && addr_num > 0 ) {
-		return addr_num;
-	} else {
-		return 0;
-	}
-}
-
 const char* dns_lookup_ptr( const char ptr_name[] ) {
 	typedef struct {
 		const char* ptr_name;
@@ -559,9 +550,7 @@ void proxy_forward_response( uint8_t *buffer, ssize_t buflen, uint16_t id ) {
 	for ( i = 0; i < N_ELEMS(proxy_entries_id); ++i ) {
 		if( proxy_entries_id[i] == id ) {
 			sock = (proxy_entries_addr[i].ss_family == AF_INET) ? g_sock4 : g_sock6;
-			if( sendto( sock, buffer, buflen, 0, (struct sockaddr*) &proxy_entries_addr[i], sizeof(IP) ) < 0 ) {
-				// Ignore failure, client may went down
-			}
+			sendto( sock, buffer, buflen, 0, (struct sockaddr*) &proxy_entries_addr[i], sizeof(IP) );
 			return;
 		}
 	}
@@ -599,18 +588,15 @@ void dns_handler( int rc, int sock ) {
 
 	hostname = msg.question.qName;
 
-	// Got DNS response
-	if( msg.qr == 1 ) {
-		if ( gconf->dns_server ) {
-			proxy_forward_response( buffer, buflen, msg.id);
-		}
-		return;
-	}
-
-	// Got foreign DNS request
+	// Check if hostname ends with .p2p
 	if( !is_suffix( hostname, gconf->query_tld ) ) {
+		// Act as an DNS proxy
 		if ( gconf->dns_server ) {
-			proxy_forward_request( buffer, buflen, &clientaddr, msg.id);
+			if( msg.qr == 1 ) {
+				proxy_forward_response( buffer, buflen, msg.id );
+			} else {
+				proxy_forward_request( buffer, buflen, &clientaddr, msg.id );
+			}
 		}
 		return;
 	}
@@ -650,12 +636,9 @@ void dns_handler( int rc, int sock ) {
 			domain, str_addr( &clientaddr )
 		);
 	} else {
-		// Check if hostname ends with .p2p
-		if( !is_suffix( hostname, gconf->query_tld ) ) {
-			return;
-		}
-
-		if( (addrs_num = kadnode_lookup_addr( hostname, addrs, MAX_ADDR_RECORDS )) == 0 ) {
+		// Start lookup for one address
+		addrs_num = N_ELEMS(addrs);
+		if( kad_lookup( hostname, addrs, &addrs_num ) < 0 || addrs_num == 0 ) {
 			log_debug( "DNS: Failed to resolve hostname: %s", hostname );
 			return;
 		}
