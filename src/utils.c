@@ -9,30 +9,12 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <ctype.h>
-#ifdef TLS
-#include "mbedtls/sha1.h"
-#else
-#include "sha1.h"
-#endif
-
 #include "main.h"
 #include "log.h"
 #include "conf.h"
 #include "sha1.h"
 #include "utils.h"
 
-
-// Convert a hash into an 64 bit value
-uint64_t id_from_hash( const char hash[] ) {
-	union {
-		uint64_t number;
-		char data[8];
-	} id;
-
-	memcpy(&id.data, hash, sizeof(id.data));
-
-	return id.number;
-}
 
 // Also matches on equality
 int is_suffix( const char str[], const char suffix[] ) {
@@ -73,7 +55,7 @@ int query_sanitize( char buf[], size_t buflen, const char query[] ) {
 
 	// Convert to lower case
 	for( i = 0; i < len; ++i ) {
-		buf[i] = tolower( (unsigned char) query[i] );
+		buf[i] = tolower( query[i] );
 	}
 	buf[len] = '\0';
 
@@ -82,7 +64,7 @@ int query_sanitize( char buf[], size_t buflen, const char query[] ) {
 
 // Create a random port != 0
 int port_random( void ) {
-	unsigned short port;
+	uint16_t port;
 
 	do {
 		bytes_random( (uint8_t*) &port, sizeof(port) );
@@ -112,7 +94,7 @@ int port_parse( const char *pstr, int err ) {
 	}
 }
 
-int port_set( IP *addr, unsigned short port ) {
+int port_set( IP *addr, uint16_t port ) {
 	switch( addr->ss_family ) {
 		case AF_INET:
 			((IP4 *)addr)->sin_port = htons( port );
@@ -180,32 +162,7 @@ char *bytes_to_hex( char hex[], const uint8_t bin[], size_t length ) {
 	return hex;
 }
 
-/*
-* Compute the id of a string using the sha1 digest.
-* In case of a 20 Byte hex string, the id converted directly.
-*/
-void id_compute( uint8_t id[], const char str[] ) {
-	size_t size;
-
-	size = strlen( str );
-	if( size == SHA1_HEX_LENGTH && str_isHex( str, SHA1_HEX_LENGTH ) ) {
-		// Treat hostname as hex string
-		bytes_from_hex( id, str, SHA1_HEX_LENGTH );
-	} else {
-#ifdef TLS
-		mbedtls_sha1_context ctx;
-		mbedtls_sha1_init(&ctx);
-		mbedtls_sha1_update( &ctx, (const uint8_t *) str, size );
-		mbedtls_sha1_finish(&ctx, id);
-#else
-		SHA1_CTX ctx;
-		SHA1_Init( &ctx );
-		SHA1_Update( &ctx, (const uint8_t *) str, size);
-		SHA1_Final( &ctx, id );
-#endif
-	}
-}
-
+// TODO: remove?
 int id_equal( const uint8_t id1[], const uint8_t id2[] ) {
 	return (memcmp( id1, id2, SHA1_BIN_LENGTH ) == 0);
 }
@@ -228,6 +185,7 @@ int str_isHex( const char str[], size_t size ) {
 	return 1;
 }
 
+// Matches [0-9a-zA-Z._-]*
 int str_isValidHostname( const char hostname[] ) {
 	size_t size;
 	size_t i;
@@ -259,7 +217,8 @@ char *str_id( const uint8_t id[] ) {
 	return bytes_to_hex( hexbuf, id, SHA1_BIN_LENGTH );
 }
 
-char *str_addr_buf( const IP *addr, char addrbuf[] ) {
+char *str_addr( const IP *addr ) {
+	static char addrbuf[FULL_ADDSTRLEN + 1];
 	char buf[INET6_ADDRSTRLEN + 1];
 	uint16_t port;
 
@@ -279,11 +238,6 @@ char *str_addr_buf( const IP *addr, char addrbuf[] ) {
 	}
 
 	return addrbuf;
-}
-
-char *str_addr( const IP *addr ) {
-	static char addrbuf[FULL_ADDSTRLEN + 1];
-	return str_addr_buf( addr, addrbuf );
 }
 
 int addr_is_multicast( const IP *addr )
@@ -445,10 +399,10 @@ time_t time_now_sec( void ) {
 	return gconf->time_now;
 }
 
-time_t time_add_min( unsigned int minutes ) {
+time_t time_add_min( uint32_t minutes ) {
 	return time_now_sec() + (60 * minutes);
 }
 
-time_t time_add_hour( unsigned int hours ) {
+time_t time_add_hour( uint32_t hours ) {
 	return time_now_sec() + (60 * 60 * hours);
 }

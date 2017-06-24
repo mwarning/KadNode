@@ -12,7 +12,6 @@
 #define FULL_ADDSTRLEN (INET6_ADDRSTRLEN + 8)
 
 
-uint64_t id_from_hash( const char hash[] );
 int is_suffix( const char str[], const char suffix[] );
 void* memdup(const void* src, size_t size);
 
@@ -20,13 +19,12 @@ int query_sanitize( char buf[], size_t buflen, const char query[] );
 
 int port_random( void );
 int port_parse( const char pstr[], int err );
-int port_set( IP *addr, unsigned short port );
+int port_set( IP *addr, uint16_t port );
 
 int bytes_random( uint8_t buffer[], size_t size );
 void bytes_from_hex( uint8_t bin[], const char hex[], size_t length );
 char *bytes_to_hex( char hex[], const uint8_t bin[], size_t length );
 
-void id_compute( uint8_t id[], const char str[] );
 int id_equal( const uint8_t id1[], const uint8_t id2[] );
 
 int str_isHex( const char str[], size_t size );
@@ -34,7 +32,6 @@ int str_isValidHostname( const char hostname[] );
 int str_isZero( const char str[] );
 
 char *str_id( const uint8_t id[] );
-char *str_addr_buf( const IP *addr, char addrbuf[] );
 char *str_addr( const IP *addr );
 
 int addr_is_multicast( const IP *addr );
@@ -45,7 +42,7 @@ int addr_len( const IP *addr );
 int addr_equal( const IP *addr1, const IP *addr2 );
 
 time_t time_now_sec( void );
-time_t time_add_min( unsigned int minutes );
-time_t time_add_hour( unsigned int hours );
+time_t time_add_min( uint32_t minutes );
+time_t time_add_hour( uint32_t hours );
 
 #endif // _UTILS_H_
