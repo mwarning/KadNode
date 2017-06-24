@@ -56,7 +56,6 @@ int announces_count( void ) {
 }
 
 void announces_debug( int fd ) {
-	char hexbuf[SHA1_HEX_LENGTH+1];
 	struct value_t *value;
 	time_t now;
 	int value_counter;
@@ -66,7 +65,7 @@ void announces_debug( int fd ) {
 	value = g_values;
 	dprintf( fd, "Announced values:\n" );
 	while( value ) {
-		dprintf( fd, " id: %s\n", str_id( value->id, hexbuf ) );
+		dprintf( fd, " id: %s\n", str_id( value->id ) );
 		dprintf( fd, "  port: %d\n", value->port );
 		if( value->refresh < now ) {
 			dprintf( fd, "  refresh: now\n" );
@@ -88,7 +87,6 @@ void announces_debug( int fd ) {
 }
 
 struct value_t *announces_add( const char query[], int port, time_t lifetime ) {
-	char hexbuf[SHA1_HEX_LENGTH+1];
 	uint8_t id[SHA1_BIN_LENGTH];
 	struct value_t *cur;
 	struct value_t *new;
@@ -144,7 +142,7 @@ struct value_t *announces_add( const char query[], int port, time_t lifetime ) {
 	new->refresh = now - 1;
 	new->lifetime = (lifetime > now) ? lifetime : (now + 100);
 
-	log_debug( "VAL: Add value id %s:%hu.",  str_id( id, hexbuf ), port );
+	log_debug( "VAL: Add value id %s:%hu.",  str_id( id ), port );
 
 	// Prepend to list
 	new->next = g_values;
@@ -214,8 +212,7 @@ void announces_announce( void ) {
 	while( value ) {
 		if( value->refresh < now ) {
 #ifdef DEBUG
-			char hexbuf[SHA1_HEX_LENGTH+1];
-			log_debug( "VAL: Announce %s:%hu",  str_id( value->id, hexbuf ), value->port );
+			log_debug( "VAL: Announce %s:%hu",  str_id( value->id ), value->port );
 #endif
 			kad_announce_once( value->id, value->port );
 			value->refresh = now + ANNOUNCES_INTERVAL;

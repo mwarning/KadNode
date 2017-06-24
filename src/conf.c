@@ -197,7 +197,6 @@ void conf_init( void ) {
 // Set default if setting was not set and validate settings
 void conf_check( void ) {
 	uint8_t node_id[SHA1_BIN_LENGTH];
-	char hexbuf[SHA1_HEX_LENGTH + 1];
 
 	if( gconf->af == 0 ) {
 		gconf->af = AF_INET;
@@ -209,8 +208,7 @@ void conf_check( void ) {
 
 	if( gconf->node_id_str == NULL ) {
 		bytes_random( node_id, SHA1_BIN_LENGTH );
-		str_id( node_id, hexbuf );
-		gconf->node_id_str = strdup( hexbuf );
+		gconf->node_id_str = strdup( str_id( node_id ) );
 	}
 
 	if( gconf->dht_port == NULL ) {

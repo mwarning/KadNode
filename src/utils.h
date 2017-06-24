@@ -33,7 +33,7 @@ int str_isHex( const char str[], size_t size );
 int str_isValidHostname( const char hostname[] );
 int str_isZero( const char str[] );
 
-char *str_id( const uint8_t id[], char idbuf[] );
+char *str_id( const uint8_t id[] );
 char *str_addr_buf( const IP *addr, char addrbuf[] );
 char *str_addr( const IP *addr );
 

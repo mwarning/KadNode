@@ -254,8 +254,9 @@ int str_isZero( const char str[] ) {
 	return (str == NULL) || (strcmp( str, "0" ) == 0);
 }
 
-char *str_id( const uint8_t id[], char buf[] ) {
-	return bytes_to_hex( buf, id, SHA1_BIN_LENGTH );
+char *str_id( const uint8_t id[] ) {
+	static char hexbuf[SHA1_HEX_LENGTH+1];
+	return bytes_to_hex( hexbuf, id, SHA1_BIN_LENGTH );
 }
 
 char *str_addr_buf( const IP *addr, char addrbuf[] ) {

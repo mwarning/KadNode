@@ -107,7 +107,7 @@ void results_debug( int fd ) {
 	dprintf( fd, "Result buckets:\n" );
 	while( *results ) {
 		bucket = *results;
-		dprintf( fd, " id: %s\n", str_id( bucket->id, buf ) );
+		dprintf( fd, " id: %s\n", str_id( bucket->id ) );
 		//dprintf( fd, "  done: %d\n", bucket->done );
 		result_counter = 0;
 		result = bucket->entries;
@@ -126,7 +126,6 @@ void results_debug( int fd ) {
 
 // Add a new bucket to collect results
 struct results_t* results_add( const char query[], int *is_new ) {
-	char hexbuf[SHA1_HEX_LENGTH+1];
 	uint8_t id[SHA1_BIN_LENGTH];
 	struct results_t* new;
 	struct results_t* results;

@@ -313,7 +313,6 @@ int kad_count_nodes( int good ) {
 #define bprintf(...) (written += snprintf( buf+written, size-written, __VA_ARGS__))
 
 int kad_status( char *buf, int size ) {
-	char hexbuf[SHA1_HEX_LENGTH+1];
 	struct storage *strg = storage;
 	struct search *srch = searches;
 	//int numsearches_active = 0;
@@ -345,7 +344,7 @@ int kad_status( char *buf, int size ) {
 	numvalues = announces_count();
 
 	bprintf( "Version: %s\n", kadnode_version_str );
-	bprintf( "DHT id: %s\n", str_id( myid, hexbuf ) );
+	bprintf( "DHT id: %s\n", str_id( myid ) );
 	bprintf( "DHT bound to: %s:%s / %s\n",
 		(gconf->af == AF_INET) ? "0.0.0.0" : "::",
 		gconf->dht_port,
@@ -566,7 +565,6 @@ int kad_export_nodes( IP addr_array[], size_t *num ) {
 
 // Print buckets (leaf/finger table)
 void kad_debug_buckets( int fd ) {
-	char hexbuf[SHA1_HEX_LENGTH+1];
 	struct bucket *b;
 	struct node *n;
 	int i, j;
@@ -575,11 +573,11 @@ void kad_debug_buckets( int fd ) {
 
 	b = (gconf->af == AF_INET) ? buckets : buckets6;
 	for( j = 0; b; ++j ) {
-		dprintf( fd, " Bucket: %s\n", str_id( b->first, hexbuf ) );
+		dprintf( fd, " Bucket: %s\n", str_id( b->first ) );
 
 		n = b->nodes;
 		for( i = 0; n; ++i ) {
-			dprintf( fd, "   Node: %s\n", str_id( n->id, hexbuf ) );
+			dprintf( fd, "   Node: %s\n", str_id( n->id ) );
 			dprintf( fd, "    addr: %s\n", str_addr( &n->ss ) );
 			dprintf( fd, "    pinged: %d\n", n->pinged );
 			n = n->next;
@@ -594,20 +592,19 @@ void kad_debug_buckets( int fd ) {
 
 // Print searches
 void kad_debug_searches( int fd ) {
-	char hexbuf[SHA1_HEX_LENGTH+1];
 	struct search *s = searches;
 	int i, j;
 
 	dht_lock();
 
 	for( j = 0; s; ++j ) {
-		dprintf( fd, " Search: %s\n", str_id( s->id, hexbuf ) );
+		dprintf( fd, " Search: %s\n", str_id( s->id ) );
 		dprintf( fd, "  af: %s\n", (s->af == AF_INET) ? "AF_INET" : "AF_INET6" );
 		dprintf( fd, "  port: %hu\n", s->port );
 		//dprintf( fd, "  done: %d\n", s->done );
 		for(i = 0; i < s->numnodes; ++i) {
 			struct search_node *sn = &s->nodes[i];
-			dprintf( fd, "   Node: %s\n", str_id(sn->id, hexbuf ) );
+			dprintf( fd, "   Node: %s\n", str_id(sn->id ) );
 			dprintf( fd, "    addr: %s\n", str_addr( &sn->ss ) );
 			dprintf( fd, "    pinged: %d\n", sn->pinged );
 			dprintf( fd, "    replied: %d\n", sn->replied );
@@ -623,7 +620,6 @@ void kad_debug_searches( int fd ) {
 
 // Print announced ids we have received
 void kad_debug_storage( int fd ) {
-	char hexbuf[SHA1_HEX_LENGTH+1];
 	struct storage *s;
 	struct peer* p;
 	IP addr;
@@ -633,7 +629,7 @@ void kad_debug_storage( int fd ) {
 
 	s = storage;
 	for( j = 0; s; ++j ) {
-		dprintf( fd, " ID: %s\n", str_id(s->id, hexbuf ));
+		dprintf( fd, " ID: %s\n", str_id(s->id ));
 		for( i = 0; i < s->numpeers; ++i ) {
 			p = &s->peers[i];
 			to_addr( &addr, &p->ip, p->len, htons( p->port ) );
