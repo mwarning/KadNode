@@ -24,4 +24,4 @@ void upnp_uninit( struct upnp_handle_t **nat );
 int upnp_handler( struct upnp_handle_t *nat,
 	unsigned short port, time_t lifespan, time_t now );
 
-#endif /* _UPNP_H_ */
+#endif // _UPNP_H_

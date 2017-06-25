@@ -22,7 +22,7 @@ void windows_service_control( DWORD dwControl ) {
 		case SERVICE_CONTROL_STOP:
 			sStatus.dwCurrentState = SERVICE_STOP_PENDING;
 			sStatus.dwCheckPoint = 0;
-			sStatus.dwWaitHint = 3000; /* Three seconds */
+			sStatus.dwWaitHint = 3000; // Three seconds
 			sStatus.dwWin32ExitCode = 0;
 			gconf->is_running = 0;
 		default:
@@ -44,15 +44,15 @@ void windows_service_main( int argc, char **argv ) {
 	sStatus.dwWin32ExitCode = 0;
 	sStatus.dwServiceSpecificExitCode = 0;
 	sStatus.dwCheckPoint = 0;
-	sStatus.dwWaitHint = 3000; /* Allow us to wait three seconds */
+	sStatus.dwWaitHint = 3000; // Allow us to wait three seconds
 	sStatus.dwCurrentState = SERVICE_RUNNING;
 
 	SetServiceStatus( hServiceStatus, &sStatus );
 
-	/* The main program */
+	// The main program
 	svc_main_func();
 
-	/* cleanup */
+	// Cleanup
 	sStatus.dwCurrentState  = SERVICE_STOPPED;
 	SetServiceStatus( hServiceStatus, &sStatus );
 }
@@ -63,7 +63,7 @@ int windows_service_start( void (*func)() ) {
 		{ NULL, NULL }
 	};
 
-	/* Safe args for later call in windows_service_main() */
+	// Safe args for later call in windows_service_main()
 	svc_main_func = func;
 	
 	if( !StartServiceCtrlDispatcher( services ) ) {
@@ -76,7 +76,7 @@ int windows_service_start( void (*func)() ) {
 
 /*
 * Similar to:
-* sc create KadNode type= own DisplayName= KadNode start= auto error= normal binPath= C:\...\kadnode.exe
+* sc create KadNode type=own DisplayName=KadNode start=auto error=normal binPath=C:\...\kadnode.exe
 */
 void windows_service_install( void ) {
 	char path[MAX_PATH];
@@ -86,18 +86,18 @@ void windows_service_install( void ) {
 	SC_HANDLE hSCManager = OpenSCManager( NULL, NULL, SC_MANAGER_CREATE_SERVICE );
 	SC_HANDLE hService = CreateService(
 		hSCManager,
-		MAIN_SRVNAME, /* name of service */
-		MAIN_SRVNAME, /* name to display */
-		SERVICE_ALL_ACCESS, /* desired access */
-		SERVICE_WIN32_OWN_PROCESS, /* service type */
-		SERVICE_AUTO_START, /* start type */
-		SERVICE_ERROR_NORMAL, /* error control type */
-		path, /* service binary */
-		NULL, /* no load order group */
-		NULL, /* no tag identifier */
-		"", /* dependencies */
-		0,	/* LocalSystem account */
-		0	/* no password */
+		MAIN_SRVNAME, // Name of service
+		MAIN_SRVNAME, // Name to display
+		SERVICE_ALL_ACCESS, // Desired access
+		SERVICE_WIN32_OWN_PROCESS, // Service type
+		SERVICE_AUTO_START, // Start type
+		SERVICE_ERROR_NORMAL, // Error control type
+		path, // Service binary
+		NULL, // No load order group
+		NULL, // No tag identifier
+		"", // Dependencies
+		0,	// LocalSystem account
+		0	// No password
 	);
 
 	CloseServiceHandle(hService);
@@ -132,7 +132,7 @@ static BOOL WINAPI windows_console_handler( int event ) {
 	}
 }
 
-/* Install singal handlers to exit KadNode on CTRL+C */
+// Install signal handlers to exit KadNode on CTRL+C
 void windows_signals( void ) {
 	if( !SetConsoleCtrlHandler( (PHANDLER_ROUTINE) windows_console_handler, TRUE ) ) {
 		log_warn( "WIN: Cannot set console handler. Error: %d", GetLastError() );
@@ -147,7 +147,7 @@ int windows_exec( const char* cmd ) {
 	si.cb = sizeof(si);
 	ZeroMemory( &pi, sizeof(pi) );
 
-	/* Start the child process */
+	// Start the child process
 	if( !CreateProcess( NULL, // No module name (use command line)
 		(char*) cmd, // Command line
 		NULL, // Process handle not inheritable

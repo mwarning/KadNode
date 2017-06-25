@@ -38,4 +38,4 @@ enum nss_status _nss_kadnode_gethostbyname4_r(
 	int *h_errnop, int32_t *ttlp ) _public_;
 #endif
 
-#endif /* _EXT_LIBNSS_H_ */
+#endif // _EXT_LIBNSS_H_
