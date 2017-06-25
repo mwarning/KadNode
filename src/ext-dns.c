@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 #include "main.h"
 #include "conf.h"
@@ -29,6 +30,7 @@ static int g_sock6 = -1;
 static uint16_t proxy_entries_id[16] = { 0 };
 static IP proxy_entries_addr[16] = { { 0 } };
 static uint32_t proxy_entries_count = 0;
+static IP g_proxy_addr;
 
 
 // DNS Header Masks
@@ -526,13 +528,53 @@ const char* qtype_str( int qType ) {
 	}
 }
 
+// Read DNS proxy server from /etc/resolv.conf
+void proxy_read_resolv( IP *dst, const char path[] ) {
+	static time_t last_checked = 0;
+	static time_t last_modified = 0;
+	const char *m = "\nnameserver ";
+	char buf[512] = { 0 };
+	IP addr;
+	struct stat attr;
+	FILE *file;
+
+	// Check at most every second
+	if( last_checked != gconf->time_now ) {
+		last_checked = gconf->time_now;
+
+		// Check if path was modified
+		stat( path, &attr );
+		if( last_modified != attr.st_mtime ) {
+			last_modified = attr.st_mtime;
+
+			file = fopen( path, "rb" );
+			if( file ) {
+				fread( buf, sizeof(buf) - 1, 1, file );
+				fclose( file );
+				const char *beg = strstr( buf, m );
+				if( beg == NULL ) {
+					// Ignore missing address
+				} else if( addr_parse( &addr, beg + strlen(m), "53", AF_UNSPEC ) < 0 ) {
+					log_warn( "DNS: Failed to read DNS server from %s", path );
+				} else if( addr_is_localhost( &addr) ) {
+					// Ignore localhost entries
+				} else {
+					*dst = addr;
+				}
+			} else {
+				log_warn( "DNS: Failed to open %s", path );
+			}
+		}
+	}
+}
+
 // Forward request to external DNS server
 void proxy_forward_request( uint8_t *buffer, ssize_t buflen, IP *clientaddr, uint16_t id ) {
 	int sock;
 
-	sock = (gconf->dns_server_addr.ss_family == AF_INET) ? g_sock4 : g_sock6;
-	if( sendto( sock, buffer, buflen, 0, (struct sockaddr*) &gconf->dns_server_addr, sizeof(IP) ) < 0 ) {
-		log_warn( "DNS: Failed to send request to dns server %s", str_addr( &gconf->dns_server_addr ) );
+	sock = (g_proxy_addr.ss_family == AF_INET) ? g_sock4 : g_sock6;
+	if( sendto( sock, buffer, buflen, 0, (struct sockaddr*) &g_proxy_addr, sizeof(IP) ) < 0 ) {
+		log_warn( "DNS: Failed to send request to dns server %s", str_addr( &g_proxy_addr ) );
 		return;
 	}
 
@@ -591,7 +633,12 @@ void dns_handler( int rc, int sock ) {
 	// Check if hostname ends with .p2p
 	if( !is_suffix( hostname, gconf->query_tld ) ) {
 		// Act as an DNS proxy
-		if ( gconf->dns_server ) {
+		if( gconf->dns_proxy_enable ) {
+			if( gconf->dns_proxy_server == NULL ) {
+				// Update proxy server address
+				proxy_read_resolv( &g_proxy_addr, "/etc/resolv.conf" );
+			}
+
 			if( msg.qr == 1 ) {
 				proxy_forward_response( buffer, buflen, msg.id );
 			} else {
@@ -667,6 +714,13 @@ void dns_handler( int rc, int sock ) {
 void dns_setup( void ) {
 	if( str_isZero( gconf->dns_port ) ) {
 		return;
+	}
+
+	if( gconf->dns_proxy_enable && gconf->dns_proxy_server ) {
+		if( addr_parse( &g_proxy_addr, gconf->dns_proxy_server, "53", AF_UNSPEC ) != 0 ) {
+			log_err( "DNS: Failed to parse IP address '%s'.", gconf->dns_proxy_server );
+			exit( 1 );
+		}
 	}
 
 	g_sock4 = net_bind( "DNS", "0.0.0.0", gconf->dns_port, NULL, IPPROTO_UDP, AF_UNSPEC );

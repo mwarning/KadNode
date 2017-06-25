@@ -240,6 +240,21 @@ char *str_addr( const IP *addr ) {
 	return addrbuf;
 }
 
+int addr_is_localhost( const IP *addr )
+{
+	// 127.0.0.1
+	unsigned int inaddr_loopback = htonl( INADDR_LOOPBACK );
+
+	switch( addr->ss_family ) {
+		case AF_INET:
+			return (memcmp( &((IP4 *)addr)->sin_addr, &inaddr_loopback, 4 ) == 0);
+		case AF_INET6:
+			return (memcmp( &((IP6 *)addr)->sin6_addr, &in6addr_loopback, 16 ) == 0);
+		default:
+			return 0;
+	}
+}
+
 int addr_is_multicast( const IP *addr )
 {
 	switch( addr->ss_family ) {
