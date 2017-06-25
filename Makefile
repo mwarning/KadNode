@@ -1,6 +1,6 @@
 
 CC ?= gcc
-CFLAGS ?= -Os -Wall -Wwrite-strings -pedantic
+CFLAGS ?= -Os -Wall -Wwrite-strings -pedantic -finline-small-functions -findirect-inlining
 CFLAGS += -std=gnu99 -I/usr/local/include
 LFLAGS += -L/usr/local/lib -lc
 FEATURES ?= cmd dns tls #bob nss lpd natpmp upnp web
