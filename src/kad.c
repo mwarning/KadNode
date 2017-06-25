@@ -72,23 +72,34 @@ void to_addr( IP *addr, const void *ip, size_t len, unsigned int port ) {
 }
 
 typedef struct {
-	unsigned char addr[16];
-	unsigned short port;
+	uint8_t addr[16];
+	uint16_t port;
 } dht_addr6_t;
 
 typedef struct {
-	unsigned char addr[4];
-	unsigned short port;
+	uint8_t addr[4];
+	uint16_t port;
 } dht_addr4_t;
 
 
 // This callback is called when a search result arrives or a search completes
 void dht_callback_func( void *closure, int event, const uint8_t *info_hash, const void *data, size_t data_len ) {
-	struct results_t *results;
+	struct results_t **results;
+	struct results_t *bucket;
 	IP addr;
 	size_t i;
 
-	results = results_find( info_hash );
+	// Find results bucket
+	bucket = NULL;
+	results = results_get();
+	while( *results ) {
+		if( memcmp( (*results)->id, info_hash, SHA1_BIN_LENGTH ) == 0 ) {
+			bucket = *results;
+			break;
+		}
+		results++;
+	}
+
 	if( results == NULL ) {
 		return;
 	}
@@ -99,7 +110,7 @@ void dht_callback_func( void *closure, int event, const uint8_t *info_hash, cons
 				dht_addr4_t *data4 = (dht_addr4_t *) data;
 				for( i = 0; i < (data_len / sizeof(dht_addr4_t)); i++ ) {
 					to_addr( &addr, &data4[i].addr, 4, data4[i].port );
-					results_add_addr( results, &addr );
+					results_add_addr( bucket, &addr );
 				}
 			}
 			break;
@@ -108,7 +119,7 @@ void dht_callback_func( void *closure, int event, const uint8_t *info_hash, cons
 				dht_addr6_t *data6 = (dht_addr6_t *) data;
 				for( i = 0; i < (data_len / sizeof(dht_addr6_t)); i++ ) {
 					to_addr( &addr, &data6[i].addr, 16, data6[i].port );
-					results_add_addr( results, &addr );
+					results_add_addr( bucket, &addr );
 				}
 			}
 			break;
@@ -227,7 +238,7 @@ void dht_hash( void *hash_return, int hash_size,
 		const void *v1, int len1,
 		const void *v2, int len2,
 		const void *v3, int len3 ) {
-	unsigned char hash[SHA1_BIN_LENGTH];
+	uint8_t hash[SHA1_BIN_LENGTH];
 
 #ifdef TLS
 	mbedtls_sha1_context ctx;
@@ -395,11 +406,11 @@ int kad_announce_once( const uint8_t id[], int port ) {
 /*
 * Add a new value to the announcement list or refresh an announcement.
 */
-int kad_announce( const char _query[], int port, time_t lifetime ) {
+int kad_announce( const char query_raw[], int port, time_t lifetime ) {
 	char query[QUERY_MAX_SIZE];
 
 	// Remove .p2p suffix and convert to lowercase
-	if( query_sanitize( query, sizeof(query), _query ) != 0 ) {
+	if( query_sanitize( query, sizeof(query), query_raw ) != 0 ) {
 		return -1;
 	}
 
@@ -407,65 +418,40 @@ int kad_announce( const char _query[], int port, time_t lifetime ) {
 	return announces_add( query, port, lifetime ) ? 0 : -2;
 }
 
-/*
-* Lookup known nodes that are nearest to the given id.
-*/
-int kad_lookup_value( const char _query[], IP addr_array[], size_t *addr_num ) {
-	char query[QUERY_MAX_SIZE + 1];
+// Lookup known nodes that are nearest to the given id
+int kad_lookup( const char query[], IP addr_array[], size_t addr_num ) {
+	char hostname[QUERY_MAX_SIZE];
 	struct results_t *results;
-	int is_new;
 	int rc;
 
-	if( query_sanitize( query, sizeof(query), _query ) != 0 ) {
-		return -2;
+	// Remove .p2p suffix and convert to lowercase
+	if( query_sanitize( hostname, sizeof(query), query ) != 0 ) {
+		return -1;
 	}
 
-	log_debug( "KAD: Lookup string: %s", query );
+	log_debug( "KAD: Lookup string: %s", hostname );
 
 	dht_lock();
 
 	// Find existing or create new item
-	results = results_add( query, &is_new );
+	results = results_lookup( hostname );
 
 	if( results == NULL ) {
 		// Failed to create a new search
 		return -1;
 	}
 
-	if( is_new ) {
+	// Search was just started
+	if( results->start_time == time_now_sec() ) {
 		// Search own announced values
 		kad_lookup_local_values( results );
-	}
-#if 0
-	if( results->done ) {
-		/*
-		* The search exists already but has finished. Restart the search when
-		* no results have been found or more than half of the searches lifetime
-		* has expired.
-		*/
-		if( results_entries_count( results ) == 0 ||
-			(time_now_sec() - results->start_time) > (MAX_SEARCH_LIFETIME / 2)
-		) {
-			// Mark search as in progress
-			//results_done( results, 0 );
-
-			// Start another search for this id
-			dht_search( results->id, 0, gconf->af, dht_callback_func, NULL );
-		}
-		rc = 2;
-	} else
-#endif
-	if( is_new ) {
 		// Start a new DHT search
 		dht_search( results->id, 0, gconf->af, dht_callback_func, NULL );
-		rc = 1;
-	} else {
-		// Search is still running
-		rc = 0;
 	}
 
 	// Collect addresses to be returned
-	*addr_num = results_collect( results, addr_array, *addr_num );
+	// returns negative values?
+	rc = results_collect( results, addr_array, addr_num );
 
 	dht_unlock();
 

@@ -4,7 +4,7 @@
 #include <errno.h>
 #include <sys/socket.h>
 #include <net/if.h>
-#include <unistd.h> /* close */
+#include <unistd.h>
 #include <sys/ioctl.h>
 #include <ifaddrs.h>
 

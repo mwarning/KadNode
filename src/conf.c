@@ -115,8 +115,8 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 #ifdef DNS
 " --dns-port <port>		Bind the DNS server interface to this local port.\n"
 "				Default: "DNS_PORT"\n\n"
-" --dns-server <ip_addr>	IP address of an external DNS server. Enables DNS proxy mode.\n"
-"				Default: none\n\n"
+" --dns-proxy-enable		Enable DNS proxy mode. Reads /etc/resolv.conf by default.\n"
+" --dns-proxy-server <ip_addr>	IP address of an external DNS server.\n"
 #endif
 #ifdef NSS
 " --nss-port <port>		Bind the Network Service Switch to this local port.\n"
@@ -230,13 +230,6 @@ void conf_check( void ) {
 #ifdef DNS
 	if( gconf->dns_port == NULL ) {
 		gconf->dns_port = strdup( DNS_PORT );
-	}
-
-	if( gconf->dns_server ) {
-		if( addr_parse( &gconf->dns_server_addr, gconf->dns_server, "53", AF_UNSPEC ) != 0 ) {
-			log_err( "CFG: Failed to parse IP address '%s'.", gconf->dns_server );
-			exit( 1 );
-		}
 	}
 #endif
 
@@ -361,8 +354,12 @@ void conf_info( void ) {
 	log_info( "LPD Address: %s", (gconf->lpd_disable == 0) ? gconf->lpd_addr : "Disabled" );
 #endif
 #ifdef DNS
-	if (gconf->dns_server) {
-		log_info( "Forward foreign DNS requests to %s", gconf->dns_server );
+	if( gconf->dns_proxy_enable ) {
+		if( gconf->dns_proxy_server ) {
+			log_info( "DNS proxy enabled: %s", gconf->dns_proxy_server );
+		} else {
+			log_info( "DNS proxy enabled" );
+		}
 	}
 #endif
 }
@@ -385,7 +382,7 @@ void conf_free( void ) {
 #endif
 #ifdef DNS
 	free( gconf->dns_port );
-	free( gconf->dns_server );
+	free( gconf->dns_proxy_server );
 #endif
 #ifdef NSS
 	free( gconf->nss_port );
@@ -407,7 +404,8 @@ enum OpCode {
 	oCmdDisableStdin,
 	oCmdPort,
 	oDnsPort,
-	oDnsServer,
+	oDnsProxyEnable,
+	oDnsProxyServer,
 	oNssPort,
 	oTlsClientEntry,
 	oTlsServerEntry,
@@ -452,7 +450,8 @@ static struct Option options[] = {
 #endif
 #ifdef DNS
 	{"--dns-port", 1, oDnsPort},
-	{"--dns-server", 1, oDnsServer},
+	{"--dns-proxy-enable", 0, oDnsProxyEnable},
+	{"--dns-proxy-server", 1, oDnsProxyServer},
 #endif
 #ifdef NSS
 	{"--nss-port", 1, oNssPort},
@@ -494,7 +493,7 @@ static struct Option options[] = {
 	{"--version", 0, oVersion},
 };
 
-const struct Option *findOption(const char name[]) {
+const struct Option *find_option(const char name[]) {
 	int i;
 
 	for( i = 0; i < N_ELEMS(options); i++) {
@@ -524,7 +523,7 @@ void conf_str( const char opt[], char *dst[], const char src[] ) {
 void conf_handle_option( const char opt[], const char val[] ) {
 	const struct Option *option;
 
-	option = findOption( opt );
+	option = find_option( opt );
 
 	if( option->num_args == 1 && val == NULL ) {
 		log_err( "CFG: Argument expected for option: %s", opt );
@@ -575,8 +574,11 @@ void conf_handle_option( const char opt[], const char val[] ) {
 		case oDnsPort:
 			conf_str( opt, &gconf->dns_port, val );
 			break;
-		case oDnsServer:
-			conf_str( opt, &gconf->dns_server, val );
+		case oDnsProxyEnable:
+			gconf->dns_proxy_enable = 1;
+			break;
+		case oDnsProxyServer:
+			conf_str( opt, &gconf->dns_proxy_server, val );
 			break;
 #endif
 #ifdef NSS
@@ -693,81 +695,66 @@ void conf_handle_option( const char opt[], const char val[] ) {
 	}
 }
 
-// Append an option and optional value to the g_argv array
+// Append arguments to g_argv / g_argc
 void conf_append( const char opt[], const char val[] ) {
-	g_argv = (char**) realloc(g_argv, (g_argc + 3) * sizeof(char*));
-	g_argv[g_argc] = strdup(opt);
-	g_argv[g_argc + 1] = val ? strdup(val) : NULL;
+	g_argv = (char**) realloc( g_argv, (g_argc + 3) * sizeof(char*) );
+	g_argv[g_argc] = strdup( opt );
+	g_argv[g_argc + 1] = val ? strdup( val ) : NULL;
 	g_argv[g_argc + 2] = NULL;
 	g_argc += 2;
 }
 
-void conf_load_file( const char filename[] ) {
-	char line[512];
-	size_t n;
+void conf_load_file( const char path[] ) {
+	char line[256];
+	char option[32];
+	char value[128];
+	char dummy[4];
+	char *last;
 	struct stat s;
+	int ret;
 	FILE *file;
-	char *option;
-	char *value;
-	char *p;
+	size_t nline;
 
-	if( stat( filename, &s ) == 0 && !(s.st_mode & S_IFREG) ) {
-		log_err( "CFG: File expected: %s\n", filename );
+	if( stat( path, &s ) == 0 && !(s.st_mode & S_IFREG) ) {
+		log_err( "CFG: File expected: %s", path );
 		exit( 1 );
 	}
 
-	n = 0;
-	file = fopen( filename, "r" );
+	nline = 0;
+	file = fopen( path, "r" );
 	if( file == NULL ) {
-		log_err( "CFG: Cannot open file '%s': %s\n", filename, strerror( errno ) );
+		log_err( "CFG: Cannot open file: %s (%s)", path, strerror( errno ) );
 		exit( 1 );
 	}
 
 	while( fgets( line, sizeof(line), file ) != NULL ) {
-		n++;
-		option = NULL;
-		value = NULL;
+		nline++;
 
-		// End line early at '#'
-		if( (p = strchr( line, '#' )) != NULL ) {
-			*p =  '\0';
+		// Cut off comments
+		last = strchr( line, '#' );
+		if( last ) {
+			*last = '\0';
 		}
 
-		// Replace quotation marks with spaces
-		p = line;
-		while( *p ) {
-			if( *p == '\'' || *p == '\"' ) {
-				*p = ' ';
-			}
-			p++;
-		}
-
-		// Parse "--option [<value>]"
-		char *pch = strtok( line," \t\n\r" );
-		while( pch != NULL ) {
-			if( option == NULL ) {
-				option = pch;
-			} else if( value == NULL ) {
-				value = pch;
-			} else {
-				fclose( file );
-				log_err( "CFG: Too many arguments in line %ld.", n );
-				exit( 1 );
-			}
-			pch = strtok( NULL, " \t\n\r" );
-		}
-
-		if( option == NULL ) {
-			continue;
-		}
-
-		if( strcmp( option, "--config" ) == 0 ) {
+		// Prevent recursive inclusion
+		if( strstr( line, "--config " ) ) {
 			fclose( file );
-			log_err( "CFG: Option '--config' not allowed inside a configuration file, line %ld.", n );
+			log_err( "CFG: Option '--config' not allowed inside a configuration file, line %ld.", nline );
 			exit( 1 );
 		}
 
-		conf_append( option, value );
+		ret = sscanf(line, " %31s %127s %3s", option, value, dummy );
+		if( ret == 1 ) {
+			// --option
+			conf_append( option, NULL );
+		} else if( ret == 2 ) {
+			// --option value
+			conf_append( option, value );
+		} else if( line[0] != '\0' ) {
+			fclose( file );
+			log_err( "CFG: Invalid line in config file: %s (%d)", path, nline );
+			exit( 1 );
+		}
 	}
 
 	fclose( file );

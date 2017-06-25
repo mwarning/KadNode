@@ -19,6 +19,10 @@
 #endif
 
 
+/*
+* Frontend for NAT-PMP and UPnP wrappers.
+*/
+
 #ifdef FWD_NATPMP
 static struct natpmp_handle_t *natpmp = NULL;
 #endif
@@ -198,7 +202,7 @@ void fwd_handle( int _rc, int _sock, void *_data ) {
 			log_info("FWD: Disable NAT-PMP - not available.");
 			natpmp_uninit( &natpmp );
 		} else if( rc == PF_RETRY ) {
-			//return;
+			// return;
 		} else {
 			log_err( "FWD: Unhandled NAT-PMP reply." );
 		}

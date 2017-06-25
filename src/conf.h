@@ -98,10 +98,8 @@ struct gconf_t {
 
 #ifdef DNS
 	char *dns_port;
-
-	// External DNS server
-	char *dns_server;
-	IP dns_server_addr;
+	int dns_proxy_enable;
+	char *dns_proxy_server;
 #endif
 
 #ifdef NSS

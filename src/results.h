@@ -51,16 +51,13 @@ void results_setup( void );
 void results_free( void );
 
 // Create and append a new results item
-struct results_t *results_add( const char query[], int *is_new );
+struct results_t *results_lookup( const char query[] );
 
 // Add an address to a result bucket
 int results_add_addr( struct results_t *results, const IP *addr );
 
 // Collect addresses
 int results_collect( struct results_t *results, IP addr_array[], size_t addr_num );
-
-// Mark as done
-//int results_done( struct results_t *results, int done );
 
 // Count (valid) result entries
 int results_entries_count( struct results_t *result );

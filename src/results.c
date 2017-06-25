@@ -25,6 +25,8 @@
 * Therefore, results are collected and stored here.
 */
 
+#define MAX_SEARCH_LIFETIME (20*60)
+
 // A ring buffer for of all searches
 static struct results_t *g_results[MAX_SEARCHES] = { NULL };
 static size_t g_results_idx = 0;
@@ -78,20 +80,24 @@ int results_entries_count( struct results_t *result ) {
 	return count;
 }
 
+void result_free( struct result_t *result ) {
+	free( result );
+}
+
 // Free a results_t item and all its result_t entries
-void results_item_free( struct results_t *bucket ) {
+void search_free( struct results_t *search ) {
 	struct result_t *cur;
 	struct result_t *next;
 
-	cur = bucket->entries;
+	cur = search->entries;
 	while( cur ) {
 		next = cur->next;
-		free( cur );
+		result_free( cur );
 		cur = next;
 	}
 
-	free( bucket->query );
-	free( bucket );
+	free( search->query );
+	free( search );
 }
 
 void results_debug( int fd ) {
@@ -107,7 +113,6 @@ void results_debug( int fd ) {
 	while( *results ) {
 		bucket = *results;
 		dprintf( fd, " id: %s\n", str_id( bucket->id ) );
-		//dprintf( fd, "  done: %d\n", bucket->done );
 		result_counter = 0;
 		result = bucket->entries;
 		while( result ) {
@@ -123,9 +128,38 @@ void results_debug( int fd ) {
 	dprintf( fd, " Found %d result buckets.\n", results_counter );
 }
 
-// Add a new bucket to collect results
+void search_restart( struct results_t *results ) {
+	results->start_time = time_now_sec();
+	//results->callback
+
+	// Remove all failed results
+	struct result_t *result = results->entries;
+	struct result_t *prev = NULL;
+	struct result_t *next = NULL;
+
+	while( result ) {
+		// Remove element
+		if( result->state == AUTH_ERROR || result->state == AUTH_SKIP ) {
+			// Remove result
+			next = result->next;
+			if( prev ) {
+				prev->next = next;
+			} else {
+				results->entries = next;
+			}
+			result_free(result);
+			result = next;
+		} else {
+			prev = result;
+			result = result->next;
+		}
+	}
+}
+
+// Start a new search
 // The query is expected to be sanitized (lower case and without query TLS)
-struct results_t* results_add( const char query[], int *is_new ) {
+//search_start()
+struct results_t* results_lookup( const char query[] ) {
 	uint8_t id[SHA1_BIN_LENGTH];
 	auth_callback *callback;
 	struct results_t* new;
@@ -133,10 +167,12 @@ struct results_t* results_add( const char query[], int *is_new ) {
 
 	// Find existing search
 	if( (results = results_find( query )) != NULL ) {
-		*is_new = 0;
+		// Restart search after half of search lifetime
+		if( (time_now_sec() - results->start_time) > (MAX_SEARCH_LIFETIME / 2) ) {
+			search_restart( results );
+		}
+
 		return results;
-	} else {
-		*is_new = 1;
 	}
 
 	if( bob_get_id( id, sizeof(id), query ) ) {
@@ -155,11 +191,12 @@ struct results_t* results_add( const char query[], int *is_new ) {
 	new->query = strdup( query );
 	new->start_time = time_now_sec();
 
-	log_debug( "Results: Add results bucket for query '%s', id '%s'.", query, str_id( id ) );
+	log_debug( "Results: Add results bucket for query: %s", query );
 
 	// Free slot if taken
 	if( g_results[g_results_idx] != NULL ) {
-		results_item_free( g_results[g_results_idx] );
+		// What to do with auths in progress?
+		search_free( g_results[g_results_idx] );
 	}
 
 	g_results[g_results_idx] = new;
@@ -237,7 +274,7 @@ void results_free( void ) {
 
 	results = &g_results[0];
 	while( *results ) {
-		results_item_free( *results );
+		search_free( *results );
 		*results = NULL;
 		results++;
 	}

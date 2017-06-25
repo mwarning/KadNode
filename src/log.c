@@ -51,7 +51,7 @@ void _log_print( int priority, const char format[], ... ) {
 	vsnprintf( buf, sizeof(buf) - 1, format, vlist );
 	va_end( vlist );
 
-	/* Select a prefix to quickly distinguish messages */
+	// Select a prefix to quickly distinguish messages
 	switch( priority ) {
 		case LOG_INFO:
 			prefix = "(I)";

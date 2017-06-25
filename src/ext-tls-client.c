@@ -141,7 +141,7 @@ void auth_end( struct tls_resource* resource, int state ) {
 		}
 	} else {
 		// Look for next address
-		tls_trigger_auth( resource->results );
+		tls_client_trigger_auth( resource->results );
 	}
 }
 
@@ -204,13 +204,14 @@ void tls_handle( int rc, int fd ) {
 		}
 #endif
 
-		auth_end(resource, AUTH_FAILED);
+		auth_end( resource, AUTH_FAILED );
 	} else {
 		// TLS handshake in progress.
 	}
 }
 
-int tls_decide_auth( const char query[] ) {
+int tls_client_get_id( uint8_t id[], size_t len, const char query[] ) {
+	// TODO
 	return 0;
 }
 
@@ -243,7 +244,7 @@ struct result_t *tls_next_result( struct results_t *results ) {
 }
 
 // Called for every new address in results
-void tls_trigger_auth( struct results_t *results ) {
+void tls_client_trigger_auth( struct results_t *results ) {
 	struct tls_resource *resource;
 	struct result_t *result;
 
