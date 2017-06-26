@@ -41,7 +41,7 @@ struct key_t {
 };
 
 struct bob_resource {
-	struct results_t *results;
+	struct search_t *search;
 	struct result_t *result;
 	uint8_t pkey[crypto_sign_PUBLICKEYBYTES];
 	uint8_t challenge[CHALLENGE_BIN_LENGTH];
@@ -97,10 +97,10 @@ static struct bob_resource *bob_next_resource( void ) {
     return NULL;
 }
 
-struct result_t *bob_next_result( struct results_t *results ) {
+struct result_t *bob_next_result( struct search_t *search ) {
 	struct result_t *result;
 
-	result = results->entries;
+	result = search->results;
 	while( result ) {
 		if( result->state == AUTH_WAITING ) {
 			return result;
@@ -126,27 +126,27 @@ void bob_send_challenge( int sock, struct bob_resource *resource ) {
 }
 
 // Start auth procedure for result bucket and utilize all resources
-void bob_trigger_auth( struct results_t *results ) {
+void bob_trigger_auth( struct search_t *search ) {
 	struct bob_resource *resource;
 	struct result_t *result;
 
-	result = results->entries;
+	result = search->results;
 	while( result ) {
 		resource = bob_next_resource();
 		if( resource == NULL ) {
 			break;
 		}
 
-		result = bob_next_result( results );
+		result = bob_next_result( search );
 		if( result == NULL ) {
 			break;
 		}
 
 		printf("create resource\n");
 		result->state = AUTH_PROGRESS;
-		bytes_from_hex( resource->pkey, results->query, 2 * crypto_sign_PUBLICKEYBYTES );
+		bytes_from_hex( resource->pkey, search->query, 2 * crypto_sign_PUBLICKEYBYTES );
 		resource->result = result;
-		resource->results = results;
+		resource->search = search;
 		resource->challenges_send = 0;
 		bytes_random( resource->challenge, CHALLENGE_BIN_LENGTH );
 
@@ -155,21 +155,21 @@ void bob_trigger_auth( struct results_t *results ) {
 }
 
 void bob_auth_end(struct bob_resource *resource, int state) {
-	struct results_t *results;
+	struct search_t *search;
 	struct result_t *result;
 
-	results = resource->results;
+	search = resource->search;
 	result = resource->result;
 
 	// Mark resource as free
-	resource->results = NULL;
+	resource->search = NULL;
 	resource->result = NULL;
 
 	// Update authentication state
 	result->state = state;
 
 	if( state == AUTH_OK ) {
-		results->callback = NULL;
+		search->callback = NULL;
 
 		while( result ) {
 			if( result->state == AUTH_PROGRESS ) {
@@ -179,7 +179,7 @@ void bob_auth_end(struct bob_resource *resource, int state) {
 		}
 	} else {
 		// Look for next address
-		bob_trigger_auth( results );
+		bob_trigger_auth( search );
 	}
 }
 
@@ -309,7 +309,7 @@ void bob_send_challenges( int sock ) {
 	// Send one packet per request
 	for( i = 0; i < N_ELEMS(g_bob_resources); i++ ) {
 		resource = &g_bob_resources[i];
-		if( resource->results == NULL ) {
+		if( resource->search == NULL ) {
 			continue;
 		}
 

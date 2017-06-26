@@ -7,7 +7,7 @@
 
 // Decide if the query is meant to be authorized via BOB
 int bob_get_id( uint8_t id[], size_t len, const char query[] );
-void bob_trigger_auth( struct results_t *results );
+void bob_trigger_auth( struct search_t *results );
 
 // .. for kad.c - remove?
 int bob_handler( int sock, uint8_t buf[], uint32_t buflen, IP *from );

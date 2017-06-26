@@ -22,9 +22,9 @@ enum AUTH_STATE {
 };
 
 // Forward declaration
-struct results_t;
+struct search_t;
 
-typedef void auth_callback(struct results_t *results);
+typedef void auth_callback(struct search_t *results);
 
 // An address that was received as a result of an id search
 struct result_t {
@@ -34,33 +34,33 @@ struct result_t {
 };
 
 // A bucket of results received when in search of an id
-struct results_t {
-	struct results_t *next;
+struct search_t {
+	struct search_t *next;
 	uint8_t id[SHA1_BIN_LENGTH];
 	char *query;
 	time_t start_time;
-	struct result_t *entries;
+	struct result_t *results;
 	auth_callback *callback;
 };
 
-struct results_t **results_get( void );
-struct results_t *results_find( const char query[] );
+struct search_t **results_get( void );
+struct search_t *results_find( const char query[] );
 
 // Register a handler to call results_expire in intervalls
 void results_setup( void );
 void results_free( void );
 
 // Create and append a new results item
-struct results_t *results_lookup( const char query[] );
+struct search_t *results_lookup( const char query[] );
 
 // Add an address to a result bucket
-int results_add_addr( struct results_t *results, const IP *addr );
+int results_add_addr( struct search_t *search, const IP *addr );
 
 // Collect addresses
-int results_collect( struct results_t *results, IP addr_array[], size_t addr_num );
+int results_collect( struct search_t *search, IP addr_array[], size_t addr_num );
 
 // Count (valid) result entries
-int results_entries_count( struct results_t *result );
+int results_entries_count( struct search_t *search );
 
 void results_debug( int fd );
 

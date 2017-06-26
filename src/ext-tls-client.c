@@ -7,7 +7,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <errno.h>
-#include <unistd.h> /* close */
+#include <unistd.h>
 
 #include "mbedtls/config.h"
 #include "mbedtls/platform.h"
@@ -35,7 +35,7 @@
 struct tls_resource {
 	mbedtls_ssl_context ssl;
 	mbedtls_net_context fd;
-	struct results_t *results;
+	struct search_t *search;
 	struct result_t *result;
 };
 
@@ -103,23 +103,23 @@ struct tls_resource *tls_find_resource( int fd ) {
 void tls_handle( int rc, int fd );
 
 void auth_end( struct tls_resource* resource, int state ) {
-	struct results_t *results;
+	struct search_t *search;
 	struct result_t *result;
 	int ret;
 
-	log_debug( "TLS: Auth %s for %s", (state == AUTH_OK) ? "success" : "failure", resource->results->query );
+	log_debug( "TLS: Auth %s for %s", (state == AUTH_OK) ? "success" : "failure", resource->search->query );
 
 	// Done and close connection
 	do ret = mbedtls_ssl_close_notify( &resource->ssl );
 	while( ret == MBEDTLS_ERR_SSL_WANT_WRITE );
 
 	result = resource->result;
-	results = resource->results;
+	search = resource->search;
 
 	net_remove_handler( resource->fd.fd, &tls_handle );
 
 	resource->result = NULL;
-	resource->results = NULL;
+	resource->search = NULL;
 	mbedtls_net_free( &resource->fd );
 	mbedtls_net_init( &resource->fd );
 	mbedtls_ssl_session_reset( &resource->ssl );
@@ -128,11 +128,11 @@ void auth_end( struct tls_resource* resource, int state ) {
 	result->state = state;
 
 	if( state == AUTH_OK ) {
-		// Stop authentication process for results
+		// Stop authentication process for search
 		// since we found a verified entry
-		results->callback = NULL;
+		search->callback = NULL;
 
-		result = results->entries;
+		result = search->results;
 		while( result ) {
 			if( result->state == AUTH_WAITING ) {
 				result->state = AUTH_SKIP;
@@ -141,7 +141,7 @@ void auth_end( struct tls_resource* resource, int state ) {
 		}
 	} else {
 		// Look for next address
-		tls_client_trigger_auth( resource->results );
+		tls_client_trigger_auth( resource->search );
 	}
 }
 
@@ -160,9 +160,9 @@ void tls_handle( int rc, int fd ) {
 	}
 
 	ssl = &resource->ssl;
-	query = resource->results->query;
+	query = resource->search->query;
 
-	printf("tls_handle %s\n", resource->results->query);
+	printf("tls_handle %s\n", resource->search->query);
 
 	if( rc < 0 ) {
 		if( errno != EINPROGRESS ) {
@@ -220,7 +220,7 @@ struct tls_resource *tls_next_resource( void ) {
 	int i;
 
 	for( i = 0; i < N_ELEMS(g_tls_resources); i++ ) {
-		if( g_tls_resources[i].results == NULL ) {
+		if( g_tls_resources[i].search == NULL ) {
 			return &g_tls_resources[i];
 		}
 	}
@@ -229,10 +229,10 @@ struct tls_resource *tls_next_resource( void ) {
 }
 
 // Get next address to authenticate (state waiting)
-struct result_t *tls_next_result( struct results_t *results ) {
+struct result_t *tls_next_result( struct search_t *search ) {
 	struct result_t *result;
 
-	result = results->entries;
+	result = search->results;
 	while( result ) {
 		if( result->state == AUTH_WAITING ) {
 			return result;
@@ -243,12 +243,12 @@ struct result_t *tls_next_result( struct results_t *results ) {
 	return NULL;
 }
 
-// Called for every new address in results
-void tls_client_trigger_auth( struct results_t *results ) {
+// Called for every new address in search
+void tls_client_trigger_auth( struct search_t *search ) {
 	struct tls_resource *resource;
 	struct result_t *result;
 
-	result = results->entries;
+	result = search->results;
 	while( result ) {
 		// Get next free SSL resource
 		resource = tls_next_resource();
@@ -257,19 +257,19 @@ void tls_client_trigger_auth( struct results_t *results ) {
 		}
 
 		// Get next result to authenticate
-		result = tls_next_result( results );
+		result = tls_next_result( search );
 		if( result == NULL ) {
 			return;
 		}
 
 		// Start authentication process
-		//printf("tls_start_jobs: %s (%s)\n", results->query, str_addr( &result->addr ) );
+		//printf("tls_start_jobs: %s (%s)\n", search->query, str_addr( &result->addr ) );
 
-		if( tls_connect( &resource->ssl, &resource->fd, results->query, &result->addr ) < 0 ) {
+		if( tls_connect( &resource->ssl, &resource->fd, search->query, &result->addr ) < 0 ) {
 			result->state = AUTH_ERROR;
 		} else {
 			resource->result = result;
-			resource->results = results;
+			resource->search = search;
 
 			result->state = AUTH_PROGRESS;
 			net_add_handler( resource->fd.fd, &tls_handle );

@@ -84,23 +84,23 @@ typedef struct {
 
 // This callback is called when a search result arrives or a search completes
 void dht_callback_func( void *closure, int event, const uint8_t *info_hash, const void *data, size_t data_len ) {
-	struct results_t **results;
-	struct results_t *bucket;
+	struct search_t **search;
+	struct search_t *bucket;
 	IP addr;
 	size_t i;
 
-	// Find results bucket
+	// Find search
 	bucket = NULL;
-	results = results_get();
-	while( *results ) {
-		if( memcmp( (*results)->id, info_hash, SHA1_BIN_LENGTH ) == 0 ) {
-			bucket = *results;
+	search = results_get();
+	while( *search ) {
+		if( memcmp( (*search)->id, info_hash, SHA1_BIN_LENGTH ) == 0 ) {
+			bucket = *search;
 			break;
 		}
-		results++;
+		search++;
 	}
 
-	if( results == NULL ) {
+	if( search == NULL ) {
 		return;
 	}
 
@@ -125,7 +125,7 @@ void dht_callback_func( void *closure, int event, const uint8_t *info_hash, cons
 			break;
 		case DHT_EVENT_SEARCH_DONE:
 		case DHT_EVENT_SEARCH_DONE6:
-			//results_done( results, 1 );
+			//search_done( results, 1 );
 			break;
 	}
 }
@@ -134,14 +134,14 @@ void dht_callback_func( void *closure, int event, const uint8_t *info_hash, cons
 * Lookup in values we announce ourselves.
 * Useful for networks of only one node, also faster.
 */
-void kad_lookup_local_values( struct results_t *results ) {
+void kad_lookup_local_values( struct search_t *search ) {
 	struct value_t* value;
 	IP addr;
 
 	// 127.0.0.1
 	unsigned int inaddr_loopback = htonl( INADDR_LOOPBACK );
 
-	value = announces_find( results->id );
+	value = announces_find( search->id );
 	if( value ) {
 		if( gconf->af == AF_INET6 ) {
 			to_addr( &addr, &in6addr_loopback, 16, htons( value->port ) ); // ::1
@@ -149,7 +149,7 @@ void kad_lookup_local_values( struct results_t *results ) {
 			to_addr( &addr, &inaddr_loopback, 4, htons( value->port ) ); // 127.0.0.1
 		}
 		log_debug( "KAD: Address found in local values: %s\n", str_addr( &addr ) );
-		results_add_addr( results, &addr );
+		results_add_addr( search, &addr );
 	}
 }
 
@@ -421,7 +421,7 @@ int kad_announce( const char query_raw[], int port, time_t lifetime ) {
 // Lookup known nodes that are nearest to the given id
 int kad_lookup( const char query[], IP addr_array[], size_t addr_num ) {
 	char hostname[QUERY_MAX_SIZE];
-	struct results_t *results;
+	struct search_t *search;
 	int rc;
 
 	// Remove .p2p suffix and convert to lowercase
@@ -434,24 +434,24 @@ int kad_lookup( const char query[], IP addr_array[], size_t addr_num ) {
 	dht_lock();
 
 	// Find existing or create new item
-	results = results_lookup( hostname );
+	search = results_lookup( hostname );
 
-	if( results == NULL ) {
+	if( search == NULL ) {
 		// Failed to create a new search
 		return -1;
 	}
 
 	// Search was just started
-	if( results->start_time == time_now_sec() ) {
+	if( search->start_time == time_now_sec() ) {
 		// Search own announced values
-		kad_lookup_local_values( results );
+		kad_lookup_local_values( search );
 		// Start a new DHT search
-		dht_search( results->id, 0, gconf->af, dht_callback_func, NULL );
+		dht_search( search->id, 0, gconf->af, dht_callback_func, NULL );
 	}
 
 	// Collect addresses to be returned
 	// returns negative values?
-	rc = results_collect( results, addr_array, addr_num );
+	rc = results_collect( search, addr_array, addr_num );
 
 	dht_unlock();
 
