@@ -12,7 +12,6 @@
 #include "log.h"
 #include "utils.h"
 #include "conf.h"
-#include "values.h"
 #include "peerfile.h"
 #include "kad.h"
 #ifdef TLS
