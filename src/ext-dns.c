@@ -1,4 +1,8 @@
 
+/*
+* DNS-Server interface for KadNode.
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -16,12 +20,8 @@
 #include "net.h"
 #include "ext-dns.h"
 
-
-/*
-* DNS-Server interface for KadNode.
-*/
-
 #define MAX_ADDR_RECORDS 32
+
 
 static int g_sock4 = -1;
 static int g_sock6 = -1;

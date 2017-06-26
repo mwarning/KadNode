@@ -276,11 +276,8 @@ void tls_server_setup( void ) {
 		mbedtls_net_set_nonblock( &g_listen_fd );
 		net_add_handler( g_listen_fd.fd, &tls_server_handler );
 	}
-	//mbedtls_ssl_set_bio( &g_ssl, &g_client_fd, mbedtls_net_send, mbedtls_net_recv, NULL );
-	//mbedtls_net_free( &g_client_fd );
-	//mbedtls_ssl_session_reset( &g_ssl );
 }
 
 void tls_server_free( void ) {
-	// Do something?
+	// Nothing to do
 }

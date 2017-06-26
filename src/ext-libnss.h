@@ -2,6 +2,7 @@
 #ifndef _EXT_LIBNSS_H_
 #define _EXT_LIBNSS_H_
 
+
 #define _public_ __attribute__( ( visibility( "default")))
 #define _hidden_ __attribute__( ( visibility( "hidden")))
 
@@ -37,5 +38,6 @@ enum nss_status _nss_kadnode_gethostbyname4_r(
 	char *buffer, size_t buflen, int *errnop,
 	int *h_errnop, int32_t *ttlp ) _public_;
 #endif
+
 
 #endif // _EXT_LIBNSS_H_

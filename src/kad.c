@@ -275,7 +275,7 @@ void kad_setup( void ) {
 		dht_debug = stdout;
 	}
 
-	bytes_from_hex( node_id, gconf->node_id_str, strlen( gconf->node_id_str ) );
+	bytes_random( node_id, SHA1_BIN_LENGTH );
 
 	dht_lock_init();
 

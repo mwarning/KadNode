@@ -2,14 +2,15 @@
 #ifndef _LPD_H
 #define _LPD_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 /*
 * Send multicast messages to discover
 * new nodes if no other nodes are known.
 */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 
 void lpd_setup( void );
 void lpd_free( void );

@@ -28,9 +28,6 @@ struct gconf_t {
 	// Current time
 	time_t time_now;
 
-	// Node identifier as hex string
-	char *node_id_str;
-
 	// Drop privileges to user
 	char *user;
 

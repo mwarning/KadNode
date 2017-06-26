@@ -20,16 +20,8 @@
 #define MAX_ADDRS 32
 
 static int g_sock = -1;
-static IP g_sockaddr = {0};
+static IP g_sockaddr = { 0 };
 
-
-void debug_write(const char msg[]) {
-	FILE *file = fopen("/tmp/kadnodenss.txt", "a");
-	if(file) {
-		fprintf(file, "%s\n", msg);
-		fclose(file);
-	}
-}
 
 /*
 * Parse/Resolve an IP address.
@@ -70,8 +62,6 @@ int _nss_kadnode_init() {
 	struct timeval tv;
 	const int opt_on = 1;
 
-debug_write("nss init start");
-
 	if( _nss_kadnode_addr_parse( &g_sockaddr, "::1", NSS_PORT, AF_UNSPEC ) < 0 ) {
 		return 0;
 	}
@@ -92,8 +82,6 @@ debug_write("nss init start");
 	if( setsockopt( g_sock, SOL_SOCKET, SO_REUSEADDR, &opt_on, sizeof(opt_on) ) < 0 ) {
 		return 0;
 	}
-
-debug_write("nss init done");
 
 	return 1;
 }
@@ -120,8 +108,6 @@ int _nss_kadnode_lookup( const char hostname[], int hostlen, IP addrs[] ) {
 			return 0;
 		}
 	}
-
-debug_write(hostname);
 
 	addrlen = _nss_kadnode_addr_len( &g_sockaddr );
 	size = sendto( g_sock, hostname, hostlen, 0, (struct sockaddr *)&g_sockaddr, addrlen );
