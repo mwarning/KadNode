@@ -196,7 +196,6 @@ void conf_init( void ) {
 
 // Set default if setting was not set and validate settings
 void conf_check( void ) {
-	uint8_t node_id[SHA1_BIN_LENGTH];
 
 	if( gconf->af == 0 ) {
 		gconf->af = AF_INET;
@@ -204,11 +203,6 @@ void conf_check( void ) {
 
 	if( gconf->query_tld == NULL ) {
 		gconf->query_tld = strdup( QUERY_TLD_DEFAULT );
-	}
-
-	if( gconf->node_id_str == NULL ) {
-		bytes_random( node_id, SHA1_BIN_LENGTH );
-		gconf->node_id_str = strdup( str_id( node_id ) );
 	}
 
 	if( gconf->dht_port == NULL ) {
@@ -298,18 +292,9 @@ void conf_check( void ) {
 	}
 
 	// Verifiy multicast address
-	if( gconf->af == AF_INET ) {
-		octet = ((uint8_t *) &((IP4 *)&lpd_addr)->sin_addr)[0];
-		if( octet != 224 && octet != 239 ) {
-			log_err( "CFG: Multicast address expected: %s", str_addr( &lpd_addr ) );
-			exit( 1 );
-		}
-	} else {
-		octet = ((uint8_t *) &((IP6 *)&lpd_addr)->sin6_addr)[0];
-		if( octet != 0xFF ) {
-			log_err( "CFG: Multicast address expected: %s", str_addr( &lpd_addr ) );
-			exit( 1 );
-		}
+	if( !addr_is_multicast(&lpd_addr) ) {
+		log_err( "CFG: Multicast address expected: %s", str_addr( &lpd_addr ) );
+		exit( 1 );
 	}
 #endif
 
@@ -320,7 +305,6 @@ void conf_check( void ) {
 
 void conf_info( void ) {
 	log_info( "Starting %s", kadnode_version_str );
-	log_info( "Node ID: %s", gconf->node_id_str );
 	log_info( "IP Mode: %s", (gconf->af == AF_INET) ? "IPv4" : "IPv6");
 
 	if( gconf->is_daemon ) {
@@ -366,7 +350,6 @@ void conf_info( void ) {
 
 void conf_free( void ) {
 	free( gconf->query_tld );
-	free( gconf->node_id_str );
 	free( gconf->user );
 	free( gconf->pidfile );
 	free( gconf->peerfile );
