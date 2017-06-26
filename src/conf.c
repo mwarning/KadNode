@@ -240,34 +240,34 @@ void conf_check( void ) {
 #endif
 
 	if( port_parse( gconf->dht_port, -1 ) < 1 ) {
-		log_err( "CFG: Invalid DHT port '%s'.", gconf->dht_port );
+		log_err( "CFG: Invalid DHT port: %s", gconf->dht_port );
 		exit( 1 );
 	}
 
 #ifdef CMD
 	if( port_parse( gconf->cmd_port, -1 ) < 0 ) {
-		log_err( "CFG: Invalid CMD port '%s'.", gconf->cmd_port );
+		log_err( "CFG: Invalid CMD port: %s", gconf->cmd_port );
 		exit( 1 );
 	}
 #endif
 
 #ifdef DNS
 	if( port_parse( gconf->dns_port, -1 ) < 0 ) {
-		log_err( "CFG: Invalid DNS port '%s'.", gconf->dns_port );
+		log_err( "CFG: Invalid DNS port: %s", gconf->dns_port );
 		exit( 1 );
 	}
 #endif
 
 #ifdef NSS
 	if( port_parse( gconf->nss_port, -1 ) < 0 ) {
-		log_err( "CFG: Invalid NSS port '%s'.", gconf->nss_port );
+		log_err( "CFG: Invalid NSS port: %s", gconf->nss_port );
 		exit( 1 );
 	}
 #endif
 
 #ifdef WEB
 	if( port_parse( gconf->web_port, -1 ) < 0 ) {
-		log_err( "CFG: Invalid WEB port '%s'.", gconf->web_port );
+		log_err( "CFG: Invalid WEB port: %s", gconf->web_port );
 		exit( 1 );
 	}
 #endif
@@ -287,7 +287,7 @@ void conf_check( void ) {
 
 	// Parse multicast address string
 	if( addr_parse( &lpd_addr, gconf->lpd_addr, LPD_PORT, gconf->af ) != 0 ) {
-		log_err( "CFG: Failed to parse IP address for '%s'.", gconf->lpd_addr );
+		log_err( "CFG: Failed to parse IP address for: %s", gconf->lpd_addr );
 		exit( 1 );
 	}
 
@@ -314,7 +314,7 @@ void conf_info( void ) {
 	}
 
 	if( gconf->configfile ) {
-		log_info( "Configuration File: '%s'", gconf->configfile );
+		log_info( "Configuration File: %s", gconf->configfile );
 	}
 
 	switch( gconf->verbosity ) {
