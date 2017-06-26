@@ -12,7 +12,7 @@
 #include "conf.h"
 #include "utils.h"
 #include "net.h"
-#include "results.h"
+#include "searches.h"
 #include "ext-filter.h"
 
 /*

@@ -15,7 +15,7 @@
 #include "kad.h"
 #include "net.h"
 #include "values.h"
-#include "results.h"
+#include "searches.h"
 #include "ext-bob.h"
 
 

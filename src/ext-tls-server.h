@@ -2,7 +2,7 @@
 #ifndef _EXT_TLS_SERVER_H_
 #define _EXT_TLS_SERVER_H_
 
-#include "results.h"
+#include "searches.h"
 
 // Add domain with cert and key file
 void tls_server_add_sni( const char name[], const char crt_file[], const char key_file[] );

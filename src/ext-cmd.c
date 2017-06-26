@@ -17,7 +17,7 @@
 #include "kad.h"
 #include "net.h"
 #include "announces.h"
-#include "results.h"
+#include "searches.h"
 #ifdef AUTH
 #include "ext-auth.h"
 #endif

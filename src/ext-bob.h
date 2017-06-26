@@ -2,7 +2,7 @@
 #ifndef _EXT_BOB_H_
 #define _EXT_BOB_H_
 
-#include "results.h"
+#include "searches.h"
 
 
 // Decide if the query is meant to be authorized via BOB

@@ -5,7 +5,7 @@ CFLAGS += -std=gnu99 -I/usr/local/include
 LFLAGS += -L/usr/local/lib -lc
 FEATURES ?= cmd dns tls #bob nss lpd natpmp upnp web
 
-OBJS = build/main.o build/results.o build/kad.o build/log.o \
+OBJS = build/main.o build/searches.o build/kad.o build/log.o \
 	build/conf.o build/sha1.o build/net.o build/utils.o \
 	build/announces.o build/peerfile.o
 

@@ -2,7 +2,7 @@
 #ifndef _EXT_TLS_CLIENT_H_
 #define _EXT_TLS_CLIENT_H_
 
-#include "results.h"
+#include "searches.h"
 
 
 // Add Certifiacte Authorities (CAs)

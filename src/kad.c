@@ -8,8 +8,8 @@
 #include "utils.h"
 #include "conf.h"
 #include "utils.h"
-#include "results.h"
 #include "net.h"
+#include "searches.h"
 #include "announces.h"
 #ifdef BOB
 #include "ext-bob.h"

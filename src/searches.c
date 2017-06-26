@@ -16,7 +16,7 @@
 #ifdef TLS
 #include "ext-tls-client.h"
 #endif
-#include "results.h"
+#include "searches.h"
 
 
 /*

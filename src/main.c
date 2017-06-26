@@ -16,7 +16,7 @@
 #include "unix.h"
 #include "net.h"
 #include "announces.h"
-#include "results.h"
+#include "searches.h"
 #include "peerfile.h"
 #ifdef __CYGWIN__
 #include "windows.h"
