@@ -87,7 +87,7 @@ void search_free( struct search_t *search ) {
 }
 
 // Get next address to authenticate
-static struct result_t *searches_next_result( struct search_t *search ) {
+static struct result_t *find_next_result( struct search_t *search ) {
 	struct result_t *result;
 
 	result = search->results;
@@ -103,7 +103,7 @@ static struct result_t *searches_next_result( struct search_t *search ) {
 }
 
 // Get next search to authenticate
-static struct search_t *searches_next_search( void ) {
+static struct search_t *find_next_search( void ) {
 	struct search_t **searches;
 
 	searches = searches_get();
@@ -116,22 +116,23 @@ static struct search_t *searches_next_search( void ) {
 	return NULL;
 }
 
-struct result_t *searches_get_auth_target( char *query, IP *addr ) {
+struct result_t *searches_get_auth_target( char query[], IP *addr ) {
 	struct search_t *search;
 	struct result_t *result;
 
 	// Get next search to authenticate
-	search = searches_next_search();
+	search = find_next_search();
 	if( search == NULL ) {
 		return NULL;
 	}
 
 	// Get next result to authenticate
-	result = searches_next_result( search );
+	result = find_next_result( search );
 	if( result == NULL ) {
 		return NULL;
 	}
 
+	// Set query and addr to authenticate
 	memcpy( query, &search->query, sizeof(search->query) );
 	memcpy( addr, &result->addr, sizeof(IP) );
 
@@ -206,12 +207,14 @@ void search_restart( struct search_t *search ) {
 	struct result_t *prev;
 	struct result_t *next;
 
+	log_debug( "Restart search for query: %s", search->query );
+
 	search->start_time = time_now_sec();
 	search->done = 0;
 
 	// Remove all failed searches
-	prev = NULL;
 	next = NULL;
+	prev = NULL;
 	result = search->results;
 	while( result ) {
 		const int state = result->state;
@@ -273,7 +276,7 @@ struct search_t* searches_start( const char query[] ) {
 	memcpy( &new->query, query, sizeof(new->query) );
 	new->start_time = time_now_sec();
 
-	log_debug( "Results: Add results bucket for query: %s", query );
+	log_debug( "Create new search for query: %s", query );
 
 	// Free slot if taken
 	if( g_searches[g_searches_idx] != NULL ) {

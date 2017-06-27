@@ -18,12 +18,6 @@ int kad_ping( const IP *addr );
 int kad_blacklist( const IP* addr );
 
 /*
-* Lookup the address of the node whose node id matches id.
-* The lookup will be performed on the results of kad_lookup().
-*/
-int kad_lookup_node( const char query[], IP *addr_return );
-
-/*
 * Lookup the addresses of the nodes who have announced value id.
 * The first call will start the search.
 */

@@ -139,7 +139,7 @@ void kad_lookup_local_values( struct search_t *search ) {
 	IP addr;
 
 	// 127.0.0.1
-	unsigned int inaddr_loopback = htonl( INADDR_LOOPBACK );
+	uint32_t inaddr_loopback = htonl( INADDR_LOOPBACK );
 
 	value = announces_find( search->id );
 	if( value ) {
@@ -459,9 +459,11 @@ int kad_lookup( const char query[], IP addr_array[], size_t addr_num ) {
 	return rc;
 }
 
+#if 0
 /*
-* Lookup the address of the node that has the given id.
-* The port refers to the kad instance.
+* Lookup the address of the node whose node id matches id.
+* The lookup will be performed on the results of kad_lookup().
+* The port in the returned address refers to the kad instance.
 */
 int kad_lookup_node( const char query[], IP *addr_return ) {
 	uint8_t id[SHA1_BIN_LENGTH];
@@ -498,6 +500,7 @@ int kad_lookup_node( const char query[], IP *addr_return ) {
 
 	return rc;
 }
+#endif
 
 int kad_blacklist( const IP* addr ) {
 

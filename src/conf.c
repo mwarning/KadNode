@@ -138,8 +138,7 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 " --service-remove		or on request by using the Service Control Manager.\n\n"
 #endif
 " -h, --help			Print this help.\n\n"
-" -v, --version			Print program version.\n\n"
-"Printed messages are prefixed by (I)nformation, (W)arning, (E)rror or (D)ebug.\n";
+" -v, --version			Print program version.\n\n";
 
 
 void conf_init( void ) {

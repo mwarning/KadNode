@@ -23,6 +23,7 @@ int is_suffix( const char str[], const char suffix[] ) {
 
 	suffix_len = strlen( suffix );
 	str_len = strlen( str );
+
 	if( suffix_len > str_len ) {
 		return 0;
 	} else {
@@ -30,10 +31,9 @@ int is_suffix( const char str[], const char suffix[] ) {
 	}
 }
 
-void* memdup(const void* src, size_t size) {
+void* memdup( const void* src, size_t size ) {
 	void* out = malloc(size);
-	memcpy(out, src, size);
-	return out;
+	return memcpy( out, src, size );
 }
 
 // Remove .p2p suffix and convert to lowercase.
@@ -49,7 +49,7 @@ int query_sanitize( char buf[], size_t buflen, const char query[] ) {
 	}
 
 	// Buffer too small
-	if( (len+1) >= buflen ) {
+	if( (len + 1) >= buflen ) {
 		return 1;
 	}
 
@@ -74,23 +74,13 @@ int port_random( void ) {
 }
 
 // Parse a port - treats 0 as valid port
-int port_parse( const char *pstr, int err ) {
+int port_parse( const char pstr[], int err ) {
 	int port;
-	size_t i;
 
-	port = 0;
-	for( i = 0; pstr[i] != '\0'; i++ ) {
-		if( pstr[i] < '0' || pstr[i] > '9' ) {
-			return err;
-		}
-		port *= 10;
-		port += pstr[i] - '0';
-	}
-
-	if( i == 0 || port < 0 || port > 65535 ) {
-		return err;
-	} else {
+	if( sscanf( pstr, "%d", &port ) == 1 && port >= 0 && port <= 65535 ) {
 		return port;
+	} else {
+		return err;
 	}
 }
 
@@ -140,7 +130,7 @@ void bytes_from_hex( uint8_t bin[], const char hex[], size_t length ) {
 		}
 
 		if( i % 2 ) {
-			bin[i/2] = xv;
+			bin[i / 2] = xv;
 			xv = 0;
 		} else {
 			xv *= 16;
@@ -243,7 +233,7 @@ char *str_addr( const IP *addr ) {
 int addr_is_localhost( const IP *addr )
 {
 	// 127.0.0.1
-	unsigned int inaddr_loopback = htonl( INADDR_LOOPBACK );
+	uint32_t inaddr_loopback = htonl( INADDR_LOOPBACK );
 
 	switch( addr->ss_family ) {
 		case AF_INET:

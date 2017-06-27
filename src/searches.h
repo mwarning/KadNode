@@ -38,7 +38,7 @@ struct search_t {
 struct search_t **searches_get( void );
 
 void searches_set_auth_state( const char query[], const IP *addr, const int state );
-struct result_t *searches_get_auth_target( char *query, IP *addr );
+struct result_t *searches_get_auth_target( char query[], IP *addr );
 
 void searches_setup( void );
 void searches_free( void );
