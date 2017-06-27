@@ -180,11 +180,12 @@ int cmd_export( struct reply_t *r ) {
 int cmd_exec( struct reply_t *r, int argc, char **argv ) {
 	time_t lifetime;
 	int minutes;
-	IP addrs[32];
-	int port;
+	IP addrs[16];
+	char hostname[256];
+	char dummy[4];
 	int count;
-	static struct value_t *value;
-	char *p;
+	int port;
+	struct value_t *value;
 	int rc = 0;
 
 	if( argc == 0 ) {
@@ -247,7 +248,7 @@ int cmd_exec( struct reply_t *r, int argc, char **argv ) {
 	} else if( strcmp( argv[0], "announce" ) == 0 && (argc == 1 || argc == 2 || argc == 3) ) {
 
 		if( argc == 1 ) {
-			// Announce all values; does not update value->refreshed
+			// Announce all values
 			count = 0;
 			value = announces_get();
 			while( value ) {
@@ -268,7 +269,7 @@ int cmd_exec( struct reply_t *r, int argc, char **argv ) {
 				lifetime = LONG_MAX;
 			} else {
 				// Round up to multiple of 30 minutes
-				minutes = (30 * (minutes/30 + 1));
+				minutes = (30 * (minutes / 30 + 1));
 				lifetime = (time_now_sec() + (minutes * 60));
 			}
 		} else {
@@ -276,32 +277,23 @@ int cmd_exec( struct reply_t *r, int argc, char **argv ) {
 			exit( 1 );
 		}
 
-		int is_random_port = 0;
+		// Parse <hostname>:[<port>]
+		port = 0;
+		rc = sscanf(argv[1], "%255[^:]:%d%4s", hostname, &port, dummy);
 
-		// Find <id>:<port> delimiter
-		p = strchr( argv[1], ':' );
-
-		if( p ) {
-			*p = '\0';
-			port = port_parse( p + 1, -1 );
-		} else {
-			// A valid port will be choosen inside kad_announce()
-			port = 0;
-			is_random_port = 1;
-		}
-
-		if( kad_announce( argv[1], port, lifetime ) >= 0 ) {
+		if( (rc == 1 || rc == 2) && kad_announce( hostname, port, lifetime ) >= 0 ) {
 #ifdef FWD
-			if( !is_random_port ) {
-				fwd_add( port, lifetime);
+			// Add port forwarding
+			if( port != 0 ) {
+				fwd_add( port, lifetime );
 			}
 #endif
 			if( lifetime == 0 ) {
 				r_printf( r ,"Start single announcement now.\n" );
 			} else if( lifetime == LONG_MAX ) {
-				r_printf( r ,"Start regular announcements for the entire run time (%sport %d).\n", (is_random_port ? "random " : ""), port );
+				r_printf( r ,"Start regular announcements for the entire run time (port %d).\n", port );
 			} else {
-				r_printf( r ,"Start regular announcements for %d minutes (%sport %d).\n", minutes, (is_random_port ? "random " : ""), port );
+				r_printf( r ,"Start regular announcements for %d minutes (port %d).\n", minutes, port );
 			}
 		} else {
 			r_printf( r ,"Invalid port or query too long.\n" );
