@@ -158,7 +158,7 @@ void conf_init( void ) {
 void conf_check( void ) {
 
 	if( gconf->af == 0 ) {
-		gconf->af = AF_INET;
+		gconf->af = AF_INET6;
 	}
 
 	if( gconf->query_tld == NULL ) {
