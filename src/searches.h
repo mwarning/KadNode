@@ -14,10 +14,7 @@ enum AUTH_STATE {
 	AUTH_WAITING // Not yet started
 };
 
-// Forward declaration
-struct search_t;
-
-typedef void auth_callback(struct search_t *search);
+typedef void auth_callback( void );
 
 // An address that was received as a result of an id search
 struct result_t {
@@ -30,16 +27,19 @@ struct result_t {
 struct search_t {
 	struct search_t *next;
 	uint8_t id[SHA1_BIN_LENGTH];
-	char *query;
+	uint16_t done;
+	char query[256];
 	time_t start_time;
 	struct result_t *results;
 	auth_callback *callback;
 };
 
+// used only in kad.c?
 struct search_t **searches_get( void );
-struct search_t *searches_find( const char query[] );
 
-// Register a handler to call results_expire in intervalls
+void searches_set_auth_state( const char query[], const IP *addr, const int state );
+struct result_t *searches_get_auth_target( char *query, IP *addr );
+
 void searches_setup( void );
 void searches_free( void );
 

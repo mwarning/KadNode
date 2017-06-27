@@ -84,20 +84,20 @@ typedef struct {
 
 // This callback is called when a search result arrives or a search completes
 void dht_callback_func( void *closure, int event, const uint8_t *info_hash, const void *data, size_t data_len ) {
-	struct search_t **search;
-	struct search_t *bucket;
+	struct search_t **searches;
+	struct search_t *search;
 	IP addr;
 	size_t i;
 
 	// Find search
-	bucket = NULL;
-	search = searches_get();
-	while( *search ) {
-		if( memcmp( (*search)->id, info_hash, SHA1_BIN_LENGTH ) == 0 ) {
-			bucket = *search;
+	search = NULL;
+	searches = searches_get();
+	while( *searches ) {
+		if( memcmp( (*searches)->id, info_hash, SHA1_BIN_LENGTH ) == 0 ) {
+			search = *searches;
 			break;
 		}
-		search += 1;
+		searches++;
 	}
 
 	if( search == NULL ) {
@@ -110,7 +110,7 @@ void dht_callback_func( void *closure, int event, const uint8_t *info_hash, cons
 				dht_addr4_t *data4 = (dht_addr4_t *) data;
 				for( i = 0; i < (data_len / sizeof(dht_addr4_t)); ++i ) {
 					to_addr( &addr, &data4[i].addr, 4, data4[i].port );
-					searches_add_addr( bucket, &addr );
+					searches_add_addr( search, &addr );
 				}
 			}
 			break;
@@ -119,13 +119,13 @@ void dht_callback_func( void *closure, int event, const uint8_t *info_hash, cons
 				dht_addr6_t *data6 = (dht_addr6_t *) data;
 				for( i = 0; i < (data_len / sizeof(dht_addr6_t)); ++i ) {
 					to_addr( &addr, &data6[i].addr, 16, data6[i].port );
-					searches_add_addr( bucket, &addr );
+					searches_add_addr( search, &addr );
 				}
 			}
 			break;
 		case DHT_EVENT_SEARCH_DONE:
 		case DHT_EVENT_SEARCH_DONE6:
-			//search_done( results, 1 );
+			// Ignore..
 			break;
 	}
 }
@@ -446,12 +446,12 @@ int kad_lookup( const char query[], IP addr_array[], size_t addr_num ) {
 	if( search->start_time == time_now_sec() ) {
 		// Search own announced values
 		kad_lookup_local_values( search );
+
 		// Start a new DHT search
 		dht_search( search->id, 0, gconf->af, dht_callback_func, NULL );
 	}
 
 	// Collect addresses to be returned
-	// returns negative values?
 	rc = searches_collect_addrs( search, addr_array, addr_num );
 
 	dht_unlock();

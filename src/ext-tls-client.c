@@ -34,8 +34,8 @@
 struct tls_resource {
 	mbedtls_ssl_context ssl;
 	mbedtls_net_context fd;
-	struct search_t *search;
-	struct result_t *result;
+	char query[256];
+	IP addr;
 };
 
 // Global TLS resources
@@ -102,46 +102,25 @@ struct tls_resource *tls_find_resource( int fd ) {
 void tls_handle( int rc, int fd );
 
 void auth_end( struct tls_resource* resource, int state ) {
-	struct search_t *search;
-	struct result_t *result;
 	int ret;
-
-	log_debug( "TLS: Auth %s for %s", (state == AUTH_OK) ? "success" : "failure", resource->search->query );
 
 	// Done and close connection
 	do ret = mbedtls_ssl_close_notify( &resource->ssl );
 	while( ret == MBEDTLS_ERR_SSL_WANT_WRITE );
 
-	result = resource->result;
-	search = resource->search;
-
 	net_remove_handler( resource->fd.fd, &tls_handle );
 
-	resource->result = NULL;
-	resource->search = NULL;
 	mbedtls_net_free( &resource->fd );
-	mbedtls_net_init( &resource->fd );
 	mbedtls_ssl_session_reset( &resource->ssl );
 
-	// Update authentication state
-	result->state = state;
+	// Mark resource as free
+	mbedtls_net_init( &resource->fd );
 
-	if( state == AUTH_OK ) {
-		// Stop authentication process for search
-		// since we found a verified entry
-		search->callback = NULL;
+	// Set state of result
+	searches_set_auth_state( &resource->query[0], &resource->addr, state );
 
-		result = search->results;
-		while( result ) {
-			if( result->state == AUTH_WAITING ) {
-				result->state = AUTH_SKIP;
-			}
-			result = result->next;
-		}
-	} else {
-		// Look for next address
-		tls_client_trigger_auth( resource->search );
-	}
+	// Look for next job
+	tls_client_trigger_auth();
 }
 
 void tls_handle( int rc, int fd ) {
@@ -159,9 +138,9 @@ void tls_handle( int rc, int fd ) {
 	}
 
 	ssl = &resource->ssl;
-	query = resource->search->query;
+	query = &resource->query[0];
 
-	printf("tls_handle %s\n", resource->search->query);
+	printf("tls_handle %s\n", query);
 
 	if( rc < 0 ) {
 		if( errno != EINPROGRESS ) {
@@ -219,7 +198,7 @@ struct tls_resource *tls_next_resource( void ) {
 	int i;
 
 	for( i = 0; i < N_ELEMS(g_tls_resources); i++ ) {
-		if( g_tls_resources[i].search == NULL ) {
+		if( g_tls_resources[i].fd.fd < 0 ) {
 			return &g_tls_resources[i];
 		}
 	}
@@ -227,54 +206,25 @@ struct tls_resource *tls_next_resource( void ) {
 	return NULL;
 }
 
-// Get next address to authenticate (state waiting)
-struct result_t *tls_next_result( struct search_t *search ) {
-	struct result_t *result;
-
-	result = search->results;
-	while( result ) {
-		if( result->state == AUTH_WAITING ) {
-			return result;
-		}
-		result = result->next;
-	}
-
-	return NULL;
-}
-
-// Called for every new address in search
-void tls_client_trigger_auth( struct search_t *search ) {
+// Called for every result that need to be authenticated
+void tls_client_trigger_auth( void ) {
 	struct tls_resource *resource;
 	struct result_t *result;
 
-	result = search->results;
-	while( result ) {
-		// Get next free SSL resource
-		resource = tls_next_resource();
-		if( resource == NULL ) {
-			return;
-		}
+	// Get next free SSL resource
+	resource = tls_next_resource();
+	if( resource == NULL ) {
+		return;
+	}
 
-		// Get next result to authenticate
-		result = tls_next_result( search );
-		if( result == NULL ) {
-			return;
-		}
-
-		// Start authentication process
-		//printf("tls_start_jobs: %s (%s)\n", search->query, str_addr( &result->addr ) );
-
-		if( tls_connect( &resource->ssl, &resource->fd, search->query, &result->addr ) < 0 ) {
+	if( (result = searches_get_auth_target( &resource->query[0], &resource->addr )) != NULL ) {
+		// State authentication process
+		if( tls_connect( &resource->ssl, &resource->fd, &resource->query[0], &result->addr ) < 0 ) {
 			result->state = AUTH_ERROR;
 		} else {
-			resource->result = result;
-			resource->search = search;
-
 			result->state = AUTH_PROGRESS;
 			net_add_handler( resource->fd.fd, &tls_handle );
 		}
-
-		result = result->next;
 	}
 }
 

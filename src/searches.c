@@ -21,7 +21,7 @@
 
 /*
 * The DHT implementation in KadNode does not store
-* results (IP addresses) from hash searches.
+* results (IP addresses) from hash id searches.
 * Therefore, results are collected and stored here.
 */
 
@@ -36,7 +36,7 @@ static struct search_t *g_searches[MAX_SEARCHES] = { NULL };
 static size_t g_searches_idx = 0;
 
 
-const char *str_state( int state ) {
+static const char *str_state( int state ) {
 	switch( state ) {
 	    case AUTH_OK: return "OK";
 	    case AUTH_AGAIN: return "AGAIN";
@@ -55,24 +55,20 @@ struct search_t** searches_get( void ) {
 }
 
 // Find a value search result
-struct search_t *searches_find( const char query[] ) {
+static struct search_t *searches_find( const char query[] ) {
 	struct search_t **search;
 	struct search_t *searches;
 
 	search = &g_searches[0];
 	while( *search ) {
 		searches = *search;
-		if( strcmp( query, searches->query ) == 0 ) {
+		if( strcmp( query, &searches->query[0] ) == 0 ) {
 			return searches;
 		}
 		search += 1;
 	}
 
 	return NULL;
-}
-
-void result_free( struct result_t *result ) {
-	free( result );
 }
 
 // Free a search_t struct
@@ -83,12 +79,96 @@ void search_free( struct search_t *search ) {
 	cur = search->results;
 	while( cur ) {
 		next = cur->next;
-		result_free( cur );
+		free( cur );
 		cur = next;
 	}
 
-	free( search->query );
 	free( search );
+}
+
+// Get next address to authenticate
+static struct result_t *searches_next_result( struct search_t *search ) {
+	struct result_t *result;
+
+	result = search->results;
+	while( result ) {
+		const int state = result->state;
+		if( state == AUTH_WAITING || state == AUTH_AGAIN ) {
+			return result;
+		}
+		result = result->next;
+	}
+
+	return NULL;
+}
+
+// Get next search to authenticate
+static struct search_t *searches_next_search( void ) {
+	struct search_t **searches;
+
+	searches = searches_get();
+	while( *searches ) {
+		if( !(*searches)->done && (*searches)->callback ) {
+			return *searches;
+		}
+		searches++;
+	}
+	return NULL;
+}
+
+struct result_t *searches_get_auth_target( char *query, IP *addr ) {
+	struct search_t *search;
+	struct result_t *result;
+
+	// Get next search to authenticate
+	search = searches_next_search();
+	if( search == NULL ) {
+		return NULL;
+	}
+
+	// Get next result to authenticate
+	result = searches_next_result( search );
+	if( result == NULL ) {
+		return NULL;
+	}
+
+	memcpy( query, &search->query, sizeof(search->query) );
+	memcpy( addr, &result->addr, sizeof(IP) );
+
+	return result;
+}
+
+void searches_set_auth_state( const char query[], const IP *addr, const int state ) {
+	struct search_t *search;
+	struct result_t *result;
+
+	log_debug( "Authentication for %s: %s", query, str_state( state ) );
+
+	search = searches_find( query );
+
+	if( search ) {
+		// Set authentication state of result
+		result = search->results;
+		while( result ) {
+			if( addr_equal( &result->addr, addr ) ) {
+				result->state = state;
+				break;
+			}
+			result = result->next;
+		}
+
+		// Skip all other results if we found one that is ok
+		if( state == AUTH_OK ) {
+			search->done = 1;
+			result = search->results;
+			while( result ) {
+				if( result->state == AUTH_WAITING ) {
+					result->state = AUTH_SKIP;
+				}
+				result = result->next;
+			}
+		}
+	}
 }
 
 void searches_debug( int fd ) {
@@ -104,6 +184,8 @@ void searches_debug( int fd ) {
 	while( *searches ) {
 		search = *searches;
 		dprintf( fd, " id: %s\n", str_id( search->id ) );
+		dprintf( fd, " query: %s\n", &search->query[0] );
+		dprintf( fd, " done: %s\n", search->done ? "true" : "false" );
 		result_counter = 0;
 		result = search->results;
 		while( result ) {
@@ -125,7 +207,7 @@ void search_restart( struct search_t *search ) {
 	struct result_t *next;
 
 	search->start_time = time_now_sec();
-	//search->callback // ??
+	search->done = 0;
 
 	// Remove all failed searches
 	prev = NULL;
@@ -141,7 +223,7 @@ void search_restart( struct search_t *search ) {
 			} else {
 				search->results = next;
 			}
-			result_free(result);
+			free( result );
 			result = next;
 			continue;
 		} else if( state == AUTH_OK ) {
@@ -157,7 +239,7 @@ void search_restart( struct search_t *search ) {
 	}
 }
 
-// Start a new search (query is epxected to be lower case and without .p2p)
+// Start a new search (query is expected to be lower case and without .p2p)
 struct search_t* searches_start( const char query[] ) {
 	uint8_t id[SHA1_BIN_LENGTH];
 	auth_callback *callback;
@@ -186,8 +268,9 @@ struct search_t* searches_start( const char query[] ) {
 
 	new = calloc( 1, sizeof(struct search_t) );
 	memcpy( new->id, id, sizeof(id) );
+	new->done = 0;
 	new->callback = callback;
-	new->query = strdup( query );
+	memcpy( &new->query, query, sizeof(new->query) );
 	new->start_time = time_now_sec();
 
 	log_debug( "Results: Add results bucket for query: %s", query );
@@ -239,7 +322,7 @@ int searches_add_addr( struct search_t *search, const IP *addr ) {
 	}
 
 	if( search->callback ) {
-		search->callback( search );
+		search->callback();
 	}
 
 	return 0;
