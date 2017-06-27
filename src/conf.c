@@ -337,7 +337,7 @@ void conf_free( void ) {
 }
 
 // Enumerate all options to keep binary size smaller
-enum OpCode {
+enum opcode {
 	oQueryTld,
 	oPidFile,
 	oPeerFile,
@@ -375,7 +375,7 @@ enum OpCode {
 struct option_t {
 	const char *name;
 	int num_args;
-	enum OpCode code;
+	enum opcode code;
 };
 
 static struct option_t options[] = {
@@ -672,20 +672,18 @@ void conf_load_file( const char path[] ) {
 			*last = '\0';
 		}
 
-		// Prevent recursive inclusion
-		if( strstr( line, "--config " ) ) {
-			fclose( file );
-			log_err( "CFG: Option '--config' not allowed inside a configuration file, line %ld.", nline );
-			exit( 1 );
-		}
+		ret = sscanf( line, " %31s %127s %3s", option, value, dummy );
 
-		ret = sscanf(line, " %31s %127s %3s", option, value, dummy );
-		if( ret == 1 ) {
-			// --option
-			conf_append( option, NULL );
-		} else if( ret == 2 ) {
-			// --option value
-			conf_append( option, value );
+		if( ret == 1 || ret == 2) {
+			// Prevent recursive inclusion
+			if( strcmp( option, "--config " ) == 0) {
+				fclose( file );
+				log_err( "CFG: Option '--config' not allowed inside a configuration file, line %ld.", nline );
+				exit( 1 );
+			}
+
+			// --option value / --option
+			conf_append( option, (ret == 2) ? value : NULL );
 		} else if( line[0] != '\0' ) {
 			fclose( file );
 			log_err( "CFG: Invalid line in config file: %s (%d)", path, nline );

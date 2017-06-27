@@ -383,7 +383,6 @@ void tls_client_free( void ) {
 
 	mbedtls_x509_crt_free( &g_cacert );
 	mbedtls_ssl_config_free( &g_conf );
-
 	mbedtls_entropy_free( &g_entropy );
 	mbedtls_ctr_drbg_free( &g_drbg );
 }

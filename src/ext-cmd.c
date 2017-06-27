@@ -279,7 +279,7 @@ int cmd_exec( struct reply_t *r, int argc, char **argv ) {
 
 		// Parse <hostname>:[<port>]
 		port = 0;
-		rc = sscanf(argv[1], "%255[^:]:%d%4s", hostname, &port, dummy);
+		rc = sscanf( argv[1], "%255[^:]:%d%4s", hostname, &port, dummy );
 
 		if( (rc == 1 || rc == 2) && kad_announce( hostname, port, lifetime ) >= 0 ) {
 #ifdef FWD
