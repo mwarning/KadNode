@@ -257,7 +257,6 @@ int cmd_exec( struct reply_t *r, int argc, char **argv ) {
 				value = value->next;
 			}
 			r_printf( r ,"%d announcements started.\n", count );
-			rc = 0;
 			goto end;
 		} else if( argc == 2 ) {
 			minutes = 0;
@@ -316,38 +315,28 @@ int cmd_exec( struct reply_t *r, int argc, char **argv ) {
 			goto end;
 		} else if( strcmp( argv[1], "blacklist" ) == 0 ) {
 			kad_debug_blacklist( STDOUT_FILENO );
-			rc = 0;
 		} else if( strcmp( argv[1], "buckets" ) == 0 ) {
 			kad_debug_buckets( STDOUT_FILENO );
-			rc = 0;
 		} else if( strcmp( argv[1], "constants") == 0 ) {
 			kad_debug_constants( STDOUT_FILENO );
-			rc = 0;
 #ifdef FWD
 		} else if( strcmp( argv[1], "forwardings") == 0 ) {
 			fwd_debug( STDOUT_FILENO );
-			rc = 0;
 #endif
 #ifdef AUTH
 		} else if( strcmp( argv[1], "pkeys") == 0 ) {
 			auth_debug_pkeys( STDOUT_FILENO );
-			rc = 0;
 		} else if( strcmp( argv[1], "skeys") == 0 ) {
 			auth_debug_skeys( STDOUT_FILENO );
-			rc = 0;
 #endif
 		} else if( strcmp( argv[1], "results") == 0 ) {
 			searches_debug( STDOUT_FILENO );
-			rc = 0;
 		} else if( strcmp( argv[1], "searches") == 0 ) {
 			kad_debug_searches( STDOUT_FILENO );
-			rc = 0;
 		} else if( strcmp( argv[1], "storage") == 0 ) {
 			kad_debug_storage( STDOUT_FILENO );
-			rc = 0;
 		} else if( strcmp( argv[1], "values" ) == 0 ) {
 			announces_debug( STDOUT_FILENO );
-			rc = 0;
 		} else {
 			dprintf( STDERR_FILENO, "Unknown argument.\n" );
 			rc = 1;
