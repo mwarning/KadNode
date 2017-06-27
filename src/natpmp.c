@@ -59,7 +59,7 @@ void natpmp_uninit( struct natpmp_handle_t **handle ) {
 	*handle = NULL;
 }
 
-int natpmp_handler( struct natpmp_handle_t *handle, unsigned short port, time_t lifespan, time_t now ) {
+int natpmp_handler( struct natpmp_handle_t *handle, uint16_t port, time_t lifespan, time_t now ) {
 	natpmpresp_t response;
 
 	// Retry later if we want to wait longer

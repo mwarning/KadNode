@@ -57,7 +57,7 @@ void upnp_uninit( struct upnp_handle_t **handle ) {
 	*handle = NULL;
 }
 
-int upnpGetSpecificPortMappingEntry( struct upnp_handle_t *handle, const char *proto, unsigned short port ) {
+int upnpGetSpecificPortMappingEntry( struct upnp_handle_t *handle, const char *proto, uint16_t port ) {
 	char extPort[6];
 	char intClient[16];
 	char intPort[6];
@@ -76,7 +76,7 @@ int upnpGetSpecificPortMappingEntry( struct upnp_handle_t *handle, const char *p
 #endif
 }
 
-int upnpDeletePortMapping( struct upnp_handle_t *handle, const char *proto, unsigned short port ) {
+int upnpDeletePortMapping( struct upnp_handle_t *handle, const char *proto, uint16_t port ) {
 	char extPort[6];
 
 	snprintf( extPort, sizeof(extPort), "%hu", port );
@@ -84,7 +84,7 @@ int upnpDeletePortMapping( struct upnp_handle_t *handle, const char *proto, unsi
 	return UPNP_DeletePortMapping( handle->urls.controlURL, handle->data.first.servicetype, extPort, proto, NULL );
 }
 
-int upnpAddPortMapping( struct upnp_handle_t *handle, const char *proto, unsigned short port ) {
+int upnpAddPortMapping( struct upnp_handle_t *handle, const char *proto, uint16_t port ) {
 	char extPort[6];
 	char inPort[6];
 
@@ -97,7 +97,7 @@ int upnpAddPortMapping( struct upnp_handle_t *handle, const char *proto, unsigne
 #endif
 }
 
-int upnp_handler( struct upnp_handle_t *handle, unsigned short port, time_t lifespan, time_t now ) {
+int upnp_handler( struct upnp_handle_t *handle, uint16_t port, time_t lifespan, time_t now ) {
 	struct UPNPDev * devlist;
 
 	// Retry later if we want to wait longer
