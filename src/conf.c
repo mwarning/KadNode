@@ -74,8 +74,6 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 "\n"
 "Usage: kadnode [OPTIONS]*\n"
 "\n"
-" --value-id <id>[:<port>]	Add a value/domain to be announced every 30 minutes.\n"
-"				This option may occur multiple times.\n\n"
 " --peerfile <file>		Import/Export peers from and to a file.\n\n"
 " --peer <addr>			Add a static peer address.\n"
 "				This option may occur multiple times.\n\n"
@@ -143,43 +141,6 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 " -v, --version			Print program version.\n\n"
 "Printed messages are prefixed by (I)nformation, (W)arning, (E)rror or (D)ebug.\n";
 
-
-// Parse a <id>[:<port>] value
-void conf_apply_value( const char val[] ) {
-	int port;
-	int rc;
-	char *p;
-
-#ifdef FWD
-	int is_random_port = 0;
-#endif
-
-	// Find <id>:<port> delimiter
-	p = strchr( val, ':' );
-
-	if( p ) {
-		*p = '\0';
-		port = port_parse( p + 1, -1 );
-	} else {
-		// A valid port will be choosen inside kad_announce()
-		port = 0;
-#ifdef FWD
-		is_random_port = 1;
-#endif
-	}
-
-	rc = kad_announce( val, port, LONG_MAX );
-	if( rc < 0 ) {
-		log_err( "CFG: Invalid port for value annoucement: %d", port );
-		exit( 1 );
-	} else {
-#ifdef FWD
-		if( !is_random_port ) {
-			fwd_add( port, LONG_MAX );
-		}
-#endif
-	}
-}
 
 void conf_init( void ) {
 	gconf = (struct gconf_t *) calloc( 1, sizeof(struct gconf_t) );
@@ -404,7 +365,6 @@ enum OpCode {
 	oServiceStart,
 	oBobGenKeys,
 	oBobAddSkey,
-	oValueId,
 	oIfname,
 	oUser,
 	oDaemon,
@@ -465,7 +425,6 @@ static struct Option options[] = {
 	{"--bob-gen-keys", 1, oBobGenKeys},
 	{"--bob-add-skey", 1, oBobAddSkey},
 #endif
-	{"--value-id", 1, oValueId},
 	{"--ifname", 1, oIfname},
 	{"--user", 1, oUser},
 	{"--daemon", 1, oDaemon},
@@ -667,10 +626,6 @@ void conf_handle_option( const char opt[], const char val[] ) {
 			bob_add_skey( val );
 			break;
 #endif
-// Dependend on other settings? 
-		case oValueId:
-			conf_apply_value( val );
-			break;
 		default:
 			log_err( "CFG: Unkown parameter: %s", opt );
 			exit(1);
