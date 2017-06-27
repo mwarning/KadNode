@@ -25,7 +25,11 @@
 * Therefore, results are collected and stored here.
 */
 
+// Expected lifetime of announcements
 #define MAX_SEARCH_LIFETIME (20*60)
+#define MAX_RESULTS_PER_SEARCH 16
+#define MAX_SEARCHES 64
+
 
 // A ring buffer for of all searches
 static struct search_t *g_searches[MAX_SEARCHES] = { NULL };
@@ -35,6 +39,7 @@ static size_t g_searches_idx = 0;
 const char *str_state( int state ) {
 	switch( state ) {
 	    case AUTH_OK: return "OK";
+	    case AUTH_AGAIN: return "AGAIN";
 	    case AUTH_FAILED: return "FAILED";
 	    case AUTH_ERROR: return "ERROR";
 	    case AUTH_SKIP: return "SKIP";
@@ -115,17 +120,20 @@ void searches_debug( int fd ) {
 }
 
 void search_restart( struct search_t *search ) {
+	struct result_t *result;
+	struct result_t *prev;
+	struct result_t *next;
+
 	search->start_time = time_now_sec();
-	//search->callback
+	//search->callback // ??
 
-	// Remove all failed search
-	struct result_t *result = search->results;
-	struct result_t *prev = NULL;
-	struct result_t *next = NULL;
-
+	// Remove all failed searches
+	prev = NULL;
+	next = NULL;
+	result = search->results;
 	while( result ) {
-		// Remove element
-		if( result->state == AUTH_ERROR || result->state == AUTH_SKIP ) {
+		const int state = result->state;
+		if( state == AUTH_ERROR || state == AUTH_AGAIN ) {
 			// Remove result
 			next = result->next;
 			if( prev ) {
@@ -135,21 +143,26 @@ void search_restart( struct search_t *search ) {
 			}
 			result_free(result);
 			result = next;
-		} else {
-			prev = result;
-			result = result->next;
+			continue;
+		} else if( state == AUTH_OK ) {
+			// Check again
+			result->state = AUTH_AGAIN;
+		} else if( state == AUTH_SKIP ) {
+			// Continue check
+			result->state = AUTH_WAITING;
 		}
+
+		prev = result;
+		result = result->next;
 	}
 }
 
-// Start a new search
-// The query is expected to be sanitized (lower case and without query TLS)
-//search_start()
+// Start a new search (query is epxected to be lower case and without .p2p)
 struct search_t* searches_start( const char query[] ) {
 	uint8_t id[SHA1_BIN_LENGTH];
 	auth_callback *callback;
-	struct search_t* new;
 	struct search_t* search;
+	struct search_t* new;
 
 	// Find existing search
 	if( (search = searches_find( query )) != NULL ) {
@@ -243,7 +256,7 @@ int searches_collect_addrs( struct search_t *search, IP addr_array[], size_t add
 	i = 0;
 	cur = search->results;
 	while( cur && i < addr_num ) {
-		if( cur->state == AUTH_OK ) {
+		if( cur->state == AUTH_OK || cur->state == AUTH_AGAIN ) {
 			memcpy( &addr_array[i], &cur->addr, sizeof(IP) );
 			i += 1;
 		}

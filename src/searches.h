@@ -2,18 +2,11 @@
 #ifndef _EXT_SEARCHES_H_
 #define _EXT_SEARCHES_H_
 
-#ifdef BOB
-#include <sodium.h>
-#define CHALLENGE_BIN_LENGTH 16
-#endif
-
-#define MAX_RESULTS_PER_SEARCH 16
-#define MAX_SEARCHES 64
-
 
 // Authentication states
 enum AUTH_STATE {
 	AUTH_OK, // Successful or not needed
+	AUTH_AGAIN, // Was already successful, but needs to be retested
 	AUTH_FAILED, // Verification failed
 	AUTH_ERROR, // No reply
 	AUTH_SKIP, // Skipped, only one result needed
@@ -30,7 +23,7 @@ typedef void auth_callback(struct search_t *search);
 struct result_t {
 	struct result_t *next;
 	IP addr;
-	int state;
+	enum AUTH_STATE state;
 };
 
 // A bucket of results received when in search of an id

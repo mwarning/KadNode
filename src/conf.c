@@ -337,7 +337,7 @@ void conf_free( void ) {
 }
 
 // Enumerate all options to keep binary size smaller
-enum opcode {
+enum OPCODE {
 	oQueryTld,
 	oPidFile,
 	oPeerFile,
@@ -375,7 +375,7 @@ enum opcode {
 struct option_t {
 	const char *name;
 	int num_args;
-	enum opcode code;
+	enum OPCODE code;
 };
 
 static struct option_t options[] = {

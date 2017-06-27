@@ -31,6 +31,7 @@
 
 // Maximum retries per address to send the challenge
 #define MAX_AUTH_CHALLENGE_SEND 3
+#define CHALLENGE_BIN_LENGTH 16
 
 
 struct key_t {
