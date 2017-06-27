@@ -23,7 +23,7 @@
 #define WEB_PORT "8053"
 
 #define QUERY_TLD_DEFAULT ".p2p"
-#define QUERY_MAX_SIZE 512
+#define QUERY_MAX_SIZE 256
 
 typedef struct sockaddr_storage IP;
 typedef struct sockaddr_in IP4;

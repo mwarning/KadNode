@@ -34,7 +34,7 @@
 struct tls_resource {
 	mbedtls_ssl_context ssl;
 	mbedtls_net_context fd;
-	char query[256];
+	char query[QUERY_MAX_SIZE];
 	IP addr;
 };
 

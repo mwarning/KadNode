@@ -44,7 +44,7 @@ struct bob_resource {
 	uint8_t pkey[crypto_sign_PUBLICKEYBYTES];
 	uint8_t challenge[CHALLENGE_BIN_LENGTH];
 	uint8_t challenges_send;
-	char query[256];
+	char query[QUERY_MAX_SIZE];
 	IP addr;
 };
 
