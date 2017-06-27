@@ -234,7 +234,6 @@ void conf_check( void ) {
 
 #ifdef LPD
 	IP lpd_addr;
-	uint8_t octet;
 
 	if( gconf->lpd_addr == NULL ) {
 		// Set default multicast address string
@@ -373,13 +372,13 @@ enum OpCode {
 	oUnknown
 };
 
-struct Option {
+struct option_t {
 	const char *name;
 	int num_args;
 	enum OpCode code;
 };
 
-static struct Option options[] = {
+static struct option_t options[] = {
 	{"", 0, oUnknown},
 	{"--query-tld", 1, oQueryTld},
 	{"--pidfile", 1, oPidFile},
@@ -434,7 +433,7 @@ static struct Option options[] = {
 	{"--version", 0, oVersion},
 };
 
-const struct Option *find_option(const char name[]) {
+const struct option_t *find_option(const char name[]) {
 	int i;
 
 	for( i = 0; i < N_ELEMS(options); i++) {
@@ -462,7 +461,7 @@ void conf_str( const char opt[], char *dst[], const char src[] ) {
 }
 
 void conf_handle_option( const char opt[], const char val[] ) {
-	const struct Option *option;
+	const struct option_t *option;
 
 	option = find_option( opt );
 

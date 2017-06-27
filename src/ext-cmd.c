@@ -52,20 +52,21 @@ const char* cmd_usage_debug =
 #define REPLY_DATA_SIZE 1472
 
 // A UDP packet sized reply
-struct Reply {
+struct reply_t {
 	char data[REPLY_DATA_SIZE];
 	ssize_t size;
+	// Prevent secret keys to be shown to other users
 	bool allow_debug;
 };
 
-void r_init( struct Reply *r, bool allow_debug ) {
+void r_init( struct reply_t *r, bool allow_debug ) {
 	r->data[0] = '\0';
 	r->size = 0;
 	r->allow_debug = allow_debug;
 }
 
 // Append a formatted string to the packet buffer
-void r_printf( struct Reply *r, const char *format, ... ) {
+void r_printf( struct reply_t *r, const char *format, ... ) {
 	va_list vlist;
 	int written;
 
@@ -114,7 +115,7 @@ void cmd_to_args( char *str, int *argc, char **argv, int max_argv ) {
 	argv[*argc] = NULL;
 }
 
-int cmd_import( struct Reply *r, const char *addr_str) {
+int cmd_import( struct reply_t *r, const char *addr_str) {
 	IP addr;
 	int rc;
 
@@ -136,11 +137,11 @@ int cmd_import( struct Reply *r, const char *addr_str) {
 	}
 }
 
-void cmd_print_status( struct Reply *r ) {
+void cmd_print_status( struct reply_t *r ) {
 	r->size += kad_status( r->data + r->size, REPLY_DATA_SIZE - r->size );
 }
 
-int cmd_blacklist( struct Reply *r, const char *addr_str ) {
+int cmd_blacklist( struct reply_t *r, const char *addr_str ) {
 	IP addr;
 
 	if( addr_parse( &addr, addr_str, NULL, gconf->af ) == 0 ) {
@@ -154,7 +155,7 @@ int cmd_blacklist( struct Reply *r, const char *addr_str ) {
 }
 
 // Export up to 32 peer addresses - more would not fit into one UDP packet
-int cmd_export( struct Reply *r ) {
+int cmd_export( struct reply_t *r ) {
 	IP addr_array[32];
 	size_t addr_num;
 	size_t i;
@@ -176,7 +177,7 @@ int cmd_export( struct Reply *r ) {
 	return 0;
 }
 
-int cmd_exec( struct Reply *r, int argc, char **argv ) {
+int cmd_exec( struct reply_t *r, int argc, char **argv ) {
 	time_t lifetime;
 	int minutes;
 	IP addrs[32];
@@ -246,7 +247,7 @@ int cmd_exec( struct Reply *r, int argc, char **argv ) {
 	} else if( strcmp( argv[0], "announce" ) == 0 && (argc == 1 || argc == 2 || argc == 3) ) {
 
 		if( argc == 1 ) {
-			// Announce all values; does not update value.refreshed
+			// Announce all values; does not update value->refreshed
 			count = 0;
 			value = announces_get();
 			while( value ) {
@@ -344,7 +345,7 @@ int cmd_exec( struct Reply *r, int argc, char **argv ) {
 			rc = 0;
 #endif
 		} else if( strcmp( argv[1], "results") == 0 ) {
-			results_debug( STDOUT_FILENO );
+			searches_debug( STDOUT_FILENO );
 			rc = 0;
 		} else if( strcmp( argv[1], "searches") == 0 ) {
 			kad_debug_searches( STDOUT_FILENO );
@@ -362,7 +363,7 @@ int cmd_exec( struct Reply *r, int argc, char **argv ) {
 		r_printf( r ,"\nOutput send to console.\n" );
 
 	} else {
-		// print usage
+		// Print usage
 		r_printf( r, cmd_usage );
 		if( r->allow_debug ) {
 			r_printf( r, cmd_usage_debug );
@@ -383,7 +384,7 @@ void cmd_remote_handler( int rc, int sock ) {
 	socklen_t addrlen_ret;
 	socklen_t addrlen;
 	char request[1500];
-	struct Reply reply;
+	struct reply_t reply;
 
 	addrlen_ret = sizeof(IP);
 	rc = recvfrom( sock, request, sizeof(request) - 1, 0, (struct sockaddr*)&clientaddr, &addrlen_ret );
@@ -413,7 +414,7 @@ void cmd_remote_handler( int rc, int sock ) {
 void cmd_console_handler( int rc, int fd ) {
 	char request[512];
 	char *req;
-	struct Reply reply;
+	struct reply_t reply;
 	char *argv[32];
 	int argc;
 

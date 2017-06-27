@@ -1,6 +1,6 @@
 
-#ifndef _EXT_RESULTS_H_
-#define _EXT_RESULTS_H_
+#ifndef _EXT_SEARCHES_H_
+#define _EXT_SEARCHES_H_
 
 #ifdef BOB
 #include <sodium.h>
@@ -24,7 +24,7 @@ enum AUTH_STATE {
 // Forward declaration
 struct search_t;
 
-typedef void auth_callback(struct search_t *results);
+typedef void auth_callback(struct search_t *search);
 
 // An address that was received as a result of an id search
 struct result_t {
@@ -43,25 +43,23 @@ struct search_t {
 	auth_callback *callback;
 };
 
-struct search_t **results_get( void );
-struct search_t *results_find( const char query[] );
+struct search_t **searches_get( void );
+struct search_t *searches_find( const char query[] );
 
 // Register a handler to call results_expire in intervalls
-void results_setup( void );
-void results_free( void );
+void searches_setup( void );
+void searches_free( void );
 
-// Create and append a new results item
-struct search_t *results_lookup( const char query[] );
+// Start a search
+struct search_t *searches_start( const char query[] );
 
 // Add an address to a result bucket
-int results_add_addr( struct search_t *search, const IP *addr );
+int searches_add_addr( struct search_t *search, const IP *addr );
 
 // Collect addresses
-int results_collect( struct search_t *search, IP addr_array[], size_t addr_num );
+int searches_collect_addrs( struct search_t *search, IP addr_array[], size_t addr_num );
 
-// Count (valid) result entries
-int results_entries_count( struct search_t *search );
+void searches_debug( int fd );
 
-void results_debug( int fd );
 
-#endif // _EXT_RESULTS_H_
+#endif // _EXT_SEARCHES_H_

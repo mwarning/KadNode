@@ -45,12 +45,12 @@ const char *str_state( int state ) {
 }
 
 // External access to all current results
-struct search_t** results_get( void ) {
+struct search_t** searches_get( void ) {
 	return &g_searches[0];
 }
 
 // Find a value search result
-struct search_t *results_find( const char query[] ) {
+struct search_t *searches_find( const char query[] ) {
 	struct search_t **search;
 	struct search_t *searches;
 
@@ -64,20 +64,6 @@ struct search_t *results_find( const char query[] ) {
 	}
 
 	return NULL;
-}
-
-int results_entries_count( struct search_t *search ) {
-	struct result_t *result;
-	int count;
-
-	count = 0;
-	result = search->results;
-	while( result ) {
-		count += 1;
-		result = result->next;
-	}
-
-	return count;
 }
 
 void result_free( struct result_t *result ) {
@@ -100,21 +86,21 @@ void search_free( struct search_t *search ) {
 	free( search );
 }
 
-void results_debug( int fd ) {
-	struct search_t **results;
-	struct search_t *bucket;
+void searches_debug( int fd ) {
+	struct search_t **searches;
+	struct search_t *search;
 	struct result_t *result;
-	int results_counter;
 	int result_counter;
+	int searche_counter;
 
-	results_counter = 0;
-	results = &g_searches[0];
+	searche_counter = 0;
+	searches = &g_searches[0];
 	dprintf( fd, "Result buckets:\n" );
-	while( *results ) {
-		bucket = *results;
-		dprintf( fd, " id: %s\n", str_id( bucket->id ) );
+	while( *searches ) {
+		search = *searches;
+		dprintf( fd, " id: %s\n", str_id( search->id ) );
 		result_counter = 0;
-		result = bucket->results;
+		result = search->results;
 		while( result ) {
 			dprintf( fd, "   addr: %s\n", str_addr( &result->addr ) );
 			dprintf( fd, "   state: %s\n", str_state( result->state ) );
@@ -122,18 +108,18 @@ void results_debug( int fd ) {
 			result = result->next;
 		}
 		dprintf( fd, "  Found %d results.\n", result_counter );
-		results_counter += 1;
-		results += 1;
+		result_counter += 1;
+		searches++;
 	}
-	dprintf( fd, " Found %d result buckets.\n", results_counter );
+	dprintf( fd, " Found %d searches.\n", searche_counter );
 }
 
-void search_restart( struct search_t *results ) {
-	results->start_time = time_now_sec();
-	//results->callback
+void search_restart( struct search_t *search ) {
+	search->start_time = time_now_sec();
+	//search->callback
 
-	// Remove all failed results
-	struct result_t *result = results->results;
+	// Remove all failed search
+	struct result_t *result = search->results;
 	struct result_t *prev = NULL;
 	struct result_t *next = NULL;
 
@@ -145,7 +131,7 @@ void search_restart( struct search_t *results ) {
 			if( prev ) {
 				prev->next = next;
 			} else {
-				results->results = next;
+				search->results = next;
 			}
 			result_free(result);
 			result = next;
@@ -159,20 +145,20 @@ void search_restart( struct search_t *results ) {
 // Start a new search
 // The query is expected to be sanitized (lower case and without query TLS)
 //search_start()
-struct search_t* results_lookup( const char query[] ) {
+struct search_t* searches_start( const char query[] ) {
 	uint8_t id[SHA1_BIN_LENGTH];
 	auth_callback *callback;
 	struct search_t* new;
-	struct search_t* results;
+	struct search_t* search;
 
 	// Find existing search
-	if( (results = results_find( query )) != NULL ) {
+	if( (search = searches_find( query )) != NULL ) {
 		// Restart search after half of search lifetime
-		if( (time_now_sec() - results->start_time) > (MAX_SEARCH_LIFETIME / 2) ) {
-			search_restart( results );
+		if( (time_now_sec() - search->start_time) > (MAX_SEARCH_LIFETIME / 2) ) {
+			search_restart( search );
 		}
 
-		return results;
+		return search;
 	}
 
 	if( bob_get_id( id, sizeof(id), query ) ) {
@@ -206,23 +192,26 @@ struct search_t* results_lookup( const char query[] ) {
 }
 
 // Add an address to an array if it is not already contained in there
-int results_add_addr( struct search_t *search, const IP *addr ) {
-	struct result_t *result;
+int searches_add_addr( struct search_t *search, const IP *addr ) {
+	struct result_t *cur;
 	struct result_t *new;
-
-	if( results_entries_count( search ) > MAX_RESULTS_PER_SEARCH ) {
-		return -1;
-	}
+	int count;
 
 	// Check if result already exists
-	result = search->results;
-	while( result ) {
-		if( addr_equal( &result->addr, addr ) ) {
+	count = 0;
+	cur = search->results;
+	while( cur ) {
+		if( addr_equal( &cur->addr, addr ) ) {
 			// Address already listed
 			return 0;
 		}
 
-		result = result->next;
+		if( count > MAX_RESULTS_PER_SEARCH ) {
+			return -1;
+		}
+
+		count += 1;
+		cur = cur->next;
 	}
 
 	new = calloc( 1, sizeof(struct result_t) );
@@ -230,8 +219,8 @@ int results_add_addr( struct search_t *search, const IP *addr ) {
 	new->state = search->callback ? AUTH_WAITING : AUTH_OK;
 
 	// Append new entry to list
-	if( result ) {
-		result->next = new;
+	if( cur ) {
+		cur->next = new;
 	} else {
 		search->results = new;
 	}
@@ -243,8 +232,8 @@ int results_add_addr( struct search_t *search, const IP *addr ) {
 	return 0;
 }
 
-int results_collect( struct search_t *search, IP addr_array[], size_t addr_num ) {
-	struct result_t *result;
+int searches_collect_addrs( struct search_t *search, IP addr_array[], size_t addr_num ) {
+	struct result_t *cur;
 	size_t i;
 
 	if( search == NULL ) {
@@ -252,24 +241,24 @@ int results_collect( struct search_t *search, IP addr_array[], size_t addr_num )
 	}
 
 	i = 0;
-	result = search->results;
-	while( result && i < addr_num ) {
-		if( result->state == AUTH_OK ) {
-			memcpy( &addr_array[i], &result->addr, sizeof(IP) );
+	cur = search->results;
+	while( cur && i < addr_num ) {
+		if( cur->state == AUTH_OK ) {
+			memcpy( &addr_array[i], &cur->addr, sizeof(IP) );
 			i += 1;
 		}
-		result = result->next;
+		cur = cur->next;
 	}
 
 	return i;
 }
 
 
-void results_setup( void ) {
+void searches_setup( void ) {
 	// Nothing to do
 }
 
-void results_free( void ) {
+void searches_free( void ) {
 	struct search_t **search;
 
 	search = &g_searches[0];

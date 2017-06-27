@@ -85,7 +85,7 @@ void main_cleanup( void ) {
 
 	peerfile_free();
 
-	results_free();
+	searches_free();
 
 	announces_free();
 
@@ -120,7 +120,7 @@ int main_start( void ) {
 	announces_setup();
 
 	// Setup handler to expire results
-	results_setup();
+	searches_setup();
 
 	// Setup import of peerfile
 	peerfile_setup();

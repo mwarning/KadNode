@@ -26,9 +26,6 @@ struct value_t* announces_find( uint8_t id[] );
 // List all entries
 void announces_debug( int fd );
 
-// Count all entries
-int announces_count( void );
-
 // Add a value id / port that will be announced until lifetime is exceeded
 struct value_t *announces_add( const char query[], int port, time_t lifetime );
 

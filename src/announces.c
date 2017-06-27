@@ -18,6 +18,7 @@
 #endif
 #include "announces.h"
 
+
 // Announce values every 20 minutes
 #define ANNOUNCES_INTERVAL (20*60)
 
@@ -42,20 +43,6 @@ struct value_t* announces_find( uint8_t id[] ) {
 		value = value->next;
 	}
 	return NULL;
-}
-
-int announces_count( void ) {
-	struct value_t *value;
-	int count;
-
-	count = 0;
-	value = g_values;
-	while( value ) {
-		count++;
-		value = value->next;
-	}
-
-	return count;
 }
 
 void announces_debug( int fd ) {

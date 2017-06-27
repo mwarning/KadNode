@@ -91,13 +91,13 @@ void dht_callback_func( void *closure, int event, const uint8_t *info_hash, cons
 
 	// Find search
 	bucket = NULL;
-	search = results_get();
+	search = searches_get();
 	while( *search ) {
 		if( memcmp( (*search)->id, info_hash, SHA1_BIN_LENGTH ) == 0 ) {
 			bucket = *search;
 			break;
 		}
-		search++;
+		search += 1;
 	}
 
 	if( search == NULL ) {
@@ -108,18 +108,18 @@ void dht_callback_func( void *closure, int event, const uint8_t *info_hash, cons
 		case DHT_EVENT_VALUES:
 			if( gconf->af == AF_INET ) {
 				dht_addr4_t *data4 = (dht_addr4_t *) data;
-				for( i = 0; i < (data_len / sizeof(dht_addr4_t)); i++ ) {
+				for( i = 0; i < (data_len / sizeof(dht_addr4_t)); ++i ) {
 					to_addr( &addr, &data4[i].addr, 4, data4[i].port );
-					results_add_addr( bucket, &addr );
+					searches_add_addr( bucket, &addr );
 				}
 			}
 			break;
 		case DHT_EVENT_VALUES6:
 			if( gconf->af == AF_INET6 ) {
 				dht_addr6_t *data6 = (dht_addr6_t *) data;
-				for( i = 0; i < (data_len / sizeof(dht_addr6_t)); i++ ) {
+				for( i = 0; i < (data_len / sizeof(dht_addr6_t)); ++i ) {
 					to_addr( &addr, &data6[i].addr, 16, data6[i].port );
-					results_add_addr( bucket, &addr );
+					searches_add_addr( bucket, &addr );
 				}
 			}
 			break;
@@ -149,7 +149,7 @@ void kad_lookup_local_values( struct search_t *search ) {
 			to_addr( &addr, &inaddr_loopback, 4, htons( value->port ) ); // 127.0.0.1
 		}
 		log_debug( "KAD: Address found in local values: %s\n", str_addr( &addr ) );
-		results_add_addr( search, &addr );
+		searches_add_addr( search, &addr );
 	}
 }
 
@@ -326,33 +326,34 @@ int kad_count_nodes( int good ) {
 int kad_status( char *buf, int size ) {
 	struct storage *strg = storage;
 	struct search *srch = searches;
-	//int numsearches_active = 0;
-	//int numsearches_done = 0;
+	int numsearches_active = 0;
+	int numsearches_done = 0;
 	int numsearches = 0;
 	int numstorage = 0;
 	int numstorage_peers = 0;
-	int numvalues = 0;
+	//int numvalues = 0;
 	int written = 0;
 
 	// count searches
 	while( srch ) {
-		//if( srch->done ) {
-		//	numsearches_done++;
-		//} else {
-		//	numsearches_active++;
-		//}
-		numsearches++;
+		if( srch->done ) {
+			numsearches_done += 1;
+		} else {
+			numsearches_active += 1;
+		}
+		numsearches += 1;
 		srch = srch->next;
 	}
 
-	// count storage and peers
+	// Count storage and peers
 	while( strg ) {
 		numstorage_peers += strg->numpeers;
-		numstorage++;
+		numstorage += 1;
 		strg = strg->next;
 	}
 
-	numvalues = announces_count();
+	// Use dht data structure!
+	//numvalues = announces_count();
 
 	bprintf( "Version: %s\n", kadnode_version_str );
 	bprintf( "DHT id: %s\n", str_id( myid ) );
@@ -366,12 +367,12 @@ int kad_status( char *buf, int size ) {
 		kad_count_nodes( 0 ), kad_count_nodes( 1 ), (gconf->af == AF_INET) ? "IPv4" : "IPv6" );
 	bprintf( "DHT Storage: %d (max %d), %d peers (max %d per storage)\n",
 		numstorage, DHT_MAX_HASHES, numstorage_peers, DHT_MAX_PEERS );
-	//bprintf( "DHT Searches: %d active, %d completed (max %d)\n",
-	//	numsearches_active, numsearches_done, DHT_MAX_SEARCHES );
+	bprintf( "DHT Searches: %d active, %d completed (max %d)\n",
+		numsearches_active, numsearches_done, DHT_MAX_SEARCHES );
 	bprintf( "DHT Searches: %d (max %d)\n", numsearches, DHT_MAX_SEARCHES );
 	bprintf( "DHT Blacklist: %d (max %d)\n",
 		(next_blacklisted % DHT_MAX_BLACKLISTED), DHT_MAX_BLACKLISTED );
-	bprintf( "DHT Values to announce: %d\n", numvalues );
+	//bprintf( "DHT Values to announce: %d\n", numvalues );
 
 	return written;
 }
@@ -434,7 +435,7 @@ int kad_lookup( const char query[], IP addr_array[], size_t addr_num ) {
 	dht_lock();
 
 	// Find existing or create new item
-	search = results_lookup( hostname );
+	search = searches_start( hostname );
 
 	if( search == NULL ) {
 		// Failed to create a new search
@@ -451,7 +452,7 @@ int kad_lookup( const char query[], IP addr_array[], size_t addr_num ) {
 
 	// Collect addresses to be returned
 	// returns negative values?
-	rc = results_collect( search, addr_array, addr_num );
+	rc = searches_collect_addrs( search, addr_array, addr_num );
 
 	dht_unlock();
 
