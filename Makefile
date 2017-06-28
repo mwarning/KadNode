@@ -6,7 +6,7 @@ LFLAGS += -L/usr/local/lib -lc
 FEATURES ?= cmd dns tls #bob nss lpd natpmp upnp web
 
 OBJS = build/main.o build/searches.o build/kad.o build/log.o \
-	build/conf.o build/sha1.o build/net.o build/utils.o \
+	build/conf.o build/net.o build/utils.o \
 	build/announces.o build/peerfile.o
 
 ifeq ($(OS),Windows_NT)

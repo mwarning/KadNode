@@ -2,6 +2,7 @@
 #define _GNU_SOURCE
 
 #include <sys/time.h>
+#include <assert.h>
 
 #include "log.h"
 #include "main.h"
@@ -15,9 +16,7 @@
 #include "ext-bob.h"
 #endif
 #ifdef TLS
-#include "mbedtls/sha1.h"
-#else
-#include "sha1.h"
+#include "mbedtls/sha256.h"
 #endif
 
 #include "dht.c"
@@ -238,25 +237,35 @@ void dht_hash( void *hash_return, int hash_size,
 		const void *v1, int len1,
 		const void *v2, int len2,
 		const void *v3, int len3 ) {
-	uint8_t hash[SHA1_BIN_LENGTH];
+	union {
+		uint8_t data[8];
+		uint16_t num4[4];
+		uint32_t num2[2];
+		uint64_t num1[1];
+	} hash;
 
-#ifdef TLS
-	mbedtls_sha1_context ctx;
-	mbedtls_sha1_init(&ctx);
-	if(v1) mbedtls_sha1_update( &ctx, v1, len1 );
-	if(v2) mbedtls_sha1_update( &ctx, v2, len2 );
-	if(v3) mbedtls_sha1_update( &ctx, v3, len3 );
-	mbedtls_sha1_finish(&ctx, hash);
-#else
-	SHA1_CTX ctx;
-	SHA1_Init( &ctx );
-	if(v1) SHA1_Update( &ctx, v1, len1 );
-	if(v2) SHA1_Update( &ctx, v2, len2 );
-	if(v3) SHA1_Update( &ctx, v3, len3 );
-	SHA1_Final( &ctx, hash );
-#endif
+	assert( len1 == 8 );
+	memcpy( &hash.data, v1, 8);
 
-	memcpy( hash_return, hash, MIN(SHA1_BIN_LENGTH, hash_size) );
+	assert( len2 == 4 || len2 == 16 );
+	if( len2 == 4 ) {
+		const uint32_t d2 = *((uint32_t*) v2);
+		hash.num2[1] ^= d2;
+		hash.num2[2] ^= d2;
+	} else {
+		hash.num1[1] ^= *((uint64_t*) v2);
+		hash.num1[1] ^= *((uint64_t*) v2 + 8);
+	}
+
+	assert( len3 == 2 );
+	const uint16_t d3 = *((uint16_t*) v3);
+	hash.num4[0] ^= d3;
+	hash.num4[1] ^= d3;
+	hash.num4[2] ^= d3;
+	hash.num4[3] ^= d3;
+
+	assert( hash_size == 8 );
+	memcpy( hash_return, &hash.data, 8 );
 }
 
 int dht_random_bytes( void *buf, size_t size ) {

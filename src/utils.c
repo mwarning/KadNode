@@ -12,7 +12,6 @@
 #include "main.h"
 #include "log.h"
 #include "conf.h"
-#include "sha1.h"
 #include "utils.h"
 
 
