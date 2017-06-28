@@ -10,10 +10,9 @@
 #include "log.h"
 
 
-
+#ifdef DEBUG
 // Program start time
 static struct timespec log_start = { 0, 0 };
-
 
 char *log_time() {
 	struct timespec now = { 0, 0 };
@@ -27,22 +26,9 @@ char *log_time() {
 
 	return buf;
 }
+#endif
 
-int _log_check( int priority ) {
-	if( (gconf->verbosity == VERBOSITY_QUIET) &&
-			(priority == LOG_INFO || priority == LOG_DEBUG) ) {
-		return 0;
-	}
-
-	if( (gconf->verbosity == VERBOSITY_VERBOSE) &&
-			(priority == LOG_DEBUG) ) {
-		return 0;
-	}
-
-	return 1;
-}
-
-void _log_print( int priority, const char format[], ... ) {
+void log_print( int priority, const char format[], ... ) {
 	char buf[512];
 	const char *prefix;
 	va_list vlist;
@@ -80,7 +66,9 @@ void _log_print( int priority, const char format[], ... ) {
 }
 
 void log_setup( void ) {
+#ifdef DEBUG
 	clock_gettime( CLOCK_MONOTONIC_COARSE, &log_start );
+#endif
 }
 
 void log_free( void ) {

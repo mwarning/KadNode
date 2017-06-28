@@ -261,35 +261,27 @@ void conf_check( void ) {
 	gconf->startup_time = time_now_sec();
 }
 
+const char *verbosity_str( int verbosity ) {
+	switch( verbosity ) {
+		case VERBOSITY_QUIET: return "quiet";
+		case VERBOSITY_VERBOSE: return "verbose";
+		case VERBOSITY_DEBUG: return "debug";
+		default:
+			log_err( "Invalid verbosity: %d", verbosity );
+			exit( 1 );
+	}
+}
+
 void conf_info( void ) {
 	log_info( "Starting %s", kadnode_version_str );
 	log_info( "IP Mode: %s", (gconf->af == AF_INET) ? "IPv4" : "IPv6");
-
-	if( gconf->is_daemon ) {
-		log_info( "Run Mode: Daemon" );
-	} else {
-		log_info( "Run Mode: Foreground" );
-	}
+	log_info( "Run Mode: %s", gconf->is_daemon ? "Daemon" : "Foreground" );
 
 	if( gconf->configfile ) {
 		log_info( "Configuration File: %s", gconf->configfile );
 	}
 
-	switch( gconf->verbosity ) {
-		case VERBOSITY_QUIET:
-			log_info( "Verbosity: quiet" );
-			break;
-		case VERBOSITY_VERBOSE:
-			log_info( "Verbosity: verbose" );
-			break;
-		case VERBOSITY_DEBUG:
-			log_info( "Verbosity: debug" );
-			break;
-		default:
-			log_err( "Invalid verbosity level." );
-			exit( 1 );
-	}
-
+	log_info( "Verbosity: %s", verbosity_str( gconf->verbosity ) );
 	log_info( "Query TLD: %s", gconf->query_tld );
 	log_info( "Peer File: %s", gconf->peerfile ? gconf->peerfile : "None" );
 #ifdef LPD
