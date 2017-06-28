@@ -58,12 +58,11 @@ int bob_get_id( uint8_t id[], size_t len, const char query[] ) {
 	size_t query_len;
 
 	query_len = strlen( query );
-	if( (query_len & 1) || !str_isHex( query, query_len ) ) {
+	if( str_isHex( query, query_len ) ) {
+		memset( id, 0, len );
+		bytes_from_hex( id, query, MIN( len, query_len ) );
 		return 1;
 	}
-
-	memset( id, 0, len );
-	bytes_from_hex( id, query, query_len );
 
 	return 0;
 }

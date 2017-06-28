@@ -261,13 +261,16 @@ struct search_t* searches_start( const char query[] ) {
 		return search;
 	}
 
-	if( bob_get_id( id, sizeof(id), query ) ) {
-		// Use Bob authentication
-		callback = &bob_trigger_auth;
-	} else if( tls_client_get_id( id, sizeof(id), query ) ) {
+	if( tls_client_get_id( id, sizeof(id), query ) ) {
 		// Use TLS authentication
 		callback = &tls_client_trigger_auth;
+	} else if( bob_get_id( id, sizeof(id), query ) ) {
+		// Use Bob authentication
+		callback = &bob_trigger_auth;
 	} else {
+		// TODO: fill query...
+		log_err("fix me");
+		assert( 1 );
 		callback = NULL;
 	}
 

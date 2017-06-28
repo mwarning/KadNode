@@ -19,6 +19,7 @@
 #include "mbedtls/x509.h"
 #include "mbedtls/error.h"
 #include "mbedtls/debug.h"
+#include "mbedtls/sha256.h"
 
 #include "main.h"
 #include "conf.h"
@@ -189,7 +190,21 @@ void tls_handle( int rc, int fd ) {
 }
 
 int tls_client_get_id( uint8_t id[], size_t len, const char query[] ) {
-	// TODO
+	uint8_t hash[32];
+
+	// Match dot in query, e.g. 'example.com'
+	if( strchr( query, '.' ) ) {
+		mbedtls_sha256_context ctx;
+		mbedtls_sha256_init( &ctx );
+		mbedtls_sha256_update( &ctx, (uint8_t*) &query[0], strlen( query ) );
+		mbedtls_sha256_finish( &ctx, hash );
+
+		memset( id, 0, len );
+		memcpy( id, hash, MIN( len, sizeof(hash) ) );
+
+		return 1;
+	}
+
 	return 0;
 }
 
