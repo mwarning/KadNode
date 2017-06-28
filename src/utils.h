@@ -8,6 +8,9 @@
 // Number of elements in an array
 #define N_ELEMS(x)  (sizeof(x) / sizeof(x[0]))
 
+#define MAX(x, y) ((x) >= (y) ? (x) : (y))
+#define MIN(x, y) ((x) <= (y) ? (x) : (y))
+
 // IPv6 address length including port, e.g. [::1]:12345
 #define FULL_ADDSTRLEN (INET6_ADDRSTRLEN + 8)
 

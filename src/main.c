@@ -174,7 +174,7 @@ int main( int argc, char **argv ) {
 		if( GetModuleFileNameA( NULL, path, sizeof(path) ) && (p = strrchr( path, '\\' )) ) {
 			*(p+1) = 0;
 		} else {
-			log_err( "MAIN: Can not get location of KadNode binary." );
+			log_err( "Cannot get location of KadNode binary." );
 			exit( 1 );
 		}
 
@@ -238,7 +238,7 @@ int main( int argc, char **argv ) {
 		unix_fork();
 
 		if( chdir( "/" ) != 0 ) {
-			log_err( "UNX: Changing working directory to '/' failed: %s", strerror( errno ) );
+			log_err( "Changing working directory to '/' failed: %s", strerror( errno ) );
 			exit( 1 );
 		}
 

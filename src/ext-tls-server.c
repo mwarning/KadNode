@@ -244,14 +244,13 @@ void tls_server_setup( void ) {
 	mbedtls_entropy_init( &g_entropy );
 	if( ( ret = mbedtls_ctr_drbg_seed( &g_drbg, mbedtls_entropy_func, &g_entropy,
 		(const unsigned char *) pers, strlen( pers ) ) ) != 0 ) {
-		printf( "mbedtls_ctr_drbg_seed returned -0x%x\n", -ret );
-		return;
+		log_err( "TLS: mbedtls_ctr_drbg_seed returned -0x%x", -ret );
+		exit( 1 );
 	}
 
 	if( g_sni_entries ) {
 		g_listen_fd.fd = net_bind( "TLS", gconf->dht_addr, "4433" /*gconf->dht_port*/, NULL, IPPROTO_TCP, AF_UNSPEC );
 
-		int ret;
 		if( ( ret = mbedtls_ssl_config_defaults( &g_conf,
 			MBEDTLS_SSL_IS_SERVER,
 			MBEDTLS_SSL_TRANSPORT_STREAM,

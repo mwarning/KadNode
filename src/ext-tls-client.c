@@ -56,7 +56,7 @@ int tls_connect( mbedtls_ssl_context *ssl, mbedtls_net_context *fd, const char q
 
 	if( ( ret = mbedtls_ssl_set_hostname( ssl, query ) ) != 0 )
 	{
-		log_err( "TLS: mbedtls_ssl_set_hostname returned %d\n\n", ret );
+		log_err( "TLS: mbedtls_ssl_set_hostname returned -0x%x", -ret );
 		return -1;
 	}
 
@@ -88,7 +88,7 @@ int tls_connect( mbedtls_ssl_context *ssl, mbedtls_net_context *fd, const char q
 struct tls_resource *tls_find_resource( int fd ) {
 	int i;
 
-	for( i = 0; i < N_ELEMS(g_tls_resources); i++ ) {
+	for( i = 0; i < N_ELEMS(g_tls_resources); ++i ) {
 		if( g_tls_resources[i].fd.fd == fd ) {
 			return &g_tls_resources[i];
 		}
@@ -144,8 +144,8 @@ void tls_handle( int rc, int fd ) {
 
 	if( rc < 0 ) {
 		if( errno != EINPROGRESS ) {
-			// Failed to make TCP/IP connection.
-			log_warn("TLS: Socket error for '%s': %s", query, strerror( errno ) );
+			// Failed to create TCP/IP connection.
+			log_warn( "TLS: Socket error for '%s': %s", query, strerror( errno ) );
 			auth_end( resource, AUTH_ERROR );
 		} else {
 			// Still connecting.
@@ -164,15 +164,15 @@ void tls_handle( int rc, int fd ) {
 
 		if( ( flags = mbedtls_ssl_get_verify_result( ssl ) ) != 0 ) {
 			mbedtls_x509_crt_verify_info( buf, sizeof( buf ), "", flags );
-			log_debug( "TLS: Peer verification failed:\n%s\n", buf);
+			log_debug( "TLS: Peer verification failed: %s", buf);
 		}
 
 		if( mbedtls_ssl_get_peer_cert( ssl ) != NULL ) {
 			mbedtls_x509_crt_info( (char *) buf, sizeof( buf ) - 1, "", mbedtls_ssl_get_peer_cert( ssl ) );
-			log_debug( "TLS: Peer certificate information:\n%s\n", buf);
+			log_debug( "TLS: Peer certificate information: %s", buf);
 		}
 
-		auth_end(resource, flags == 0 ? AUTH_OK : AUTH_FAILED);
+		auth_end( resource, flags == 0 ? AUTH_OK : AUTH_FAILED );
 	} else if( ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE ) {
 		// TLS handshake failure.
 #ifdef DEBUG
@@ -197,7 +197,7 @@ int tls_client_get_id( uint8_t id[], size_t len, const char query[] ) {
 struct tls_resource *tls_next_resource( void ) {
 	int i;
 
-	for( i = 0; i < N_ELEMS(g_tls_resources); i++ ) {
+	for( i = 0; i < N_ELEMS(g_tls_resources); ++i ) {
 		if( g_tls_resources[i].fd.fd < 0 ) {
 			return &g_tls_resources[i];
 		}
@@ -229,7 +229,7 @@ void tls_client_trigger_auth( void ) {
 }
 
 #if DEBUG
-// Verifiy configuration
+// Verify configuration
 int tls_conf_verify( void *data, mbedtls_x509_crt *crt, int depth, uint32_t *flags ) {
 	char buf[MBEDTLS_SSL_MAX_CONTENT_LEN + 1];
 	((void) data);
@@ -253,6 +253,13 @@ int tls_conf_verify( void *data, mbedtls_x509_crt *crt, int depth, uint32_t *fla
 void tls_client_add_ca( const char ca_path[] ) {
 	char error_buf[100];
 	int ret;
+	static int done = 1;
+
+	// Initialize only once
+	if( done ) {
+		mbedtls_x509_crt_init( &g_cacert );
+		done = 0;
+	}
 
 	if( ((ret = mbedtls_x509_crt_parse_file( &g_cacert, ca_path )) < 0) &&
 		((ret = mbedtls_x509_crt_parse_path( &g_cacert, ca_path )) < 0)) {
@@ -264,15 +271,6 @@ void tls_client_add_ca( const char ca_path[] ) {
 	log_info( "TLS: Loaded certificates from: %s (%d skipped)", ca_path, ret );
 }
 
-// TODO: create server IP address on the same port as the DHT.
-/*
-st4 = net_bind( "KAD", DHT_ADDR4, gconf->dht_port, gconf->dht_ifname, IPPROTO_UDP, AF_INET );
-st6 = net_bind( "KAD", DHT_ADDR6, gconf->dht_port, gconf->dht_ifname, IPPROTO_UDP, AF_INET6 );
-su4 = net_bind( "KAD", DHT_ADDR4, gconf->dht_port, gconf->dht_ifname, IPPROTO_TCP, AF_INET );
-su6 = net_bind( "KAD", DHT_ADDR6, gconf->dht_port, gconf->dht_ifname, IPPROTO_TCP, AF_INET6 );
-... make global and share between KAD, BOB and TLS
-
-*/
 void tls_client_setup( void ) {
 	const char *pers = "kadnode";
 	int ret;
@@ -285,26 +283,25 @@ void tls_client_setup( void ) {
 
 	if( ( ret = mbedtls_ctr_drbg_seed( &g_drbg, mbedtls_entropy_func, &g_entropy,
 		(const unsigned char *) pers, strlen( pers ) ) ) != 0 ) {
-		log_err( "TLS: mbedtls_ctr_drbg_seed returned -0x%x\n", -ret );
+		log_err( "TLS: mbedtls_ctr_drbg_seed returned -0x%x", -ret );
 		exit(1);
 		return;
 	}
 
-	for( i = 0; i < N_ELEMS(g_tls_resources); i++ ) {
+	for( i = 0; i < N_ELEMS(g_tls_resources); ++i ) {
 		mbedtls_ssl_init( &g_tls_resources[i].ssl );
 		mbedtls_net_init( &g_tls_resources[i].fd );
 	}
 
 	mbedtls_ssl_config_init( &g_conf );
-	mbedtls_x509_crt_init( &g_cacert );
 
-	// Setting up the SSL/TLS structure.
+	// Setup SSL/TLS structure
 	if( ( ret = mbedtls_ssl_config_defaults( &g_conf,
 		MBEDTLS_SSL_IS_CLIENT,
 		MBEDTLS_SSL_TRANSPORT_STREAM,
 		MBEDTLS_SSL_PRESET_DEFAULT ) ) != 0 ) {
-		log_err( "TLS: mbedtls_ssl_config_defaults returned -0x%x\n\n", -ret );
-		exit(1);
+		log_err( "TLS: mbedtls_ssl_config_defaults returned -0x%x", -ret );
+		exit( 1 );
 	}
 
 #ifdef DEBUG
@@ -315,10 +312,10 @@ void tls_client_setup( void ) {
 	mbedtls_ssl_conf_read_timeout( &g_conf, 0 );
 	mbedtls_ssl_conf_ca_chain( &g_conf, &g_cacert, NULL );
 
-	for( i = 0; i < N_ELEMS(g_tls_resources); i++ ) {
+	for( i = 0; i < N_ELEMS(g_tls_resources); ++i ) {
 		if( ( ret = mbedtls_ssl_setup( &g_tls_resources[i].ssl, &g_conf ) ) != 0 ) {
-			log_err( "TLS: mbedtls_ssl_setup returned -0x%x\n\n", -ret );
-			exit(1);
+			log_err( "TLS: mbedtls_ssl_setup returned -0x%x", -ret );
+			exit( 1 );
 		}
 	}
 }
@@ -326,7 +323,7 @@ void tls_client_setup( void ) {
 void tls_client_free( void ) {
 	int i;
 
-	for( i = 0; i < N_ELEMS(g_tls_resources); i++ ) {
+	for( i = 0; i < N_ELEMS(g_tls_resources); ++i ) {
 		mbedtls_ssl_free( &g_tls_resources[i].ssl );
 		mbedtls_net_free( &g_tls_resources[i].fd );
 	}

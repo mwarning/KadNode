@@ -15,9 +15,6 @@
 #ifdef BOB
 #include "ext-bob.h"
 #endif
-#ifdef TLS
-#include "mbedtls/sha256.h"
-#endif
 
 #include "dht.c"
 
@@ -52,7 +49,7 @@ void dht_unlock( void ) {
 * Put an address and port into a sockaddr_storages struct.
 * Both addr and port are in network byte order.
 */
-void to_addr( IP *addr, const void *ip, size_t len, unsigned int port ) {
+void to_addr( IP *addr, const void *ip, size_t len, uint16_t port ) {
 	memset( addr, '\0', sizeof(IP) );
 
 	if( len == 4 ) {
@@ -138,7 +135,7 @@ void kad_lookup_local_values( struct search_t *search ) {
 	IP addr;
 
 	// 127.0.0.1
-	uint32_t inaddr_loopback = htonl( INADDR_LOOPBACK );
+	const uint32_t inaddr_loopback = htonl( INADDR_LOOPBACK );
 
 	value = announces_find( search->id );
 	if( value ) {

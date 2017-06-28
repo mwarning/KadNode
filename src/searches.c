@@ -38,14 +38,16 @@ static size_t g_searches_idx = 0;
 
 static const char *str_state( int state ) {
 	switch( state ) {
-	    case AUTH_OK: return "OK";
-	    case AUTH_AGAIN: return "AGAIN";
-	    case AUTH_FAILED: return "FAILED";
-	    case AUTH_ERROR: return "ERROR";
-	    case AUTH_SKIP: return "SKIP";
-	    case AUTH_PROGRESS: return "PROGRESS";
-	    case AUTH_WAITING: return "WAITING";
-	    default: return "???";
+		case AUTH_OK: return "OK";
+		case AUTH_AGAIN: return "AGAIN";
+		case AUTH_FAILED: return "FAILED";
+		case AUTH_ERROR: return "ERROR";
+		case AUTH_SKIP: return "SKIP";
+		case AUTH_PROGRESS: return "PROGRESS";
+		case AUTH_WAITING: return "WAITING";
+		default:
+			log_err( "Invalid state: %d", state );
+			exit(1);
 	}
 }
 
@@ -148,7 +150,7 @@ void searches_set_auth_state( const char query[], const IP *addr, const int stat
 	search = searches_find( query );
 
 	if( search ) {
-		// Set authentication state of result
+		// Search and set authentication state of result
 		result = search->results;
 		while( result ) {
 			if( addr_equal( &result->addr, addr ) ) {
@@ -230,7 +232,7 @@ void search_restart( struct search_t *search ) {
 			result = next;
 			continue;
 		} else if( state == AUTH_OK ) {
-			// Check again
+			// Check again on another search
 			result->state = AUTH_AGAIN;
 		} else if( state == AUTH_SKIP ) {
 			// Continue check
@@ -280,7 +282,7 @@ struct search_t* searches_start( const char query[] ) {
 
 	// Free slot if taken
 	if( g_searches[g_searches_idx] != NULL ) {
-		// What to do with auths in progress?
+		// Remove and abort entire search
 		search_free( g_searches[g_searches_idx] );
 	}
 

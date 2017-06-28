@@ -35,7 +35,7 @@ void* memdup( const void* src, size_t size ) {
 	return memcpy( out, src, size );
 }
 
-// Remove .p2p suffix and convert to lowercase.
+// Remove .p2p suffix and convert to lowercase
 int query_sanitize( char buf[], size_t buflen, const char query[] ) {
 	size_t len;
 	size_t i;
@@ -151,7 +151,6 @@ char *bytes_to_hex( char hex[], const uint8_t bin[], size_t length ) {
 	return hex;
 }
 
-// TODO: remove?
 int id_equal( const uint8_t id1[], const uint8_t id2[] ) {
 	return (memcmp( id1, id2, SHA1_BIN_LENGTH ) == 0);
 }
@@ -171,7 +170,8 @@ int str_isHex( const char str[], size_t size ) {
 		}
 	}
 
-	return 1;
+	// Return 1 if size is even
+	return size & 1;
 }
 
 // Matches [0-9a-zA-Z._-]*
@@ -232,7 +232,7 @@ char *str_addr( const IP *addr ) {
 int addr_is_localhost( const IP *addr )
 {
 	// 127.0.0.1
-	uint32_t inaddr_loopback = htonl( INADDR_LOOPBACK );
+	const uint32_t inaddr_loopback = htonl( INADDR_LOOPBACK );
 
 	switch( addr->ss_family ) {
 		case AF_INET:

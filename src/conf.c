@@ -365,8 +365,8 @@ enum OPCODE {
 
 struct option_t {
 	const char *name;
-	int num_args;
-	enum OPCODE code;
+	uint16_t num_args;
+	uint16_t code;
 };
 
 static struct option_t options[] = {
