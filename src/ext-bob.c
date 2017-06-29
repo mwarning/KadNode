@@ -141,17 +141,6 @@ void bob_auth_end(struct bob_resource *resource, int state) {
 	bob_trigger_auth();
 }
 
-int bob_is_pkey( const char str[] ) {
-	size_t size;
-
-	size = strlen( str );
-	if( size != 2 * crypto_sign_PUBLICKEYBYTES ) {
-		return 0;
-	}
-
-	return str_isHex( str, size );
-}
-
 int bob_is_skey( const char str[] ) {
 	size_t size;
 
@@ -161,10 +150,6 @@ int bob_is_skey( const char str[] ) {
 	}
 
 	return str_isHex( str, size );
-}
-
-int bob_decide_auth( const char *query ) {
-	return bob_is_pkey( query );
 }
 
 /*
