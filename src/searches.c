@@ -244,6 +244,17 @@ void search_restart( struct search_t *search ) {
 	}
 }
 
+int hex_get_id( uint8_t id[], size_t len, const char query[] ) {
+	size_t query_len = strlen( query );
+	if( str_isHex( query, query_len ) ) {
+		memset( id, 0, len ); // Fill up id with random numbers?
+		bytes_from_hex( id, query, MIN( len, query_len ) );
+		return 1;
+	}
+
+	return 0;
+}
+
 // Start a new search (query is expected to be lower case and without .p2p)
 struct search_t* searches_start( const char query[] ) {
 	uint8_t id[SHA1_BIN_LENGTH];
@@ -263,15 +274,19 @@ struct search_t* searches_start( const char query[] ) {
 
 	if( tls_client_get_id( id, sizeof(id), query ) ) {
 		// Use TLS authentication
+		// For e.g. example.com.p2p
 		callback = &tls_client_trigger_auth;
 	} else if( bob_get_id( id, sizeof(id), query ) ) {
 		// Use Bob authentication
+		// For e.g. ecdsa_<hex>.p2p
 		callback = &bob_trigger_auth;
-	} else {
-		// TODO: fill query...
-		log_err("fix me");
-		assert( 1 );
+	} else if( hex_get_id( id, sizeof(id), query ) ) {
+		// Use no authentication
+		// For e.g. <hex>.p2p
 		callback = NULL;
+	} else {
+		// No idea what to do
+		return NULL;
 	}
 
 	new = calloc( 1, sizeof(struct search_t) );
