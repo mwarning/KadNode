@@ -438,8 +438,6 @@ int kad_lookup( const char query[], IP addr_array[], size_t addr_num ) {
 
 	log_debug( "KAD: Lookup string: %s", hostname );
 
-	dht_lock();
-
 	// Find existing or create new item
 	search = searches_start( hostname );
 
@@ -454,13 +452,13 @@ int kad_lookup( const char query[], IP addr_array[], size_t addr_num ) {
 		kad_lookup_local_values( search );
 
 		// Start a new DHT search
+		dht_lock();
 		dht_search( search->id, 0, gconf->af, dht_callback_func, NULL );
+		dht_unlock();
 	}
 
 	// Collect addresses to be returned
 	rc = searches_collect_addrs( search, addr_array, addr_num );
-
-	dht_unlock();
 
 	return rc;
 }
