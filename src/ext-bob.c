@@ -31,8 +31,8 @@
 * If the challenge can be decrypted by the public key we have,
 * we know that the peer has the private key.
 *
-* Request: "AUTH" + PUBLICKEY + CHALLENGE
-* Response: "AUTH" + PUBLICKEY + ENCRYPTED_CHALLENGE
+* Request: "BOB" + PUBLICKEY + CHALLENGE
+* Response: "BOB" + PUBLICKEY + SIGNED_CHALLENGE
 */
 
 // Maximum retries per address to send the challenge
@@ -60,8 +60,8 @@ static struct key_t *g_keys = NULL;
 static time_t g_send_challenges = 0;
 static struct bob_resource g_bob_resources[8];
 
-mbedtls_entropy_context g_entropy;
-mbedtls_ctr_drbg_context g_ctr_drbg;
+static mbedtls_entropy_context g_entropy;
+static mbedtls_ctr_drbg_context g_ctr_drbg;
 
 
 int mbedtls_ecp_decompress(
@@ -100,11 +100,8 @@ int mbedtls_ecp_decompress(
     // x <= input
     MBEDTLS_MPI_CHK( mbedtls_mpi_read_binary( &x, input + 1, plen ) );
 
-    // r = x
-    MBEDTLS_MPI_CHK( mbedtls_mpi_copy( &r, &x ) );
-
     // r = x^2
-    MBEDTLS_MPI_CHK( mbedtls_mpi_mul_mpi( &r, &r, &x ) );
+    MBEDTLS_MPI_CHK( mbedtls_mpi_mul_mpi( &r, &x, &x ) );
 
     // r = x^2 + a
     if( grp->A.p == NULL ) {
@@ -132,7 +129,7 @@ int mbedtls_ecp_decompress(
     // r ^ ((P + 1) / 4) (mod p)
     MBEDTLS_MPI_CHK( mbedtls_mpi_exp_mod( &r, &r, &n, &grp->P, NULL ) );
 
-    // Select solution that has the required "sign" (equals odd/even solution in finite group)
+    // Select solution that has the correct "sign" (equals odd/even solution in finite group)
     if( (input[0] == 0x03) != mbedtls_mpi_get_bit( &r, 0 ) ) {
         // r = p - r
         MBEDTLS_MPI_CHK( mbedtls_mpi_sub_mpi( &r, &grp->P, &r ) );
@@ -342,14 +339,14 @@ int bob_create_key( const char path[] ) {
 		return 1;
 	}
 
-	// Generate key that is even / positive
+	// Generate key where Y is even / positive
 	do {
 		if( (ret = mbedtls_ecp_gen_key( ECPARAMS, mbedtls_pk_ec( ctx ),
 			mbedtls_ctr_drbg_random, &ctr_drbg ) ) != 0 ) {
-			printf( "mbedtls_ecp_gen_key returned %d\n", ret );
+			printf( "mbedtls_ecp_gen_key returned -0x%04x\n", -ret );
 			return 1;
 		}
-	} while( mbedtls_mpi_get_bit( &r, 0 ) != 1 )
+	} while( mbedtls_mpi_get_bit( &mbedtls_pk_ec( ctx )->Q.Y, 0 ) != 0 );
 
 	print_key_info( &ctx, path );
 
