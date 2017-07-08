@@ -229,7 +229,6 @@ int cmd_exec( struct reply_t *r, int argc, char **argv ) {
 			for( i = 0; i < num; ++i ) {
 				r_printf( r, "%s\n", str_addr( &addrs[i] ) );
 			}
-			rc = 0;
 		} else if( rc < 0 ) {
 			r_printf( r ,"Some error occured.\n" );
 			rc = 1;
@@ -419,11 +418,7 @@ void cmd_console_handler( int rc, int fd ) {
 	// Execute command line
 	rc = cmd_exec( &reply, argc, argv );
 
-	if( rc == 0 ) {
-		fprintf( stdout, "%.*s\n", (int) reply.size, reply.data );
-	} else {
-		fprintf( stderr, "%.*s\n", (int) reply.size, reply.data );
-	}
+	fprintf( rc ? stderr : stdout, "%.*s\n", (int) reply.size, reply.data );
 }
 
 void cmd_setup( void ) {
