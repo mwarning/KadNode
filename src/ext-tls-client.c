@@ -232,7 +232,9 @@ void tls_client_trigger_auth( void ) {
 		return;
 	}
 
-	if( (result = searches_get_auth_target( &resource->query[0], &resource->addr )) != NULL ) {
+	if( (result = searches_get_auth_target(
+			&resource->query[0], &resource->addr,
+			&tls_client_trigger_auth )) != NULL ) {
 		// State authentication process
 		if( tls_connect( &resource->ssl, &resource->fd, &resource->query[0], &result->addr ) < 0 ) {
 			result->state = AUTH_ERROR;

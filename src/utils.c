@@ -137,18 +137,16 @@ void bytes_from_hex( uint8_t bin[], const char hex[], size_t length ) {
 	}
 }
 
-char *bytes_to_hex( char hex[], const uint8_t bin[], size_t length ) {
-	size_t i;
-	uint8_t *p0 = (uint8_t *)bin;
-	char *p1 = hex;
+char *bytes_to_hex( char hex[], const uint8_t bin[], size_t len ) {
+    static const char hexchars[16] = "0123456789abcdef";
+    size_t i;
 
-	for( i = 0; i < length; i++ ) {
-		snprintf( p1, 3, "%02x", *p0 );
-		p0 += 1;
-		p1 += 2;
-	}
-
-	return hex;
+    for( i = 0; i < len; ++i ) {
+        hex[2 * i] = hexchars[bin[i] / 16];
+        hex[2 * i + 1] = hexchars[bin[i] % 16];
+    }
+    hex[2 * len] = '\0';
+    return hex;
 }
 
 int id_equal( const uint8_t id1[], const uint8_t id2[] ) {

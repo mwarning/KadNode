@@ -105,12 +105,12 @@ static struct result_t *find_next_result( struct search_t *search ) {
 }
 
 // Get next search to authenticate
-static struct search_t *find_next_search( void ) {
+static struct search_t *find_next_search( auth_callback *callback ) {
 	struct search_t **searches;
 
 	searches = searches_get();
 	while( *searches ) {
-		if( !(*searches)->done && (*searches)->callback ) {
+		if( !(*searches)->done && (*searches)->callback == callback ) {
 			return *searches;
 		}
 		searches++;
@@ -118,12 +118,12 @@ static struct search_t *find_next_search( void ) {
 	return NULL;
 }
 
-struct result_t *searches_get_auth_target( char query[], IP *addr ) {
+struct result_t *searches_get_auth_target( char query[], IP *addr, auth_callback *callback ) {
 	struct search_t *search;
 	struct result_t *result;
 
 	// Get next search to authenticate
-	search = find_next_search();
+	search = find_next_search( callback );
 	if( search == NULL ) {
 		return NULL;
 	}
@@ -134,7 +134,7 @@ struct result_t *searches_get_auth_target( char query[], IP *addr ) {
 		return NULL;
 	}
 
-	// Set query and addr to authenticate
+	// Set query and address to authenticate
 	memcpy( query, &search->query, sizeof(search->query) );
 	memcpy( addr, &result->addr, sizeof(IP) );
 

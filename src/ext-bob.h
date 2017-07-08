@@ -10,14 +10,14 @@ void bob_trigger_auth( void );
 // .. for kad.c - remove?
 int bob_handler( int sock, uint8_t buf[], uint32_t buflen, IP *from );
 
-// Add secret key
-void bob_add_skey( const char arg[] );
+// Load a key file
+int bob_load_key( const char path[] );
+
+// Create a key file
+int bob_create_key( const char path[] );
 
 // Print secret/public keys to file descriptor
 void bob_debug_keys( int fd );
-
-// Generate a public/secret key pair and print it to stdout
-int bob_generate_key_pair( void );
 
 void bob_setup( void );
 void bob_free( void );

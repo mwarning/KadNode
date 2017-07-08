@@ -353,8 +353,8 @@ enum OPCODE {
 	oServiceInstall,
 	oServiceRemove,
 	oServiceStart,
-	oBobGenKeys,
-	oBobAddSkey,
+	oBobCreateKey,
+	oBobLoadKey,
 	oIfname,
 	oUser,
 	oDaemon,
@@ -412,8 +412,8 @@ static struct option_t options[] = {
 	{"--service-start", 0, oServiceStart},
 #endif
 #ifdef BOB
-	{"--bob-gen-keys", 1, oBobGenKeys},
-	{"--bob-add-skey", 1, oBobAddSkey},
+	{"--bob-create-key", 1, oBobCreateKey},
+	{"--bob-load-key", 1, oBobLoadKey},
 #endif
 	{"--ifname", 1, oIfname},
 	{"--user", 1, oUser},
@@ -609,11 +609,11 @@ void conf_handle_option( const char opt[], const char val[] ) {
 			exit( 0 );
 			break;
 #ifdef BOB
-		case oBobGenKeys:
-			exit( bob_generate_key_pair() );
+		case oBobCreateKey:
+			exit( bob_create_key( val ) );
 			break;
-		case oBobAddSkey:
-			bob_add_skey( val );
+		case oBobLoadKey:
+			bob_load_key( val );
 			break;
 #endif
 		default:

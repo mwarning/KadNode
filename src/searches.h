@@ -34,11 +34,11 @@ struct search_t {
 	auth_callback *callback;
 };
 
-// used only in kad.c?
+// used only in kad.c to insert local values..?
 struct search_t **searches_get( void );
 
 void searches_set_auth_state( const char query[], const IP *addr, const int state );
-struct result_t *searches_get_auth_target( char query[], IP *addr );
+struct result_t *searches_get_auth_target( char query[], IP *addr, auth_callback *callback );
 
 void searches_setup( void );
 void searches_free( void );
