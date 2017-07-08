@@ -27,7 +27,7 @@ int kad_lookup( const char query[], IP addr_array[], size_t *addr_num );
 int kad_export_nodes( IP addr_array[], size_t *addr_num );
 
 // Print status information
-int kad_status( char *buf, int len );
+int kad_status( char buf[], size_t len );
 
 // Count good or all known peers
 int kad_count_nodes( int good );

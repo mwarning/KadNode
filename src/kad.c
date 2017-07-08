@@ -329,7 +329,7 @@ int kad_count_nodes( int good ) {
 
 #define bprintf(...) (written += snprintf( buf+written, size-written, __VA_ARGS__))
 
-int kad_status( char *buf, int size ) {
+int kad_status( char buf[], size_t size ) {
 	struct storage *strg = storage;
 	struct search *srch = searches;
 	int numsearches_active = 0;
@@ -363,10 +363,10 @@ int kad_status( char *buf, int size ) {
 
 	bprintf( "Version: %s\n", kadnode_version_str );
 	bprintf( "DHT id: %s\n", str_id( myid ) );
-	bprintf( "DHT bound to: %s:%s / %s\n",
-		(gconf->af == AF_INET) ? "0.0.0.0" : "::",
+	bprintf( "DHT listen on: %s:%s / %s\n",
+		(gconf->af == AF_INET) ? "0.0.0.0" : "[::]",
 		gconf->dht_port,
-		(gconf->dht_ifname == NULL) ? "<any device>" : gconf->dht_ifname
+		(gconf->dht_ifname == NULL) ? "<any>" : gconf->dht_ifname
 	);
 
 	bprintf( "DHT Nodes: %d (%d good) (%s)\n",
