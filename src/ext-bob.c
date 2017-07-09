@@ -64,84 +64,84 @@ static mbedtls_ctr_drbg_context g_ctr_drbg;
 
 
 int mbedtls_ecp_decompress(
-    const mbedtls_ecp_group *grp,
-    const unsigned char *input, size_t ilen,
-    unsigned char *output, size_t *olen, size_t osize
+	const mbedtls_ecp_group *grp,
+	const unsigned char *input, size_t ilen,
+	unsigned char *output, size_t *olen, size_t osize
 ) {
-    int ret;
-    size_t plen;
-    mbedtls_mpi r;
-    mbedtls_mpi x;
-    mbedtls_mpi n;
+	int ret;
+	size_t plen;
+	mbedtls_mpi r;
+	mbedtls_mpi x;
+	mbedtls_mpi n;
 
-    plen = mbedtls_mpi_size( &grp->P );
+	plen = mbedtls_mpi_size( &grp->P );
 
-    *olen = 2 * plen + 1;
+	*olen = 2 * plen + 1;
 
-    if( osize < *olen )
-        return( MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL );
+	if( osize < *olen )
+		return( MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL );
 
-    if( ilen != plen + 1 )
-        return( MBEDTLS_ERR_ECP_BAD_INPUT_DATA );
+	if( ilen != plen + 1 )
+		return( MBEDTLS_ERR_ECP_BAD_INPUT_DATA );
 
-    if( input[0] != 0x02 && input[0] != 0x03 )
-        return( MBEDTLS_ERR_ECP_BAD_INPUT_DATA );
+	if( input[0] != 0x02 && input[0] != 0x03 )
+		return( MBEDTLS_ERR_ECP_BAD_INPUT_DATA );
 
-    // output will consist of 0x04|X|Y
-    memcpy( output, input, ilen );
-    output[0] = 0x04;
+	// output will consist of 0x04|X|Y
+	memcpy( output, input, ilen );
+	output[0] = 0x04;
 
-    mbedtls_mpi_init( &r );
-    mbedtls_mpi_init( &x );
-    mbedtls_mpi_init( &n );
+	mbedtls_mpi_init( &r );
+	mbedtls_mpi_init( &x );
+	mbedtls_mpi_init( &n );
 
-    // x <= input
-    MBEDTLS_MPI_CHK( mbedtls_mpi_read_binary( &x, input + 1, plen ) );
+	// x <= input
+	MBEDTLS_MPI_CHK( mbedtls_mpi_read_binary( &x, input + 1, plen ) );
 
-    // r = x^2
-    MBEDTLS_MPI_CHK( mbedtls_mpi_mul_mpi( &r, &x, &x ) );
+	// r = x^2
+	MBEDTLS_MPI_CHK( mbedtls_mpi_mul_mpi( &r, &x, &x ) );
 
-    // r = x^2 + a
-    if( grp->A.p == NULL ) {
-        // Special case where a is -3
-        MBEDTLS_MPI_CHK( mbedtls_mpi_sub_int( &r, &r, 3 ) );
-    } else {
-        MBEDTLS_MPI_CHK( mbedtls_mpi_add_mpi( &r, &r, &grp->A ) );
-    }
+	// r = x^2 + a
+	if( grp->A.p == NULL ) {
+		// Special case where a is -3
+		MBEDTLS_MPI_CHK( mbedtls_mpi_sub_int( &r, &r, 3 ) );
+	} else {
+		MBEDTLS_MPI_CHK( mbedtls_mpi_add_mpi( &r, &r, &grp->A ) );
+	}
 
-    // r = x^3 + ax
-    MBEDTLS_MPI_CHK( mbedtls_mpi_mul_mpi( &r, &r, &x ) );
+	// r = x^3 + ax
+	MBEDTLS_MPI_CHK( mbedtls_mpi_mul_mpi( &r, &r, &x ) );
 
-    // r = x^3 + ax + b
-    MBEDTLS_MPI_CHK( mbedtls_mpi_add_mpi( &r, &r, &grp->B ) );
+	// r = x^3 + ax + b
+	MBEDTLS_MPI_CHK( mbedtls_mpi_add_mpi( &r, &r, &grp->B ) );
 
-    // Calculate quare root of r over finite field P
-    // r = sqrt(x^3 + ax + b) = (x^3 + ax + b) ^ ((P + 1) / 4) (mod P)
+	// Calculate quare root of r over finite field P
+	// r = sqrt(x^3 + ax + b) = (x^3 + ax + b) ^ ((P + 1) / 4) (mod P)
 
-    // n = P + 1
-    MBEDTLS_MPI_CHK( mbedtls_mpi_add_int( &n, &grp->P, 1 ) );
+	// n = P + 1
+	MBEDTLS_MPI_CHK( mbedtls_mpi_add_int( &n, &grp->P, 1 ) );
 
-    // n = (P + 1) / 4
-    MBEDTLS_MPI_CHK( mbedtls_mpi_shift_r( &n, 2 ) );
+	// n = (P + 1) / 4
+	MBEDTLS_MPI_CHK( mbedtls_mpi_shift_r( &n, 2 ) );
 
-    // r ^ ((P + 1) / 4) (mod p)
-    MBEDTLS_MPI_CHK( mbedtls_mpi_exp_mod( &r, &r, &n, &grp->P, NULL ) );
+	// r ^ ((P + 1) / 4) (mod p)
+	MBEDTLS_MPI_CHK( mbedtls_mpi_exp_mod( &r, &r, &n, &grp->P, NULL ) );
 
-    // Select solution that has the correct "sign" (equals odd/even solution in finite group)
-    if( (input[0] == 0x03) != mbedtls_mpi_get_bit( &r, 0 ) ) {
-        // r = p - r
-        MBEDTLS_MPI_CHK( mbedtls_mpi_sub_mpi( &r, &grp->P, &r ) );
-    }
+	// Select solution that has the correct "sign" (equals odd/even solution in finite group)
+	if( (input[0] == 0x03) != mbedtls_mpi_get_bit( &r, 0 ) ) {
+		// r = p - r
+		MBEDTLS_MPI_CHK( mbedtls_mpi_sub_mpi( &r, &grp->P, &r ) );
+	}
 
-    // y => output
-    ret = mbedtls_mpi_write_binary( &r, output + 1 + plen, plen );
+	// y => output
+	ret = mbedtls_mpi_write_binary( &r, output + 1 + plen, plen );
 
 cleanup:
-    mbedtls_mpi_free( &r );
-    mbedtls_mpi_free( &x );
-    mbedtls_mpi_free( &n );
+	mbedtls_mpi_free( &r );
+	mbedtls_mpi_free( &x );
+	mbedtls_mpi_free( &n );
 
-    return( ret );
+	return( ret );
 }
 
 void bob_auth_end(struct bob_resource *resource, int state) {
@@ -264,12 +264,12 @@ void bob_trigger_auth( void ) {
 }
 
 static int write_pem( const mbedtls_pk_context *key, const char path[] ) {
-    FILE *file;
-    uint8_t buf[1000];
-    size_t len;
-    int ret;
+	FILE *file;
+	uint8_t buf[1000];
+	size_t len;
+	int ret;
 
-    memset( buf, 0, sizeof(buf) );
+	memset( buf, 0, sizeof(buf) );
 
 	if( ( ret = mbedtls_pk_write_key_pem( (mbedtls_pk_context *) key, buf, sizeof(buf) ) ) != 0 ) {
 		return ret;
@@ -298,40 +298,38 @@ static int write_pem( const mbedtls_pk_context *key, const char path[] ) {
 }
 
 void print_key_info( mbedtls_pk_context *ctx, const char path[] ) {
-	char hexbuf[64];
-	uint8_t buf[32];
-    size_t plen;
-    int ret;
+	char hexbuf[2 * PUBLICKEYBYTES + 1];
+	uint8_t buf[PUBLICKEYBYTES];
+	int ret;
 
-	plen = mbedtls_mpi_size( &mbedtls_pk_ec( *ctx )->grp.P );
-	ret = mbedtls_mpi_write_binary( &mbedtls_pk_ec( *ctx )->Q.X, buf, plen );
+	ret = mbedtls_mpi_write_binary( &mbedtls_pk_ec( *ctx )->Q.X, buf, sizeof(buf) );
 	if( ret != 0 ) {
 		log_err( "eror 34\n" );
 		exit( 1 );
 	}
 
 	printf("Public key for %s: %s (%lu bits)\n",
-		path, bytes_to_hex( hexbuf, buf, plen ), mbedtls_pk_ec( *ctx )->grp.pbits);
+		path, bytes_to_hex( hexbuf, buf, sizeof(buf) ), mbedtls_pk_ec( *ctx )->grp.pbits);
 }
 
 // Generate a new key pair and print it to stdout.
 int bob_create_key( const char path[] ) {
-    mbedtls_entropy_context entropy;
-    mbedtls_ctr_drbg_context ctr_drbg;
-    mbedtls_pk_context ctx;
-    const char *pers = MAIN_SRVNAME;
-    int ret;
+	mbedtls_entropy_context entropy;
+	mbedtls_ctr_drbg_context ctr_drbg;
+	mbedtls_pk_context ctx;
+	const char *pers = MAIN_SRVNAME;
+	int ret;
 
-    mbedtls_pk_init( &ctx );
-    mbedtls_ctr_drbg_init( &ctr_drbg );
+	mbedtls_pk_init( &ctx );
+	mbedtls_ctr_drbg_init( &ctr_drbg );
 
-    mbedtls_entropy_init( &entropy );
-    //TODO: see gen_key.c example for better seed method
-    if( ( ret = mbedtls_ctr_drbg_seed( &ctr_drbg, mbedtls_entropy_func, &entropy,
-		(const unsigned char *) pers, strlen( pers ) ) ) != 0 ) {
-        printf( "mbedtls_ctr_drbg_seed returned %d\n", ret );
-        return 1;
-    }
+	mbedtls_entropy_init( &entropy );
+	//TODO: see gen_key.c example for better seed method
+	if( ( ret = mbedtls_ctr_drbg_seed( &ctr_drbg, mbedtls_entropy_func, &entropy,
+			(const unsigned char *) pers, strlen( pers ) ) ) != 0 ) {
+		printf( "mbedtls_ctr_drbg_seed returned %d\n", ret );
+		return 1;
+	}
 
 	printf( "Generating key pair...\n" );
 
