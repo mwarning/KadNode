@@ -35,7 +35,6 @@
 * Response: "BOB" + PUBLICKEY + SIGNED_CHALLENGE
 */
 
-// Maximum retries per address to send the challenge
 #define ECPARAMS MBEDTLS_ECP_DP_SECP256R1
 #define PUBLICKEYBYTES 32
 #define MAX_AUTH_CHALLENGE_SEND 3
@@ -71,6 +70,9 @@ int mbedtls_ecp_decompress(
 ) {
     int ret;
     size_t plen;
+    mbedtls_mpi r;
+    mbedtls_mpi x;
+    mbedtls_mpi n;
 
     plen = mbedtls_mpi_size( &grp->P );
 
@@ -88,10 +90,6 @@ int mbedtls_ecp_decompress(
     // output will consist of 0x04|X|Y
     memcpy( output, input, ilen );
     output[0] = 0x04;
-
-    mbedtls_mpi r;
-    mbedtls_mpi x;
-    mbedtls_mpi n;
 
     mbedtls_mpi_init( &r );
     mbedtls_mpi_init( &x );
@@ -190,9 +188,13 @@ static void bob_send_challenge( int sock, struct bob_resource *resource ) {
 	int ret;
 	printf( "Signing message...\n" );
 
+	// Insert marker
 	memcpy( sig, "BOB", 3);
-	memcpy( sig + 3, , PUBLICKEYBYTES );
 
+	// Insert X value of public key
+	mbedtls_mpi_write_binary( &mbedtls_pk_ec( resource->ctx_verify )->Q.X, sig + 3, PUBLICKEYBYTES );
+
+	// Insert signature
 	if( ( ret = mbedtls_ecdsa_write_signature(
 			mbedtls_pk_ec( resource->ctx_verify ), MBEDTLS_MD_SHA256,
 			resource->challenge, CHALLENGE_BIN_LENGTH, sig + 3 + PUBLICKEYBYTES, &slen,
@@ -228,12 +230,12 @@ void bob_trigger_auth( void ) {
 		result->state = AUTH_PROGRESS;
 
 		if( strlen( query ) != 64 ) {
-			log_err("BOB: Query length not expected.");
+			log_err("BOB: Unexpected query length.");
 			bob_auth_end( resource, AUTH_ERROR );
 			return;
 		}
 
-		// Hex to binary compressed form (assuming even Y => 0x02)
+		// Hex to binary and compressed form (assuming even Y => 0x02)
 		compressed[0] = 0x02;
 		bytes_from_hex( compressed + 1, query, 64 );
 
