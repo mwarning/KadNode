@@ -100,9 +100,9 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 " --lpd-disable			Disable multicast to discover local peers.\n\n"
 #endif
 #ifdef BOB
-" --bob-gen-pair		Generate a new public/secret key pair and exit.\n\n"
-" --bob-add-skey <key>	Add a secret key. The derived public key will be announced.\n"
-"				The secret key will be used to prove that you have it.\n"
+" --bob-gen-pair			Generate a new public/secret key pair and exit.\n\n"
+" --bob-add-skey <key>		Add a secret key. The derived public key will be announced.\n"
+"				The secret key will be used to prove that you have it.\n\n"
 #endif
 #ifdef CMD
 " --cmd-disable-stdin		Disable the local control interface.\n\n"
@@ -112,8 +112,8 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 #ifdef DNS
 " --dns-port <port>		Bind the DNS server interface to this local port.\n"
 "				Default: "DNS_PORT"\n\n"
-" --dns-proxy-enable		Enable DNS proxy mode. Reads /etc/resolv.conf by default.\n"
-" --dns-proxy-server <ip_addr>	IP address of an external DNS server.\n"
+" --dns-proxy-enable		Enable DNS proxy mode. Reads /etc/resolv.conf by default.\n\n"
+" --dns-proxy-server <ip_addr>	IP address of an external DNS server.\n\n"
 #endif
 #ifdef NSS
 " --nss-port <port>		Bind the Network Service Switch to this local port.\n"
@@ -127,10 +127,10 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 " --fwd-disable			Disable UPnP/NAT-PMP to forward router ports.\n\n"
 #endif
 #ifdef TLS
-"--tls-client-entry		Path to file or folder of CA certificates for TLS client.\n\n"
-"						Example: "
-"--tls-server-entry		Comma separated triples of domain, certificate and key for TLS server.\n"
-"						Example: kanode.p2p,kadnode.crt,kadnode.key\n\n"
+" --tls-client-entry		Path to file or folder of CA certificates for TLS client.\n"
+"				Example: \n\n"
+" --tls-server-entry		Comma separated triples of domain, certificate and key for TLS server.\n"
+"				Example: kanode.p2p,kadnode.crt,kadnode.key\n\n"
 #endif
 #ifdef __CYGWIN__
 " --service-start		Start, install and remove KadNode as Windows service.\n"
