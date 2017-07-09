@@ -54,7 +54,7 @@ struct bob_resource {
 	IP addr;
 };
 
-static int bob_socket = -1;
+static int g_dht_socket = -1;
 static struct key_t *g_keys = NULL;
 static time_t g_send_challenges = 0;
 static struct bob_resource g_bob_resources[8];
@@ -259,19 +259,19 @@ void bob_trigger_auth( void ) {
 
 		resource->challenges_send = 0;
 		bytes_random( resource->challenge, CHALLENGE_BIN_LENGTH );
-		bob_send_challenge( bob_socket, resource );
+		bob_send_challenge( g_dht_socket, resource );
 	}
 }
 
-static int write_pem( mbedtls_pk_context *key, const char path[] ) {
+static int write_pem( const mbedtls_pk_context *key, const char path[] ) {
     FILE *file;
-    uint8_t buf[16000];
+    uint8_t buf[1000];
     size_t len;
     int ret;
 
-    memset(buf, 0, sizeof(buf));
+    memset( buf, 0, sizeof(buf) );
 
-	if( ( ret = mbedtls_pk_write_key_pem( key, buf, sizeof(buf) ) ) != 0 ) {
+	if( ( ret = mbedtls_pk_write_key_pem( (mbedtls_pk_context *) key, buf, sizeof(buf) ) ) != 0 ) {
 		return ret;
 	}
 
@@ -323,7 +323,6 @@ int bob_create_key( const char path[] ) {
     int ret;
 
     mbedtls_pk_init( &ctx );
-    //mbedtls_pk_init( &ctx_verify );
     mbedtls_ctr_drbg_init( &ctr_drbg );
 
     mbedtls_entropy_init( &entropy );
@@ -353,7 +352,7 @@ int bob_create_key( const char path[] ) {
 	print_key_info( &ctx, path );
 
 	if( write_pem( &ctx, path ) == 0) {
-		printf("Wrote %s\n", path);
+		printf( "Wrote %s\n", path );
 	}
 
 	return 0;
@@ -482,6 +481,11 @@ void bob_encrypt_challenge( int sock, uint8_t buf[], size_t buflen, IP *addr ) {
 int bob_handler( int fd, uint8_t buf[], uint32_t buflen, IP *from ) {
 	time_t now;
 
+	// Hack to get the DHT socket..
+	if( g_dht_socket == -1 ) {
+		g_dht_socket = fd;
+	}
+
 	if( buflen > 3 && memcmp( buf, "BOB", 3 ) != 0 ) {
 		if( buflen == (3 + PUBLICKEYBYTES + CHALLENGE_BIN_LENGTH) ) {
 			// Answer a challenge request
@@ -490,6 +494,7 @@ int bob_handler( int fd, uint8_t buf[], uint32_t buflen, IP *from ) {
 			// Handle reply to a challenge request
 			bob_verify_challenge( fd, buf, buflen, from );
 		}
+		return 0;
 	}
 
 	now = time_now_sec();
