@@ -297,19 +297,13 @@ static int write_pem( const mbedtls_pk_context *key, const char path[] ) {
 	return 0;
 }
 
-void print_key_info( mbedtls_pk_context *ctx, const char path[] ) {
-	char hexbuf[2 * PUBLICKEYBYTES + 1];
+static const char *get_pkey_hex( const mbedtls_pk_context *ctx ) {
+	static char hexbuf[2 * PUBLICKEYBYTES + 1];
 	uint8_t buf[PUBLICKEYBYTES];
-	int ret;
 
-	ret = mbedtls_mpi_write_binary( &mbedtls_pk_ec( *ctx )->Q.X, buf, sizeof(buf) );
-	if( ret != 0 ) {
-		log_err( "eror 34\n" );
-		exit( 1 );
-	}
+	mbedtls_mpi_write_binary( &mbedtls_pk_ec( *ctx )->Q.X, buf, sizeof(buf) );
 
-	printf("Public key for %s: %s (%lu bits)\n",
-		path, bytes_to_hex( hexbuf, buf, sizeof(buf) ), mbedtls_pk_ec( *ctx )->grp.pbits);
+	return bytes_to_hex( hexbuf, buf, sizeof(buf) );
 }
 
 // Generate a new key pair and print it to stdout.
@@ -328,30 +322,32 @@ int bob_create_key( const char path[] ) {
 	if( ( ret = mbedtls_ctr_drbg_seed( &ctr_drbg, mbedtls_entropy_func, &entropy,
 			(const unsigned char *) pers, strlen( pers ) ) ) != 0 ) {
 		printf( "mbedtls_ctr_drbg_seed returned %d\n", ret );
-		return 1;
+		return -1;
 	}
 
-	printf( "Generating key pair...\n" );
+	printf( "Generating secp256r1 key...\n" );
 
 	if( ( ret = mbedtls_pk_setup( &ctx, mbedtls_pk_info_from_type( MBEDTLS_PK_ECKEY ) ) ) != 0 ) {
 		printf( "mbedtls_pk_setup returned -0x%04x\n", -ret );
-		return 1;
+		return -1;
 	}
 
-	// Generate key where Y is even / positive
+	// Generate key where Y is even (called positive in a prime group)
+	// This spares us from transmitting the sign along with the public key
 	do {
 		if( (ret = mbedtls_ecp_gen_key( ECPARAMS, mbedtls_pk_ec( ctx ),
 			mbedtls_ctr_drbg_random, &ctr_drbg ) ) != 0 ) {
 			printf( "mbedtls_ecp_gen_key returned -0x%04x\n", -ret );
-			return 1;
+			return -1;
 		}
 	} while( mbedtls_mpi_get_bit( &mbedtls_pk_ec( ctx )->Q.Y, 0 ) != 0 );
 
-	print_key_info( &ctx, path );
-
-	if( write_pem( &ctx, path ) == 0) {
-		printf( "Wrote %s\n", path );
+	if( write_pem( &ctx, path ) != 0 ) {
+		return -1;
 	}
+
+	printf( "Public key/link: %s"QUERY_TLD_DEFAULT"\n", get_pkey_hex( &ctx ) );
+	printf( "Wrote secret key to %s\n", path );
 
 	return 0;
 }
@@ -366,11 +362,11 @@ int bob_load_key( const char path[] ) {
 
 	if( (ret = mbedtls_pk_parse_keyfile( &ctx, path, NULL )) != 0) {
 		mbedtls_pk_free( &ctx );
-		printf( "mbedtls_pk_parse_keyfile returned -0x%04x\n", -ret );
+		log_err( "mbedtls_pk_parse_keyfile returned -0x%04x\n", -ret );
 		return -1;
 	}
 
-	print_key_info( &ctx, path );
+	log_info( "Public key for %s: %s\n", path, get_pkey_hex( &ctx ) );
 
 	struct key_t *entry = (struct key_t*) calloc( 1, sizeof(struct key_t) );
 	memcpy( &entry->ctx_sign, &ctx, sizeof(ctx) );

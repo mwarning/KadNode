@@ -100,9 +100,11 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 " --lpd-disable			Disable multicast to discover local peers.\n\n"
 #endif
 #ifdef BOB
-" --bob-gen-pair			Generate a new public/secret key pair and exit.\n\n"
-" --bob-add-skey <key>		Add a secret key. The derived public key will be announced.\n"
-"				The secret key will be used to prove that you have it.\n\n"
+" --bob-create-key <file>	Generate a new secp256r1 secret key in pem format and\n"
+"				write it to the file. The public key will be printed to the terminal.\n\n"
+" --bob-load-key <file>		Load a secret key from a file in pem format. The derived public\n"
+"				key will be printed to the terminal and announed in the network.\n"
+"				The secret key will be used to prove its ownership.\n\n"
 #endif
 #ifdef CMD
 " --cmd-disable-stdin		Disable the local control interface.\n\n"
@@ -292,7 +294,7 @@ void conf_info( void ) {
 		if( gconf->dns_proxy_server ) {
 			log_info( "DNS proxy enabled: %s", gconf->dns_proxy_server );
 		} else {
-			log_info( "DNS proxy enabled" );
+			log_info( "DNS proxy enabled: /etc/resolv.conf" );
 		}
 	}
 #endif
@@ -610,7 +612,7 @@ void conf_handle_option( const char opt[], const char val[] ) {
 			break;
 #ifdef BOB
 		case oBobCreateKey:
-			exit( bob_create_key( val ) );
+			exit( bob_create_key( val ) < 0 );
 			break;
 		case oBobLoadKey:
 			bob_load_key( val );
