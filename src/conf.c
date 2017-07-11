@@ -199,34 +199,34 @@ void conf_check( void ) {
 #endif
 
 	if( port_parse( gconf->dht_port, -1 ) < 1 ) {
-		log_err( "CFG: Invalid DHT port: %s", gconf->dht_port );
+		log_err( "Invalid DHT port: %s", gconf->dht_port );
 		exit( 1 );
 	}
 
 #ifdef CMD
 	if( port_parse( gconf->cmd_port, -1 ) < 0 ) {
-		log_err( "CFG: Invalid CMD port: %s", gconf->cmd_port );
+		log_err( "Invalid CMD port: %s", gconf->cmd_port );
 		exit( 1 );
 	}
 #endif
 
 #ifdef DNS
 	if( port_parse( gconf->dns_port, -1 ) < 0 ) {
-		log_err( "CFG: Invalid DNS port: %s", gconf->dns_port );
+		log_err( "Invalid DNS port: %s", gconf->dns_port );
 		exit( 1 );
 	}
 #endif
 
 #ifdef NSS
 	if( port_parse( gconf->nss_port, -1 ) < 0 ) {
-		log_err( "CFG: Invalid NSS port: %s", gconf->nss_port );
+		log_err( "Invalid NSS port: %s", gconf->nss_port );
 		exit( 1 );
 	}
 #endif
 
 #ifdef WEB
 	if( port_parse( gconf->web_port, -1 ) < 0 ) {
-		log_err( "CFG: Invalid WEB port: %s", gconf->web_port );
+		log_err( "Invalid WEB port: %s", gconf->web_port );
 		exit( 1 );
 	}
 #endif
@@ -245,13 +245,13 @@ void conf_check( void ) {
 
 	// Parse multicast address string
 	if( addr_parse( &lpd_addr, gconf->lpd_addr, LPD_PORT, gconf->af ) != 0 ) {
-		log_err( "CFG: Failed to parse IP address for: %s", gconf->lpd_addr );
+		log_err( "Failed to parse IP address for: %s", gconf->lpd_addr );
 		exit( 1 );
 	}
 
 	// Verifiy multicast address
 	if( !addr_is_multicast(&lpd_addr) ) {
-		log_err( "CFG: Multicast address expected: %s", str_addr( &lpd_addr ) );
+		log_err( "Multicast address expected: %s", str_addr( &lpd_addr ) );
 		exit( 1 );
 	}
 #endif
@@ -437,7 +437,7 @@ const struct option_t *find_option(const char name[]) {
 }
 
 void conf_duplicate_option( const char opt[] ) {
-	log_err( "CFG: Option was already set: %s", opt );
+	log_err( "Option was already set: %s", opt );
 	exit( 1 );
 }
 
@@ -457,13 +457,13 @@ void conf_handle_option( const char opt[], const char val[] ) {
 	option = find_option( opt );
 
 	if( option->num_args == 1 && val == NULL ) {
-		log_err( "CFG: Argument expected for option: %s", opt );
+		log_err( "Argument expected for option: %s", opt );
 		exit( 1 );
 		return;
 	}
 
 	if( option->num_args == 0 && val != NULL ) {
-		log_err( "CFG: No argument expected for option: %s", opt );
+		log_err( "No argument expected for option: %s", opt );
 		exit( 1 );
 		return;
 	}
@@ -489,7 +489,7 @@ void conf_handle_option( const char opt[], const char val[] ) {
 			} else if( strcmp( val, "debug" ) == 0 ) {
 				gconf->verbosity = VERBOSITY_DEBUG;
 			} else {
-				log_err( "CFG: Invalid argument for %s", opt );
+				log_err( "Invalid argument for %s", opt );
 				exit( 1 );
 			}
 			break;
@@ -532,7 +532,7 @@ void conf_handle_option( const char opt[], const char val[] ) {
 			if( sscanf( val, "%127[^,],%127[^,],%127[^,]", name, crt_file, key_file ) == 3 ) {
 				tls_server_add_sni( name, crt_file, key_file );
 			} else {
-				log_err( "CFG: Invalid value format: %s", val );
+				log_err( "Invalid value format: %s", val );
 				exit(1);
 			}
 			break;
@@ -555,7 +555,7 @@ void conf_handle_option( const char opt[], const char val[] ) {
 			} else if( strcmp( val, "ipv6" ) == 0 ) {
 				gconf->af = AF_INET6;
 			} else {
-				log_err("CFG: Invalid argument for %s. Use 'ipv4' or 'ipv6'.", opt );
+				log_err( "Invalid argument for %s. Use 'ipv4' or 'ipv6'.", opt );
 				exit( 1 );
 			}
 			break;
@@ -617,7 +617,7 @@ void conf_handle_option( const char opt[], const char val[] ) {
 			break;
 #endif
 		default:
-			log_err( "CFG: Unkown parameter: %s", opt );
+			log_err( "Unkown parameter: %s", opt );
 			exit(1);
 	}
 }
@@ -643,14 +643,14 @@ void conf_load_file( const char path[] ) {
 	size_t nline;
 
 	if( stat( path, &s ) == 0 && !(s.st_mode & S_IFREG) ) {
-		log_err( "CFG: File expected: %s", path );
+		log_err( "File expected: %s", path );
 		exit( 1 );
 	}
 
 	nline = 0;
 	file = fopen( path, "r" );
 	if( file == NULL ) {
-		log_err( "CFG: Cannot open file: %s (%s)", path, strerror( errno ) );
+		log_err( "Cannot open file: %s (%s)", path, strerror( errno ) );
 		exit( 1 );
 	}
 
@@ -669,7 +669,7 @@ void conf_load_file( const char path[] ) {
 			// Prevent recursive inclusion
 			if( strcmp( option, "--config " ) == 0) {
 				fclose( file );
-				log_err( "CFG: Option '--config' not allowed inside a configuration file, line %ld.", nline );
+				log_err( "Option '--config' not allowed inside a configuration file, line %ld.", nline );
 				exit( 1 );
 			}
 
@@ -677,7 +677,7 @@ void conf_load_file( const char path[] ) {
 			conf_append( option, (ret == 2) ? value : NULL );
 		} else if( line[0] != '\0' ) {
 			fclose( file );
-			log_err( "CFG: Invalid line in config file: %s (%d)", path, nline );
+			log_err( "Invalid line in config file: %s (%d)", path, nline );
 			exit( 1 );
 		}
 	}
