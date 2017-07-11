@@ -178,6 +178,7 @@ static const char g_names[MAX_ADDR_RECORDS][3] = {
 /*
 * Basic memory operations.
 */
+
 size_t get16bits( const uint8_t** buffer ) {
 	uint16_t value;
 
@@ -634,8 +635,8 @@ void dns_handler( int rc, int sock ) {
 	if( !is_suffix( hostname, gconf->query_tld ) ) {
 		// Act as an DNS proxy
 		if( gconf->dns_proxy_enable ) {
+			// Update proxy server address if no fixed DNS server is given
 			if( gconf->dns_proxy_server == NULL ) {
-				// Update proxy server address
 				proxy_read_resolv( &g_proxy_addr, "/etc/resolv.conf" );
 			}
 
@@ -716,6 +717,7 @@ void dns_setup( void ) {
 		return;
 	}
 
+	// Initialize g_proxy_addr
 	if( gconf->dns_proxy_enable && gconf->dns_proxy_server ) {
 		if( addr_parse( &g_proxy_addr, gconf->dns_proxy_server, "53", AF_UNSPEC ) != 0 ) {
 			log_err( "DNS: Failed to parse IP address '%s'.", gconf->dns_proxy_server );

@@ -446,7 +446,7 @@ int kad_lookup( const char query[], IP addr_array[], size_t addr_num ) {
 		return -1;
 	}
 
-	// Search was just started
+	// Search was just started (time is only updated in the main loop)
 	if( search->start_time == time_now_sec() ) {
 		// Search own announced values
 		kad_lookup_local_values( search );
