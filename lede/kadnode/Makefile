@@ -5,7 +5,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=kadnode
-PKG_VERSION:=1.0.0
+PKG_VERSION:=2.0.0
 PKG_RELEASE:=1
 
 PKG_LICENSE:=MIT
@@ -28,6 +28,7 @@ define Package/kadnode
 	URL:=https://github.com/mwarning/KadNode
 	MENU:=1
 	DEPENDS:=+KADNODE_ENABLE_AUTH:libsodium +KADNODE_ENABLE_UPNP:libminiupnpc +KADNODE_ENABLE_NATPMP:libnatpmp
+	MAINTAINER:=Moritz Warning <moritzwarning@web.de>
 endef
 
 define Package/kadnode/description
