@@ -438,16 +438,11 @@ const struct option_t *find_option(const char name[]) {
 	return &options[0];
 }
 
-void conf_duplicate_option( const char opt[] ) {
-	log_err( "Option was already set: %s", opt );
-	exit( 1 );
-}
-
 // Set a string once - error when already set
 void conf_str( const char opt[], char *dst[], const char src[] ) {
 	if( *dst != NULL ) {
-		conf_duplicate_option( opt );
-		return;
+		log_err( "Option was already set: %s", opt );
+		exit( 1 );
 	}
 
 	*dst = strdup( src );
@@ -461,13 +456,11 @@ void conf_handle_option( const char opt[], const char val[] ) {
 	if( option->num_args == 1 && val == NULL ) {
 		log_err( "Argument expected for option: %s", opt );
 		exit( 1 );
-		return;
 	}
 
 	if( option->num_args == 0 && val != NULL ) {
 		log_err( "No argument expected for option: %s", opt );
 		exit( 1 );
-		return;
 	}
 
 	switch( option->code ) {
@@ -551,7 +544,8 @@ void conf_handle_option( const char opt[], const char val[] ) {
 			break;
 		case oMode:
 			if( gconf->af != 0 ) {
-				conf_duplicate_option( opt );
+				log_err( "Option was already set: %s", opt );
+				exit( 1 );
 			} else if( strcmp( val, "ipv4" ) == 0 ) {
 				gconf->af = AF_INET;
 			} else if( strcmp( val, "ipv6" ) == 0 ) {
