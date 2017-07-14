@@ -18,8 +18,8 @@
 #include "net.h"
 #include "announces.h"
 #include "searches.h"
-#ifdef AUTH
-#include "ext-auth.h"
+#ifdef BOB
+#include "ext-bob.h"
 #endif
 #ifdef FWD
 #include "ext-fwd.h"
@@ -31,23 +31,20 @@ static const char* cmd_usage =
 	"Usage:\n"
 	"	status\n"
 	"	lookup <query>\n"
-#if 0
-	"	lookup_node <id>\n"
-#endif
 	"	announce [<query>[:<port>] [<minutes>]]\n"
 	"	import <addr>\n"
 	"	export\n"
 	"	blacklist <addr>\n";
 
 const char* cmd_usage_debug =
-	"	list [blacklist|buckets|constants|"
+	"	list blacklist|buckets|constants"
 #ifdef FWD
-	"forwardings|"
+	"|forwardings"
 #endif
-#ifdef AUTH
-	"skeys|pkeys|"
+#ifdef BOB
+	"|keys"
 #endif
-	"results|searches|storage|values]\n";
+	"|results|searches|storage|announces\n";
 
 #define REPLY_DATA_SIZE 1472
 
@@ -71,7 +68,7 @@ void r_printf( struct reply_t *r, const char *format, ... ) {
 	int written;
 
 	va_start( vlist, format );
-	written = vsnprintf( r->data + r->size, REPLY_DATA_SIZE - 1 , format, vlist );
+	written = vsnprintf( r->data + r->size, REPLY_DATA_SIZE - 1, format, vlist );
 	va_end( vlist );
 
 	// Ignore characters that do not fit into packet
@@ -80,39 +77,6 @@ void r_printf( struct reply_t *r, const char *format, ... ) {
 	} else {
 		r->data[r->size] = '\0';
 	}
-}
-
-// Partition a string to the common argc/argv arguments
-void cmd_to_args( char *str, int *argc, char **argv, int max_argv ) {
-	size_t len, i;
-
-	len = strlen( str );
-	*argc = 0;
-
-	// Zero out white/control characters
-	for( i = 0; i <= len; i++ ) {
-		if( str[i] <= ' ') {
-			str[i] = '\0';
-		}
-	}
-
-	// Record strings
-	for( i = 0; i <= len; i++ ) {
-
-		if( str[i] == '\0') {
-			continue;
-		}
-
-		if( *argc >= max_argv - 1 ) {
-			break;
-		}
-
-		argv[*argc] = &str[i];
-		*argc += 1;
-		i += strlen( &str[i] );
-	}
-
-	argv[*argc] = NULL;
 }
 
 int cmd_import( struct reply_t *r, const char *addr_str) {
@@ -177,53 +141,69 @@ int cmd_export( struct reply_t *r ) {
 	return 0;
 }
 
-int cmd_exec( struct reply_t *r, int argc, char **argv ) {
-	time_t lifetime;
-	int minutes;
-	IP addrs[16];
-	char hostname[256];
-	char dummy[4];
-	int count;
-	int port;
-	struct value_t *value;
-	int rc = 0;
+int cmd_announce( struct reply_t *r, const char hostname[], int32_t port, int64_t lifetime ) {
+	time_t minutes;
 
-	if( argc == 0 ) {
+	if( port < 0 || port > 65534 ) {
+		port = 0;
+	}
 
-		// Print usage
-		r_printf( r, cmd_usage );
-		if( r->allow_debug ) {
-			r_printf( r, cmd_usage_debug );
-		}
-		rc = 1;
+	if( lifetime < 0 ) {
+		minutes = 0;
+		lifetime = LONG_MAX;
+	} else {
+		// Round up to multiple of 30 minutes
+		minutes = (30 * (lifetime / 30 + 1));
+		lifetime = (time_now_sec() + (minutes * 60));
+	}
 
-	} else if( strcmp( argv[0], "import" ) == 0 && argc == 2 ) {
-
-		rc = cmd_import( r, argv[1] );
-#if 0
-	} else if( strcmp( argv[0], "lookup_node" ) == 0 && argc == 2 ) {
-
-		// Check searches for node
-		rc = kad_lookup_node( argv[1], &addrs[0] );
-		if( rc == 0 ) {
-			r_printf( r, "%s\n", str_addr( &addrs[0] ) );
-		} else if( rc == 1 ) {
-			r_printf( r ,"No search found.\n" );
-			rc = 1;
-		} else if( rc == 2 ) {
-			r_printf( r ,"Invalid id format. 20 digit hex string expected.\n" );
-			rc = 1;
-		} else {
-			rc = 1;
+	if( kad_announce( hostname, port, lifetime ) >= 0 ) {
+#ifdef FWD
+		// Add port forwarding
+		if( port != 0 ) {
+			fwd_add( port, lifetime );
 		}
 #endif
-	} else if( strcmp( argv[0], "lookup" ) == 0 && argc == 2 ) {
+		if( lifetime == 0 ) {
+			r_printf( r ,"Start single announcement now.\n" );
+		} else if( lifetime == LONG_MAX ) {
+			r_printf( r ,"Start regular announcements for the entire run time (port %d).\n", port );
+		} else {
+			r_printf( r ,"Start regular announcements for %d minutes (port %d).\n", minutes, port );
+		}
+	} else {
+		r_printf( r ,"Invalid port or query too long.\n" );
+		return 1;
+	}
 
-		size_t num = N_ELEMS(addrs);
-		size_t i;
+	return 0;
+}
+
+// Match a format string with only %n at the end
+int match( const char input[], const char fmt[] ) {
+	int n = -1;
+	sscanf( input, fmt, &n);
+	return (n > 0 && input[n] == '\0');
+}
+
+int cmd_exec( struct reply_t *r, const char input[] ) {
+	struct value_t *value;
+	int lifetime;
+	IP addrs[16];
+	char hostname[256];
+	int count;
+	int port;
+	size_t i;
+	size_t num;
+	int rc = 0;
+
+	if( sscanf( input, " import %255s ", hostname ) == 1 ) {
+		rc = cmd_import( r, hostname );
+	} else if( sscanf( input, " lookup %255s ", hostname ) == 1 ) {
+		num = N_ELEMS(addrs);
 
 		// Check searches for node
-		rc = kad_lookup( argv[1], addrs, &num );
+		rc = kad_lookup( hostname, addrs, &num );
 
 		if( rc >= 0 && num > 0 ) {
 			for( i = 0; i < num; ++i ) {
@@ -239,109 +219,60 @@ int cmd_exec( struct reply_t *r, int argc, char **argv ) {
 			r_printf( r ,"Search started.\n" );
 			rc = 1;
 		}
-	} else if( strcmp( argv[0], "status" ) == 0 && argc == 1 ) {
-
+	} else if( match( input, " status %n" ) ) {
 		// Print node id and statistics
 		cmd_print_status( r );
-
-	} else if( strcmp( argv[0], "announce" ) == 0 && (argc == 1 || argc == 2 || argc == 3) ) {
-
-		if( argc == 1 ) {
-			// Announce all values
-			count = 0;
-			value = announces_get();
-			while( value ) {
-				kad_announce_once( value->id, value->port );
-				count++;
-				value = value->next;
-			}
-			r_printf( r ,"%d announcements started.\n", count );
-			goto end;
-		} else if( argc == 2 ) {
-			minutes = 0;
-			lifetime = 0;
-		} else if( argc == 3 ) {
-			minutes = atoi( argv[2] );
-			if( minutes < 0 ) {
-				minutes = 0;
-				lifetime = LONG_MAX;
-			} else {
-				// Round up to multiple of 30 minutes
-				minutes = (30 * (minutes / 30 + 1));
-				lifetime = (time_now_sec() + (minutes * 60));
-			}
-		} else {
-			// Make compilers happy
-			exit( 1 );
+	} else if( match( input, " announce %n" ) ) {
+		// Announce all values
+		count = 0;
+		value = announces_get();
+		while( value ) {
+			kad_announce_once( value->id, value->port );
+			count++;
+			value = value->next;
 		}
-
-		// Parse <hostname>:[<port>]
-		port = 0;
-		rc = sscanf( argv[1], "%255[^:]:%d%4s", hostname, &port, dummy );
-
-		if( (rc == 1 || rc == 2) && kad_announce( hostname, port, lifetime ) >= 0 ) {
-#ifdef FWD
-			// Add port forwarding
-			if( port != 0 ) {
-				fwd_add( port, lifetime );
-			}
-#endif
-			if( lifetime == 0 ) {
-				r_printf( r ,"Start single announcement now.\n" );
-			} else if( lifetime == LONG_MAX ) {
-				r_printf( r ,"Start regular announcements for the entire run time (port %d).\n", port );
-			} else {
-				r_printf( r ,"Start regular announcements for %d minutes (port %d).\n", minutes, port );
-			}
-		} else {
-			r_printf( r ,"Invalid port or query too long.\n" );
-			rc = 1;
-		}
-
-	} else if( argc == 2 && strcmp( argv[0], "blacklist" ) == 0 ) {
-
-		rc = cmd_blacklist( r, argv[1] );
-
-	} else if( argc == 1 && strcmp( argv[0], "export" ) == 0 ) {
-
+		r_printf( r ,"%d announcements started.\n", count );
+	} else if( sscanf( input, " announce %255[^:] ", hostname ) == 1 ) {
+		rc = cmd_announce( r, hostname, -1, -1 );
+	} else if( sscanf( input, " announce %255[^:] %d ", hostname, &lifetime) == 2 ) {
+		rc = cmd_announce( r, hostname, -1, lifetime );
+	} else if( sscanf( input, " announce %255[^:]:%d %d ", hostname, &port, &lifetime) == 3 ) {
+		rc = cmd_announce( r, hostname, port, lifetime );
+	} else if( match( input, " blacklist %255[^:]%n" ) ) {
+		rc = cmd_blacklist( r, hostname );
+	} else if( match( input, " export %n" ) ) {
 		rc = cmd_export( r );
-
-	} else if( argc == 2 && strcmp( argv[0], "list" ) == 0 && r->allow_debug ) {
-
+	} else if( match( input, " list %*s%n" ) && r->allow_debug ) {
 		if( gconf->is_daemon == 1 ) {
 			r_printf( r ,"The 'list' command is not available while KadNode runs as daemon.\n" );
 			rc = 1;
-			goto end;
-		} else if( strcmp( argv[1], "blacklist" ) == 0 ) {
+		} else if( match( input, " list blacklist %n" )) {
 			kad_debug_blacklist( STDOUT_FILENO );
-		} else if( strcmp( argv[1], "buckets" ) == 0 ) {
+		} else if( match( input, " list buckets %n" )) {
 			kad_debug_buckets( STDOUT_FILENO );
-		} else if( strcmp( argv[1], "constants") == 0 ) {
+		} else if( match( input, " list constants %n" )) {
 			kad_debug_constants( STDOUT_FILENO );
 #ifdef FWD
-		} else if( strcmp( argv[1], "forwardings") == 0 ) {
+		} else if( match( input, " list forwardings %n" )) {
 			fwd_debug( STDOUT_FILENO );
 #endif
-#ifdef AUTH
-		} else if( strcmp( argv[1], "pkeys") == 0 ) {
-			auth_debug_pkeys( STDOUT_FILENO );
-		} else if( strcmp( argv[1], "skeys") == 0 ) {
-			auth_debug_skeys( STDOUT_FILENO );
+#ifdef BOB
+		} else if( match( input, " list keys %n" )) {
+			bob_debug_keys( STDOUT_FILENO );
 #endif
-		} else if( strcmp( argv[1], "results") == 0 ) {
+		} else if( match( input, " list results %n" )) {
 			searches_debug( STDOUT_FILENO );
-		} else if( strcmp( argv[1], "searches") == 0 ) {
+		} else if( match( input, " list searches %n" )) {
 			kad_debug_searches( STDOUT_FILENO );
-		} else if( strcmp( argv[1], "storage") == 0 ) {
+		} else if( match( input, " list storage %n" )) {
 			kad_debug_storage( STDOUT_FILENO );
-		} else if( strcmp( argv[1], "values" ) == 0 ) {
+		} else if( match( input, " list announcements %n" )) {
 			announces_debug( STDOUT_FILENO );
 		} else {
-			dprintf( STDERR_FILENO, "Unknown argument.\n" );
+			dprintf( STDERR_FILENO, "Unknown command.\n" );
 			rc = 1;
 		}
 		r_printf( r ,"\nOutput send to console.\n" );
-
 	} else {
 		// Print usage
 		r_printf( r, cmd_usage );
@@ -351,23 +282,17 @@ int cmd_exec( struct reply_t *r, int argc, char **argv ) {
 		rc = 1;
 	}
 
-end:
-	;
 	return rc;
 }
 
 void cmd_remote_handler( int rc, int sock ) {
-	char* argv[32];
-	int argc;
-
 	IP clientaddr;
-	socklen_t addrlen_ret;
 	socklen_t addrlen;
 	char request[1500];
 	struct reply_t reply;
 
-	addrlen_ret = sizeof(IP);
-	rc = recvfrom( sock, request, sizeof(request) - 1, 0, (struct sockaddr*)&clientaddr, &addrlen_ret );
+	addrlen = sizeof(IP);
+	rc = recvfrom( sock, request, sizeof(request) - 1, 0, (struct sockaddr*)&clientaddr, &addrlen );
 	if( rc <= 0 ) {
 		return;
 	} else {
@@ -378,11 +303,8 @@ void cmd_remote_handler( int rc, int sock ) {
 	r_init( &reply, false );
 	r_printf( &reply, "_" );
 
-	// Split up the command line into an argument array
-	cmd_to_args( request, &argc, &argv[0], N_ELEMS(argv) );
-
 	// Execute command line
-	rc = cmd_exec( &reply, argc, argv );
+	rc = cmd_exec( &reply, request );
 
 	// Insert return code
 	reply.data[0] = (rc == 0) ? '0' : '1';
@@ -393,10 +315,8 @@ void cmd_remote_handler( int rc, int sock ) {
 
 void cmd_console_handler( int rc, int fd ) {
 	char request[512];
-	char *req;
 	struct reply_t reply;
-	char *argv[32];
-	int argc;
+	char *req;
 
 	if( rc == 0 ) {
 		return;
@@ -409,14 +329,11 @@ void cmd_console_handler( int rc, int fd ) {
 		return;
 	}
 
-	// Split up the command line into an argument array
-	cmd_to_args( request, &argc, &argv[0], N_ELEMS(argv) );
-
 	// Initialize reply
 	r_init( &reply, true );
 
 	// Execute command line
-	rc = cmd_exec( &reply, argc, argv );
+	rc = cmd_exec( &reply, request );
 
 	fprintf( rc ? stderr : stdout, "%.*s\n", (int) reply.size, reply.data );
 }
