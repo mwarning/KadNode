@@ -539,7 +539,6 @@ void conf_handle_option( const char opt[], const char val[] ) {
 			break;
 #endif
 		case oConfig:
-			conf_load_file( val );
 			conf_str( opt, &gconf->configfile, val );
 			break;
 		case oMode:
@@ -691,7 +690,7 @@ void conf_load_args( int argc, char **argv ) {
 
 	for( i = 1; i < g_argc; i++ ) {
 		const char *opt = g_argv[i];
-		const char *val = g_argv[i+1];
+		const char *val = g_argv[i + 1];
 		if( val && val[0] != '-') {
 			// -x abc
 			conf_handle_option( opt, val );
@@ -700,6 +699,10 @@ void conf_load_args( int argc, char **argv ) {
 			// -x
 			conf_handle_option( opt, NULL );
 		}
+	}
+
+	if( gconf->configfile ) {
+		conf_load_file( gconf->configfile );
 	}
 
 	conf_check();
