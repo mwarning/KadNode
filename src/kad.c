@@ -431,12 +431,12 @@ int kad_lookup( const char query[], IP addr_array[], size_t addr_num ) {
 	struct search_t *search;
 	int rc;
 
+	log_debug( "KAD: Lookup string: %s", hostname );
+
 	// Remove .p2p suffix and convert to lowercase
 	if( query_sanitize( hostname, sizeof(query), query ) != 0 ) {
 		return -1;
 	}
-
-	log_debug( "KAD: Lookup string: %s", hostname );
 
 	// Find existing or create new item
 	search = searches_start( hostname );

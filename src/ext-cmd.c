@@ -145,7 +145,7 @@ int cmd_announce( struct reply_t *r, const char hostname[], int32_t port, int64_
 	time_t minutes;
 
 	if( port < 0 || port > 65534 ) {
-		port = 0;
+		return 1;
 	}
 
 	if( lifetime < 0 ) {
@@ -182,7 +182,7 @@ int cmd_announce( struct reply_t *r, const char hostname[], int32_t port, int64_
 // Match a format string with only %n at the end
 int match( const char input[], const char fmt[] ) {
 	int n = -1;
-	sscanf( input, fmt, &n);
+	sscanf( input, fmt, &n );
 	return (n > 0 && input[n] == '\0');
 }
 
@@ -231,11 +231,11 @@ int cmd_exec( struct reply_t *r, const char input[] ) {
 			count++;
 			value = value->next;
 		}
-		r_printf( r ,"%d announcements started.\n", count );
+		r_printf( r, "%d announcements started.\n", count );
 	} else if( sscanf( input, " announce %255[^:] ", hostname ) == 1 ) {
-		rc = cmd_announce( r, hostname, -1, -1 );
+		rc = cmd_announce( r, hostname, 0, -1 );
 	} else if( sscanf( input, " announce %255[^:] %d ", hostname, &lifetime) == 2 ) {
-		rc = cmd_announce( r, hostname, -1, lifetime );
+		rc = cmd_announce( r, hostname, 0, lifetime );
 	} else if( sscanf( input, " announce %255[^:]:%d %d ", hostname, &port, &lifetime) == 3 ) {
 		rc = cmd_announce( r, hostname, port, lifetime );
 	} else if( match( input, " blacklist %255[^:]%n" ) ) {

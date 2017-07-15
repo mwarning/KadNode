@@ -277,7 +277,7 @@ static int write_pem( const mbedtls_pk_context *key, const char path[] ) {
 
 	if( (file = fopen( path, "r" )) != NULL ) {
 		fclose( file );
-		log_err( "BOB: File already exists: %s", path );
+		log_err( "File already exists: %s", path );
 		return -1;
 	}
 
@@ -306,7 +306,8 @@ static const char *get_pkey_hex( const mbedtls_pk_context *ctx ) {
 	return bytes_to_hex( hexbuf, buf, sizeof(buf) );
 }
 
-// Generate a new key pair and print it to stdout.
+// Generate a new key pair, write the secret key
+// to path and print public key to stdout.
 int bob_create_key( const char path[] ) {
 	mbedtls_entropy_context entropy;
 	mbedtls_ctr_drbg_context ctr_drbg;
@@ -325,7 +326,7 @@ int bob_create_key( const char path[] ) {
 		return -1;
 	}
 
-	printf( "Generating secp256r1 key...\n" );
+	printf( "Generating %s key...\n", mbedtls_ecp_curve_info_from_grp_id( ECPARAMS )->name );
 
 	if( ( ret = mbedtls_pk_setup( &ctx, mbedtls_pk_info_from_type( MBEDTLS_PK_ECKEY ) ) ) != 0 ) {
 		printf( "mbedtls_pk_setup returned -0x%04x\n", -ret );
@@ -425,7 +426,7 @@ void bob_verify_challenge( int sock, uint8_t buf[], size_t buflen, IP *addr ) {
 
 		bob_auth_end( resource, ret ? AUTH_FAILED : AUTH_OK );
 	} else {
-		log_warn( "BOB: no session found for address %s", str_addr( addr ) );
+		log_warn( "BOB: No session found for address %s", str_addr( addr ) );
 	}
 }
 
@@ -461,12 +462,12 @@ void bob_encrypt_challenge( int sock, uint8_t buf[], size_t buflen, IP *addr ) {
 			sig, &slen, mbedtls_ctr_drbg_random, &g_ctr_drbg );
 
 		if( ret != 0) {
-			log_warn( "BOB: mbedtls_ecdsa_write_signature returned %d\n", ret );
+			log_warn( "mbedtls_ecdsa_write_signature returned %d\n", ret );
 		} else  {
 			printf( "Hash: %s\n", bytes_to_hex(hexbuf, buf, buflen) );
 			printf( "Signature: %s\n", bytes_to_hex( hexbuf, sig, slen ));
 
-			log_debug( "BOB: Received challenge from %s and send back response.", str_addr( addr ) );
+			log_debug( "Received challenge from %s and send back response.", str_addr( addr ) );
 			sendto( sock, sig, slen, 0, (struct sockaddr*) addr, sizeof(IP) );
 		}
 	}
@@ -517,6 +518,7 @@ void bob_free( void ) {
 	key = g_keys;
 	while( key ) {
 		next = key->next;
+		// Also zeroes the private key in memory
 		mbedtls_pk_free( &key->ctx_sign );
 		free( key );
 		key = next;
