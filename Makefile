@@ -30,7 +30,7 @@ endif
 ifeq ($(findstring bob,$(FEATURES)),bob)
   OBJS += build/ext-bob.o
   CFLAGS += -DBOB
-  LFLAGS += -lsodium
+  LFLAGS += -lmbedtls -lmbedx509 -lmbedcrypto
 endif
 
 ifeq ($(findstring cmd,$(FEATURES)),cmd)
