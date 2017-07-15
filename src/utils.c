@@ -169,7 +169,7 @@ int str_isHex( const char str[], size_t size ) {
 	}
 
 	// Return 1 if size is even
-	return size & 1;
+	return !(size & 1);
 }
 
 // Matches [0-9a-zA-Z._-]*
