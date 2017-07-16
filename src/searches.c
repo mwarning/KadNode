@@ -248,7 +248,7 @@ int hex_get_id( uint8_t id[], size_t len, const char query[] ) {
 	size_t query_len = strlen( query );
 	if( str_isHex( query, query_len ) ) {
 		memset( id, 0, len ); // Fill up id with random numbers?
-		bytes_from_hex( id, query, MIN( len, query_len ) );
+		bytes_from_hex( id, query, MIN( 2 * len, query_len ) );
 		return 1;
 	}
 

@@ -161,7 +161,7 @@ int bob_get_id( uint8_t id[], size_t ilen, const char query[] ) {
 	size_t qlen;
 
 	qlen = strlen( query );
-	if( str_isHex( query, qlen ) ) {
+	if( qlen == 64 && str_isHex( query, qlen ) ) {
 		memset( id, 0, ilen );
 		bytes_from_hex( id, query, MIN( ilen * 2, qlen ) );
 		return 1;
@@ -482,7 +482,7 @@ int bob_handler( int fd, uint8_t buf[], uint32_t buflen, IP *from ) {
 		g_dht_socket = fd;
 	}
 
-	if( buflen > 3 && memcmp( buf, "BOB", 3 ) != 0 ) {
+	if( buflen > 3 && memcmp( buf, "BOB", 3 ) == 0 ) {
 		if( buflen == (3 + PUBLICKEYBYTES + CHALLENGE_BIN_LENGTH) ) {
 			// Answer a challenge request
 			bob_encrypt_challenge( fd, buf, buflen, from );
