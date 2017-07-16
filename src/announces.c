@@ -64,7 +64,7 @@ void announces_debug( int fd ) {
 		}
 
 		if( value->lifetime == LONG_MAX ) {
-			dprintf( fd, "  lifetime: infinite\n" );
+			dprintf( fd, "  lifetime: entire runtime\n" );
 		} else {
 			dprintf( fd, "  lifetime: %ld min left\n", (value->lifetime -  now) / 60 );
 		}
@@ -116,7 +116,11 @@ struct value_t *announces_add( const char query[], int port, time_t lifetime ) {
 	new->refresh = now - 1; // Send first announcement as soon as possible
 	new->lifetime = lifetime;
 
-	log_debug( "Add announcement %s (port %hu) for %lu minutes", str_id( id ), port, (lifetime - now) / 60 );
+	if( lifetime == LONG_MAX ) {
+		log_debug( "Add announcement %s:%hu for entire runtime", str_id( id ), port );
+	} else {
+		log_debug( "Add announcement %s:%hu for %lu minutes", str_id( id ), port, (lifetime - now) / 60 );
+	}
 
 	// Prepend to list
 	new->next = g_values;
