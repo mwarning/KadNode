@@ -20,6 +20,7 @@
 #include "utils.h"
 #include "kad.h"
 #include "net.h"
+#include "announces.h"
 #include "searches.h"
 #include "ext-bob.h"
 
@@ -156,13 +157,13 @@ void bob_auth_end(struct bob_resource *resource, int state) {
 	bob_trigger_auth();
 }
 
-int bob_get_id( uint8_t id[], size_t len, const char query[] ) {
-	size_t query_len;
+int bob_get_id( uint8_t id[], size_t ilen, const char query[] ) {
+	size_t qlen;
 
-	query_len = strlen( query );
-	if( str_isHex( query, query_len ) ) {
-		memset( id, 0, len );
-		bytes_from_hex( id, query, MIN( len, query_len ) );
+	qlen = strlen( query );
+	if( str_isHex( query, qlen ) ) {
+		memset( id, 0, ilen );
+		bytes_from_hex( id, query, MIN( ilen * 2, qlen ) );
 		return 1;
 	}
 
@@ -367,7 +368,7 @@ int bob_load_key( const char path[] ) {
 		return -1;
 	}
 
-	log_info( "Public key for %s: %s\n", path, get_pkey_hex( &ctx ) );
+	log_info( "Public key for %s: %s", path, get_pkey_hex( &ctx ) );
 
 	struct key_t *entry = (struct key_t*) calloc( 1, sizeof(struct key_t) );
 	memcpy( &entry->ctx_sign, &ctx, sizeof(ctx) );

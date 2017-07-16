@@ -32,7 +32,7 @@ struct value_t* announces_get( void ) {
 	return g_values;
 }
 
-struct value_t* announces_find( uint8_t id[] ) {
+struct value_t* announces_find( const uint8_t id[] ) {
 	struct value_t *value;
 
 	value = g_values;
@@ -53,7 +53,7 @@ void announces_debug( int fd ) {
 	now = time_now_sec();
 	value_counter = 0;
 	value = g_values;
-	dprintf( fd, "Announced values:\n" );
+	dprintf( fd, "Announcements:\n" );
 	while( value ) {
 		dprintf( fd, " id: %s\n", str_id( value->id ) );
 		dprintf( fd, "  port: %d\n", value->port );
@@ -73,29 +73,27 @@ void announces_debug( int fd ) {
 		value = value->next;
 	}
 
-	dprintf( fd, " Found %d values.\n", value_counter );
+	dprintf( fd, " Found %d entries.\n", value_counter );
 }
 
 struct value_t *announces_add( const char query[], int port, time_t lifetime ) {
 	uint8_t id[SHA1_BIN_LENGTH];
 	struct value_t *cur;
 	struct value_t *new;
-	time_t now;
+	time_t now = time_now_sec();
 
 	if( !bob_get_id( id, sizeof(id), query )
-		|| !tls_client_get_id( id, sizeof(id), query ) ) {
+		&& !tls_client_get_id( id, sizeof(id), query ) ) {
 		return NULL;
-	}
-
-	if( port == 0 ) {
-		port = port_random();
 	}
 
 	if( port < 1 || port > 65535 ) {
 		return NULL;
 	}
 
-	now = time_now_sec();
+	if( lifetime < now ) {
+		return NULL;
+	}
 
 	// Value already exists - refresh
 	if( (cur = announces_find( id )) != NULL ) {
@@ -114,19 +112,18 @@ struct value_t *announces_add( const char query[], int port, time_t lifetime ) {
 	// Prepend new entry
 	new = (struct value_t*) calloc( 1, sizeof(struct value_t) );
 	memcpy( new->id, id, SHA1_BIN_LENGTH );
-
 	new->port = port;
-	new->refresh = now - 1;
-	new->lifetime = (lifetime > now) ? lifetime : (now + 100);
+	new->refresh = now - 1; // Send first announcement as soon as possible
+	new->lifetime = lifetime;
 
-	log_debug( "VAL: Add value id %s:%hu.",  str_id( id ), port );
+	log_debug( "Add announcement id %s:%hu for %lu minutes", str_id( id ), port, (lifetime - now) / 60 );
 
 	// Prepend to list
 	new->next = g_values;
 	g_values = new;
 
 	// Trigger immediate handling
-	g_announces_announce= 0;
+	g_announces_announce = 0;
 
 	return new;
 }
@@ -189,7 +186,7 @@ void announces_announce( void ) {
 	while( value ) {
 		if( value->refresh < now ) {
 #ifdef DEBUG
-			log_debug( "VAL: Announce %s:%hu",  str_id( value->id ), value->port );
+			log_debug( "Announce %s:%hu",  str_id( value->id ), value->port );
 #endif
 			kad_announce_once( value->id, value->port );
 			value->refresh = now + ANNOUNCES_INTERVAL;

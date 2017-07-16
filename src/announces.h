@@ -21,7 +21,7 @@ void announces_setup( void );
 void announces_free( void );
 
 struct value_t* announces_get( void );
-struct value_t* announces_find( uint8_t id[] );
+struct value_t* announces_find( const uint8_t id[] );
 
 // List all entries
 void announces_debug( int fd );

@@ -4,7 +4,7 @@
 
 
 // Decide if the query is meant to be authorized via BOB
-int bob_get_id( uint8_t id[], size_t len, const char query[] );
+int bob_get_id( uint8_t id[], size_t ilen, const char query[] );
 void bob_trigger_auth( void );
 
 // .. for kad.c - remove?

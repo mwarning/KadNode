@@ -44,7 +44,7 @@ const char* cmd_usage_debug =
 #ifdef BOB
 	"|keys"
 #endif
-	"|results|searches|storage|announces\n";
+	"|results|searches|storage|announcements\n";
 
 #define REPLY_DATA_SIZE 1472
 
@@ -141,19 +141,18 @@ int cmd_export( struct reply_t *r ) {
 	return 0;
 }
 
-int cmd_announce( struct reply_t *r, const char hostname[], int32_t port, int64_t lifetime ) {
-	time_t minutes;
+int cmd_announce( struct reply_t *r, const char hostname[], int port, int minutes ) {
+	time_t lifetime;
 
 	if( port < 0 || port > 65534 ) {
 		return 1;
 	}
 
-	if( lifetime < 0 ) {
-		minutes = 0;
+	if( minutes < 0 ) {
 		lifetime = LONG_MAX;
 	} else {
 		// Round up to multiple of 30 minutes
-		minutes = (30 * (lifetime / 30 + 1));
+		minutes = (30 * (minutes / 30 + 1));
 		lifetime = (time_now_sec() + (minutes * 60));
 	}
 
@@ -164,9 +163,7 @@ int cmd_announce( struct reply_t *r, const char hostname[], int32_t port, int64_
 			fwd_add( port, lifetime );
 		}
 #endif
-		if( lifetime == 0 ) {
-			r_printf( r ,"Start single announcement now.\n" );
-		} else if( lifetime == LONG_MAX ) {
+		if( minutes < 0 ) {
 			r_printf( r ,"Start regular announcements for the entire run time (port %d).\n", port );
 		} else {
 			r_printf( r ,"Start regular announcements for %d minutes (port %d).\n", minutes, port );
@@ -188,7 +185,7 @@ int match( const char input[], const char fmt[] ) {
 
 int cmd_exec( struct reply_t *r, const char input[] ) {
 	struct value_t *value;
-	int lifetime;
+	int minutes;
 	IP addrs[16];
 	char hostname[256];
 	int count;
@@ -234,15 +231,15 @@ int cmd_exec( struct reply_t *r, const char input[] ) {
 		r_printf( r, "%d announcements started.\n", count );
 	} else if( sscanf( input, " announce %255[^:] ", hostname ) == 1 ) {
 		rc = cmd_announce( r, hostname, 0, -1 );
-	} else if( sscanf( input, " announce %255[^:] %d ", hostname, &lifetime) == 2 ) {
-		rc = cmd_announce( r, hostname, 0, lifetime );
-	} else if( sscanf( input, " announce %255[^:]:%d %d ", hostname, &port, &lifetime) == 3 ) {
-		rc = cmd_announce( r, hostname, port, lifetime );
+	} else if( sscanf( input, " announce %255[^:] %d ", hostname, &minutes) == 2 ) {
+		rc = cmd_announce( r, hostname, 0, minutes );
+	} else if( sscanf( input, " announce %255[^:]:%d %d ", hostname, &port, &minutes) == 3 ) {
+		rc = cmd_announce( r, hostname, port, minutes );
 	} else if( match( input, " blacklist %255[^:]%n" ) ) {
 		rc = cmd_blacklist( r, hostname );
 	} else if( match( input, " export %n" ) ) {
 		rc = cmd_export( r );
-	} else if( match( input, " list %*s%n" ) && r->allow_debug ) {
+	} else if( match( input, " list %*s %n" ) && r->allow_debug ) {
 		if( gconf->is_daemon == 1 ) {
 			r_printf( r ,"The 'list' command is not available while KadNode runs as daemon.\n" );
 			rc = 1;
