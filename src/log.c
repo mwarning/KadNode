@@ -14,17 +14,26 @@
 // Program start time
 static struct timespec log_start = { 0, 0 };
 
-char *log_time() {
+const char *log_time() {
 	struct timespec now = { 0, 0 };
 	clock_gettime( CLOCK_MONOTONIC_COARSE, &now );
 
-	static char buf[16];
-	sprintf( buf, "%.5f",
+	// Initialize clock
+	if( log_start.tv_sec == 0 && log_start.tv_nsec == 0 ) {
+		clock_gettime( CLOCK_MONOTONIC_COARSE, &log_start );
+	}
+
+	static char buf[10];
+	sprintf( buf, "[%8.2f] ",
 		((double) now.tv_sec + 1.0e-9 * now.tv_nsec) -
 		((double) log_start.tv_sec + 1.0e-9 * log_start.tv_nsec)
 	);
 
 	return buf;
+}
+#else
+const char *log_time() {
+	return "";
 }
 #endif
 
@@ -58,19 +67,10 @@ void log_print( int priority, const char format[], ... ) {
 	if( gconf->use_syslog ) {
 		// Write messages to e.g. /var/log/syslog
 		openlog( MAIN_SRVNAME, LOG_PID | LOG_CONS, LOG_USER | LOG_PERROR );
-		syslog( priority, "%s %s", prefix, buf );
+		syslog( priority, "%s%s %s", log_time(), prefix, buf );
 		closelog();
 	} else {
-		fprintf( stderr, "%s %s\n", prefix, buf );
+		FILE *out = (priority == LOG_ERR) ? stderr : stdout;
+		fprintf( out, "%s%s %s\n", log_time(), prefix, buf );
 	}
-}
-
-void log_setup( void ) {
-#ifdef DEBUG
-	clock_gettime( CLOCK_MONOTONIC_COARSE, &log_start );
-#endif
-}
-
-void log_free( void ) {
-	// Nothing to do
 }
