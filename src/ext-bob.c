@@ -368,7 +368,7 @@ int bob_load_key( const char path[] ) {
 		return -1;
 	}
 
-	log_info( "Public key for %s: %s", path, get_pkey_hex( &ctx ) );
+	log_info( "Load %s, public key: %s", path, get_pkey_hex( &ctx ) );
 
 	struct key_t *entry = (struct key_t*) calloc( 1, sizeof(struct key_t) );
 	memcpy( &entry->ctx_sign, &ctx, sizeof(ctx) );

@@ -116,7 +116,7 @@ struct value_t *announces_add( const char query[], int port, time_t lifetime ) {
 	new->refresh = now - 1; // Send first announcement as soon as possible
 	new->lifetime = lifetime;
 
-	log_debug( "Add announcement id %s:%hu for %lu minutes", str_id( id ), port, (lifetime - now) / 60 );
+	log_debug( "Add announcement %s (port %hu) for %lu minutes", str_id( id ), port, (lifetime - now) / 60 );
 
 	// Prepend to list
 	new->next = g_values;

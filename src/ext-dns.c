@@ -417,7 +417,7 @@ const char* dns_lookup_ptr( const char ptr_name[] ) {
 	};
 
 	size_t i;
-	for( i = 0; i < (sizeof(entries) / sizeof(entries[0])); i++ ) {
+	for( i = 0; i < N_ELEMS(entries); i++ ) {
 		if( strcmp( ptr_name, entries[i].ptr_name )  == 0 ) {
 			return entries[i].hostname;
 		}
