@@ -86,7 +86,7 @@ int net_socket( const char name[], const char ifname[], int protocol, int af ) {
 
 	if( net_set_nonblocking( sock ) < 0 ) {
 		close( sock );
-		log_err( "%s: Failed to make socket nonblocking: '%s'", name, strerror( errno ) );
+		log_err( "%s: Failed to make socket nonblocking: %s", name, strerror( errno ) );
 		return -1;
 	}
 
@@ -99,7 +99,7 @@ int net_socket( const char name[], const char ifname[], int protocol, int af ) {
 #else
 	if( ifname && setsockopt( sock, SOL_SOCKET, SO_BINDTODEVICE, ifname, strlen( ifname ) ) ) {
 		close( sock );
-		log_err( "%s: Unable to bind to device '%s': %s", name, ifname, strerror( errno ) );
+		log_err( "%s: Unable to bind to device %s: %s", name, ifname, strerror( errno ) );
 		return -1;
 	}
 #endif
@@ -107,7 +107,7 @@ int net_socket( const char name[], const char ifname[], int protocol, int af ) {
 	const int optval = 1;
 	if( setsockopt( sock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval) ) < 0 ) {
 		close( sock );
-		log_err( "%s: Unable to set SO_REUSEADDR for '%s': %s", name, strerror( errno ) );
+		log_err( "%s: Unable to set SO_REUSEADDR for %s: %s", name, ifname, strerror( errno ) );
 		return -1;
 	}
 
@@ -140,8 +140,8 @@ int net_bind(
 	if( sockaddr.ss_family == AF_INET6 ) {
 		if( setsockopt( sock, IPPROTO_IPV6, IPV6_V6ONLY, &opt_on, sizeof(opt_on) ) < 0 ) {
 			close( sock );
-			log_err( "%s: Failed to set socket option IPV6_V6ONLY: '%s' (%s)",
-				name, strerror( errno ), str_addr( &sockaddr ) );
+			log_err( "%s: Failed to set IPV6_V6ONLY for %s: %s",
+				name, str_addr( &sockaddr ), strerror( errno ) );
 			return -1;
 		}
 	}
@@ -149,16 +149,16 @@ int net_bind(
 	addrlen = addr_len( &sockaddr );
 	if( bind( sock, (struct sockaddr*) &sockaddr, addrlen ) < 0 ) {
 		close( sock );
-		log_err( "%s: Failed to bind socket to address: '%s' (%s)",
-			name, strerror( errno ), str_addr( &sockaddr )
+		log_err( "%s: Failed to bind socket to %s: %s",
+			name, str_addr( &sockaddr ), strerror( errno )
 		);
 		return -1;
 	}
 
 	if( protocol == IPPROTO_TCP && listen( sock, 5 ) < 0 ) {
 		close( sock );
-		log_err( "%s: Failed to listen on socket: '%s' (%s)",
-			name, strerror( errno ), str_addr( &sockaddr )
+		log_err( "%s: Failed to listen on %s: %s (%s)",
+			name, str_addr( &sockaddr ), strerror( errno )
 		);
 		return -1;
 	}
