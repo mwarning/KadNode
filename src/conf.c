@@ -275,7 +275,7 @@ const char *verbosity_str( int verbosity ) {
 
 void conf_info( void ) {
 	log_info( "Starting %s", kadnode_version_str );
-	log_info( "IP Mode: %s", (gconf->af == AF_INET) ? "IPv4" : "IPv6");
+	log_info( "Net Mode: %s", (gconf->af == AF_INET) ? "IPv4" : "IPv6");
 	log_info( "Run Mode: %s", gconf->is_daemon ? "Daemon" : "Foreground" );
 
 	if( gconf->configfile ) {
