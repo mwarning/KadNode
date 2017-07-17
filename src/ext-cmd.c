@@ -32,12 +32,11 @@ static const char* cmd_usage =
 	"	status\n"
 	"	lookup <query>\n"
 	"	announce [<query>[:<port>] [<minutes>]]\n"
-	"	import <addr>\n"
-	"	export\n"
+	"	ping <addr>\n"
 	"	blacklist <addr>\n";
 
 const char* cmd_usage_debug =
-	"	list blacklist|buckets|constants"
+	"	list nodes|blacklist|buckets|constants"
 #ifdef FWD
 	"|forwardings"
 #endif
@@ -79,7 +78,7 @@ void r_printf( struct reply_t *r, const char *format, ... ) {
 	}
 }
 
-int cmd_import( struct reply_t *r, const char *addr_str) {
+int cmd_ping( struct reply_t *r, const char *addr_str) {
 	IP addr;
 	int rc;
 
@@ -88,17 +87,15 @@ int cmd_import( struct reply_t *r, const char *addr_str) {
 		if( kad_ping( &addr ) == 0 ) {
 			r_printf( r, "Send ping to: %s\n", str_addr( &addr ) );
 			return 0;
-		} else {
-			r_printf( r, "Failed to send ping.\n" );
-			return 1;
 		}
+		r_printf( r, "Failed to send ping.\n" );
 	} else if( rc == -1 ) {
 		r_printf( r, "Failed to parse address.\n" );
-		return 1;
 	} else {
 		r_printf( r, "Failed to resolve address.\n" );
-		return 1;
 	}
+
+	return 1;
 }
 
 void cmd_print_status( struct reply_t *r ) {
@@ -119,23 +116,20 @@ int cmd_blacklist( struct reply_t *r, const char *addr_str ) {
 }
 
 // Export up to 32 peer addresses - more would not fit into one UDP packet
-int cmd_export( struct reply_t *r ) {
+int cmd_debug_nodes( struct reply_t *r ) {
 	IP addr_array[32];
 	size_t addr_num;
 	size_t i;
 
-	addr_num = N_ELEMS(addr_array);
-	if( kad_export_nodes( addr_array, &addr_num ) != 0 ) {
+	addr_num = kad_export_nodes( addr_array, N_ELEMS(addr_array) );
+
+	if( addr_num == 0 ) {
+		r_printf( r, "No good nodes found.\n" );
 		return 1;
 	}
 
 	for( i = 0; i < addr_num; ++i ) {
 		r_printf( r, "%s\n", str_addr( &addr_array[i] ) );
-	}
-
-	if( i == 0 ) {
-		r_printf( r, "No good nodes found.\n" );
-		return 1;
 	}
 
 	return 0;
@@ -191,19 +185,16 @@ int cmd_exec( struct reply_t *r, const char input[] ) {
 	int count;
 	int port;
 	size_t i;
-	size_t num;
 	int rc = 0;
 
-	if( sscanf( input, " import %255s ", hostname ) == 1 ) {
-		rc = cmd_import( r, hostname );
+	if( sscanf( input, " ping %255s ", hostname ) == 1 ) {
+		rc = cmd_ping( r, hostname );
 	} else if( sscanf( input, " lookup %255s ", hostname ) == 1 ) {
-		num = N_ELEMS(addrs);
-
 		// Check searches for node
-		rc = kad_lookup( hostname, addrs, &num );
+		rc = kad_lookup( hostname, addrs, N_ELEMS(addrs) );
 
-		if( rc >= 0 && num > 0 ) {
-			for( i = 0; i < num; ++i ) {
+		if( rc > 0 ) {
+			for( i = 0; i < rc; ++i ) {
 				r_printf( r, "%s\n", str_addr( &addrs[i] ) );
 			}
 		} else if( rc < 0 ) {
@@ -237,12 +228,12 @@ int cmd_exec( struct reply_t *r, const char input[] ) {
 		rc = cmd_announce( r, hostname, port, minutes );
 	} else if( match( input, " blacklist %255[^:]%n" ) ) {
 		rc = cmd_blacklist( r, hostname );
-	} else if( match( input, " export %n" ) ) {
-		rc = cmd_export( r );
 	} else if( match( input, " list %*s %n" ) && r->allow_debug ) {
 		if( gconf->is_daemon == 1 ) {
 			r_printf( r ,"The 'list' command is not available while KadNode runs as daemon.\n" );
 			rc = 1;
+		} else if( match( input, " list nodes %n" )) {
+			rc = cmd_debug_nodes( r );
 		} else if( match( input, " list blacklist %n" )) {
 			kad_debug_blacklist( STDOUT_FILENO );
 		} else if( match( input, " list buckets %n" )) {
@@ -269,7 +260,7 @@ int cmd_exec( struct reply_t *r, const char input[] ) {
 			dprintf( STDERR_FILENO, "Unknown command.\n" );
 			rc = 1;
 		}
-		r_printf( r ,"\nOutput send to console.\n" );
+		//r_printf( r ,"\nOutput send to console.\n" );
 	} else {
 		// Print usage
 		r_printf( r, cmd_usage );

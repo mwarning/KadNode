@@ -685,8 +685,8 @@ void dns_handler( int rc, int sock ) {
 		);
 	} else {
 		// Start lookup for one address
-		addrs_num = N_ELEMS(addrs);
-		if( kad_lookup( hostname, addrs, &addrs_num ) < 0 || addrs_num == 0 ) {
+		addrs_num = kad_lookup( hostname, addrs, N_ELEMS(addrs) );
+		if( addrs_num <= 0 ) {
 			log_debug( "DNS: Failed to resolve hostname: %s", hostname );
 			return;
 		}

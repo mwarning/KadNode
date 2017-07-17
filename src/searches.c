@@ -145,7 +145,7 @@ void searches_set_auth_state( const char query[], const IP *addr, const int stat
 	struct search_t *search;
 	struct result_t *result;
 
-	log_debug( "Authentication for %s: %s", query, str_state( state ) );
+	log_debug( "Set authentication state for %s: %s", query, str_state( state ) );
 
 	search = searches_find( query );
 
@@ -351,8 +351,8 @@ int searches_add_addr( struct search_t *search, const IP *addr ) {
 	return 0;
 }
 
-int searches_collect_addrs( struct search_t *search, IP addr_array[], size_t addr_num ) {
-	struct result_t *cur;
+int searches_collect_addrs( const struct search_t *search, IP addr_array[], size_t addr_num ) {
+	const struct result_t *cur;
 	size_t i;
 
 	if( search == NULL ) {

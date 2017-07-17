@@ -40,8 +40,9 @@ void peerfile_export( void ) {
 		return;
 	}
 
-	num = N_ELEMS(addrs);
-	if( kad_export_nodes( addrs, &num ) != 0 ) {
+	num = kad_export_nodes( addrs, N_ELEMS(addrs) );
+
+	if( num < 0 ) {
 		log_warn("PEERFILE: Failed to export nodes.");
 		return;
 	}

@@ -50,7 +50,7 @@ struct search_t *searches_start( const char query[] );
 int searches_add_addr( struct search_t *search, const IP *addr );
 
 // Collect addresses
-int searches_collect_addrs( struct search_t *search, IP addr_array[], size_t addr_num );
+int searches_collect_addrs( const struct search_t *search, IP addr_array[], size_t addr_num );
 
 void searches_debug( int fd );
 

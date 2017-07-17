@@ -144,7 +144,7 @@ void kad_lookup_local_values( struct search_t *search ) {
 		} else {
 			to_addr( &addr, &inaddr_loopback, 4, htons( value->port ) ); // 127.0.0.1
 		}
-		log_debug( "KAD: Address found in local values: %s\n", str_addr( &addr ) );
+		log_debug( "KAD: Address found in own announcements: %s", str_addr( &addr ) );
 		searches_add_addr( search, &addr );
 	}
 }
@@ -276,10 +276,10 @@ void kad_setup( void ) {
 	s4 = -1;
 	s6 = -1;
 
+#ifdef DEBUG
 	// Let the DHT output debug text
-	if( gconf->verbosity == VERBOSITY_DEBUG ) {
-		dht_debug = stdout;
-	}
+	dht_debug = stdout;
+#endif
 
 	bytes_random( node_id, SHA1_BIN_LENGTH );
 
@@ -429,12 +429,12 @@ int kad_announce( const char query_raw[], int port, time_t lifetime ) {
 int kad_lookup( const char query[], IP addr_array[], size_t addr_num ) {
 	char hostname[QUERY_MAX_SIZE];
 	struct search_t *search;
-	int rc;
 
-	log_debug( "KAD: Lookup string: %s", hostname );
+	log_debug( "Lookup identifier: %s", query );
 
 	// Remove .p2p suffix and convert to lowercase
-	if( query_sanitize( hostname, sizeof(query), query ) != 0 ) {
+	if( query_sanitize( hostname, sizeof(hostname), query ) != 0 ) {
+		log_debug("query_sanitize error");
 		return -1;
 	}
 
@@ -443,6 +443,7 @@ int kad_lookup( const char query[], IP addr_array[], size_t addr_num ) {
 
 	if( search == NULL ) {
 		// Failed to create a new search
+		log_debug("searches_start error");
 		return -1;
 	}
 
@@ -458,9 +459,7 @@ int kad_lookup( const char query[], IP addr_array[], size_t addr_num ) {
 	}
 
 	// Collect addresses to be returned
-	rc = searches_collect_addrs( search, addr_array, addr_num );
-
-	return rc;
+	return searches_collect_addrs( search, addr_array, addr_num );
 }
 
 #if 0
@@ -516,22 +515,22 @@ int kad_blacklist( const IP* addr ) {
 }
 
 // Export known nodes; the maximum is 200 nodes
-int kad_export_nodes( IP addr_array[], size_t *num ) {
+int kad_export_nodes( IP addr_array[], size_t num ) {
 	IP4 *addr4;
 	IP6 *addr6;
 	int num4;
 	int num6;
-	int i;
+	int n;
 
 	if( gconf->af == AF_INET6 ) {
-		num6 = MIN(*num, 200);
+		num6 = MIN(num, 200);
 		addr6 = calloc( num6, sizeof(IP6) );
 		num4 = 0;
 		addr4 = NULL;
 	} else {
 		num6 = 0;
 		addr6 = NULL;
-		num4 = MIN(*num, 200);
+		num4 = MIN(num, 200);
 		addr4 = calloc( num4, sizeof(IP4) );
 	}
 
@@ -540,21 +539,18 @@ int kad_export_nodes( IP addr_array[], size_t *num ) {
 	dht_unlock();
 
 	if( gconf->af == AF_INET6 ) {
-		for( i = 0; i < num6; ++i ) {
-			memcpy( &addr_array[i], &addr6[i], sizeof(IP6) );
+		for( n = 0; n < num6; ++n ) {
+			memcpy( &addr_array[n], &addr6[n], sizeof(IP6) );
 		}
 		free( addr6 );
 	} else {
-		for( i = 0; i < num4; ++i ) {
-			memcpy( &addr_array[i], &addr4[i], sizeof(IP4) );
+		for( n = 0; n < num4; ++n ) {
+			memcpy( &addr_array[n], &addr4[n], sizeof(IP4) );
 		}
 		free( addr4 );
 	}
 
-	// Store number of nodes we have actually found
-	*num = i;
-
-	return 0;
+	return n;
 }
 
 // Print buckets (leaf/finger table)
@@ -586,17 +582,19 @@ void kad_debug_buckets( int fd ) {
 
 // Print searches
 void kad_debug_searches( int fd ) {
-	struct search *s = searches;
-	int i, j;
+	struct search *s;
+	int i;
+	int j;
 
 	dht_lock();
 
+	s = searches;
 	for( j = 0; s; ++j ) {
 		dprintf( fd, " Search: %s\n", str_id( s->id ) );
 		dprintf( fd, "  af: %s\n", (s->af == AF_INET) ? "AF_INET" : "AF_INET6" );
 		dprintf( fd, "  port: %hu\n", s->port );
 		//dprintf( fd, "  done: %d\n", s->done );
-		for(i = 0; i < s->numnodes; ++i) {
+		for( i = 0; i < s->numnodes; ++i ) {
 			struct search_node *sn = &s->nodes[i];
 			dprintf( fd, "   Node: %s\n", str_id(sn->id ) );
 			dprintf( fd, "    addr: %s\n", str_addr( &sn->ss ) );
