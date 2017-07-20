@@ -25,7 +25,8 @@
 
 // Next time to do DHT maintenance
 static time_t g_dht_maintenance = 0;
-
+static int s4 = -1;
+static int s6 = -1;
 
 void dht_lock_init( void ) {
 #ifdef PTHREAD
@@ -271,10 +272,6 @@ int dht_random_bytes( void *buf, size_t size ) {
 
 void kad_setup( void ) {
 	uint8_t node_id[SHA1_BIN_LENGTH];
-	int s4, s6;
-
-	s4 = -1;
-	s6 = -1;
 
 #ifdef DEBUG
 	// Let the DHT output debug text
@@ -339,6 +336,8 @@ int kad_status( char buf[], size_t size ) {
 	int numstorage_peers = 0;
 	//int numvalues = 0;
 	int written = 0;
+	IP listen_addr;
+	socklen_t len;
 
 	// count searches
 	while( srch ) {
@@ -358,14 +357,16 @@ int kad_status( char buf[], size_t size ) {
 		strg = strg->next;
 	}
 
+	// Get address the DHT listens to
+	len = sizeof(listen_addr);
+	getsockname( s4 < 0 ? s6 : s4, (struct sockaddr *) &listen_addr, &len );
+
 	// Use dht data structure!
 	//numvalues = announces_count();
 
 	bprintf( "Version: %s\n", kadnode_version_str );
 	bprintf( "DHT id: %s\n", str_id( myid ) );
-	bprintf( "DHT listen on: %s:%s / %s\n",
-		(gconf->af == AF_INET) ? "0.0.0.0" : "[::]",
-		gconf->dht_port,
+	bprintf( "DHT listen on: %s / %s\n", str_addr( &listen_addr ),
 		(gconf->dht_ifname == NULL) ? "<any>" : gconf->dht_ifname
 	);
 
