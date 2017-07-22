@@ -217,11 +217,9 @@ void conf_check( void ) {
 
 	if( gconf->lpd_addr == NULL ) {
 		// Set default multicast address string
-		if( gconf->af == AF_INET ) {
-			gconf->lpd_addr = strdup( LPD_ADDR4 );
-		} else {
-			gconf->lpd_addr = strdup( LPD_ADDR6 );
-		}
+		gconf->lpd_addr = strdup(
+			(gconf->af == AF_INET) ? LPD_ADDR4 : LPD_ADDR6
+		);
 	}
 
 	// Parse multicast address string
