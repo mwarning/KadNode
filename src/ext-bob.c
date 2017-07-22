@@ -531,8 +531,21 @@ int bob_handler( int fd, uint8_t buf[], uint32_t buflen, IP *from ) {
 }
 
 void bob_setup( void ) {
+	struct key_t *key;
+	const char *hkey;
+	int port = atoi( gconf->dht_port );
+
 	mbedtls_ctr_drbg_init( &g_ctr_drbg );
 	mbedtls_entropy_init( &g_entropy );
+
+	// Anounce keys via DHT
+	key = g_keys;
+	while( key ) {
+		// Start announcing public key for the entire runtime
+		hkey = get_pkey_hex( &key->ctx_sign );
+		announces_add( hkey, port, LONG_MAX );
+		key = key->next;
+	}
 }
 
 void bob_free( void ) {
