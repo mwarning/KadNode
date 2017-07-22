@@ -359,7 +359,7 @@ int kad_status( char buf[], size_t size ) {
 
 	// Get address the DHT listens to
 	len = sizeof(listen_addr);
-	getsockname( s4 < 0 ? s6 : s4, (struct sockaddr *) &listen_addr, &len );
+	getsockname( g_dht_socket4 < 0 ? g_dht_socket6 : g_dht_socket4, (struct sockaddr *) &listen_addr, &len );
 
 	// Use dht data structure!
 	//numvalues = announces_count();
