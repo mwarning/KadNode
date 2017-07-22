@@ -475,9 +475,9 @@ int dns_setup_msg( struct Message *msg, IP addrs[], size_t addrs_num, const char
 	size_t i, c;
 
 	// Header: leave most values intact for response
-	msg->qr = 1; // this is a response
-	msg->aa = 1; // this server is authoritative
-	msg->ra = 0; // no recursion available - we don't ask other DNS servers
+	msg->qr = 1; // This is a response
+	msg->aa = 1; // This server is authoritative
+	msg->ra = 0; // No recursion available - we don't ask other DNS servers
 	msg->rcode = Ok_ResponseType;
 
 	msg->qdCount = 1;
