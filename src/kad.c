@@ -25,8 +25,8 @@
 
 // Next time to do DHT maintenance
 static time_t g_dht_maintenance = 0;
-static int s4 = -1;
-static int s6 = -1;
+static int g_dht_socket4 = -1;
+static int g_dht_socket6 = -1;
 
 void dht_lock_init( void ) {
 #ifdef PTHREAD
@@ -284,15 +284,15 @@ void kad_setup( void ) {
 
 	//gconf->dht_addr
 	if( gconf->af == AF_INET ) {
-		s4 = net_bind( "KAD", gconf->dht_addr, gconf->dht_port, gconf->dht_ifname, IPPROTO_UDP, AF_INET );
-		net_add_handler( s4, &dht_handler );
+		g_dht_socket4 = net_bind( "KAD", gconf->dht_addr, gconf->dht_port, gconf->dht_ifname, IPPROTO_UDP, AF_INET );
+		net_add_handler( g_dht_socket4, &dht_handler );
 	} else {
-		s6 = net_bind( "KAD", gconf->dht_addr, gconf->dht_port, gconf->dht_ifname, IPPROTO_UDP, AF_INET6 );
-		net_add_handler( s6, &dht_handler );
+		g_dht_socket6 = net_bind( "KAD", gconf->dht_addr, gconf->dht_port, gconf->dht_ifname, IPPROTO_UDP, AF_INET6 );
+		net_add_handler( g_dht_socket6, &dht_handler );
 	}
 
 	// Init the DHT.  Also set the sockets into non-blocking mode.
-	if( dht_init( s4, s6, node_id, (uint8_t*) "KN\0\0") < 0 ) {
+	if( dht_init( g_dht_socket4, g_dht_socket6, node_id, (uint8_t*) "KN\0\0") < 0 ) {
 		log_err( "KAD: Failed to initialize the DHT." );
 		exit( 1 );
 	}
