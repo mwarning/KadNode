@@ -45,7 +45,7 @@ const char* cmd_usage_debug =
 #endif
 	"|results|searches|storage|announcements\n";
 
-#define REPLY_DATA_SIZE 1472
+#define REPLY_DATA_SIZE 1400
 
 // A UDP packet sized reply
 struct reply_t {
@@ -194,17 +194,15 @@ int cmd_exec( struct reply_t *r, const char input[] ) {
 		rc = kad_lookup( hostname, addrs, N_ELEMS(addrs) );
 
 		if( rc > 0 ) {
+			// Print results
 			for( i = 0; i < rc; ++i ) {
 				r_printf( r, "%s\n", str_addr( &addrs[i] ) );
 			}
 		} else if( rc < 0 ) {
 			r_printf( r ,"Some error occured.\n" );
 			rc = 1;
-		} else if( rc == 0 ) {
-			r_printf( r ,"Search in progress.\n" );
-			rc = 1;
 		} else {
-			r_printf( r ,"Search started.\n" );
+			r_printf( r ,"Search in progress.\n" );
 			rc = 1;
 		}
 	} else if( match( input, " status %n" ) ) {
@@ -276,7 +274,7 @@ int cmd_exec( struct reply_t *r, const char input[] ) {
 void cmd_remote_handler( int rc, int sock ) {
 	IP clientaddr;
 	socklen_t addrlen;
-	char request[1500];
+	char request[REPLY_DATA_SIZE];
 	struct reply_t reply;
 
 	addrlen = sizeof(IP);
