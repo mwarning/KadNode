@@ -147,6 +147,9 @@ int main_start( void ) {
 
 #ifdef __CYGWIN__
 int main( int argc, char **argv ) {
+	char cmd[MAX_PATH];
+	char path[MAX_PATH];
+	char *p;
 
 	conf_init();
 	conf_load_args( argc, argv );
@@ -155,11 +158,8 @@ int main( int argc, char **argv ) {
 		gconf->use_syslog = 1;
 
 		// Get kadnode.exe binary lcoation
-		char cmd[MAX_PATH];
-		char path[MAX_PATH];
-		char *p;
 		if( GetModuleFileNameA( NULL, path, sizeof(path) ) && (p = strrchr( path, '\\' )) ) {
-			*(p+1) = 0;
+			*(p + 1) = 0;
 		} else {
 			log_err( "Cannot get location of KadNode binary." );
 			exit( 1 );
@@ -185,7 +185,6 @@ int main( int argc, char **argv ) {
 		unix_fork();
 
 		// Change working directory to C:\ directory or disk equivalent
-		char path[MAX_PATH], *p;
 		if( GetModuleFileNameA( NULL, path, sizeof(path) ) && (p = strchr( path, '\\' )) ) {
 			*(p+1) = 0;
 			SetCurrentDirectoryA( path );
