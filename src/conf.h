@@ -103,10 +103,6 @@ struct gconf_t {
 	char *nss_port;
 #endif
 
-#ifdef WEB
-	char *web_port;
-#endif
-
 #ifdef PTHREAD
 	// DHT thread stuff
 	pthread_t dht_thread;

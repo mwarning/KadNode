@@ -63,9 +63,6 @@ const char *kadnode_version_str = "KadNode v"MAIN_VERSION" ("
 #ifdef TLS
 " tls"
 #endif
-#ifdef WEB
-" web"
-#endif
 " )";
 
 const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
@@ -120,10 +117,6 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 #ifdef NSS
 " --nss-port <port>		Bind the Network Service Switch to this local port.\n"
 "				Default: "NSS_PORT"\n\n"
-#endif
-#ifdef WEB
-" --web-port <port>		Bind the web server to this local port.\n"
-"				Default: "WEB_PORT"\n\n"
 #endif
 #ifdef FWD
 " --fwd-disable			Disable UPnP/NAT-PMP to forward router ports.\n\n"
@@ -193,12 +186,6 @@ void conf_check( void ) {
 	}
 #endif
 
-#ifdef WEB
-	if( gconf->web_port == NULL ) {
-		gconf->web_port = strdup( WEB_PORT );
-	}
-#endif
-
 	if( port_parse( gconf->dht_port, -1 ) < 1 ) {
 		log_err( "Invalid DHT port: %s", gconf->dht_port );
 		exit( 1 );
@@ -221,13 +208,6 @@ void conf_check( void ) {
 #ifdef NSS
 	if( port_parse( gconf->nss_port, -1 ) < 0 ) {
 		log_err( "Invalid NSS port: %s", gconf->nss_port );
-		exit( 1 );
-	}
-#endif
-
-#ifdef WEB
-	if( port_parse( gconf->web_port, -1 ) < 0 ) {
-		log_err( "Invalid WEB port: %s", gconf->web_port );
 		exit( 1 );
 	}
 #endif
@@ -321,9 +301,6 @@ void conf_free( void ) {
 #ifdef NSS
 	free( gconf->nss_port );
 #endif
-#ifdef WEB
-	free( gconf->web_port );
-#endif
 
 	free( gconf );
 }
@@ -343,7 +320,6 @@ enum OPCODE {
 	oNssPort,
 	oTlsClientEntry,
 	oTlsServerEntry,
-	oWebPort,
 	oConfig,
 	oMode,
 	oPort,
@@ -392,9 +368,6 @@ static struct option_t options[] = {
 #ifdef TLS
 	{"--tls-client-entry", 1, oTlsClientEntry},
 	{"--tls-server-entry", 1, oTlsServerEntry},
-#endif
-#ifdef WEB
-	{"--web-port", 1, oWebPort},
 #endif
 	{"--config", 1, oConfig},
 	{"--mode", 1, oMode},
@@ -529,11 +502,6 @@ void conf_handle_option( const char opt[], const char val[] ) {
 			}
 			break;
 		}
-#endif
-#ifdef WEB
-		case oWebPort:
-			conf_str( opt, &gconf->web_port, val );
-			break;
 #endif
 		case oConfig:
 			conf_str( opt, &gconf->configfile, val );

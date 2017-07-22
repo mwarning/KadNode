@@ -21,7 +21,6 @@
 #define CMD_PORT "1700"
 #define DNS_PORT "3535"
 #define NSS_PORT "4053"
-#define WEB_PORT "8053"
 
 #define QUERY_TLD_DEFAULT ".p2p"
 #define QUERY_MAX_SIZE 256

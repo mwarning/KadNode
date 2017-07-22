@@ -3,7 +3,7 @@ CC ?= gcc
 CFLAGS ?= -Os -Wall -Wwrite-strings -pedantic
 CFLAGS += -std=gnu99 -I/usr/local/include
 LFLAGS += -L/usr/local/lib -lc
-FEATURES ?= cmd dns tls bob #nss lpd natpmp upnp web
+FEATURES ?= cmd dns tls bob #nss lpd natpmp upnp
 
 OBJS = build/main.o build/searches.o build/kad.o build/log.o \
 	build/conf.o build/net.o build/utils.o \
@@ -52,11 +52,6 @@ ifeq ($(findstring nss,$(FEATURES)),nss)
   OBJS += build/ext-nss.o
   CFLAGS += -DNSS
   EXTRA += libnss_kadnode.so.2
-endif
-
-ifeq ($(findstring web,$(FEATURES)),web)
-  OBJS += build/ext-web.o
-  CFLAGS += -DWEB
 endif
 
 ifeq ($(findstring tls,$(FEATURES)),tls)

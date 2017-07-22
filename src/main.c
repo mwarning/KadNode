@@ -31,9 +31,6 @@
 #ifdef DNS
 #include "ext-dns.h"
 #endif
-#ifdef WEB
-#include "ext-web.h"
-#endif
 #ifdef NSS
 #include "ext-nss.h"
 #endif
@@ -65,9 +62,6 @@ void main_cleanup( void ) {
 #endif
 #ifdef NSS
 	nss_free();
-#endif
-#ifdef WEB
-	web_free();
 #endif
 #ifdef DNS
 	dns_free();
@@ -130,9 +124,6 @@ int main_start( void ) {
 #endif
 #ifdef DNS
 	dns_setup();
-#endif
-#ifdef WEB
-	web_setup();
 #endif
 #ifdef NSS
 	nss_setup();
