@@ -131,7 +131,7 @@ void dht_callback_func( void *closure, int event, const uint8_t *info_hash, cons
 * Lookup in values we announce ourselves.
 * Useful for networks of only one node, also faster.
 */
-void kad_lookup_local_values( struct search_t *search ) {
+void kad_lookup_own_announcements( struct search_t *search ) {
 	struct value_t* value;
 	IP addr;
 
@@ -448,10 +448,10 @@ int kad_lookup( const char query[], IP addr_array[], size_t addr_num ) {
 		return -1;
 	}
 
-	// Search was just started (time is only updated in the main loop)
+	// Search was just started
 	if( search->start_time == time_now_sec() ) {
-		// Search own announced values
-		kad_lookup_local_values( search );
+		// Search own announces
+		kad_lookup_own_announcements( search );
 
 		// Start a new DHT search
 		dht_lock();
