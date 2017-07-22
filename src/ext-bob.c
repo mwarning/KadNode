@@ -30,10 +30,17 @@
 * Random byte strings (called challenges) are send to all peers.
 * The peer is expected to encrypt the challenge with the private key.
 * If the challenge can be decrypted by the public key we have,
-* we know that the peer has the private key.
+* we know that the peer has the private key. The ip address will then
+* be used as result.
 *
-* Request: "BOB" + PUBLICKEY + CHALLENGE
-* Response: "BOB" + PUBLICKEY + SIGNED_CHALLENGE
+* Paket exchange:
+* Lookup <public-key>.p2p
+* 1. get IP addresses from DHT
+* 2. send to every address "BOB" + PUBLICKEY + CHALLENGE
+*    - remember IP address and challenge
+* 3. get response "BOB" + SIGNED_CHALLENGE
+*    - find challenge by sender IP address
+* 4. verify signature by public key
 */
 
 #define ECPARAMS MBEDTLS_ECP_DP_SECP256R1
@@ -44,6 +51,7 @@
 
 struct key_t {
 	struct key_t *next;
+	char *path; // File path the key was loaded from
 	mbedtls_pk_context ctx_sign;
 };
 
@@ -64,6 +72,7 @@ static mbedtls_entropy_context g_entropy;
 static mbedtls_ctr_drbg_context g_ctr_drbg;
 
 
+// Decompress key since mbedtls does not have this feature.
 int mbedtls_ecp_decompress(
 	const mbedtls_ecp_group *grp,
 	const unsigned char *input, size_t ilen,
@@ -183,30 +192,22 @@ static struct bob_resource *bob_next_resource( void ) {
 	return NULL;
 }
 
-static void bob_send_challenge( int sock, struct bob_resource *resource ) {
-	uint8_t sig[512] = { 0 };
-	size_t slen;
-	int ret;
-	printf( "Signing message...\n" );
+static void bob_send_challenge( int sock, const struct bob_resource *resource ) {
+	uint8_t buf[3 + PUBLICKEYBYTES + CHALLENGE_BIN_LENGTH];
+	char hexbuf[sizeof(buf) * 2 + 1];
 
 	// Insert marker
-	memcpy( sig, "BOB", 3);
+	memcpy( buf, "BOB", 3);
 
-	// Insert X value of public key
-	mbedtls_mpi_write_binary( &mbedtls_pk_ec( resource->ctx_verify )->Q.X, sig + 3, PUBLICKEYBYTES );
+	// Append X value of public key
+	mbedtls_mpi_write_binary( &mbedtls_pk_ec( resource->ctx_verify )->Q.X, buf + 3, PUBLICKEYBYTES );
 
-	// Insert signature
-	if( ( ret = mbedtls_ecdsa_write_signature(
-			mbedtls_pk_ec( resource->ctx_verify ), MBEDTLS_MD_SHA256,
-			resource->challenge, CHALLENGE_BIN_LENGTH, sig + 3 + PUBLICKEYBYTES, &slen,
-			mbedtls_ctr_drbg_random, &g_ctr_drbg ) ) != 0 ) {
-		printf( "mbedtls_ecdsa_write_signature returned %d\n", ret );
-		exit(1);
-		return;
-	}
+	// Append challenge bytes
+	memcpy( buf + 3 + PUBLICKEYBYTES, resource->challenge, CHALLENGE_BIN_LENGTH );
 
-	slen += 3 + PUBLICKEYBYTES;
-	sendto( sock, sig, slen, 0, (struct sockaddr*) &resource->addr, sizeof(IP) );
+	log_debug( "Send challenge to %s: %s", str_addr(&resource->addr), bytes_to_hex( hexbuf, buf, sizeof(buf) ) );
+
+	sendto( sock, buf, sizeof(buf), 0, (struct sockaddr*) &resource->addr, sizeof(IP) );
 }
 
 // Start auth procedure for result bucket and utilize all resources
@@ -223,15 +224,22 @@ void bob_trigger_auth( void ) {
 		return;
 	}
 
+	//TODO: insert somewhere else?
+	if( mbedtls_pk_ec( resource->ctx_verify ) == NULL ) {
+		//printf( "set grp\n" );
+		mbedtls_pk_setup( &resource->ctx_verify, mbedtls_pk_info_from_type( MBEDTLS_PK_ECKEY ) );
+		mbedtls_ecp_group_load( &mbedtls_pk_ec( resource->ctx_verify )->grp, ECPARAMS );
+	}
+
 	// Shortcuts
-	mbedtls_ecp_keypair *kp = mbedtls_pk_ec(resource->ctx_verify);
+	mbedtls_ecp_keypair *kp = mbedtls_pk_ec( resource->ctx_verify );
 	char *query = &resource->query[0];
 
 	if( (result = searches_get_auth_target( query, &resource->addr, &bob_trigger_auth )) != NULL ) {
 		result->state = AUTH_PROGRESS;
 
 		if( strlen( query ) != 64 ) {
-			log_err("BOB: Unexpected query length.");
+			log_err( "BOB: Unexpected query length: %s", query );
 			bob_auth_end( resource, AUTH_ERROR );
 			return;
 		}
@@ -244,7 +252,7 @@ void bob_trigger_auth( void ) {
 		if( (ret = mbedtls_ecp_decompress(
 				&kp->grp, compressed, sizeof(compressed),
 				decompressed, &olen, sizeof(decompressed) )) != 0 ) {
-			printf("internal error4: %d\n", ret);
+			log_err( "Error in mbedtls_ecp_decompress: %d\n", ret );
 			bob_auth_end( resource, AUTH_ERROR );
 			return;
 		}
@@ -253,7 +261,7 @@ void bob_trigger_auth( void ) {
 		if( (ret = mbedtls_ecp_point_read_binary(
 				&kp->grp, &kp->Q,
 				decompressed, sizeof(decompressed) )) != 0 ) {
-			printf("internal error2: %d\n", ret);
+			log_err( "Error in mbedtls_ecp_point_read_binary: %d\n", ret );
 			bob_auth_end( resource, AUTH_ERROR );
 			return;
 		}
@@ -295,6 +303,7 @@ static int write_pem( const mbedtls_pk_context *key, const char path[] ) {
 	}
 
 	fclose( file );
+
 	return 0;
 }
 
@@ -348,7 +357,7 @@ int bob_create_key( const char path[] ) {
 		return -1;
 	}
 
-	printf( "Public key/link: %s"QUERY_TLD_DEFAULT"\n", get_pkey_hex( &ctx ) );
+	printf( "Public key: %s\n", get_pkey_hex( &ctx ) );
 	printf( "Wrote secret key to %s\n", path );
 
 	return 0;
@@ -357,27 +366,37 @@ int bob_create_key( const char path[] ) {
 // Add secret key
 int bob_load_key( const char path[] ) {
 	mbedtls_pk_context ctx;
+	char msg[300];
 	int ret;
 
 	mbedtls_pk_init( &ctx );
-	//mbedtls_ecp_group_load( &mbedtls_pk_ec( ctx )->grp, ECPARAMS );
 
 	if( (ret = mbedtls_pk_parse_keyfile( &ctx, path, NULL )) != 0) {
 		mbedtls_pk_free( &ctx );
-		log_err( "mbedtls_pk_parse_keyfile returned -0x%04x\n", -ret );
+		mbedtls_strerror( ret, msg, sizeof(msg) );
+		log_err( "Error loading %s: %s", path, msg );
 		return -1;
 	}
 
-	log_info( "Load %s, public key: %s", path, get_pkey_hex( &ctx ) );
+	if( mbedtls_pk_ec( ctx )->grp.id != ECPARAMS ) {
+		log_err( "Unsupported key type for %s: %s (expected %s)", path,
+			mbedtls_ecp_curve_info_from_grp_id( mbedtls_pk_ec( ctx )->grp.id )->name,
+			mbedtls_ecp_curve_info_from_grp_id( ECPARAMS )->name
+		);
+		return -1;
+	}
 
 	struct key_t *entry = (struct key_t*) calloc( 1, sizeof(struct key_t) );
 	memcpy( &entry->ctx_sign, &ctx, sizeof(ctx) );
+	entry->path = strdup( path );
 
 	// Prepend to list
 	if( g_keys ) {
 		entry->next = g_keys;
 	}
 	g_keys = entry;
+
+	log_info( "Loaded %s (Public key: %s)", path, get_pkey_hex( &ctx ) );
 
 	return 0;
 }
@@ -432,11 +451,12 @@ void bob_verify_challenge( int sock, uint8_t buf[], size_t buflen, IP *addr ) {
 }
 
 struct key_t *bob_find_key( const uint8_t pkey[] ) {
+	uint8_t epkey[PUBLICKEYBYTES];
 	struct key_t *key = g_keys;
 
 	while( key ) {
-		//size_t plen = mbedtls_mpi_size( &mbedtls_pk_ec( key->ctx_sign )->grp.P );
-		if( memcmp( &mbedtls_pk_ec( key->ctx_sign )->Q.X, pkey, CHALLENGE_BIN_LENGTH ) == 0) {
+		mbedtls_mpi_write_binary( &mbedtls_pk_ec( key->ctx_sign )->Q.X, epkey, PUBLICKEYBYTES );
+		if( memcmp( epkey, pkey, PUBLICKEYBYTES ) == 0 ) {
 			return key;
 		}
 		key = key->next;
@@ -452,25 +472,31 @@ void bob_encrypt_challenge( int sock, uint8_t buf[], size_t buflen, IP *addr ) {
 	char hexbuf[300];
 	size_t slen;
 	int ret;
-	uint8_t *challenge = buf + 3;
-	uint8_t *pkey = buf + 3 + CHALLENGE_BIN_LENGTH;
+
+	uint8_t *pkey = buf + 3;
+	uint8_t *challenge = buf + 3 + PUBLICKEYBYTES;
 
 	key = bob_find_key( pkey );
-	if( key && buflen == CHALLENGE_BIN_LENGTH ) {
+	if( key ) {
+		//what is expected here? do we accept BOB + signature?
+		memcpy( sig, "BOB", 3 );
 		ret = mbedtls_ecdsa_write_signature(
 			mbedtls_pk_ec( key->ctx_sign ), MBEDTLS_MD_SHA256,
 			challenge, CHALLENGE_BIN_LENGTH,
-			sig, &slen, mbedtls_ctr_drbg_random, &g_ctr_drbg );
+			sig + 3, &slen, mbedtls_ctr_drbg_random, &g_ctr_drbg );
+		slen += 3;
 
 		if( ret != 0) {
 			log_warn( "mbedtls_ecdsa_write_signature returned %d\n", ret );
 		} else  {
-			printf( "Hash: %s\n", bytes_to_hex(hexbuf, buf, buflen) );
-			printf( "Signature: %s\n", bytes_to_hex( hexbuf, sig, slen ));
+			printf( "Hash: %s\n", bytes_to_hex( hexbuf, buf, buflen ) );
+			printf( "Signature: %s\n", bytes_to_hex( hexbuf, sig, slen ) );
 
 			log_debug( "Received challenge from %s and send back response.", str_addr( addr ) );
 			sendto( sock, sig, slen, 0, (struct sockaddr*) addr, sizeof(IP) );
 		}
+	} else {
+		log_debug( "BOB: Secret key not found for public key: %s", bytes_to_hex( hexbuf, pkey, PUBLICKEYBYTES ) );
 	}
 }
 
@@ -496,8 +522,8 @@ int bob_handler( int fd, uint8_t buf[], uint32_t buflen, IP *from ) {
 	now = time_now_sec();
 
 	// Send out new challenges every second
-	if( g_send_challenges != now ) {
-		g_send_challenges = now;
+	if( g_send_challenges < now ) {
+		g_send_challenges = now + 1;
 		//bob_send_challenges( fd );
 	}
 
@@ -521,6 +547,7 @@ void bob_free( void ) {
 		next = key->next;
 		// Also zeroes the private key in memory
 		mbedtls_pk_free( &key->ctx_sign );
+		free( key->path );
 		free( key );
 		key = next;
 	}
