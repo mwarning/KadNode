@@ -43,7 +43,7 @@ const char* cmd_usage_debug =
 #ifdef BOB
 	"|keys"
 #endif
-	"|results|searches|storage|announcements\n";
+	"|searches|announcements|dht_searches|dht_storage|\n";
 
 #define REPLY_DATA_SIZE 1400
 
@@ -246,14 +246,14 @@ int cmd_exec( struct reply_t *r, const char input[] ) {
 		} else if( match( input, " list keys %n" )) {
 			bob_debug_keys( STDOUT_FILENO );
 #endif
-		} else if( match( input, " list results %n" )) {
-			searches_debug( STDOUT_FILENO );
 		} else if( match( input, " list searches %n" )) {
-			kad_debug_searches( STDOUT_FILENO );
-		} else if( match( input, " list storage %n" )) {
-			kad_debug_storage( STDOUT_FILENO );
+			searches_debug( STDOUT_FILENO );
 		} else if( match( input, " list announcements %n" )) {
 			announces_debug( STDOUT_FILENO );
+		} else if( match( input, " list dht_searches %n" )) {
+			kad_debug_searches( STDOUT_FILENO );
+		} else if( match( input, " list dht_storage %n" )) {
+			kad_debug_storage( STDOUT_FILENO );
 		} else {
 			dprintf( STDERR_FILENO, "Unknown command.\n" );
 			rc = 1;
