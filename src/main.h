@@ -14,10 +14,7 @@
 #define LPD_ADDR4 "239.192.152.143"
 #define LPD_ADDR6 "ff15::efc0:988f"
 #define LPD_PORT "6771"
-#define DHT_ADDR4 "0.0.0.0"
-#define DHT_ADDR6 "::"
 #define DHT_PORT "6881"
-
 #define CMD_PORT "1700"
 #define DNS_PORT "3535"
 #define NSS_PORT "4053"
