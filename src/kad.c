@@ -133,20 +133,26 @@ void dht_callback_func( void *closure, int event, const uint8_t *info_hash, cons
 */
 void kad_lookup_own_announcements( struct search_t *search ) {
 	struct value_t* value;
+	int af;
 	IP addr;
 
 	// 127.0.0.1
 	const uint32_t inaddr_loopback = htonl( INADDR_LOOPBACK );
 
+	af = gconf->af;
 	value = announces_find( search->id );
 	if( value ) {
-		if( gconf->af == AF_INET6 ) {
+		if( af == AF_UNSPEC || af == AF_INET6 ) {
 			to_addr( &addr, &in6addr_loopback, 16, htons( value->port ) ); // ::1
-		} else {
-			to_addr( &addr, &inaddr_loopback, 4, htons( value->port ) ); // 127.0.0.1
+			searches_add_addr( search, &addr );
+			log_debug( "KAD: Address found in own announcements: %s", str_addr( &addr ) );
 		}
-		log_debug( "KAD: Address found in own announcements: %s", str_addr( &addr ) );
-		searches_add_addr( search, &addr );
+
+		if( af == AF_UNSPEC || af == AF_INET ) {
+			to_addr( &addr, &inaddr_loopback, 4, htons( value->port ) ); // 127.0.0.1
+			searches_add_addr( search, &addr );
+			log_debug( "KAD: Address found in own announcements: %s", str_addr( &addr ) );
+		}
 	}
 }
 
@@ -282,12 +288,14 @@ void kad_setup( void ) {
 
 	dht_lock_init();
 
-	//gconf->dht_addr
-	if( gconf->af == AF_INET ) {
-		g_dht_socket4 = net_bind( "KAD", gconf->dht_addr, gconf->dht_port, gconf->dht_ifname, IPPROTO_UDP, AF_INET );
+	g_dht_socket4 = net_bind( "KAD", "0.0.0.0", gconf->dht_port, gconf->dht_ifname, IPPROTO_UDP, AF_INET );
+	g_dht_socket6 = net_bind( "KAD", "::", gconf->dht_port, gconf->dht_ifname, IPPROTO_UDP, AF_INET6 );
+
+	if ( g_dht_socket4 >= 0 ) {
 		net_add_handler( g_dht_socket4, &dht_handler );
-	} else {
-		g_dht_socket6 = net_bind( "KAD", gconf->dht_addr, gconf->dht_port, gconf->dht_ifname, IPPROTO_UDP, AF_INET6 );
+	}
+
+	if( g_dht_socket6 >= 0 ) {
 		net_add_handler( g_dht_socket6, &dht_handler );
 	}
 
@@ -302,12 +310,10 @@ void kad_free( void ) {
 	dht_uninit();
 }
 
-int kad_count_nodes( int good ) {
-	struct bucket *bucket;
+int kad_count_bucket( const struct bucket *bucket, int good ) {
 	struct node *node;
 	int count;
 
-	bucket = (gconf->af == AF_INET ) ? buckets : buckets6;
 	count = 0;
 	while( bucket ) {
 		if( good ) {
@@ -324,6 +330,11 @@ int kad_count_nodes( int good ) {
 	return count;
 }
 
+int kad_count_nodes( int good ) {
+	// Count nodes in IPv4 and IPv6 buckets
+	return kad_count_bucket( buckets, good ) + kad_count_bucket( buckets6, good );
+}
+
 #define bprintf(...) (written += snprintf( buf+written, size-written, __VA_ARGS__))
 
 int kad_status( char buf[], size_t size ) {
@@ -336,8 +347,6 @@ int kad_status( char buf[], size_t size ) {
 	int numstorage_peers = 0;
 	//int numvalues = 0;
 	int written = 0;
-	IP listen_addr;
-	socklen_t len;
 
 	// count searches
 	while( srch ) {
@@ -357,21 +366,15 @@ int kad_status( char buf[], size_t size ) {
 		strg = strg->next;
 	}
 
-	// Get address the DHT listens to
-	len = sizeof(listen_addr);
-	getsockname( g_dht_socket4 < 0 ? g_dht_socket6 : g_dht_socket4, (struct sockaddr *) &listen_addr, &len );
-
 	// Use dht data structure!
 	//numvalues = announces_count();
 
 	bprintf( "Version: %s\n", kadnode_version_str );
 	bprintf( "DHT id: %s\n", str_id( myid ) );
-	bprintf( "DHT listen on: %s / %s\n", str_addr( &listen_addr ),
-		(gconf->dht_ifname == NULL) ? "<any>" : gconf->dht_ifname
-	);
-
-	bprintf( "DHT Nodes: %d (%d good) (%s)\n",
-		kad_count_nodes( 0 ), kad_count_nodes( 1 ), (gconf->af == AF_INET) ? "IPv4" : "IPv6" );
+	bprintf( "DHT listen on: %s / %s\n", str_af( gconf->af ),
+		gconf->dht_ifname ? gconf->dht_ifname : "<any>");
+	bprintf( "DHT Nodes: %d (%d good)\n",
+		kad_count_nodes( 0 ), kad_count_nodes( 1 ) );
 	bprintf( "DHT Storage: %d (max %d), %d peers (max %d per storage)\n",
 		numstorage, DHT_MAX_HASHES, numstorage_peers, DHT_MAX_PEERS );
 	bprintf( "DHT Searches: %d active, %d completed (max %d)\n",
@@ -435,7 +438,7 @@ int kad_lookup( const char query[], IP addr_array[], size_t addr_num ) {
 
 	// Remove .p2p suffix and convert to lowercase
 	if( query_sanitize( hostname, sizeof(hostname), query ) != 0 ) {
-		log_debug("query_sanitize error");
+		log_debug( "query_sanitize error" );
 		return -1;
 	}
 

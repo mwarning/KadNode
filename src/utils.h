@@ -30,12 +30,14 @@ char *bytes_to_hex( char hex[], const uint8_t bin[], size_t length );
 
 int id_equal( const uint8_t id1[], const uint8_t id2[] );
 
+
 int str_isHex( const char str[], size_t size );
 int str_isValidHostname( const char hostname[] );
 int str_isZero( const char str[] );
 
-char *str_id( const uint8_t id[] );
-char *str_addr( const IP *addr );
+const char *str_af( int af );
+const char *str_id( const uint8_t id[] );
+const char *str_addr( const IP *addr );
 
 int addr_is_localhost( const IP *addr );
 int addr_is_multicast( const IP *addr );

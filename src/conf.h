@@ -55,14 +55,11 @@ struct gconf_t {
 	// Write log to /var/log/message
 	int use_syslog;
 
-	// IPv4 or IPv6 mode
+	// Net mode (AF_INET / AF_INET6 / AF_UNSPEC)
 	int af;
 
 	// DHT port number
 	char* dht_port;
-
-	// DHT address
-	char* dht_addr;
 
 	// DHT interface
 	char *dht_ifname;

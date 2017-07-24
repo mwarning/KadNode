@@ -39,8 +39,10 @@ static mbedtls_ctr_drbg_context g_drbg;
 static mbedtls_ssl_context g_ssl;
 static mbedtls_ssl_config g_conf;
 
-static mbedtls_net_context g_listen_fd;
-static mbedtls_net_context g_client_fd;
+static mbedtls_net_context g_listen_fd4;
+static mbedtls_net_context g_listen_fd6;
+static mbedtls_net_context g_client_fd4;
+static mbedtls_net_context g_client_fd6;
 
 
 // Certificate for each domain we authenticate
@@ -58,14 +60,14 @@ static struct sni_entry *g_sni_entries = NULL;
 void tls_client_handler( int rc, int sock );
 
 
-void end_client_connection(int result) {
+void end_client_connection( mbedtls_net_context *client_fd, int result ) {
 	int ret;
 
 	// Done and close connection
 	do ret = mbedtls_ssl_close_notify( &g_ssl );
 	while( ret == MBEDTLS_ERR_SSL_WANT_WRITE );
 
-	mbedtls_net_free( &g_client_fd );
+	mbedtls_net_free( client_fd );
 	mbedtls_ssl_session_reset( &g_ssl );
 
 	if( result == MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED )  {
@@ -80,13 +82,21 @@ void end_client_connection(int result) {
 		log_info( "TLS: Authentication successful" );
 	}
 
-	net_remove_handler(g_listen_fd.fd, tls_client_handler);
+	net_remove_handler( client_fd->fd, tls_client_handler );
 }
 
 void tls_client_handler( int rc, int sock ) {
+	mbedtls_net_context *client_fd;
 	int ret;
+	int exp;
 
 	log_info( "TLS: tls_client_handler, rc: %d\n", rc );
+
+	if( sock == g_client_fd4.fd ) {
+		client_fd = &g_client_fd4;
+	} else {
+		client_fd = &g_client_fd6;
+	}
 
 	do ret = mbedtls_ssl_handshake( &g_ssl );
 	while( ret == MBEDTLS_ERR_SSL_WANT_READ ||
@@ -111,13 +121,12 @@ void tls_client_handler( int rc, int sock ) {
 			log_debug( "TLS: Failed verfiy: %s", vrfy_buf );
 		}
 #endif
-		end_client_connection(ret);
+		end_client_connection( client_fd, ret );
 	} else {
 		// ret == 0
-		log_info( "TLS: Protocol is %s, Ciphersuite is %s",
+		log_info( "TLS: Protocol is %s, ciphersuite is %s",
 			mbedtls_ssl_get_version( &g_ssl ), mbedtls_ssl_get_ciphersuite( &g_ssl ) );
 
-		int exp;
 		if( ( exp = mbedtls_ssl_get_record_expansion( &g_ssl ) ) >= 0 ) {
 			log_info( "TLS: Record expansion is %d", exp );
 		} else {
@@ -125,43 +134,51 @@ void tls_client_handler( int rc, int sock ) {
 		}
 
 		// All ok
-		end_client_connection(0);
+		end_client_connection( client_fd, 0 );
 	}
 }
 
 void tls_server_handler( int rc, int sock ) {
-	printf( "TLS: tls_server_handler, rc: %d, sock:%d %d\n", rc, g_listen_fd.fd, sock);
-
+	printf( "TLS: tls_server_handler, rc: %d, sock: %d %d\n", rc, g_listen_fd4.fd, sock);
 	unsigned char client_ip[16] = { 0 };
 	size_t cliip_len;
+	mbedtls_net_context *listen_fd;
+	mbedtls_net_context *client_fd;
 	int ret;
 
-	if( rc <= 0 || g_listen_fd.fd < 0 ) {
+	if( sock == g_listen_fd6.fd ) {
+		listen_fd = &g_listen_fd6;
+		client_fd = &g_client_fd6;
+	} else {
+		listen_fd = &g_listen_fd4;
+		client_fd = &g_client_fd4;
+	}
+
+	if( rc <= 0 || g_client_fd4.fd > -1 || g_client_fd6.fd > -1 ) {
 		// we already got an connection in progress
 		return;
 	}
 
-	if( ( ret = mbedtls_net_accept( &g_listen_fd, &g_client_fd,
+	if( ( ret = mbedtls_net_accept( listen_fd, client_fd,
 				client_ip, sizeof( client_ip ), &cliip_len ) ) != 0 ) {
 		log_warn( "TLS: mbedtls_net_accept returned -0x%x", -ret );
 		return;
 	}
 
-	log_debug("TLS: got incoming connection");
+	log_debug( "TLS: got incoming connection" );
 
-	ret = mbedtls_net_set_nonblock( &g_client_fd );
+	ret = mbedtls_net_set_nonblock( client_fd );
 	if( ret != 0 ) {
 		log_warn( "TLS: net_set_nonblock() returned -0x%x", -ret );
 		return;
 	}
 
-	mbedtls_ssl_conf_read_timeout( &g_conf, 0);
+	mbedtls_ssl_conf_read_timeout( &g_conf, 0 );
 
-	mbedtls_ssl_set_bio( &g_ssl, &g_client_fd, mbedtls_net_send, mbedtls_net_recv, NULL );
+	mbedtls_ssl_set_bio( &g_ssl, client_fd, mbedtls_net_send, mbedtls_net_recv, NULL );
 
 	// New incoming handler connection
-	net_add_handler( g_listen_fd.fd, tls_client_handler );
-	printf("add net handler\n");
+	net_add_handler( client_fd->fd, tls_client_handler );
 }
 
 /*
@@ -204,7 +221,7 @@ void tls_server_add_sni( const char name[], const char crt_file[], const char ke
 		exit( 1 );
 	}
 
-	new->name = strdup(name);
+	new->name = strdup( name );
 	mbedtls_x509_crt_init( &new->cert );
 	mbedtls_pk_init( &new->key );
 
@@ -233,8 +250,11 @@ void tls_server_setup( void ) {
 	const char * pers = "kadnode";
 	int ret;
 
-	mbedtls_net_init( &g_client_fd );
-	mbedtls_net_init( &g_listen_fd );
+	mbedtls_net_init( &g_client_fd4 );
+	mbedtls_net_init( &g_listen_fd4 );
+	mbedtls_net_init( &g_client_fd6 );
+	mbedtls_net_init( &g_listen_fd6 );
+
 	mbedtls_ssl_init( &g_ssl );
 	mbedtls_ssl_config_init( &g_conf );
 	mbedtls_ctr_drbg_init( &g_drbg );
@@ -248,8 +268,10 @@ void tls_server_setup( void ) {
 		exit( 1 );
 	}
 
+	// Without SNI entries, there is no reason to start the TLS server
 	if( g_sni_entries ) {
-		g_listen_fd.fd = net_bind( "TLS", gconf->dht_addr, "4433" /*gconf->dht_port*/, NULL, IPPROTO_TCP, AF_UNSPEC );
+		g_listen_fd4.fd = net_bind( "TLS", "0.0.0.0", gconf->dht_port, NULL, IPPROTO_TCP, AF_UNSPEC );
+		g_listen_fd6.fd = net_bind( "TLS", "::", gconf->dht_port, NULL, IPPROTO_TCP, AF_UNSPEC );
 
 		if( ( ret = mbedtls_ssl_config_defaults( &g_conf,
 			MBEDTLS_SSL_IS_SERVER,
@@ -271,8 +293,11 @@ void tls_server_setup( void ) {
 			exit( 1 );
 		}
 
-		mbedtls_net_set_nonblock( &g_listen_fd );
-		net_add_handler( g_listen_fd.fd, &tls_server_handler );
+		mbedtls_net_set_nonblock( &g_listen_fd4 );
+		mbedtls_net_set_nonblock( &g_listen_fd6 );
+
+		net_add_handler( g_listen_fd4.fd, &tls_server_handler );
+		net_add_handler( g_listen_fd6.fd, &tls_server_handler );
 	}
 }
 

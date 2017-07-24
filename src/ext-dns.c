@@ -726,10 +726,15 @@ void dns_setup( void ) {
 	}
 
 	g_sock4 = net_bind( "DNS", "127.0.0.1", gconf->dns_port, NULL, IPPROTO_UDP, AF_UNSPEC );
-	net_add_handler( g_sock4, &dns_handler );
-
 	g_sock6 = net_bind( "DNS", "::1", gconf->dns_port, NULL, IPPROTO_UDP, AF_UNSPEC );
-	net_add_handler( g_sock6, &dns_handler );
+
+	if( g_sock4 >= 0 ) {
+		net_add_handler( g_sock4, &dns_handler );
+	}
+
+	if( g_sock6 >= 0 ) {
+		net_add_handler( g_sock6, &dns_handler );
+	}
 }
 
 void dns_free( void ) {

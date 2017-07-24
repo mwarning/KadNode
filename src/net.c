@@ -46,7 +46,7 @@ void net_add_handler( int fd, net_callback *callback ) {
     exit(1);
 }
 
-void net_remove_handler(int fd, net_callback *callback) {
+void net_remove_handler( int fd, net_callback *callback ) {
     int i;
 
     for (i = 0; i < N_ELEMS(g_tasks); i++) {
@@ -122,14 +122,19 @@ int net_bind(
 	int protocol, int af
 ) {
 	const int opt_on = 1;
-	int sock;
 	socklen_t addrlen;
 	IP sockaddr;
+	int sock;
 
 	if( addr_parse( &sockaddr, addr, port, af ) != 0 ) {
 		log_err( "%s: Failed to parse IP address '%s' and port '%s'.",
 			name, addr, port
 		);
+		return -1;
+	}
+
+	// Disable IPv6 or IPv4
+	if( gconf->af != AF_UNSPEC && gconf->af != af ) {
 		return -1;
 	}
 
@@ -223,7 +228,7 @@ void net_loop( void ) {
         // Call all callbacks
         for( i = 0; i < N_ELEMS(g_tasks); ++i ) {
             struct task_t *task = &g_tasks[i];
-            if (task->callback) {
+            if( task->callback ) {
                 if( task->fd >= 0 && FD_ISSET( task->fd, &fds_working ) ) {
                     task->callback( rc, task->fd );
                 } else {

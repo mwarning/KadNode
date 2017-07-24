@@ -196,15 +196,28 @@ int str_isValidHostname( const char hostname[] ) {
 }
 
 int str_isZero( const char str[] ) {
-	return (str == NULL) || (strcmp( str, "0" ) == 0);
+	return (str == NULL) || (str[0] == '0' && str[1] == '\0');
 }
 
-char *str_id( const uint8_t id[] ) {
+const char *str_id( const uint8_t id[] ) {
 	static char hexbuf[SHA1_HEX_LENGTH+1];
 	return bytes_to_hex( hexbuf, id, SHA1_BIN_LENGTH );
 }
 
-char *str_addr( const IP *addr ) {
+const char *str_af( int af ) {
+	switch( af ) {
+		case AF_INET:
+			return "IPv4";
+		case AF_INET6:
+			return "IPv6";
+		case AF_UNSPEC:
+			return "IPv4+IPv6";
+		default:
+			return "<invalid>";
+	}
+}
+
+const char *str_addr( const IP *addr ) {
 	static char addrbuf[FULL_ADDSTRLEN + 1];
 	char buf[INET6_ADDRSTRLEN + 1];
 	uint16_t port;

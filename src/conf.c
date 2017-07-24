@@ -77,8 +77,6 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 " --user <user>			Change the UUID after start.\n\n"
 " --port	<port>			Bind DHT to this port.\n"
 "				Default: "DHT_PORT"\n\n"
-" --addr	<addr>			Bind DHT to this address.\n"
-"				Default: "DHT_ADDR4" / "DHT_ADDR6"\n\n"
 " --config <file>		Provide a configuration file with one command line\n"
 "				option on each line. Comments start after '#'.\n\n"
 " --ifname <interface>		Bind to this interface.\n"
@@ -87,8 +85,8 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 " --verbosity <level>		Verbosity level: quiet, verbose or debug.\n"
 "				Default: verbose\n\n"
 " --pidfile <file>		Write process pid to a file.\n\n"
-" --mode <ipv4|ipv6>		Enable IPv4 or IPv6 mode for the DHT.\n"
-"				Default: ipv4\n\n"
+" --mode <ipv4|ipv6>		Enable IPv4 or IPv6 only mode.\n"
+"				Default: IPv4+IPv6\n\n"
 " --query-tld <domain>		Top level domain to be handled by KadNode.\n"
 "				Default: "QUERY_TLD_DEFAULT"\n\n"
 #ifdef LPD
@@ -151,7 +149,7 @@ void conf_init( void ) {
 void conf_check( void ) {
 
 	if( gconf->af == 0 ) {
-		gconf->af = AF_INET6;
+		gconf->af = AF_UNSPEC;
 	}
 
 	if( gconf->query_tld == NULL ) {
@@ -160,12 +158,6 @@ void conf_check( void ) {
 
 	if( gconf->dht_port == NULL ) {
 		gconf->dht_port = strdup( DHT_PORT );
-	}
-
-	if( gconf->dht_addr == NULL ) {
-		gconf->dht_addr = strdup(
-			(gconf->af == AF_INET) ? DHT_ADDR4 : DHT_ADDR6
-		);
 	}
 
 #ifdef CMD
@@ -253,8 +245,8 @@ const char *verbosity_str( int verbosity ) {
 
 void conf_info( void ) {
 	log_info( "Starting %s", kadnode_version_str );
-	log_info( "Net Mode: %s", (gconf->af == AF_INET) ? "IPv4" : "IPv6");
-	log_info( "Run Mode: %s", gconf->is_daemon ? "Daemon" : "Foreground" );
+	log_info( "Net Mode: %s", str_af( gconf->af ) );
+	log_info( "Run Mode: %s", gconf->is_daemon ? "daemon" : "foreground" );
 
 	if( gconf->configfile ) {
 		log_info( "Configuration File: %s", gconf->configfile );
@@ -321,7 +313,6 @@ enum OPCODE {
 	oConfig,
 	oMode,
 	oPort,
-	oAddr,
 	oLpdAddr,
 	oLpdDisable,
 	oFwdDisable,
@@ -370,7 +361,6 @@ static struct option_t options[] = {
 	{"--config", 1, oConfig},
 	{"--mode", 1, oMode},
 	{"--port", 1, oPort},
-	{"--addr", 1, oAddr},
 #ifdef LPD
 	{"--lpd-addr", 1, oLpdAddr},
 	{"--lpd-disable", 0, oLpdDisable},
@@ -519,9 +509,6 @@ void conf_handle_option( const char opt[], const char val[] ) {
 			break;
 		case oPort:
 			conf_str( opt, &gconf->dht_port, val );
-			break;
-		case oAddr:
-			conf_str( opt, &gconf->dht_addr, val );
 			break;
 #ifdef LPD
 		case oLpdAddr:
