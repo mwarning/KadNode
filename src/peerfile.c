@@ -14,26 +14,26 @@
 #include "peerfile.h"
 
 
+struct peer {
+	struct peer *next;
+	char* addr_str;
+};
+
 // Next time to import peers from peer file
 static time_t peerfile_import_time = 0;
 
 // Next time to export peers to peer file
 static time_t peerfile_export_time = 0;
 
-struct peer {
-	struct peer *next;
-	char* addr_str;
-};
-
-// A list of static peers
+// A list of static peers, given by --peer argument
 static struct peer *g_peers = NULL;
 
 
 void peerfile_export( void ) {
 	const char *filename;
-	IP addrs[150];
+	IP addrs[200];
 	size_t i, num;
-	FILE * fp;
+	FILE *fp;
 
 	filename = gconf->peerfile;
 	if( filename == NULL ) {
@@ -82,7 +82,7 @@ void peerfile_export( void ) {
 	log_info( "PEERFILE: %d peers exported: %s", i, filename );
 }
 
-int peerfile_import_peer( const char* addr_str ) {
+int peerfile_import_peer( const char addr_str[] ) {
 	IP addr;
 	int rc;
 
@@ -100,11 +100,13 @@ int peerfile_import_peer( const char* addr_str ) {
 	return 0;
 }
 
-void peerfile_import( const char filename[] ) {
+void peerfile_import( void ) {
+	const char *filename;
 	char linebuf[256];
 	FILE *fp;
 	int num;
 
+	filename = gconf->peerfile;
 	if( filename == NULL ) {
 		return;
 	}
@@ -131,7 +133,7 @@ void peerfile_import( const char filename[] ) {
 	log_info( "PEERFILE: Imported %d peers from: '%s'", num, filename );
 }
 
-void peerfile_import_static( struct peer *peers ) {
+void peerfile_import_static( const struct peer *peers ) {
 	int num;
 
 	num = 0;
@@ -158,7 +160,7 @@ void peerfile_handle_peerfile( int _rc, int _sock ) {
 
 	if( peerfile_import_time <= time_now_sec() && kad_count_nodes( 0 ) == 0 ) {
 		// Ping peers from peerfile, if present
-		peerfile_import( gconf->peerfile );
+		peerfile_import();
 
 		// Import static peers
 		peerfile_import_static( g_peers );
