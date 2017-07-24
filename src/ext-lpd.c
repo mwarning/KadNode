@@ -34,7 +34,7 @@ const char msg_fmt[] =
 * so that other clients will accept it as peer.
 */
 #define LPD_DEFAULT_INFOHASH "0000000000000000000000000000000000000000"
-static char g_infohash[SHA1_HEX_LENGTH+1] = LPD_DEFAULT_INFOHASH;
+static char g_infohash[SHA1_HEX_LENGTH + 1] = LPD_DEFAULT_INFOHASH;
 
 // Packets per minute to be handled
 enum { PACKET_LIMIT_MAX = 20 };
@@ -70,7 +70,7 @@ int mcast_set_group( int sock, IP *mcast_addr, const char ifname[], int join ) {
 
 	memcpy( &req.gr_group, mcast_addr, addr_len( mcast_addr ) );
 
-	level=  (mcast_addr->ss_family == AF_INET) ? IPPROTO_IP : IPPROTO_IPV6;
+	level = (mcast_addr->ss_family == AF_INET) ? IPPROTO_IP : IPPROTO_IPV6;
 	optname = (join == 0) ? MCAST_LEAVE_GROUP : MCAST_JOIN_GROUP;
 
 	if( setsockopt( sock, level, optname, &req, sizeof(req) ) < 0 ) {
@@ -398,7 +398,7 @@ void lpd_setup( void ) {
 	g_packet_limit = PACKET_LIMIT_MAX;
 
 	if( addr_parse( &g_lpd_addr, gconf->lpd_addr, LPD_PORT, gconf->af ) != 0 ) {
-		log_err( "BOOT: Failed to parse IP address for '%s'.", gconf->lpd_addr );
+		log_err( "LPD: Failed to parse IP address: %s", gconf->lpd_addr );
 	}
 
 	if( gconf->lpd_disable ) {

@@ -194,7 +194,9 @@ static struct bob_resource *bob_next_resource( void ) {
 
 static void bob_send_challenge( int sock, const struct bob_resource *resource ) {
 	uint8_t buf[3 + PUBLICKEYBYTES + CHALLENGE_BIN_LENGTH];
+#ifdef DEBUG
 	char hexbuf[sizeof(buf) * 2 + 1];
+#endif
 
 	// Insert marker
 	memcpy( buf, "BOB", 3);
@@ -421,7 +423,7 @@ void bob_send_challenges( int sock ) {
 	}
 }
 
-struct bob_resource *bob_find_resource(const IP *addr) {
+struct bob_resource *bob_find_resource( const IP *addr ) {
 	int i;
 
 	for( i = 0; i < N_ELEMS(g_bob_resources); ++i) {
@@ -469,7 +471,9 @@ struct key_t *bob_find_key( const uint8_t pkey[] ) {
 void bob_encrypt_challenge( int sock, uint8_t buf[], size_t buflen, IP *addr ) {
 	struct key_t *key;
 	uint8_t sig[200];
+#ifdef DEBUG
 	char hexbuf[300];
+#endif
 	size_t slen;
 	int ret;
 
@@ -478,7 +482,6 @@ void bob_encrypt_challenge( int sock, uint8_t buf[], size_t buflen, IP *addr ) {
 
 	key = bob_find_key( pkey );
 	if( key ) {
-		//what is expected here? do we accept BOB + signature?
 		memcpy( sig, "BOB", 3 );
 		ret = mbedtls_ecdsa_write_signature(
 			mbedtls_pk_ec( key->ctx_sign ), MBEDTLS_MD_SHA256,
@@ -488,11 +491,8 @@ void bob_encrypt_challenge( int sock, uint8_t buf[], size_t buflen, IP *addr ) {
 
 		if( ret != 0) {
 			log_warn( "mbedtls_ecdsa_write_signature returned %d\n", ret );
-		} else  {
-			printf( "Hash: %s\n", bytes_to_hex( hexbuf, buf, buflen ) );
-			printf( "Signature: %s\n", bytes_to_hex( hexbuf, sig, slen ) );
-
-			log_debug( "Received challenge from %s and send back response.", str_addr( addr ) );
+		} else {
+			log_debug( "Received challenge from %s and send back response", str_addr( addr ) );
 			sendto( sock, sig, slen, 0, (struct sockaddr*) addr, sizeof(IP) );
 		}
 	} else {
@@ -524,10 +524,25 @@ int bob_handler( int fd, uint8_t buf[], uint32_t buflen, IP *from ) {
 	// Send out new challenges every second
 	if( g_send_challenges < now ) {
 		g_send_challenges = now + 1;
-		//bob_send_challenges( fd );
+		bob_send_challenges( fd );
 	}
 
 	return 1;
+}
+
+void bob_debug_keys( int fd ) {
+	struct key_t *key;
+
+	if( g_keys == NULL ) {
+		dprintf( fd, "No keys found.\n" );
+		return;
+	}
+
+	key = g_keys;
+	while( key ) {
+		dprintf( fd, "Public key: %s (%s)\n", get_pkey_hex( &key->ctx_sign ), key->path );
+		key = key->next;
+	}
 }
 
 void bob_setup( void ) {

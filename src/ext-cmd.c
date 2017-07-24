@@ -36,14 +36,14 @@ static const char* cmd_usage =
 	"	blacklist <addr>\n";
 
 const char* cmd_usage_debug =
-	"	list nodes|blacklist|buckets|constants"
+	"	list blacklist|buckets|constants"
 #ifdef FWD
 	"|forwardings"
 #endif
 #ifdef BOB
 	"|keys"
 #endif
-	"|searches|announcements|dht_searches|dht_storage|\n";
+	"|searches|announcements|dht_nodes|dht_searches|dht_storage|\n";
 
 #define REPLY_DATA_SIZE 1400
 
@@ -230,8 +230,6 @@ int cmd_exec( struct reply_t *r, const char input[] ) {
 		if( gconf->is_daemon == 1 ) {
 			r_printf( r ,"The 'list' command is not available while KadNode runs as daemon.\n" );
 			rc = 1;
-		} else if( match( input, " list nodes %n" )) {
-			rc = cmd_debug_nodes( r );
 		} else if( match( input, " list blacklist %n" )) {
 			kad_debug_blacklist( STDOUT_FILENO );
 		} else if( match( input, " list buckets %n" )) {
@@ -250,6 +248,8 @@ int cmd_exec( struct reply_t *r, const char input[] ) {
 			searches_debug( STDOUT_FILENO );
 		} else if( match( input, " list announcements %n" )) {
 			announces_debug( STDOUT_FILENO );
+		} else if( match( input, " list dht_nodes %n" )) {
+			rc = cmd_debug_nodes( r );
 		} else if( match( input, " list dht_searches %n" )) {
 			kad_debug_searches( STDOUT_FILENO );
 		} else if( match( input, " list dht_storage %n" )) {
