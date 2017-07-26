@@ -519,7 +519,7 @@ int bob_handler( int fd, uint8_t buf[], uint32_t buflen, IP *from ) {
 		return 0;
 	}
 
-	now = time_now_sec();
+	now = time_add_secs( 0 );
 
 	// Send out new challenges every second
 	if( g_send_challenges < now ) {

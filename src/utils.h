@@ -14,6 +14,9 @@
 // IPv6 address length including port, e.g. [::1]:12345
 #define FULL_ADDSTRLEN (INET6_ADDRSTRLEN + 8)
 
+// Direct access to time in seconds
+#define time_now_sec() (gconf->time_now)
+
 
 int is_suffix( const char str[], const char suffix[] );
 void* memdup(const void* src, size_t size);
@@ -47,8 +50,8 @@ int addr_port( const IP *addr );
 int addr_len( const IP *addr );
 int addr_equal( const IP *addr1, const IP *addr2 );
 
-time_t time_now_sec( void );
-time_t time_add_min( uint32_t minutes );
-time_t time_add_hour( uint32_t hours );
+time_t time_add_secs( uint32_t seconds );
+time_t time_add_mins( uint32_t minutes );
+time_t time_add_hours( uint32_t hours );
 
 #endif // _UTILS_H_

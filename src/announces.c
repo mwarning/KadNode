@@ -205,14 +205,14 @@ void announces_handle( int _rc, int _sock ) {
 		announces_expire();
 
 		// Try again in ~1 minute
-		g_announces_expire = time_add_min( 1 );
+		g_announces_expire = time_add_mins( 1 );
 	}
 
 	if( g_announces_announce <= time_now_sec() && kad_count_nodes( 0 ) != 0 ) {
 		announces_announce();
 
 		// Try again in ~1 minute
-		g_announces_announce = time_add_min( 1 );
+		g_announces_announce = time_add_mins( 1 );
 	}
 }
 

@@ -410,14 +410,14 @@ int addr_equal( const IP *addr1, const IP *addr2 ) {
 	}
 }
 
-time_t time_now_sec( void ) {
-	return gconf->time_now;
+time_t time_add_secs( uint32_t seconds ) {
+	return gconf->time_now + seconds;
 }
 
-time_t time_add_min( uint32_t minutes ) {
-	return time_now_sec() + (60 * minutes);
+time_t time_add_mins( uint32_t minutes ) {
+	return gconf->time_now + (60 * minutes);
 }
 
-time_t time_add_hour( uint32_t hours ) {
-	return time_now_sec() + (60 * 60 * hours);
+time_t time_add_hours( uint32_t hours ) {
+	return gconf->time_now + (60 * 60 * hours);
 }

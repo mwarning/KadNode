@@ -166,7 +166,7 @@ void peerfile_handle_peerfile( int _rc, int _sock ) {
 		peerfile_import_static( g_peers );
 
 		// Try again in ~5 minutes
-		peerfile_import_time = time_add_min( 5 );
+		peerfile_import_time = time_add_mins( 5 );
 	}
 
 	if( peerfile_export_time <= time_now_sec() && kad_count_nodes( 1 ) != 0 ) {
@@ -174,13 +174,13 @@ void peerfile_handle_peerfile( int _rc, int _sock ) {
 		peerfile_export();
 
 		// Try again in 24 hours
-		peerfile_export_time = time_add_hour( 24 );
+		peerfile_export_time = time_add_hours( 24 );
 	}
 }
 
 void peerfile_setup( void ) {
-	peerfile_import_time = time_now_sec() + 10;
-	peerfile_export_time = time_now_sec();
+	peerfile_import_time = time_add_secs( 10 );
+	peerfile_export_time = time_add_hours( 24 );
 	net_add_handler( -1 , &peerfile_handle_peerfile );
 }
 
