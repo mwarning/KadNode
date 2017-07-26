@@ -31,7 +31,7 @@
 // Global object variables
 struct gconf_t *gconf = NULL;
 
-static int g_argc = NULL;
+static int g_argc = 0;
 static char **g_argv = NULL;
 
 
