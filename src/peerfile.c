@@ -40,6 +40,11 @@ void peerfile_export( void ) {
 		return;
 	}
 
+	if( (time_now_sec() - gconf->startup_time) < (5 * 60) ) {
+		log_info( "PEERFILE: No peers exported. KadNode needs to run at least 5 minutes." );
+		return;
+	}
+
 	num = kad_export_nodes( addrs, N_ELEMS(addrs) );
 
 	if( num < 0 ) {
@@ -50,11 +55,6 @@ void peerfile_export( void ) {
 	// No peers to export
 	if( num == 0 ) {
 		log_info( "PEERFILE: No peers to export." );
-		return;
-	}
-
-	if( (time_now_sec() - gconf->startup_time) < (5 * 60) ) {
-		log_info( "PEERFILE: No peers exported. KadNode needs to run at least 5 minutes." );
 		return;
 	}
 
