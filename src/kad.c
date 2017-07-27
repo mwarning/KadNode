@@ -523,39 +523,35 @@ int kad_blacklist( const IP* addr ) {
 }
 
 // Export known nodes; the maximum is 200 nodes
-int kad_export_nodes( IP addr_array[], size_t num ) {
-	IP4 *addr4;
-	IP6 *addr6;
+int kad_export_nodes( IP addrs[], size_t num ) {
+	IP4 addr4[150];
+	IP6 addr6[150];
 	int num4;
 	int num6;
-	int n;
+	int n = 0;
+	int j = 0;
+	int k = 0;
 
-	if( gconf->af == AF_INET6 ) {
-		num6 = MIN(num, 200);
-		addr6 = calloc( num6, sizeof(IP6) );
-		num4 = 0;
-		addr4 = NULL;
-	} else {
-		num6 = 0;
-		addr6 = NULL;
-		num4 = MIN(num, 200);
-		addr4 = calloc( num4, sizeof(IP4) );
-	}
+	num6 = MIN(num, N_ELEMS(addr4));
+	num4 = MIN(num, N_ELEMS(addr6));
 
 	dht_lock();
 	dht_get_nodes( addr4, &num4, addr6, &num6 );
 	dht_unlock();
 
-	if( gconf->af == AF_INET6 ) {
-		for( n = 0; n < num6; ++n ) {
-			memcpy( &addr_array[n], &addr6[n], sizeof(IP6) );
+	// Export IPv4 and IPv6 addresses in equal parts
+	while( (num4 || num6 ) && num ) {
+		if( num && num4 ) {
+			memcpy( &addrs[n++], &addr4[j++], sizeof(IP4) );
+			num4--;
+			num--;
 		}
-		free( addr6 );
-	} else {
-		for( n = 0; n < num4; ++n ) {
-			memcpy( &addr_array[n], &addr4[n], sizeof(IP4) );
+
+		if( num && num6 ) {
+			memcpy( &addrs[n++], &addr6[k++], sizeof(IP6) );
+			num6--;
+			num--;
 		}
-		free( addr4 );
 	}
 
 	return n;
