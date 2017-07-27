@@ -368,13 +368,17 @@ int kad_status( char buf[], size_t size ) {
 
 	// Use dht data structure!
 	//numvalues = announces_count();
+	int nodes4 = kad_count_bucket( buckets, 0 );
+	int nodes6 = kad_count_bucket( buckets6, 0 );
+	int nodes4_good = kad_count_bucket( buckets, 1 );
+	int nodes6_good = kad_count_bucket( buckets6, 1 );
 
 	bprintf( "Version: %s\n", kadnode_version_str );
 	bprintf( "DHT id: %s\n", str_id( myid ) );
 	bprintf( "DHT listen on: %s / %s\n", str_af( gconf->af ),
 		gconf->dht_ifname ? gconf->dht_ifname : "<any>");
-	bprintf( "DHT Nodes: %d (%d good)\n",
-		kad_count_nodes( 0 ), kad_count_nodes( 1 ) );
+	bprintf( "DHT Nodes: %d IPv4 (%d good), %d IPv6 (%d good)\n",
+		nodes4, nodes4_good, nodes6, nodes6_good );
 	bprintf( "DHT Storage: %d (max %d), %d peers (max %d per storage)\n",
 		numstorage, DHT_MAX_HASHES, numstorage_peers, DHT_MAX_PEERS );
 	bprintf( "DHT Searches: %d active, %d completed (max %d)\n",
