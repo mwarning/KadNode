@@ -44,7 +44,8 @@
 */
 
 #define ECPARAMS MBEDTLS_ECP_DP_SECP256R1
-#define PUBLICKEYBYTES 32
+#define ECPARAMS_NAME "secp256r1"
+#define ECPARAMS_SIZE 32
 #define MAX_AUTH_CHALLENGE_SEND 3
 #define CHALLENGE_BIN_LENGTH 32
 
@@ -193,7 +194,7 @@ static struct bob_resource *bob_next_resource( void ) {
 }
 
 static void bob_send_challenge( int sock, const struct bob_resource *resource ) {
-	uint8_t buf[3 + PUBLICKEYBYTES + CHALLENGE_BIN_LENGTH];
+	uint8_t buf[3 + ECPARAMS_SIZE + CHALLENGE_BIN_LENGTH];
 #ifdef DEBUG
 	char hexbuf[sizeof(buf) * 2 + 1];
 #endif
@@ -202,10 +203,10 @@ static void bob_send_challenge( int sock, const struct bob_resource *resource ) 
 	memcpy( buf, "BOB", 3);
 
 	// Append X value of public key
-	mbedtls_mpi_write_binary( &mbedtls_pk_ec( resource->ctx_verify )->Q.X, buf + 3, PUBLICKEYBYTES );
+	mbedtls_mpi_write_binary( &mbedtls_pk_ec( resource->ctx_verify )->Q.X, buf + 3, ECPARAMS_SIZE );
 
 	// Append challenge bytes
-	memcpy( buf + 3 + PUBLICKEYBYTES, resource->challenge, CHALLENGE_BIN_LENGTH );
+	memcpy( buf + 3 + ECPARAMS_SIZE, resource->challenge, CHALLENGE_BIN_LENGTH );
 
 	log_debug( "Send challenge to %s: %s", str_addr(&resource->addr), bytes_to_hex( hexbuf, buf, sizeof(buf) ) );
 
@@ -310,8 +311,8 @@ static int write_pem( const mbedtls_pk_context *key, const char path[] ) {
 }
 
 static const char *get_pkey_hex( const mbedtls_pk_context *ctx ) {
-	static char hexbuf[2 * PUBLICKEYBYTES + 1];
-	uint8_t buf[PUBLICKEYBYTES];
+	static char hexbuf[2 * ECPARAMS_SIZE + 1];
+	uint8_t buf[ECPARAMS_SIZE];
 
 	mbedtls_mpi_write_binary( &mbedtls_pk_ec( *ctx )->Q.X, buf, sizeof(buf) );
 
@@ -338,7 +339,7 @@ int bob_create_key( const char path[] ) {
 		return -1;
 	}
 
-	printf( "Generating %s key...\n", mbedtls_ecp_curve_info_from_grp_id( ECPARAMS )->name );
+	printf( "Generating %s key...\n", ECPARAMS_NAME );
 
 	if( ( ret = mbedtls_pk_setup( &ctx, mbedtls_pk_info_from_type( MBEDTLS_PK_ECKEY ) ) ) != 0 ) {
 		printf( "mbedtls_pk_setup returned -0x%04x\n", -ret );
@@ -383,7 +384,7 @@ int bob_load_key( const char path[] ) {
 	if( mbedtls_pk_ec( ctx )->grp.id != ECPARAMS ) {
 		log_err( "Unsupported key type for %s: %s (expected %s)", path,
 			mbedtls_ecp_curve_info_from_grp_id( mbedtls_pk_ec( ctx )->grp.id )->name,
-			mbedtls_ecp_curve_info_from_grp_id( ECPARAMS )->name
+			ECPARAMS_NAME
 		);
 		return -1;
 	}
@@ -453,12 +454,12 @@ void bob_verify_challenge( int sock, uint8_t buf[], size_t buflen, IP *addr ) {
 }
 
 struct key_t *bob_find_key( const uint8_t pkey[] ) {
-	uint8_t epkey[PUBLICKEYBYTES];
+	uint8_t epkey[ECPARAMS_SIZE];
 	struct key_t *key = g_keys;
 
 	while( key ) {
-		mbedtls_mpi_write_binary( &mbedtls_pk_ec( key->ctx_sign )->Q.X, epkey, PUBLICKEYBYTES );
-		if( memcmp( epkey, pkey, PUBLICKEYBYTES ) == 0 ) {
+		mbedtls_mpi_write_binary( &mbedtls_pk_ec( key->ctx_sign )->Q.X, epkey, ECPARAMS_SIZE );
+		if( memcmp( epkey, pkey, ECPARAMS_SIZE ) == 0 ) {
 			return key;
 		}
 		key = key->next;
@@ -478,7 +479,7 @@ void bob_encrypt_challenge( int sock, uint8_t buf[], size_t buflen, IP *addr ) {
 	int ret;
 
 	uint8_t *pkey = buf + 3;
-	uint8_t *challenge = buf + 3 + PUBLICKEYBYTES;
+	uint8_t *challenge = buf + 3 + ECPARAMS_SIZE;
 
 	key = bob_find_key( pkey );
 	if( key ) {
@@ -496,7 +497,7 @@ void bob_encrypt_challenge( int sock, uint8_t buf[], size_t buflen, IP *addr ) {
 			sendto( sock, sig, slen, 0, (struct sockaddr*) addr, sizeof(IP) );
 		}
 	} else {
-		log_debug( "BOB: Secret key not found for public key: %s", bytes_to_hex( hexbuf, pkey, PUBLICKEYBYTES ) );
+		log_debug( "BOB: Secret key not found for public key: %s", bytes_to_hex( hexbuf, pkey, ECPARAMS_SIZE ) );
 	}
 }
 
@@ -509,7 +510,7 @@ int bob_handler( int fd, uint8_t buf[], uint32_t buflen, IP *from ) {
 	}
 
 	if( buflen > 3 && memcmp( buf, "BOB", 3 ) == 0 ) {
-		if( buflen == (3 + PUBLICKEYBYTES + CHALLENGE_BIN_LENGTH) ) {
+		if( buflen == (3 + ECPARAMS_SIZE + CHALLENGE_BIN_LENGTH) ) {
 			// Answer a challenge request
 			bob_encrypt_challenge( fd, buf, buflen, from );
 		} else {
