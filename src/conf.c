@@ -31,6 +31,7 @@
 // Global object variables
 struct gconf_t *gconf = NULL;
 
+// Program arguments (extendable
 static int g_argc = 0;
 static char **g_argv = NULL;
 
@@ -110,7 +111,7 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 " --dns-port <port>		Bind the DNS server interface to this local port.\n"
 "				Default: "DNS_PORT"\n\n"
 " --dns-proxy-enable		Enable DNS proxy mode. Reads /etc/resolv.conf by default.\n\n"
-" --dns-proxy-server <ip_addr>	IP address of an external DNS server.\n\n"
+" --dns-proxy-server <ip-addr>	IP address of an external DNS server.\n\n"
 #endif
 #ifdef NSS
 " --nss-port <port>		Bind the Network Service Switch to this local port.\n"
@@ -120,9 +121,10 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 " --fwd-disable			Disable UPnP/NAT-PMP to forward router ports.\n\n"
 #endif
 #ifdef TLS
-" --tls-client-entry		Path to file or folder of CA certificates for TLS client.\n"
-"				Example: \n\n"
-" --tls-server-entry		Comma separated triples of domain, certificate and key for TLS server.\n"
+" --tls-client-entry <path>	Path to file or folder of CA certificates to authenticate addresses.\n"
+"				This option may occur multiple times.\n\n"
+" --tls-server-entry <triple>	Add a comma separated triple of domain, certificate and key for the TLS server.\n"
+"				This option may occur multiple times.\n"
 "				Example: kanode.p2p,kadnode.crt,kadnode.key\n\n"
 #endif
 #ifdef __CYGWIN__
