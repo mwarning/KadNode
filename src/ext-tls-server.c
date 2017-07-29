@@ -63,6 +63,8 @@ void tls_client_handler( int rc, int sock );
 void end_client_connection( mbedtls_net_context *client_fd, int result ) {
 	int ret;
 
+	net_remove_handler( client_fd->fd, tls_client_handler );
+
 	// Done and close connection
 	do ret = mbedtls_ssl_close_notify( &g_ssl );
 	while( ret == MBEDTLS_ERR_SSL_WANT_WRITE );
@@ -81,8 +83,6 @@ void end_client_connection( mbedtls_net_context *client_fd, int result ) {
 	} else {
 		log_info( "TLS: Authentication successful" );
 	}
-
-	net_remove_handler( client_fd->fd, tls_client_handler );
 }
 
 void tls_client_handler( int rc, int sock ) {
