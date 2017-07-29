@@ -270,6 +270,7 @@ void tls_server_setup( void ) {
 
 	// Without SNI entries, there is no reason to start the TLS server
 	if( g_sni_entries ) {
+		// May return -1 if protocol not enabled/supported
 		g_listen_fd4.fd = net_bind( "TLS", "0.0.0.0", gconf->dht_port, NULL, IPPROTO_TCP, AF_UNSPEC );
 		g_listen_fd6.fd = net_bind( "TLS", "::", gconf->dht_port, NULL, IPPROTO_TCP, AF_UNSPEC );
 
@@ -293,11 +294,15 @@ void tls_server_setup( void ) {
 			exit( 1 );
 		}
 
-		mbedtls_net_set_nonblock( &g_listen_fd4 );
-		mbedtls_net_set_nonblock( &g_listen_fd6 );
+		if( g_listen_fd4.fd > -1 ) {
+			mbedtls_net_set_nonblock( &g_listen_fd4 );
+			net_add_handler( g_listen_fd4.fd, &tls_server_handler );
+		}
 
-		net_add_handler( g_listen_fd4.fd, &tls_server_handler );
-		net_add_handler( g_listen_fd6.fd, &tls_server_handler );
+		if( g_listen_fd6.fd > -1 ) {
+			mbedtls_net_set_nonblock( &g_listen_fd6 );
+			net_add_handler( g_listen_fd6.fd, &tls_server_handler );
+		}
 	}
 }
 
