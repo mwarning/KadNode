@@ -77,7 +77,7 @@ void end_client_connection( mbedtls_net_context *client_fd, int result ) {
 	} else if( result != 0 ) {
 		char error_buf[100];
 		mbedtls_strerror( result, error_buf, 100 );
-		log_info( "TLS: Last error was: %d - %s\n", result, error_buf );
+		log_info( "TLS: Error -0x%x - %s", -result, error_buf );
 	} else {
 		log_info( "TLS: Authentication successful" );
 	}
@@ -90,7 +90,7 @@ void tls_client_handler( int rc, int sock ) {
 	int ret;
 	int exp;
 
-	log_info( "TLS: tls_client_handler, rc: %d\n", rc );
+	log_info( "TLS: tls_client_handler, rc: %d", rc );
 
 	if( sock == g_client_fd4.fd ) {
 		client_fd = &g_client_fd4;
@@ -111,14 +111,13 @@ void tls_client_handler( int rc, int sock ) {
 		return;
 	}
 	else*/ if( ret != 0 ) {
-		log_info( "TLS: mbedtls_ssl_handshake returned -0x%x\n\n", -ret );
 #ifdef DEBUG
 		if( ret == MBEDTLS_ERR_X509_CERT_VERIFY_FAILED ) {
 			char vrfy_buf[512];
 			int flags = mbedtls_ssl_get_verify_result( &g_ssl );
 			mbedtls_x509_crt_verify_info( vrfy_buf, sizeof( vrfy_buf ), "", flags );
 
-			log_debug( "TLS: Failed verfiy: %s", vrfy_buf );
+			log_debug( "TLS: Verify failed: %s", vrfy_buf );
 		}
 #endif
 		end_client_connection( client_fd, ret );
@@ -139,7 +138,6 @@ void tls_client_handler( int rc, int sock ) {
 }
 
 void tls_server_handler( int rc, int sock ) {
-	printf( "TLS: tls_server_handler, rc: %d, sock: %d %d\n", rc, g_listen_fd4.fd, sock);
 	unsigned char client_ip[16] = { 0 };
 	size_t cliip_len;
 	mbedtls_net_context *listen_fd;
@@ -155,7 +153,7 @@ void tls_server_handler( int rc, int sock ) {
 	}
 
 	if( rc <= 0 || g_client_fd4.fd > -1 || g_client_fd6.fd > -1 ) {
-		// we already got an connection in progress
+		// We already got an connection in progress
 		return;
 	}
 
@@ -165,7 +163,7 @@ void tls_server_handler( int rc, int sock ) {
 		return;
 	}
 
-	log_debug( "TLS: got incoming connection" );
+	log_debug( "TLS: Got incoming connection" );
 
 	ret = mbedtls_net_set_nonblock( client_fd );
 	if( ret != 0 ) {
