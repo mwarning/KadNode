@@ -115,7 +115,7 @@ int cmd_blacklist( struct reply_t *r, const char *addr_str ) {
 	}
 }
 
-// Export up to 32 peer addresses - more would not fit into one UDP packet
+// Export up to 32 peer addresses - more might not fit into one UDP packet
 int cmd_debug_nodes( struct reply_t *r ) {
 	IP addr_array[32];
 	size_t addr_num;
@@ -187,9 +187,9 @@ int cmd_exec( struct reply_t *r, const char input[] ) {
 	size_t i;
 	int rc = 0;
 
-	if( sscanf( input, " ping %255s ", hostname ) == 1 ) {
+	if( sscanf( input, " ping %255[^ ] ", hostname ) == 1 ) {
 		rc = cmd_ping( r, hostname );
-	} else if( sscanf( input, " lookup %255s ", hostname ) == 1 ) {
+	} else if( sscanf( input, " lookup %255[^ ] ", hostname ) == 1 ) {
 		// Check searches for node
 		rc = kad_lookup( hostname, addrs, N_ELEMS(addrs) );
 
@@ -218,13 +218,13 @@ int cmd_exec( struct reply_t *r, const char input[] ) {
 			value = value->next;
 		}
 		r_printf( r, "%d announcements started.\n", count );
-	} else if( sscanf( input, " announce %255[^:] ", hostname ) == 1 ) {
+	} else if( sscanf( input, " announce %255[^: ] ", hostname ) == 1 ) {
 		rc = cmd_announce( r, hostname, 0, -1 );
-	} else if( sscanf( input, " announce %255[^:] %d ", hostname, &minutes) == 2 ) {
+	} else if( sscanf( input, " announce %255[^: ] %d ", hostname, &minutes) == 2 ) {
 		rc = cmd_announce( r, hostname, 0, minutes );
-	} else if( sscanf( input, " announce %255[^:]:%d %d ", hostname, &port, &minutes) == 3 ) {
+	} else if( sscanf( input, " announce %255[^: ]:%d %d ", hostname, &port, &minutes) == 3 ) {
 		rc = cmd_announce( r, hostname, port, minutes );
-	} else if( match( input, " blacklist %255[^:]%n" ) ) {
+	} else if( match( input, " blacklist %255[^: ]%n" ) ) {
 		rc = cmd_blacklist( r, hostname );
 	} else if( match( input, " list %*s %n" ) && r->allow_debug ) {
 		if( gconf->is_daemon == 1 ) {
