@@ -121,9 +121,9 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 " --fwd-disable			Disable UPnP/NAT-PMP to forward router ports.\n\n"
 #endif
 #ifdef TLS
-" --tls-client-entry <path>	Path to file or folder of CA certificates to authenticate addresses.\n"
+" --tls-client-cert <path>	Path to file or folder of CA certificates.\n"
 "				This option may occur multiple times.\n\n"
-" --tls-server-entry <triple>	Add a comma separated triple of domain, certificate and key for the TLS server.\n"
+" --tls-server-cert <triple>	Add a comma separated triple of server domain, certificate and key.\n"
 "				This option may occur multiple times.\n"
 "				Example: kanode.p2p,kadnode.crt,kadnode.key\n\n"
 #endif
@@ -357,8 +357,8 @@ static struct option_t options[] = {
 	{"--nss-port", 1, oNssPort},
 #endif
 #ifdef TLS
-	{"--tls-client-entry", 1, oTlsClientEntry},
-	{"--tls-server-entry", 1, oTlsServerEntry},
+	{"--tls-client-cert", 1, oTlsClientEntry},
+	{"--tls-server-cert", 1, oTlsServerEntry},
 #endif
 	{"--config", 1, oConfig},
 	{"--mode", 1, oMode},
