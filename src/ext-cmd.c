@@ -36,14 +36,15 @@ static const char* cmd_usage =
 	"	blacklist <addr>\n";
 
 const char* cmd_usage_debug =
-	"	list blacklist|buckets|constants"
+	"	list blacklist|searches|announcements"
 #ifdef FWD
 	"|forwardings"
 #endif
 #ifdef BOB
 	"|keys"
 #endif
-	"|searches|announcements|dht_nodes|dht_searches|dht_storage|\n";
+	"|constants\n"
+	"	list dht_buckets|dht_nodes|dht_searches|dht_storage\n";
 
 #define REPLY_DATA_SIZE 1400
 
@@ -185,11 +186,14 @@ int cmd_exec( struct reply_t *r, const char input[] ) {
 	int count;
 	int port;
 	size_t i;
+	char d; // Dummy marker
 	int rc = 0;
 
-	if( sscanf( input, " ping %255[^ ] ", hostname ) == 1 ) {
+	if( sscanf( input, " ping %255s %c", hostname, &d ) == 1 ) {
 		rc = cmd_ping( r, hostname );
-	} else if( sscanf( input, " lookup %255[^ ] ", hostname ) == 1 ) {
+	} else if( sscanf( input, " lookup %255s %c", hostname, &d ) == 1 ) {
+		printf("lookup: '%s'\n", hostname);
+
 		// Check searches for node
 		rc = kad_lookup( hostname, addrs, N_ELEMS(addrs) );
 
@@ -218,11 +222,11 @@ int cmd_exec( struct reply_t *r, const char input[] ) {
 			value = value->next;
 		}
 		r_printf( r, "%d announcements started.\n", count );
-	} else if( sscanf( input, " announce %255[^: ] ", hostname ) == 1 ) {
+	} else if( sscanf( input, " announce %255s %c", hostname, &d ) == 1 ) {
 		rc = cmd_announce( r, hostname, 0, -1 );
-	} else if( sscanf( input, " announce %255[^: ] %d ", hostname, &minutes) == 2 ) {
+	} else if( sscanf( input, " announce %255[^: ] %d %c", hostname, &minutes, &d ) == 2 ) {
 		rc = cmd_announce( r, hostname, 0, minutes );
-	} else if( sscanf( input, " announce %255[^: ]:%d %d ", hostname, &port, &minutes) == 3 ) {
+	} else if( sscanf( input, " announce %255[^: ]:%d %d %c", hostname, &port, &minutes, &d ) == 3 ) {
 		rc = cmd_announce( r, hostname, port, minutes );
 	} else if( match( input, " blacklist %255[^: ]%n" ) ) {
 		rc = cmd_blacklist( r, hostname );
@@ -232,8 +236,6 @@ int cmd_exec( struct reply_t *r, const char input[] ) {
 			rc = 1;
 		} else if( match( input, " list blacklist %n" )) {
 			kad_debug_blacklist( STDOUT_FILENO );
-		} else if( match( input, " list buckets %n" )) {
-			kad_debug_buckets( STDOUT_FILENO );
 		} else if( match( input, " list constants %n" )) {
 			kad_debug_constants( STDOUT_FILENO );
 #ifdef FWD
@@ -248,6 +250,8 @@ int cmd_exec( struct reply_t *r, const char input[] ) {
 			searches_debug( STDOUT_FILENO );
 		} else if( match( input, " list announcements %n" )) {
 			announces_debug( STDOUT_FILENO );
+		} else if( match( input, " list dht_buckets %n" )) {
+			kad_debug_buckets( STDOUT_FILENO );
 		} else if( match( input, " list dht_nodes %n" )) {
 			rc = cmd_debug_nodes( r );
 		} else if( match( input, " list dht_searches %n" )) {
