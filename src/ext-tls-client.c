@@ -267,7 +267,7 @@ int tls_conf_verify( void *data, mbedtls_x509_crt *crt, int depth, uint32_t *fla
 #endif
 
 // Load the trusted CA
-void tls_client_add_ca( const char ca_path[] ) {
+void tls_client_add_ca( const char path[] ) {
 	char error_buf[100];
 	int ret;
 	static int done = 1;
@@ -278,14 +278,14 @@ void tls_client_add_ca( const char ca_path[] ) {
 		done = 0;
 	}
 
-	if( ((ret = mbedtls_x509_crt_parse_file( &g_cacert, ca_path )) < 0) &&
-		((ret = mbedtls_x509_crt_parse_path( &g_cacert, ca_path )) < 0)) {
+	if( ((ret = mbedtls_x509_crt_parse_file( &g_cacert, path )) < 0) &&
+		((ret = mbedtls_x509_crt_parse_path( &g_cacert, path )) < 0)) {
 		mbedtls_strerror( ret, error_buf, sizeof(error_buf) );
-		log_err( "TLS: Failed to load the CA root certificate(s) from %s - %s", ca_path, error_buf );
+		log_err( "TLS: Failed to load the CA root certificate(s) from %s - %s", path, error_buf );
 		exit(1);
 	}
 
-	log_info( "TLS: Loaded certificates from: %s (%d skipped)", ca_path, ret );
+	log_info( "TLS: Loaded certificates from %s (%d skipped)", path, ret );
 }
 
 void tls_client_setup( void ) {
