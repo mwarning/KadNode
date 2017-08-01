@@ -179,15 +179,15 @@ void searches_debug( int fd ) {
 	struct search_t *search;
 	struct result_t *result;
 	int result_counter;
-	int searche_counter;
+	int search_counter;
 
-	searche_counter = 0;
+	search_counter = 0;
 	searches = &g_searches[0];
 	dprintf( fd, "Result buckets:\n" );
 	while( *searches ) {
 		search = *searches;
+		dprintf( fd, " query: '%s'\n", &search->query[0] );
 		dprintf( fd, " id: %s\n", str_id( search->id ) );
-		dprintf( fd, " query: %s\n", &search->query[0] );
 		dprintf( fd, " done: %s\n", search->done ? "true" : "false" );
 		result_counter = 0;
 		result = search->results;
@@ -199,9 +199,10 @@ void searches_debug( int fd ) {
 		}
 		dprintf( fd, "  Found %d results.\n", result_counter );
 		result_counter += 1;
+		search_counter += 1;
 		searches++;
 	}
-	dprintf( fd, " Found %d searches.\n", searche_counter );
+	dprintf( fd, " Found %d searches.\n", search_counter );
 }
 
 void search_restart( struct search_t *search ) {
