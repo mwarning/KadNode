@@ -14,19 +14,20 @@ Every instance can also announce any domain like e.g. myname.p2p. People on othe
 devices running KadNode can then enter myname.p2p into their browsers or console in order
 to reach the announcing host. To avoid name clashes, cryptographic public/private key pairs can be used.
 This makes it possible to have a personal and decentralized DynDNS service.
-The [DHT](https://github.com/jech/dht) is identical to the one used in the Transmission Bittorrent client and works
-on the Internet as well as on local networks.
+The [DHT](https://github.com/jech/dht) is identical to the one used in the Transmission Bittorrent client and works'on the Internet as well as on local networks.
 
 Features:
 
 * IPv4/IPv6 support
+* TLS support (e.g. can use browser CA chain)
+* Plain public key links as <public-hex-key>.p2p
 * UPnP/NAT-PMP support
 * local peer discovery
-* small size 75KB-125KB
-* public/secret key authentication (based on [libsodium](https://github.com/jedisct1/libsodium))
+* small size, ~30KB compressed
+* public/secret key authentication (based on [mbedtls](https://github.com/ARMmbed/mbedtls/))
 * command line interface (kadnode-ctl)
 * NSS support through /etc/nsswitch.conf
-* integrated simplified DNS server (handles A, AAAA, and SRV requests)
+* integrated simplified DNS server and proxy (handles A, AAAA, and SRV requests)
 * packages for ArchLinux/Debian/FreeBSD/MacOSX/LEDE/Windows
 * peer file import/export on startup/shutdown and every 24h
 
@@ -35,26 +36,32 @@ Most features are optional and can be left out to reduce the binary size.
 
 ## JOIN THE SWARM
 
-KadNode needs to know at least one active peer to join a swarm. This can be achieved
-by inserting e.g. *bttracker.debian.org*, or any other address of an active peer,
-into a file and provide it to KadNode:
+KadNode needs to know at least one active peer to join / bootstrap into the swarm.
+There are three ways to archieve this:
 
+1. Provide one or more peers to the command line arguments. These could be public BitTorrent trackers, or other KadNode instances:
 ```
-kadnode --peerfile peers.txt
+kadnode --peer bttracker.debian.org --peer 192.168.1.1
 ```
 
-This will cause KadNode to bootstrap into a network. On shutdown and also every 24h,
-KadNode writes at most 150 good peers back to the peer file.
+2. Use the local peer discovery feature. Just start kadnode and it will try to discover other node in the local network.
+
+3. Ping a node using the KadNode console if present:
+```
+kadnode-ctl ping bttracker.debian.org
+```
+
+Also provide a --peerfile argument to let KadNode storage its peerlist on shutdown and every 24h.
 This ensures successful boostrapping on the next startup.
-The peer file is not written after at least 5 minutes of runtime.
 
-Another source of peers is the local network. KadNode can find peers via
-local peer discovery and bootstrap that way. This is useful if the peers file
-only contains stale entries.
 
 ## AUTHENTICATION
 
-For most use cases you first need to create a secret/public key pair:
+KadNode provides two authentication schemes. One works via TLS. The other one uses raw secret/public keys and is hence called bob, because ... it is simple.
+
+# Via TLS
+
+# via BOB
 
 ```
 $kadnode --auth-gen-keys
@@ -136,40 +143,10 @@ Multiple --auth-add-key and multiple --value-id arguments are possible.
 Pattern conflicts will result in an error message on startup.
 Command line options can also be put inside a configuration file (see --config *file*).
 
-## IDENTIFIERS
-
-Identifiers are what you use to lookup IP addresses (e.g. "foo.p2p").
-They will be reduced to a 20 Byte representation based on the SHA-1 message digest algorithm.
-The digest is what will be then used in the actual lookup process.
-KadNode allows four types of identifiers:
-
-* Raw identifiers are 20 Byte identifiers written as hex strings. No digest will be applied.
-  *  E.g: `<40_hex_characters>.p2p`
-
-* Raw public key identifiers are 32 Byte hex strings. They will be interpreted as a public key.
-  * The SHA-1 digest of the key string respresentation is used to locate nodes.
-  * The public key is used to verify that the found nodes have the corresponding secret key.
-  * E.g.: `<64_hex_characters>.p2p`
-
-* Plain identifiers are just strings that have no key associated to them.
-  * The SHA-1 digest of the string is used to find nodes.
-  * E.g.:  `example.p2p`
-
-* Plain identifiers that match a given pattern and have a public key assigned to them.
-  * The SHA-1 digest of the string and public key is used to find nodes.
-  * The public key is used to verify if the nodes found have the corresponding secret key.
-  * E.g.:  `foo.p2p`
-
-All identifiers are converted to lowercase and are therefore case insensitive.
-A ".p2p" at the end of every identifier is ignored and not applied to the digest.
-It is used to direct requests to KadNode only.
-
-
 ## OPTIONS
 
-  * `--value-id` *id[:port]*  
-    Add a value identifier/domain and optional port to be announced every 30 minutes.  
-    The announcement will associate this nodes IP address with this identifier.  
+  * `--announce` *name[:port]*  
+    Announce a hostname. A domain as hostname is expected to authenticate by on port 443 (e.g. a webserver using HTTPS).
     This option may occur multiple times.
 
   * `--peerfile` *file-path*  
@@ -223,27 +200,33 @@ It is used to direct requests to KadNode only.
   * `--dns-server` *address*  
     IP address of an external DNS server. Enables DNS proxy mode (Default: none).
 
+  * `--dns-proxy-enable`  
+    Enable DNS proxy mode. Reads /etc/resolv.conf by default.
+
+  * `--dns-proxy-server` *ip-address*  
+    Use IP address of an external DNS server instead of resolv.conf.
+
   * `--nss-port` *port*  
     Bind the "Name Service Switch" to this local port (Default: 4053).
 
-  * `--web-port` *port*  
-    Bind the web server to this local port (Default: 8053).
+  * `--tls-client-cert` *path*  
+    Path to file or folder of CA root certificates.  
+    This option may occur multiple times.
 
-  * `--auth-gen-keys`  
-    Generate a secret/public key pair.
+  * `--tls-server-cert` *tuple*  
+    Add a comma separated tuple of server certificate file and key.  
+    The certificates Common Name is announced.
+    This option may occur multiple times.  
+    Example: kadnode.crt,kadnode.key
 
-  * `--auth-add-pkey` [*pattern*:]*public-key*  
-    Associate a public key with any value id that matches the pattern.  
-    Used to verify that the other side has the secret key.  
-    This option can occur multiple times.
+  * `--bob-create-key` *file*  
+    Bob  
 
-  * `--auth-add-skey` [*pattern*:]*secret-key*  
-    Associate a secret key with any value id that matches the pattern.  
-    Used to prove the ownership of the domain.  
-    This option can occur multiple times.
+  * `--bob-load-key` *file*  
+    Bob  
 
-  * `--mode` *protocol*  
-    Enable IPv4 or IPv6 mode for the DHT (Default: ipv4).
+  * `--ipv4, -4, --ipv6, -6`  
+    Enable IPv4 or IPv6 only mode for the DHT (Default: IPv4+IPv6).
 
   * `-h`, `--help`  
     Print the list of accepted options.
@@ -292,18 +275,6 @@ KadNode allows a limited set of commands to be send from any user from other con
 
   * `-h`  
     Print this help.
-
-## Web Interface
-
-The optional web interface allows queries of these forms:
-
-  * `http://localhost:8053/lookup?foo.p2p`
-  * `http://localhost:8053/announce?foobar`
-  * `http://localhost:8053/blacklist?1.2.3.4`
-
-If the interface cannot be reached then the interface might be disabled (port set to 0)
-or not compiled in (check `kadnode --version`).
-In case the IPv6 entry for localhost is not used or missing, try `[::1]` instead of `localhost`.
 
 ## PORT FORWARDINGS
 
