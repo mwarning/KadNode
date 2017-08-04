@@ -86,7 +86,7 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 " --verbosity <level>		Verbosity level: quiet, verbose or debug.\n"
 "				Default: verbose\n\n"
 " --pidfile <file>		Write process pid to a file.\n\n"
-" --mode <ipv4|ipv6>		Enable IPv4 or IPv6 only mode.\n"
+" --ipv4, -4, --ipv6, -6		Enable IPv4 or IPv6 only mode.\n"
 "				Default: IPv4+IPv6\n\n"
 " --query-tld <domain>		Top level domain to be handled by KadNode.\n"
 "				Default: "QUERY_TLD_DEFAULT"\n\n"
@@ -314,7 +314,8 @@ enum OPCODE {
 	oTlsClientEntry,
 	oTlsServerEntry,
 	oConfig,
-	oMode,
+	oIpv4,
+	oIpv6,
 	oPort,
 	oLpdAddr,
 	oLpdDisable,
@@ -362,7 +363,10 @@ static struct option_t options[] = {
 	{"--tls-server-cert", 1, oTlsServerEntry},
 #endif
 	{"--config", 1, oConfig},
-	{"--mode", 1, oMode},
+	{"--ipv4", 0, oIpv4},
+	{"-4", 0, oIpv4},
+	{"--ipv6", 0, oIpv6},
+	{"-6", 0, oIpv6},
 	{"--port", 1, oPort},
 #ifdef LPD
 	{"--lpd-addr", 1, oLpdAddr},
@@ -499,18 +503,14 @@ void conf_handle_option( const char opt[], const char val[] ) {
 		case oConfig:
 			conf_str( opt, &gconf->configfile, val );
 			break;
-		case oMode:
+		case oIpv4:
+		case oIpv6:
 			if( gconf->af != 0 ) {
-				log_err( "Option was already set: %s", opt );
-				exit( 1 );
-			} else if( strcmp( val, "ipv4" ) == 0 ) {
-				gconf->af = AF_INET;
-			} else if( strcmp( val, "ipv6" ) == 0 ) {
-				gconf->af = AF_INET6;
-			} else {
-				log_err( "Invalid argument for %s. Use 'ipv4' or 'ipv6'.", opt );
+				log_err( "IPv4 or IPv6 mode already set: %s", opt );
 				exit( 1 );
 			}
+
+			gconf->af = (option->code == oIpv6) ? AF_INET6 : AF_INET;
 			break;
 		case oPort:
 			conf_str( opt, &gconf->dht_port, val );
