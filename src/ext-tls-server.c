@@ -204,25 +204,19 @@ char *get_common_name( const mbedtls_x509_crt *crt ) {
 }
 
 int sni_callback( void *p_info, mbedtls_ssl_context *ssl, const unsigned char *name, size_t name_len ) {
-	printf("sni_callback for name: %s\n", name);
+	struct sni_entry *cur;
 
-	struct sni_entry *cur = (struct sni_entry *) p_info;
+	log_debug( "Look for certificate: %s\n", name );
 
+	cur = (struct sni_entry *) p_info;
 	while( cur != NULL ) {
-		//TODO: use cn_cmp()
 		if( name_len == strlen( cur->name ) &&
 			memcmp( name, cur->name, name_len ) == 0 ) {
-			printf("found\n");
-			//Set the data required to verify peer certificate for the current handshake.
-			//if( cur->ca != NULL ) {
-			//    printf("set sni ca chain\n");
-			//    mbedtls_ssl_set_hs_ca_chain( ssl, cur->ca, cur->crl );
-			//}
 
-			// auth mode for client
-			mbedtls_ssl_set_hs_authmode( ssl, MBEDTLS_SSL_VERIFY_NONE /*MBEDTLS_SSL_VERIFY_REQUIRED*/ );
+			// The client does not need to be authenticated
+			mbedtls_ssl_set_hs_authmode( ssl, MBEDTLS_SSL_VERIFY_NONE );
 
-			// Set own certificate and key for the current handshake.
+			// Set own certificate and key for the current handshake
 			return( mbedtls_ssl_set_hs_own_cert( ssl, &cur->crt, &cur->key ) );
 		}
 
