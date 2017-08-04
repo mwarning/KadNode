@@ -80,18 +80,28 @@ struct value_t *announces_add( const char query[], int port, time_t lifetime ) {
 	uint8_t id[SHA1_BIN_LENGTH];
 	struct value_t *cur;
 	struct value_t *new;
+	int ret = 0;
 	time_t now = time_now_sec();
 
-	if( !bob_get_id( id, sizeof(id), query )
-		&& !tls_client_get_id( id, sizeof(id), query ) ) {
-		return NULL;
+	// Get id from query
+#ifdef BOB
+	if( ret == 0 ) {
+		ret = bob_get_id( id, sizeof(id), query );
+	}
+#endif
+
+#ifdef TLS
+	if( ret == 0 ) {
+		ret = tls_client_get_id( id, sizeof(id), query );
+	}
+#endif
+
+	if( ret == 0 ) {
+		ret = hex_get_id( id, sizeof(id), query );
 	}
 
-	if( port < 1 || port > 65535 ) {
-		return NULL;
-	}
-
-	if( lifetime < now ) {
+	if( ret == 0 || port < 1 || port > 65535 || lifetime < now ) {
+		log_err( "Invalid announcement: %s (port %d)", query, port );
 		return NULL;
 	}
 
@@ -104,7 +114,7 @@ struct value_t *announces_add( const char query[], int port, time_t lifetime ) {
 		}
 
 		// Trigger immediate handling
-		g_announces_announce= 0;
+		g_announces_announce = 0;
 
 		return cur;
 	}
@@ -117,9 +127,9 @@ struct value_t *announces_add( const char query[], int port, time_t lifetime ) {
 	new->lifetime = lifetime;
 
 	if( lifetime == LONG_MAX ) {
-		log_debug( "Add announcement %s:%hu for entire runtime", str_id( id ), port );
+		log_debug( "Add announcement for %s (%s:%hu). Update for entire runtime", query, str_id( id ), port );
 	} else {
-		log_debug( "Add announcement %s:%hu for %lu minutes", str_id( id ), port, (lifetime - now) / 60 );
+		log_debug( "Add announcement for %s (%s:%hu). Update for %lu minutes", query, str_id( id ), port, (lifetime - now) / 60 );
 	}
 
 	// Prepend to list

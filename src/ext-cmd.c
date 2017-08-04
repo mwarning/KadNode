@@ -36,7 +36,7 @@ static const char* cmd_usage =
 	"	blacklist <addr>\n";
 
 const char* cmd_usage_debug =
-	"	list blacklist|searches|announcements"
+	"	list blacklist|searches|announcements|nodes"
 #ifdef FWD
 	"|forwardings"
 #endif
@@ -44,7 +44,7 @@ const char* cmd_usage_debug =
 	"|keys"
 #endif
 	"|constants\n"
-	"	list dht_buckets|dht_nodes|dht_searches|dht_storage\n";
+	"	list dht_buckets|dht_searches|dht_storage\n";
 
 #define REPLY_DATA_SIZE 1400
 
@@ -238,6 +238,8 @@ int cmd_exec( struct reply_t *r, const char input[] ) {
 			kad_debug_blacklist( STDOUT_FILENO );
 		} else if( match( input, " list constants %n" )) {
 			kad_debug_constants( STDOUT_FILENO );
+		} else if( match( input, " list nodes %n" )) {
+			rc = cmd_debug_nodes( r );
 #ifdef FWD
 		} else if( match( input, " list forwardings %n" )) {
 			fwd_debug( STDOUT_FILENO );
@@ -252,8 +254,6 @@ int cmd_exec( struct reply_t *r, const char input[] ) {
 			announces_debug( STDOUT_FILENO );
 		} else if( match( input, " list dht_buckets %n" )) {
 			kad_debug_buckets( STDOUT_FILENO );
-		} else if( match( input, " list dht_nodes %n" )) {
-			rc = cmd_debug_nodes( r );
 		} else if( match( input, " list dht_searches %n" )) {
 			kad_debug_searches( STDOUT_FILENO );
 		} else if( match( input, " list dht_storage %n" )) {

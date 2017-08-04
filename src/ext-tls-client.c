@@ -301,7 +301,7 @@ void tls_client_setup( void ) {
 	if( ( ret = mbedtls_ctr_drbg_seed( &g_drbg, mbedtls_entropy_func, &g_entropy,
 		(const unsigned char *) pers, strlen( pers ) ) ) != 0 ) {
 		log_err( "TLS: mbedtls_ctr_drbg_seed returned -0x%x", -ret );
-		exit(1);
+		exit( 1 );
 		return;
 	}
 
@@ -329,6 +329,7 @@ void tls_client_setup( void ) {
 	mbedtls_ssl_conf_read_timeout( &g_conf, 0 );
 	mbedtls_ssl_conf_ca_chain( &g_conf, &g_cacert, NULL );
 
+	// Initialize a bunch ob SSL contexts
 	for( i = 0; i < N_ELEMS(g_tls_resources); ++i ) {
 		if( ( ret = mbedtls_ssl_setup( &g_tls_resources[i].ssl, &g_conf ) ) != 0 ) {
 			log_err( "TLS: mbedtls_ssl_setup returned -0x%x", -ret );

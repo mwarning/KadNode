@@ -187,8 +187,8 @@ void searches_debug( int fd ) {
 	while( *searches ) {
 		search = *searches;
 		dprintf( fd, " query: '%s'\n", &search->query[0] );
-		dprintf( fd, " id: %s\n", str_id( search->id ) );
-		dprintf( fd, " done: %s\n", search->done ? "true" : "false" );
+		dprintf( fd, "  id: %s\n", str_id( search->id ) );
+		dprintf( fd, "  done: %s\n", search->done ? "true" : "false" );
 		result_counter = 0;
 		result = search->results;
 		while( result ) {
@@ -245,17 +245,6 @@ void search_restart( struct search_t *search ) {
 	}
 }
 
-int hex_get_id( uint8_t id[], size_t len, const char query[] ) {
-	size_t query_len = strlen( query );
-	if( str_isHex( query, query_len ) ) {
-		memset( id, 0, len ); // Fill up id with random numbers?
-		bytes_from_hex( id, query, MIN( 2 * len, query_len ) );
-		return 1;
-	}
-
-	return 0;
-}
-
 // Start a new search (query is expected to be lower case and without .p2p)
 struct search_t* searches_start( const char query[] ) {
 	uint8_t id[SHA1_BIN_LENGTH];
@@ -287,6 +276,7 @@ struct search_t* searches_start( const char query[] ) {
 		callback = NULL;
 	} else {
 		// No idea what to do
+		log_debug( "No idea how what method to use for %s", query );
 		return NULL;
 	}
 

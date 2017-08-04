@@ -18,6 +18,8 @@
 #define time_now_sec() (gconf->time_now)
 
 
+int hex_get_id( uint8_t id[], size_t len, const char query[] );
+
 int is_suffix( const char str[], const char suffix[] );
 void* memdup(const void* src, size_t size);
 
@@ -37,6 +39,7 @@ int id_equal( const uint8_t id1[], const uint8_t id2[] );
 int str_isHex( const char str[], size_t size );
 int str_isValidHostname( const char hostname[] );
 int str_isZero( const char str[] );
+//void str_toLowercase( char str[] );
 
 const char *str_af( int af );
 const char *str_id( const uint8_t id[] );

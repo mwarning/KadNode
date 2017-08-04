@@ -17,6 +17,7 @@
 #include "mbedtls/certs.h"
 #include "mbedtls/x509.h"
 #include "mbedtls/debug.h"
+#include "mbedtls/oid.h"
 #include "mbedtls/error.h"
 
 #include "main.h"
@@ -26,6 +27,7 @@
 #include "kad.h"
 #include "net.h"
 #include "searches.h"
+#include "announces.h"
 #include "ext-tls-server.h"
 
 
@@ -48,7 +50,7 @@ static mbedtls_net_context g_client_fd6;
 // Certificate for each domain we authenticate
 struct sni_entry {
 	const char *name;
-	mbedtls_x509_crt cert;
+	mbedtls_x509_crt crt;
 	mbedtls_pk_context key;
 	struct sni_entry *next;
 };
@@ -98,6 +100,8 @@ void tls_client_handler( int rc, int sock ) {
 		client_fd = &g_client_fd6;
 	}
 
+printf("client_fd: %d, sock: %d\n", client_fd->fd, sock);
+
 	do ret = mbedtls_ssl_handshake( &g_ssl );
 	while( ret == MBEDTLS_ERR_SSL_WANT_READ ||
 		ret == MBEDTLS_ERR_SSL_WANT_WRITE );
@@ -139,10 +143,15 @@ void tls_client_handler( int rc, int sock ) {
 
 void tls_server_handler( int rc, int sock ) {
 	unsigned char client_ip[16] = { 0 };
-	size_t cliip_len;
 	mbedtls_net_context *listen_fd;
 	mbedtls_net_context *client_fd;
+	size_t cliip_len;
 	int ret;
+
+	if( rc <= 0 || g_client_fd4.fd > -1 || g_client_fd6.fd > -1 ) {
+		// No data or there is already a connection in progress
+		return;
+	}
 
 	if( sock == g_listen_fd6.fd ) {
 		listen_fd = &g_listen_fd6;
@@ -150,11 +159,6 @@ void tls_server_handler( int rc, int sock ) {
 	} else {
 		listen_fd = &g_listen_fd4;
 		client_fd = &g_client_fd4;
-	}
-
-	if( rc <= 0 || g_client_fd4.fd > -1 || g_client_fd6.fd > -1 ) {
-		// We already got an connection in progress
-		return;
 	}
 
 	if( ( ret = mbedtls_net_accept( listen_fd, client_fd,
@@ -179,15 +183,33 @@ void tls_server_handler( int rc, int sock ) {
 	net_add_handler( client_fd->fd, tls_client_handler );
 }
 
-/*
- * SNI callback.
- */
+// Get the CN field of an certificate
+char *get_common_name( const mbedtls_x509_crt *crt ) {
+	const mbedtls_x509_name *name;
+
+	name = &crt->subject;
+	while( name ) {
+		if( name->oid.p ) {
+			const char *short_name = NULL;
+			int ret = mbedtls_oid_get_attr_short_name( &name->oid, &short_name );
+			if( ret == 0 && strcmp( short_name, "CN" ) == 0 ) {
+				return strndup((char*)name->val.p, name->val.len);
+			}
+		}
+
+		name = name->next;
+	}
+
+	return NULL;
+}
+
 int sni_callback( void *p_info, mbedtls_ssl_context *ssl, const unsigned char *name, size_t name_len ) {
 	printf("sni_callback for name: %s\n", name);
 
 	struct sni_entry *cur = (struct sni_entry *) p_info;
 
 	while( cur != NULL ) {
+		//TODO: use cn_cmp()
 		if( name_len == strlen( cur->name ) &&
 			memcmp( name, cur->name, name_len ) == 0 ) {
 			printf("found\n");
@@ -201,7 +223,7 @@ int sni_callback( void *p_info, mbedtls_ssl_context *ssl, const unsigned char *n
 			mbedtls_ssl_set_hs_authmode( ssl, MBEDTLS_SSL_VERIFY_NONE /*MBEDTLS_SSL_VERIFY_REQUIRED*/ );
 
 			// Set own certificate and key for the current handshake.
-			return( mbedtls_ssl_set_hs_own_cert( ssl, &cur->cert, &cur->key ) );
+			return( mbedtls_ssl_set_hs_own_cert( ssl, &cur->crt, &cur->key ) );
 		}
 
 		cur = cur->next;
@@ -210,44 +232,77 @@ int sni_callback( void *p_info, mbedtls_ssl_context *ssl, const unsigned char *n
 	return -1;
 }
 
-void tls_server_add_sni( const char name[], const char crt_file[], const char key_file[] ) {
+void tls_server_add_sni( const char crt_file[], const char key_file[] ) {
 	char error_buf[100];
+	mbedtls_x509_crt crt;
+	mbedtls_pk_context key;
 	struct sni_entry *new;
+	struct sni_entry *cur;
+	char *name;
 
-	if( (new = calloc( 1, sizeof(struct sni_entry))) == NULL ) {
-		log_err( "TLS: Error calling calloc()" );
-		exit( 1 );
-	}
-
-	new->name = strdup( name );
-	mbedtls_x509_crt_init( &new->cert );
-	mbedtls_pk_init( &new->key );
+	mbedtls_x509_crt_init( &crt );
+	mbedtls_pk_init( &key );
 
 	int ret;
-	if( (ret = mbedtls_x509_crt_parse_file( &new->cert, crt_file )) != 0 ) {     
+	if( (ret = mbedtls_x509_crt_parse_file( &crt, crt_file )) != 0 ) {
 		mbedtls_strerror( ret, error_buf, sizeof(error_buf) );
 		log_err( "TLS: %s: %s", crt_file, error_buf );
 		exit( 1 );
 	}
 
-	if( (ret = mbedtls_pk_parse_keyfile( &new->key, key_file, "" /* no password */ )) != 0 ) {
+	if( (ret = mbedtls_pk_parse_keyfile( &key, key_file, "" /* no password */ )) != 0 ) {
 		mbedtls_strerror( ret, error_buf, sizeof(error_buf) );
 		log_err( "TLS: %s: %s", key_file, error_buf );
 		exit( 1 );
 	}
 
+	// Check if common name is set
+	if( (name = get_common_name( &crt )) == NULL ) {
+		log_err( "TLS: No common name set in %s", crt_file );
+		exit( 1 );
+	}
+
+	// Check for duplicate entries
+	cur = g_sni_entries;
+	while( cur ) {
+		if( strcmp( cur->name, name ) == 0 ) {
+			log_err( "TLS: Duplicate entry %s", name );
+			exit( 1 );
+		}
+		cur = cur->next;
+	}
+
+	// Create new entry
+	if( (new = calloc( 1, sizeof(struct sni_entry))) == NULL ) {
+		log_err( "TLS: Error calling calloc()" );
+		exit( 1 );
+	}
+
+	new->name = name;
+	memcpy( &new->key, &key, sizeof(key) );
+	memcpy( &new->crt, &crt, sizeof(crt) );
+
+#ifdef DEBUG
+	char buf[MBEDTLS_SSL_MAX_CONTENT_LEN + 1];
+	mbedtls_x509_crt_info( buf, sizeof( buf ) - 1, "  ", &new->crt );
+	printf( "%s:\n%s", crt_file, buf );
+#endif
+
+	// Prepend entry to list
 	if( g_sni_entries ) {
 		new->next = g_sni_entries;
 	}
 	g_sni_entries = new;
 
-	log_info( "TLS: Loaded server credentials for %s", name );
+	log_info( "TLS: Loaded server credentials for %s (crt: %s, key: %s)", name, crt_file, key_file );
 }
 
 void tls_server_setup( void ) {
 	const char * pers = "kadnode";
+	struct sni_entry *cur;
 	int ret;
 
+	// Initialize sockets
 	mbedtls_net_init( &g_client_fd4 );
 	mbedtls_net_init( &g_listen_fd4 );
 	mbedtls_net_init( &g_client_fd6 );
@@ -264,6 +319,13 @@ void tls_server_setup( void ) {
 		(const unsigned char *) pers, strlen( pers ) ) ) != 0 ) {
 		log_err( "TLS: mbedtls_ctr_drbg_seed returned -0x%x", -ret );
 		exit( 1 );
+	}
+
+	// Announce server name entry
+	cur = g_sni_entries;
+	while( cur ) {
+		kad_announce( cur->name, atoi( gconf->dht_port ), LONG_MAX );
+		cur = cur->next;
 	}
 
 	// Without SNI entries, there is no reason to start the TLS server

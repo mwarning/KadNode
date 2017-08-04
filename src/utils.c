@@ -15,6 +15,18 @@
 #include "utils.h"
 
 
+// Convert hex query to bytes id
+int hex_get_id( uint8_t id[], size_t len, const char query[] ) {
+	size_t query_len = strlen( query );
+	if( str_isHex( query, query_len ) ) {
+		memset( id, 0, len ); // Fill up id with random numbers?
+		bytes_from_hex( id, query, MIN( 2 * len, query_len ) );
+		return 1;
+	}
+
+	return 0;
+}
+
 // Also matches on equality
 int is_suffix( const char str[], const char suffix[] ) {
 	size_t suffix_len;
@@ -35,17 +47,23 @@ void* memdup( const void* src, size_t size ) {
 	return memcpy( out, src, size );
 }
 
+/*
+void str_toLowercase( char str[] ) {
+	char *beg;
+
+	beg = str;
+	while( *beg ) {
+		*beg = tolower( *beg );
+		beg++;
+	}
+}*/
+
 // Remove .p2p suffix and convert to lowercase
 int query_sanitize( char buf[], size_t buflen, const char query[] ) {
 	size_t len;
 	size_t i;
 
 	len = strlen( query );
-
-	// Remove .p2p suffix
-	if( is_suffix( query, gconf->query_tld ) ) {
-		len -= strlen( gconf->query_tld );
-	}
 
 	// Buffer too small
 	if( (len + 1) >= buflen ) {
@@ -56,7 +74,13 @@ int query_sanitize( char buf[], size_t buflen, const char query[] ) {
 	for( i = 0; i < len; ++i ) {
 		buf[i] = tolower( query[i] );
 	}
-	buf[len] = '\0';
+
+	// Remove .p2p suffix
+	//if( is_suffix( query, gconf->query_tld ) ) {
+	//	i -= strlen( gconf->query_tld );
+	//}
+
+	buf[i] = '\0';
 
 	return 0;
 }

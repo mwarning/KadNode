@@ -121,11 +121,11 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 " --fwd-disable			Disable UPnP/NAT-PMP to forward router ports.\n\n"
 #endif
 #ifdef TLS
-" --tls-client-cert <path>	Path to file or folder of CA certificates.\n"
+" --tls-client-cert <path>	Path to file or folder of CA root certificates.\n"
 "				This option may occur multiple times.\n\n"
-" --tls-server-cert <triple>	Add a comma separated triple of server domain, certificate and key.\n"
+" --tls-server-cert <tuple>	Add a comma separated tuple of server certificate file and key.\n"
 "				This option may occur multiple times.\n"
-"				Example: kanode.p2p,kadnode.crt,kadnode.key\n\n"
+"				Example: kadnode.crt,kadnode.key\n\n"
 #endif
 #ifdef __CYGWIN__
 " --service-start		Start, install and remove KadNode as Windows service.\n"
@@ -486,13 +486,12 @@ void conf_handle_option( const char opt[], const char val[] ) {
 			break;
 		case oTlsServerEntry:
 		{
-			// Add SNI entries for the TLS server (e.g. foo.p2p,my.cert,my.key)
-			char name[128];
+			// Add SNI entries for the TLS server (e.g. my.cert,my.key)
 			char crt_file[128];
 			char key_file[128];
 
-			if( sscanf( val, "%127[^,],%127[^,],%127[^,]", name, crt_file, key_file ) == 3 ) {
-				tls_server_add_sni( name, crt_file, key_file );
+			if( sscanf( val, "%127[^,],%127[^,]", crt_file, key_file ) == 2 ) {
+				tls_server_add_sni( crt_file, key_file );
 			} else {
 				log_err( "Invalid value format: %s", val );
 				exit(1);

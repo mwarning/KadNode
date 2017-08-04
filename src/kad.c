@@ -438,13 +438,13 @@ int kad_lookup( const char query[], IP addr_array[], size_t addr_num ) {
 	char hostname[QUERY_MAX_SIZE];
 	struct search_t *search;
 
-	log_debug( "Lookup identifier: %s", query );
-
-	// Remove .p2p suffix and convert to lowercase
+	// Trim spaces, remove .p2p suffix and convert to lowercase
 	if( query_sanitize( hostname, sizeof(hostname), query ) != 0 ) {
 		log_debug( "query_sanitize error" );
 		return -1;
 	}
+
+	log_debug( "Lookup identifier: %s", hostname );
 
 	// Find existing or create new item
 	search = searches_start( hostname );
@@ -594,17 +594,17 @@ void kad_debug_searches( int fd ) {
 
 	s = searches;
 	for( j = 0; s; ++j ) {
-		dprintf( fd, " Search: %s\n", str_id( s->id ) );
+		dprintf( fd, " DHT-Search: %s\n", str_id( s->id ) );
 		dprintf( fd, "  af: %s\n", (s->af == AF_INET) ? "AF_INET" : "AF_INET6" );
 		dprintf( fd, "  port: %hu\n", s->port );
 		//dprintf( fd, "  done: %d\n", s->done );
 		for( i = 0; i < s->numnodes; ++i ) {
 			struct search_node *sn = &s->nodes[i];
 			dprintf( fd, "   Node: %s\n", str_id(sn->id ) );
-			dprintf( fd, "    addr: %s\n", str_addr( &sn->ss ) );
-			dprintf( fd, "    pinged: %d\n", sn->pinged );
-			dprintf( fd, "    replied: %d\n", sn->replied );
-			dprintf( fd, "    acked: %d\n", sn->acked );
+			dprintf( fd, "     addr: %s\n", str_addr( &sn->ss ) );
+			dprintf( fd, "     pinged: %d\n", sn->pinged );
+			dprintf( fd, "     replied: %d\n", sn->replied );
+			dprintf( fd, "     acked: %d\n", sn->acked );
 		}
 		dprintf( fd, "  Found %d nodes.\n", i );
 		s = s->next;
@@ -625,11 +625,11 @@ void kad_debug_storage( int fd ) {
 
 	s = storage;
 	for( j = 0; s; ++j ) {
-		dprintf( fd, " ID: %s\n", str_id(s->id ));
+		dprintf( fd, " id: %s\n", str_id(s->id ));
 		for( i = 0; i < s->numpeers; ++i ) {
 			p = &s->peers[i];
 			to_addr( &addr, &p->ip, p->len, htons( p->port ) );
-			dprintf( fd, "   Peer: %s\n", str_addr( &addr )  );
+			dprintf( fd, "   peer: %s\n", str_addr( &addr )  );
 		}
 		dprintf( fd, "  Found %d peers.\n", i );
 		s = s->next;
