@@ -16,13 +16,10 @@
 void nss_lookup( int sock, IP *clientaddr, const char hostname[] ) {
 	socklen_t addrlen;
 	IP addrs[MAX_ADDRS];
-	size_t num;
-
-	// Return at most MAX_ADDRS addresses
-	num = MAX_ADDRS;
 
 	// Lookup id, starts search when not already started
-	if( kad_lookup( hostname, addrs, &num ) >= 0 && num > 0 ) {
+	int num = kad_lookup( hostname, addrs, N_ELEMS(addrs) );
+	if( num > 0 ) {
 		// Found addresses
 		log_debug( "NSS: Send %lu addresses to %s. Packet has %d bytes.",
 		   num, str_addr( clientaddr ), sizeof(IP)

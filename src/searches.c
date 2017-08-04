@@ -262,15 +262,21 @@ struct search_t* searches_start( const char query[] ) {
 		return search;
 	}
 
+#ifdef TLS
 	if( tls_client_get_id( id, sizeof(id), query ) ) {
 		// Use TLS authentication
 		// For e.g. example.com.p2p
 		callback = &tls_client_trigger_auth;
-	} else if( bob_get_id( id, sizeof(id), query ) ) {
+	} else
+#endif
+#ifdef BOB
+	if( bob_get_id( id, sizeof(id), query ) ) {
 		// Use Bob authentication
 		// For e.g. ecdsa_<hex>.p2p
 		callback = &bob_trigger_auth;
-	} else if( hex_get_id( id, sizeof(id), query ) ) {
+	} else
+#endif
+	if( hex_get_id( id, sizeof(id), query ) ) {
 		// Use no authentication
 		// For e.g. <hex>.p2p
 		callback = NULL;
