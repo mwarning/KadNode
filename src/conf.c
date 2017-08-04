@@ -132,12 +132,13 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 " --service-install		KadNode will be started/shut down along with Windows\n"
 " --service-remove		or on request by using the Service Control Manager.\n\n"
 #endif
-" --help				Print this help.\n\n"
-" --version			Print program version.\n\n";
+" -h, --help			Print this help.\n\n"
+" -v, --version			Print program version.\n\n";
 
 
 void conf_init( void ) {
 	gconf = (struct gconf_t *) calloc( 1, sizeof(struct gconf_t) );
+
 	gconf->is_running = 1;
 
 #ifdef DEBUG
@@ -382,7 +383,9 @@ static struct option_t options[] = {
 	{"--ifname", 1, oIfname},
 	{"--user", 1, oUser},
 	{"--daemon", 1, oDaemon},
+	{"-h", 0, oHelp},
 	{"--help", 0, oHelp},
+	{"-v", 0, oVersion},
 	{"--version", 0, oVersion},
 };
 
