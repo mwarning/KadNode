@@ -640,7 +640,7 @@ void conf_load_args( int argc, char **argv ) {
 	int i;
 
 	// Duplicate memory to get an array that can be appended to
-	g_argv = (char**) memdup(argv, argc * sizeof(char*));
+	g_argv = (char**) memdup(argv, (argc + 1) * sizeof(char*));
 	g_argc = argc;
 
 	for( i = 1; i < g_argc; i++ ) {
