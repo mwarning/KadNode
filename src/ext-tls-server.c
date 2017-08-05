@@ -33,7 +33,7 @@
 
 /*
 * TLS server that closes the connection as soon as the handshake has been done.
-* The certificate are selected by Server Name Indication (SNI).
+* The certificates are selected by Server Name Indication (SNI).
 */
 
 static mbedtls_entropy_context g_entropy;
@@ -291,7 +291,7 @@ void tls_server_add_sni( const char crt_file[], const char key_file[] ) {
 }
 
 void tls_server_setup( void ) {
-	const char * pers = "kadnode";
+	const char *pers = "kadnode";
 	struct sni_entry *cur;
 	int ret;
 

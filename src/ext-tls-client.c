@@ -156,7 +156,7 @@ void tls_handle( int rc, int fd ) {
 			(unsigned int) mbedtls_ssl_get_max_frag_len( ssl ), query
 		);
 
-		// Verifying peer X.509 certificate
+		// Verify peer X.509 certificate
 
 		uint32_t flags = 0;
 		char buf[MBEDTLS_SSL_MAX_CONTENT_LEN + 1];

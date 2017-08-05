@@ -218,7 +218,7 @@ int cmd_exec( struct reply_t *r, const char input[] ) {
 		value = announces_get();
 		while( value ) {
 			kad_announce_once( value->id, value->port );
-			count++;
+			count += 1;
 			value = value->next;
 		}
 		r_printf( r, "%d announcements started.\n", count );
