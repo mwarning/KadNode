@@ -72,6 +72,7 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 "\n"
 "Usage: kadnode [OPTIONS]*\n"
 "\n"
+" --announce <name>[:<port>]	Announce an name and port without providing authentication.\n\n"
 " --peerfile <file>		Import/Export peers from and to a file.\n\n"
 " --peer <addr>			Add a static peer address.\n"
 "				This option may occur multiple times.\n\n"
@@ -299,6 +300,7 @@ void conf_free( void ) {
 
 // Enumerate all options to keep binary size smaller
 enum OPCODE {
+	oAnnounce,
 	oQueryTld,
 	oPidFile,
 	oPeerFile,
@@ -340,6 +342,7 @@ struct option_t {
 
 static struct option_t options[] = {
 	{"", 0, oUnknown},
+	{"--announce", 1, oAnnounce},
 	{"--query-tld", 1, oQueryTld},
 	{"--pidfile", 1, oPidFile},
 	{"--peerfile", 1, oPeerFile},
@@ -362,11 +365,11 @@ static struct option_t options[] = {
 	{"--tls-server-cert", 1, oTlsServerEntry},
 #endif
 	{"--config", 1, oConfig},
+	{"--port", 1, oPort},
 	{"--ipv4", 0, oIpv4},
 	{"-4", 0, oIpv4},
 	{"--ipv6", 0, oIpv6},
 	{"-6", 0, oIpv6},
-	{"--port", 1, oPort},
 #ifdef LPD
 	{"--lpd-addr", 1, oLpdAddr},
 	{"--lpd-disable", 0, oLpdDisable},
@@ -430,6 +433,23 @@ void conf_handle_option( const char opt[], const char val[] ) {
 	}
 
 	switch( option->code ) {
+		case oAnnounce:
+		{
+			int rc = -1;
+			uint16_t port = 0;
+			char name[QUERY_MAX_SIZE];
+
+			if( sscanf( val, "%254[^:]:%hu", name, &port ) > 0 ) {
+				rc = kad_announce( name, port, LONG_MAX );
+			} else {
+				log_err( "Invalid value to announce: %s", val );
+			}
+
+			if( rc < 0 ) {
+				exit ( 1 );
+			}
+			break;
+		}
 		case oQueryTld:
 			conf_str( opt, &gconf->query_tld, val );
 			break;
