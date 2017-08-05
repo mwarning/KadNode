@@ -3,7 +3,7 @@ CC ?= gcc
 CFLAGS ?= -Os -Wall -Wwrite-strings -pedantic
 CFLAGS += -std=gnu99 -I/usr/local/include
 LFLAGS += -L/usr/local/lib -lc
-FEATURES ?= cmd dns tls bob #nss lpd natpmp upnp
+FEATURES ?= dns lpd tls bob #cmd debug nss natpmp upnp
 
 OBJS = build/main.o build/searches.o build/kad.o build/log.o \
 	build/conf.o build/net.o build/utils.o \

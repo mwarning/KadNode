@@ -23,7 +23,7 @@ Features:
 * Plain public key links as <public-hex-key>.p2p
 * UPnP/NAT-PMP support
 * local peer discovery
-* small size, ~70KB depending on features
+* small size, ~85KB depending on features
 * public/secret key authentication
 * command line interface (kadnode-ctl)
 * NSS support through /etc/nsswitch.conf
