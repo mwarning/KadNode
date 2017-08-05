@@ -415,7 +415,7 @@ int kad_announce_once( const uint8_t id[], int port ) {
 	dht_search( id, port, AF_INET6, dht_callback_func, NULL );
 	dht_unlock();
 
-	return 1;
+	return 0;
 }
 
 /*
