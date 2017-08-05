@@ -96,11 +96,10 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 " --lpd-disable			Disable multicast to discover local peers.\n\n"
 #endif
 #ifdef BOB
-" --bob-create-key <file>	Generate a new secp256r1 secret key in pem format and\n"
-"				write it to the file. The public key will be printed to the terminal.\n\n"
-" --bob-load-key <file>		Load a secret key from a file in pem format. The derived public\n"
-"				key will be printed to the terminal and announed in the network.\n"
-"				The secret key will be used to prove its ownership.\n\n"
+" --bob-create-key <file>	Write a new secp256r1 secret key in PEM format to the file.\n"
+"				The public key will be printed to the terminal before exit.\n\n"
+" --bob-load-key <file>		Read a secret key in PEM format and announce the public key.\n"
+"				This option may occur multiple times.\n\n"
 #endif
 #ifdef CMD
 " --cmd-disable-stdin		Disable the local control interface.\n\n"
@@ -111,7 +110,7 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 " --dns-port <port>		Bind the DNS server interface to this local port.\n"
 "				Default: "DNS_PORT"\n\n"
 " --dns-proxy-enable		Enable DNS proxy mode. Reads /etc/resolv.conf by default.\n\n"
-" --dns-proxy-server <ip-addr>	IP address of an external DNS server.\n\n"
+" --dns-proxy-server <ip-addr>	Use IP address of an external DNS server instead of resolv.conf.\n\n"
 #endif
 #ifdef NSS
 " --nss-port <port>		Bind the Network Service Switch to this local port.\n"
