@@ -11,6 +11,7 @@
 
 
 #ifdef DEBUG
+
 // Program start time
 static struct timespec log_start = { 0, 0 };
 
@@ -31,15 +32,13 @@ const char *log_time() {
 
 	return buf;
 }
-#else
-const char *log_time() {
-	return "";
-}
+
 #endif
 
 void log_print( int priority, const char format[], ... ) {
 	char buf[512];
 	const char *prefix;
+	const char *time;
 	va_list vlist;
 
 	va_start( vlist, format );
@@ -64,13 +63,19 @@ void log_print( int priority, const char format[], ... ) {
 			prefix = "(?)";
 	}
 
+#ifdef DEBUG
+	time = log_time();
+#else
+	time = "";
+#endif
+
 	if( gconf->use_syslog ) {
 		// Write messages to e.g. /var/log/syslog
 		openlog( MAIN_SRVNAME, LOG_PID | LOG_CONS, LOG_USER | LOG_PERROR );
-		syslog( priority, "%s%s %s", log_time(), prefix, buf );
+		syslog( priority, "%s%s", time, buf );
 		closelog();
 	} else {
 		FILE *out = (priority == LOG_ERR) ? stderr : stdout;
-		fprintf( out, "%s%s %s\n", log_time(), prefix, buf );
+		fprintf( out, "%s%s %s\n", time, prefix, buf );
 	}
 }
