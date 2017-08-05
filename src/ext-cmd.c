@@ -272,7 +272,7 @@ int cmd_exec( struct reply_t *r, const char input[] ) {
 		rc = 1;
 	}
 
-	return rc;
+	return (rc != 0);
 }
 
 void cmd_remote_handler( int rc, int sock ) {
