@@ -33,9 +33,6 @@ Features:
 
 Crypto provided by [mbedtls](https://github.com/ARMmbed/mbedtls/), also used by OpenWrt.
 
-Most features are optional and can be left out to reduce the binary size.
-
-
 ## JOIN THE SWARM
 
 KadNode needs to know at least one active peer to join / bootstrap into the swarm.
@@ -59,26 +56,27 @@ This ensures successful boostrapping on the next startup.
 
 ## AUTHENTICATION
 
-KadNode provides two authentication schemes. One works via TLS. The other one uses raw secret/public keys and is hence called bob, because ... it is simple.
+KadNode provides two authentication schemes. One works via x509 certificates and TLS. The other one uses raw secret/public keys and is hence called bob - why not.
 
 ### Via TLS
 
 Typically there are two KadNode instances involved.
 
-One node announcing a hostname, e.g. mynode.p2p. The other one looking for the announcing IP address.
+One node announcing a domain, e.g. mynode.p2p. The other one looking for the announcing IP address.
+X509 certificates are used for this an can be created e.g. using openssl tools.
 
 ```
 kadnode --tls-server-cert mynode.crt,mynode.key
 ```
 
 mynode.crt needs to have the common name field set to 'mynode.p2p'.
-This files are used to announce mynode.p2p on the network and to prove ownership.
+This files are used to announce mynode.p2p on the network and to prove ownership via TLS.
 
 As alternative, ownerhip can be proven by a https server running on the same host.
 In this case, kadnode only needs to announce the hostname:
 
 ```
-kadnode --announce mynode.p2p
+kadnode --announce mynode.p2p:443
 ```
 
 The other node doing the lookup for mynode.p2p needs to have access to the root certificate that has been used to sign mynode.crt. These can be a common web browsers certificate authorities.
@@ -105,12 +103,18 @@ Now load the secret key on KadNode startup:
 kadnode --bob-load-key mysecretkey.pem
 ```
 
-Other nodes can now resolve c492192ac20144ed2a43d57e7239f5ef5f6bb418a51600980e55ff565cc916a4.p2p to the ipaddress of the announcing host without the need to share a secret key beforehand.
+Any reachable node can now resolve c492192ac20144ed2a43d57e7239f5ef5f6bb418a51600980e55ff565cc916a4.p2p to the IP address of the announcing host. There is no need to share any more information beforehand.
+
+## No Authentication
+
+KadNode also allows to just lookup a hexdecimal string and to get IP address as return.
+This is a plain use of the DHT.
 
 ## OPTIONS
 
   * `--announce` *name[:port]*  
-    Announce a domain. The domain is expected to authenticate on port 443 via TLS (e.g. HTTPS).
+    Announce an name and port without providing authentication.  
+    This is useful if the authentication is provided via a HTTPS server on the same host instead.
     This option may occur multiple times.
 
   * `--peerfile` *file*  
@@ -165,10 +169,10 @@ Other nodes can now resolve c492192ac20144ed2a43d57e7239f5ef5f6bb418a51600980e55
     IP address of an external DNS server. Enables DNS proxy mode (Default: none).
 
   * `--dns-proxy-enable`  
-    Enable DNS proxy mode. Reads /etc/resolv.conf by default.
+    Enable DNS proxy mode. Uses /etc/resolv.conf by default.
 
   * `--dns-proxy-server` *ip-address*  
-    Use IP address of an external DNS server instead of resolv.conf.
+    Use IP address of an external DNS server instead of /etc/resolv.conf.
 
   * `--nss-port` *port*  
     Bind the "Name Service Switch" to this local port (Default: 4053).
@@ -242,7 +246,23 @@ KadNode allows a limited set of commands to be send from any user from other con
   * `-h`  
     Print this help.
 
-## PORT FORWARDINGS
+## Features List
+
+Most features are optional and can be left out to reduce the binary size:
+
+* cmd - Command line. Mostly useful for debugging.
+* debug - Enabled debug output. For debugging.
+* lpd - Local peer discovery. Finds local peers.
+* tls - TLS authentication.
+* bob - Raw secret/public key authentication.
+* dns - DNS interface support.
+* nss - Name Service Switch interface support.
+* upnp - Universal Plug and Play support. For automatic port forwarding.
+* natpmp - NAT Port Mapping support. For automatic port forwarding.
+
+Call `kanode --version` to get the list of included features.
+
+## Automatic Port Forwarding
 
 If KadNode runs on a computer in a private network, it will try to establish a port forwarding for the DHT port and ports used for announcements.
 Port forwarding only works if UPnP/NAT-PMP is compiled into KadNode and is supported by the gateway/router.
