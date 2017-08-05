@@ -61,60 +61,61 @@ This ensures successful boostrapping on the next startup.
 
 KadNode provides two authentication schemes. One works via TLS. The other one uses raw secret/public keys and is hence called bob, because ... it is simple.
 
-# Via TLS
+### Via TLS
 
-Typically you have two KadNode instance.
+Typically there are two KadNode instances involved.
 
-One announcing a hostname, e.g. mynode.p2p.
+One node announcing a hostname, e.g. mynode.p2p. The other one looking for the announcing IP address.
 
 ```
 kadnode --tls-server-cert mynode.crt,mynode.key
 ```
 
-mynode.crt needs to have the command name field set to 'mynode.p2p'.
+mynode.crt needs to have the common name field set to 'mynode.p2p'.
 This files are used to announce mynode.p2p on the network and to prove ownership.
-As alternative, ownerhip can be proven by and https server running on the same host.
+
+As alternative, ownerhip can be proven by a https server running on the same host.
 In this case, kadnode only needs to announce the hostname:
 
 ```
 kadnode --announce mynode.p2p
 ```
 
-The other node doing the lookup for mynode.p2p need have access to the root certifiacte used to sign mynode.crt. These can be a common web browsers certificate authorities.
+The other node doing the lookup for mynode.p2p needs to have access to the root certificate that has been used to sign mynode.crt. These can be a common web browsers certificate authorities.
 
 ```
 kadnode --tls-client-cert /usr/share/ca-certificates/mozilla
 ```
 
-Of course you can create your certificate authority.
+Of course you can create your own certificate authority.
 
-# Via BOB
+### Via BOB
 
-Create a elliptic curve (secp256r1) secret key in a file:
+First create an elliptic curve secret key file:
 
 ```
 kadnode --bob-create-key mysecretkey.pem
-Generating secp256r1 key...
+Generating secp256r1 key pair...
 Public key: c492192ac20144ed2a43d57e7239f5ef5f6bb418a51600980e55ff565cc916a4
 Wrote secret key to mysecretkey.pem
 ```
 
-Now load the secret key on kadnode startup:
+Now load the secret key on KadNode startup:
 ```
 kadnode --bob-load-key mysecretkey.pem
 ```
 
-Other nodes can now resolve c492192ac20144ed2a43d57e7239f5ef5f6bb418a51600980e55ff565cc916a4.p2p without the need to share a secret key beforehand.
+Other nodes can now resolve c492192ac20144ed2a43d57e7239f5ef5f6bb418a51600980e55ff565cc916a4.p2p to the ipaddress of the announcing host without the need to share a secret key beforehand.
 
 ## OPTIONS
 
   * `--announce` *name[:port]*  
-    Announce a hostname. A domain as hostname is expected to authenticate by on port 443 (e.g. a webserver using HTTPS).
+    Announce a domain. The domain is expected to authenticate on port 443 via TLS (e.g. HTTPS).
     This option may occur multiple times.
 
   * `--peerfile` *file*  
     Import peers for bootstrapping and write good peers  
-	to this file every 24 hours and on shutdown.
+    to this file every 24 hours and on shutdown.
 
   * `--user` *name*  
     Change the UUID after start.
@@ -208,7 +209,7 @@ When not started in background, KadNode accepts a variety of commands from stand
 
   * `lookup` *query*  
     Lookup the IP addresses of all nodes that claim to satisfy the query.  
-	The first call will start the search.
+    The first call will start the search.
 
   * `announce` [*query*[<i>:*port*</i>] [<i>*minutes*</i>]]  
     Announce that this instance is associated with a query  
@@ -243,9 +244,8 @@ KadNode allows a limited set of commands to be send from any user from other con
 
 ## PORT FORWARDINGS
 
-If KadNode runs on a computer in a private network, it will try to establish a port forwarding for the DHT port.
+If KadNode runs on a computer in a private network, it will try to establish a port forwarding for the DHT port and ports used for announcements.
 Port forwarding only works if UPnP/NAT-PMP is compiled into KadNode and is supported by the gateway/router.
-Also, ports attached to announcement values (e.g. `--value-id foo.p2p:80`) will result in additional port forwardings.
 This is useful to make a local service (e.g. a web server) reachable from the Internet without the need to
 configure port forwardings manually.
 

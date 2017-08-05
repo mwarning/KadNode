@@ -1,14 +1,12 @@
 ## FAQ
 * **What is KadNode?**  
     In short, KadNode is the Transmissions DHT with interfaces and packaging.  
-    Slightly longer; KadNode is a tool that resolves names to IP addresses using the BitTorrent P2P network.
+    Slightly longer; KadNode is a tool that resolves names to IP addresses using the BitTorrent DHT network.
     KadNode runs in background and intercepts and answers name request for the .p2p domain.
     It has a very low resource consumption. The main task is to just return IP addresses for identifiers,
     not necessarly traditional DNS.
-* **How to start?**  
-    See the [Howto Start](https://github.com/mwarning/KadNode/wiki/Start).
 * **How does KadNode intercept DNS reqests?**  
-    On some systems the Name Service Switch (NSS) support (see /etc/nsswitch.conf) is used. For other systems KadNode includes a basic DNS server that listens on the local host (Supported are A, AAAA and SRV requests - to transmit the port). But this is tricky, because the might interfere with existing local DNS settings.
+    On some systems the Name Service Switch (NSS) support (see /etc/nsswitch.conf) is used. For other systems KadNode includes a basic DNS server that listens on the local host (Supported are A, AAAA and SRV requests - to transmit the port). It can also act as a simple DNS proxy.
 * **How long does it take to resolve an address?**  
     An estimate would be 8 seconds. Unless the address has been been cached.
 * **So, it's all about DNS?**  
@@ -25,8 +23,8 @@ using the public key as you would use a domain name. The resolved IP addresses a
     This is not in the scope of KadNode. So it is your task to enter the keys into the configuration files. KadNode does not intend to solve the task of key distribution.
 * **Is the authentication/verification secure?**  
     No. The current mechanism is vulnerable to man-in-the-middle attacks!
-* **How to compile KadNode without UPNP, NAT-PMP or authentication (libsodium) support?**  
-    Edit the FEATURES variable in Makefile and remove 'upnp', 'natpmp' or 'auth'. You can check the binary using `kadnode -v`.
+* **How to compile KadNode without UPNP, NAT-PMP or authentication (mbedtls) support?**  
+    Edit the FEATURES variable in Makefile and remove 'upnp', 'natpmp' or 'bob' and 'tls'. You can check the binary using `kadnode -v`.
 * **Local Peer Discover (LPD) does not work on bridged devices..**  
     Try to disable the multicast_snooping or multicast_querier option, this is needed for OpenWrt: echo 0 > /sys/devices/virtual/net/br-lan/bridge/multicast_snooping
 * **How does the authentication work?**  
@@ -35,11 +33,13 @@ using the public key as you would use a domain name. The resolved IP addresses a
     Namecoin tries to imitate traditional DNS where a domain is globally unique. KadNode merely maps identifiers to IP addresses without more thought. The authentication extension for KadNode is more of an experiment for a more specific application.
 * **Lookup is slow? What is going on?**  
     KadNode may need a few seconds to resolve an identifier. If it takes considerably longer than 10 seconds, then your node might no properly bootstrapped. Let me now if you have reason to assume otherwise. There has been added a [branch](/mwarning/KadNode/commits/big_buckets) for speed enhancements.
-* **What is "fatal error: sodium.h: No such file or directory"?**  
-    When you try to compile KadNode, then you need to have [mbedtls](https://github.com/ARMmbed/mbedtls/) installed. Otherwise, see Build&Installation below.
+* **What are the compile dependencies?**  
+    When you try to compile KadNode, then you need to have [mbedtls](https://github.com/ARMmbed/mbedtls/) installed.
+* **Why use the secp256r1 elliptic curve instead of ed25519?**  
+    ed25519 would be preferable, but mbedtls does not support ed25519 yet.
 * **Why do not use the nodes ID to find a node? They do not need to be announced in comparison to value IDs ?**  
     Value IDs might not be free to choose in the future as some BitTorrent security features propose. You can also have only one.
 * **When are peers exported?**  
     When a peer file is given (--peerfile), good peers are written to it every 24 hours and on proper shutdown (but only after at least 5min runtime).
 * **Where does the name *KadNode* come from?**  
-    It is short form Kademlia Node; Kademlia is the name of the DHT design used for BitTorrent.
+    It is a short form Kademlia Node; Kademlia is the name of the DHT design used for BitTorrent.
