@@ -83,6 +83,8 @@ typedef struct {
 void dht_callback_func( void *closure, int event, const uint8_t *info_hash, const void *data, size_t data_len ) {
 	struct search_t **searches;
 	struct search_t *search;
+	dht_addr4_t *data4;
+	dht_addr6_t *data6;
 	IP addr;
 	size_t i;
 
@@ -103,21 +105,17 @@ void dht_callback_func( void *closure, int event, const uint8_t *info_hash, cons
 
 	switch( event ) {
 		case DHT_EVENT_VALUES:
-			if( gconf->af == AF_INET ) {
-				dht_addr4_t *data4 = (dht_addr4_t *) data;
-				for( i = 0; i < (data_len / sizeof(dht_addr4_t)); ++i ) {
-					to_addr( &addr, &data4[i].addr, 4, data4[i].port );
-					searches_add_addr( search, &addr );
-				}
+			data4 = (dht_addr4_t *) data;
+			for( i = 0; i < (data_len / sizeof(dht_addr4_t)); ++i ) {
+				to_addr( &addr, &data4[i].addr, 4, data4[i].port );
+				searches_add_addr( search, &addr );
 			}
 			break;
 		case DHT_EVENT_VALUES6:
-			if( gconf->af == AF_INET6 ) {
-				dht_addr6_t *data6 = (dht_addr6_t *) data;
-				for( i = 0; i < (data_len / sizeof(dht_addr6_t)); ++i ) {
-					to_addr( &addr, &data6[i].addr, 16, data6[i].port );
-					searches_add_addr( search, &addr );
-				}
+			data6 = (dht_addr6_t *) data;
+			for( i = 0; i < (data_len / sizeof(dht_addr6_t)); ++i ) {
+				to_addr( &addr, &data6[i].addr, 16, data6[i].port );
+				searches_add_addr( search, &addr );
 			}
 			break;
 		case DHT_EVENT_SEARCH_DONE:
@@ -408,14 +406,16 @@ int kad_ping( const IP* addr ) {
 int kad_announce_once( const uint8_t id[], int port ) {
 
 	if( port < 1 || port > 65535 ) {
+		log_debug( "KAD: Invalid port for announcement: %d", port );
 		return -1;
 	}
 
 	dht_lock();
-	dht_search( id, port, gconf->af, dht_callback_func, NULL );
+	dht_search( id, port, AF_INET, dht_callback_func, NULL );
+	dht_search( id, port, AF_INET6, dht_callback_func, NULL );
 	dht_unlock();
 
-	return 0;
+	return 1;
 }
 
 /*
@@ -462,7 +462,8 @@ int kad_lookup( const char query[], IP addr_array[], size_t addr_num ) {
 
 		// Start a new DHT search
 		dht_lock();
-		dht_search( search->id, 0, gconf->af, dht_callback_func, NULL );
+		dht_search( search->id, 0, AF_INET, dht_callback_func, NULL );
+		dht_search( search->id, 0, AF_INET6, dht_callback_func, NULL );
 		dht_unlock();
 	}
 
