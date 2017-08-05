@@ -339,7 +339,7 @@ int bob_create_key( const char path[] ) {
 		return -1;
 	}
 
-	printf( "Generating %s key...\n", ECPARAMS_NAME );
+	printf( "Generating %s key pair...\n", ECPARAMS_NAME );
 
 	if( ( ret = mbedtls_pk_setup( &ctx, mbedtls_pk_info_from_type( MBEDTLS_PK_ECKEY ) ) ) != 0 ) {
 		printf( "mbedtls_pk_setup returned -0x%04x\n", -ret );

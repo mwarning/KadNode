@@ -141,8 +141,6 @@ void tls_handle( int rc, int fd ) {
 	ssl = &resource->ssl;
 	query = &resource->query[0];
 
-	printf("tls_handle %s\n", query);
-
 	if( rc < 0 ) {
 		if( errno != EINPROGRESS ) {
 			// Failed to create TCP/IP connection.
@@ -248,19 +246,18 @@ void tls_client_trigger_auth( void ) {
 #if DEBUG
 // Verify configuration
 int tls_conf_verify( void *data, mbedtls_x509_crt *crt, int depth, uint32_t *flags ) {
-	char buf[MBEDTLS_SSL_MAX_CONTENT_LEN + 1];
+	char buf1[MBEDTLS_SSL_MAX_CONTENT_LEN + 1];
+	char buf2[MBEDTLS_SSL_MAX_CONTENT_LEN + 1];
 	((void) data);
 
-	mbedtls_x509_crt_info( buf, sizeof( buf ) - 1, "", crt );
+	mbedtls_x509_crt_info( buf1, sizeof( buf1 ) - 1, "", crt );
 
-	log_info( "TLS: Verify requested for (Depth %d)\n%s\n", depth, buf);
-
-	if ( *flags == 0 ) {
-		log_info( "TLS: This certificate has no flags" );
-	} else {
-		mbedtls_x509_crt_verify_info( buf, sizeof( buf ), "", *flags );
-		log_debug( "TLS: %s\n", buf );
+	if ( *flags ) {
+		mbedtls_x509_crt_verify_info( buf2, sizeof( buf2 ), "", *flags );
 	}
+
+	log_debug( "TLS: Verify requested for (Depth %d)\n%s\nFlags:\n%s", depth, buf1,
+		*flags ? buf2 : "No flags" );
 
 	return 0;
 }

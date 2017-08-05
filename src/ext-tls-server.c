@@ -75,15 +75,15 @@ void end_client_connection( mbedtls_net_context *client_fd, int result ) {
 	mbedtls_ssl_session_reset( &g_ssl );
 
 	if( result == MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED )  {
-		log_info( "TLS: Hello verification requested" );
+		log_debug( "TLS: Hello verification requested" );
 	} else if( result == MBEDTLS_ERR_SSL_CLIENT_RECONNECT ) {
 		log_debug( "TLS: Client initiated reconnection from same port" );
 	} else if( result != 0 ) {
 		char error_buf[100];
 		mbedtls_strerror( result, error_buf, 100 );
-		log_info( "TLS: Error -0x%x - %s", -result, error_buf );
+		log_debug( "TLS: Error -0x%x - %s", -result, error_buf );
 	} else {
-		log_info( "TLS: Authentication successful" );
+		log_debug( "TLS: Authentication successful" );
 	}
 }
 
@@ -92,15 +92,13 @@ void tls_client_handler( int rc, int sock ) {
 	int ret;
 	int exp;
 
-	log_info( "TLS: tls_client_handler, rc: %d", rc );
+	log_debug( "TLS: tls_client_handler, rc: %d", rc );
 
 	if( sock == g_client_fd4.fd ) {
 		client_fd = &g_client_fd4;
 	} else {
 		client_fd = &g_client_fd6;
 	}
-
-printf("client_fd: %d, sock: %d\n", client_fd->fd, sock);
 
 	do ret = mbedtls_ssl_handshake( &g_ssl );
 	while( ret == MBEDTLS_ERR_SSL_WANT_READ ||
@@ -127,13 +125,13 @@ printf("client_fd: %d, sock: %d\n", client_fd->fd, sock);
 		end_client_connection( client_fd, ret );
 	} else {
 		// ret == 0
-		log_info( "TLS: Protocol is %s, ciphersuite is %s",
+		log_debug( "TLS: Protocol is %s, ciphersuite is %s",
 			mbedtls_ssl_get_version( &g_ssl ), mbedtls_ssl_get_ciphersuite( &g_ssl ) );
 
 		if( ( exp = mbedtls_ssl_get_record_expansion( &g_ssl ) ) >= 0 ) {
-			log_info( "TLS: Record expansion is %d", exp );
+			log_debug( "TLS: Record expansion is %d", exp );
 		} else {
-			log_info( "TLS: Record expansion is unknown (compression)" );
+			log_debug( "TLS: Record expansion is unknown (compression)" );
 		}
 
 		// All ok
@@ -186,14 +184,15 @@ void tls_server_handler( int rc, int sock ) {
 // Get the CN field of an certificate
 char *get_common_name( const mbedtls_x509_crt *crt ) {
 	const mbedtls_x509_name *name;
+	const char *short_name;
+	int ret;
 
 	name = &crt->subject;
 	while( name ) {
 		if( name->oid.p ) {
-			const char *short_name = NULL;
-			int ret = mbedtls_oid_get_attr_short_name( &name->oid, &short_name );
+			ret = mbedtls_oid_get_attr_short_name( &name->oid, &short_name );
 			if( ret == 0 && strcmp( short_name, "CN" ) == 0 ) {
-				return strndup((char*)name->val.p, name->val.len);
+				return strndup( (char*)name->val.p, name->val.len );
 			}
 		}
 
@@ -233,11 +232,11 @@ void tls_server_add_sni( const char crt_file[], const char key_file[] ) {
 	struct sni_entry *new;
 	struct sni_entry *cur;
 	char *name;
+	int ret;
 
 	mbedtls_x509_crt_init( &crt );
 	mbedtls_pk_init( &key );
 
-	int ret;
 	if( (ret = mbedtls_x509_crt_parse_file( &crt, crt_file )) != 0 ) {
 		mbedtls_strerror( ret, error_buf, sizeof(error_buf) );
 		log_err( "TLS: %s: %s", crt_file, error_buf );

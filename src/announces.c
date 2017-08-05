@@ -127,9 +127,9 @@ struct value_t *announces_add( const char query[], int port, time_t lifetime ) {
 	new->lifetime = lifetime;
 
 	if( lifetime == LONG_MAX ) {
-		log_debug( "Add announcement for %s (%s:%hu). Update for entire runtime", query, str_id( id ), port );
+		log_debug( "Add announcement for %s (%s:%hu). Update for entire runtime.", query, str_id( id ), port );
 	} else {
-		log_debug( "Add announcement for %s (%s:%hu). Update for %lu minutes", query, str_id( id ), port, (lifetime - now) / 60 );
+		log_debug( "Add announcement for %s (%s:%hu). Update for %lu minutes.", query, str_id( id ), port, (lifetime - now) / 60 );
 	}
 
 	// Prepend to list
