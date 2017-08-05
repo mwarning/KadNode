@@ -9,7 +9,6 @@
 #include <ifaddrs.h>
 
 #include "main.h"
-#include "sha1.h"
 #include "conf.h"
 #include "log.h"
 #include "utils.h"
@@ -275,7 +274,7 @@ int parse_packet( const char str[] ) {
 	return port;
 }
 
-void handle_mcast( int rc, int sock_recv, void *_data ) {
+void handle_mcast( int rc, int sock_recv ) {
 	char buf[512];
 	IP c_addr;
 	socklen_t addrlen;
@@ -307,7 +306,7 @@ void handle_mcast( int rc, int sock_recv, void *_data ) {
 		g_packet_limit = 5 * PACKET_LIMIT_MAX;
 
 		// Try again in ~5 minutes
-		g_mcast_time = time_add_min( 5 );
+		g_mcast_time = time_add_mins( 5 );
 	}
 
 	if( rc <= 0 ) {
