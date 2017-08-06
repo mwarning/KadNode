@@ -31,7 +31,7 @@ Features:
 * packages for ArchLinux/Debian/FreeBSD/MacOSX/LEDE/Windows
 * peer file import/export on startup/shutdown and every 24h
 
-Crypto provided by [mbedtls](https://github.com/ARMmbed/mbedtls/), also used by OpenWrt.
+Crypto/TLS support is provided by [libmbedtls](https://github.com/ARMmbed/mbedtls/). The library is also used by OpenWrt.
 
 ## JOIN THE SWARM
 
@@ -249,14 +249,14 @@ Most features are optional and can be left out to reduce the binary size:
 * cmd - Command line. Mostly useful for debugging.
 * debug - Enabled debug output. For debugging.
 * lpd - Local peer discovery. Finds local peers.
-* tls - TLS authentication.
-* bob - Raw secret/public key authentication.
+* tls - TLS authentication. Uses libmbedtls.
+* bob - Raw secret/public key authentication. Uses libmbedtls.
 * dns - DNS interface support.
 * nss - Name Service Switch interface support.
 * upnp - Universal Plug and Play support. For automatic port forwarding.
 * natpmp - NAT Port Mapping support. For automatic port forwarding.
 
-Call `kanode --version` to get the list of included features.
+Call `kadnode --version` to get the list of included features.
 
 ## Automatic Port Forwarding
 
