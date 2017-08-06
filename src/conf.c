@@ -92,8 +92,6 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 " --query-tld <domain>		Top level domain to be handled by KadNode.\n"
 "				Default: "QUERY_TLD_DEFAULT"\n\n"
 #ifdef LPD
-" --lpd-addr <addr>		Set multicast address for Local Peer Discovery.\n"
-"				Default: "LPD_ADDR4" / "LPD_ADDR6"\n\n"
 " --lpd-disable			Disable multicast to discover local peers.\n\n"
 #endif
 #ifdef BOB
@@ -207,32 +205,21 @@ void conf_check( void ) {
 	}
 #endif
 
-#ifdef LPD
-	IP lpd_addr;
-
-	if( gconf->lpd_addr == NULL ) {
-		// Set default multicast address string
-		gconf->lpd_addr = strdup(
-			(gconf->af == AF_INET) ? LPD_ADDR4 : LPD_ADDR6
-		);
-	}
-
-	// Parse multicast address string
-	if( addr_parse( &lpd_addr, gconf->lpd_addr, LPD_PORT, gconf->af ) != 0 ) {
-		log_err( "Failed to parse IP address for: %s", gconf->lpd_addr );
-		exit( 1 );
-	}
-
-	// Verifiy multicast address
-	if( !addr_is_multicast(&lpd_addr) ) {
-		log_err( "Multicast address expected: %s", str_addr( &lpd_addr ) );
-		exit( 1 );
-	}
-#endif
-
 	// Store startup time
 	gconf->time_now = time( NULL );
 	gconf->startup_time = time_now_sec();
+}
+
+const char *lpd_str( int af ) {
+	if( gconf->lpd_disable ) {
+		return "disabled";
+	}
+
+	switch( af ) {
+		case AF_INET: return LPD_ADDR4;
+		case AF_INET6: return LPD_ADDR6;
+		default: return LPD_ADDR4" / "LPD_ADDR6;
+	}
 }
 
 const char *verbosity_str( int verbosity ) {
@@ -259,7 +246,7 @@ void conf_info( void ) {
 	log_info( "Query TLD: %s", gconf->query_tld );
 	log_info( "Peer File: %s", gconf->peerfile ? gconf->peerfile : "None" );
 #ifdef LPD
-	log_info( "LPD Address: %s", (gconf->lpd_disable == 0) ? gconf->lpd_addr : "Disabled" );
+	log_info( "LPD Address: %s", lpd_str( gconf->af ) );
 #endif
 #ifdef DNS
 	if( gconf->dns_proxy_enable ) {
@@ -281,9 +268,6 @@ void conf_free( void ) {
 	free( gconf->dht_ifname );
 	free( gconf->configfile );
 
-#ifdef LPD
-	free( gconf->lpd_addr );
-#endif
 #ifdef CMD
 	free( gconf->cmd_port );
 #endif
@@ -534,9 +518,6 @@ void conf_handle_option( const char opt[], const char val[] ) {
 			conf_str( opt, &gconf->dht_port, val );
 			break;
 #ifdef LPD
-		case oLpdAddr:
-			conf_str( opt, &gconf->lpd_addr, val );
-			break;
 		case oLpdDisable:
 			gconf->lpd_disable = 1;
 			break;

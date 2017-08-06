@@ -78,9 +78,6 @@ struct gconf_t {
 #endif
 
 #ifdef LPD
-	// DHT multicast address for bootstrapping
-	char *lpd_addr;
-
 	// Disable ping on multicast address
 	int lpd_disable;
 #endif

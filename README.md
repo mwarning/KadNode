@@ -149,10 +149,6 @@ This is a plain use of the DHT.
   * `--pidfile` *file-path*  
     Write process pid to a file.
 
-  * `--lpd-addr` *address*  
-    Send LPD packets to this multicast address as long no peers were found.  
-    Default: 239.192.152.143:6771 / [ff15::efc0:988f]:6771
-
   * `--lpd-disable`  
     Disable Local Peer Discovery (LPD).
 
