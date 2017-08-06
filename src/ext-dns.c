@@ -649,18 +649,21 @@ void dns_handler( int rc, int sock ) {
 		return;
 	}
 
-	if( msg.question.qType == A_Resource_RecordType && gconf->af != AF_INET ) {
-		log_debug( "DNS: Received request for IPv4 record (A), but DHT uses IPv6." );
-		return;
-	}
+	const int af = gconf->af;
+	if( af != AF_UNSPEC ) {
+		if( msg.question.qType == A_Resource_RecordType && af != AF_INET ) {
+			log_debug( "DNS: Received request for IPv4 record (A), but DHT uses IPv6 only." );
+			return;
+		}
 
-	if( msg.question.qType == AAAA_Resource_RecordType && gconf->af != AF_INET6 ) {
-		log_debug( "DNS: Received request for IPv6 record (AAAA), but DHT uses IPv4." );
-		return;
+		if( msg.question.qType == AAAA_Resource_RecordType && af != AF_INET6 ) {
+			log_debug( "DNS: Received request for IPv6 record (AAAA), but DHT uses IPv4 only." );
+			return;
+		}
 	}
 
 	if ( !str_isValidHostname( hostname ) ) {
-		log_warn( "DNS: Invalid hostname for lookup: '%s'", hostname );
+		log_warn( "DNS: Invalid hostname for lookup: %s", hostname );
 		return;
 	}
 
