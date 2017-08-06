@@ -47,11 +47,11 @@ start_instance() {
 	CONFIG_FILE="/tmp/kadnode.$s.conf"
 	OPTS=""
 
-	append_opts "$s" node_id user port ifname cmd_port web_port\
-		lpd_addr mode dns_port verbosity peer peerfile config \
-		auth_add_pkey auth_add_skey value_id query_tld
+	append_opts "$s" announce tls_client_cert tls_server_cert bob_load_key \
+		lpd_addr dns_server dns_port verbosity peer peerfile config \
+		query_tld user port ifname cmd_port
 
-	append_opts_boolean "$s" lpd_disable fwd_disable
+	append_opts_boolean "$s" dns_proxy_enable lpd_disable fwd_disable ipv4 ipv6
 
 	echo "$OPTS" > $CONFIG_FILE
 

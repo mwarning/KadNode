@@ -1,14 +1,14 @@
 # Maintainer: Moritz Warning <moritzwarning@web.de>
 
 pkgname=kadnode
-pkgver=1.0.0
+pkgver=2.0.0
 pkgrel=1
 
 pkgdesc='A P2P based DNS service using the Kademlia Distributed Hash Table (DHT)'
 arch=('x86_64' 'i686')
 url='http://github.com/mwarning/KadNode'
 license=('MIT')
-depends=('libsodium')
+depends=('libmbedtls')
 
 backup=('etc/kadnode/kadnode.conf' 'etc/kadnode/peers.txt')
 
@@ -21,7 +21,7 @@ install="kadnode.install"
 
 build() {
 	cd $srcdir/KadNode*
-	make FEATURES="auth lpd cmd nss"
+	make FEATURES="tls bob lpd nss"
 }
 
 package() {

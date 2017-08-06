@@ -6,6 +6,11 @@ config KADNODE_ENABLE_LPD
 	depends on PACKAGE_kadnode
 	default y
 
+config KADNODE_ENABLE_CMD
+	bool "Enable Command Console"
+	depends on PACKAGE_kadnode
+	default n
+
 config KADNODE_ENABLE_DNS
 	bool "Enable the local DNS server"
 	depends on PACKAGE_kadnode

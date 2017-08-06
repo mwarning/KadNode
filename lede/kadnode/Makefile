@@ -27,7 +27,7 @@ define Package/kadnode
 	SUBMENU:=IP Addresses and Names
 	URL:=https://github.com/mwarning/KadNode
 	MENU:=1
-	DEPENDS:=+KADNODE_ENABLE_AUTH:libsodium +KADNODE_ENABLE_UPNP:libminiupnpc +KADNODE_ENABLE_NATPMP:libnatpmp
+	DEPENDS:=+KADNODE_ENABLE_BOB:libmbedtls +KADNODE_ENABLE_TLS:libmbedtls +KADNODE_ENABLE_UPNP:libminiupnpc +KADNODE_ENABLE_NATPMP:libnatpmp
 	MAINTAINER:=Moritz Warning <moritzwarning@web.de>
 endef
 
@@ -39,22 +39,22 @@ define Package/kadnode/config
 	source "$(SOURCE)/Config.in"
 endef
 
-FEATURES = cmd
+FEATURES = 
+
+ifeq ($(CONFIG_KADNODE_ENABLE_CMD),y)
+FEATURES += cmd
+endif
 
 ifeq ($(CONFIG_KADNODE_ENABLE_LPD),y)
 FEATURES += lpd
 endif
 
 ifeq ($(CONFIG_KADNODE_ENABLE_AUTH),y)
-FEATURES += auth
+FEATURES += bob tls
 endif
 
 ifeq ($(CONFIG_KADNODE_ENABLE_DNS),y)
 FEATURES += dns
-endif
-
-ifeq ($(CONFIG_KADNODE_ENABLE_WEB),y)
-FEATURES += web
 endif
 
 ifeq ($(CONFIG_KADNODE_ENABLE_UPNP),y)

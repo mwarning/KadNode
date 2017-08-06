@@ -1,4 +1,4 @@
-##Compilation on Windows
+## Compilation on Windows
 
 KadNode can be build for Window systems using the [Cygwin](http://www.cygwin.com/) environment.
 
@@ -11,13 +11,13 @@ The following packages and its dependencies need to be selected:
 * All => Web   => wget
 
 If you want to use auth extension (for public/private keys),
-you need to download and install [libsodium](https://github.com/jedisct1/libsodium).
+you need to download and install [mbedtls](https://github.com/ARMmbed/mbedtls/).
 Open the Cygwin terminal and execute:
 
 ```
-wget https://github.com/jedisct1/libsodium/releases/download/1.0.11/libsodium-1.0.11.tar.gz
-tar -xvzf libsodium-1.0.11.tar.gz
-cd libsodium-1.0.11
+wget https://tls.mbed.org/download/start/mbedtls-2.5.1-apache.tgz
+tar -xvf mbedtls-2.5.1-apache.tgz
+cd mbedtls-2.5.1-apache
 ./configure
 make
 make install
@@ -29,7 +29,7 @@ Now download and compile KadNode:
 ```
 git clone https://github.com/mwarning/KadNode.git
 cd KadNode
-FEATURES="auth cmd dns lpd" make
+FEATURES="bob tls dns lpd" make
 ```
 
 Finally, start KadNode:
