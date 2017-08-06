@@ -312,8 +312,8 @@ enum OPCODE {
 	oDnsProxyEnable,
 	oDnsProxyServer,
 	oNssPort,
-	oTlsClientEntry,
-	oTlsServerEntry,
+	oTlsClientCert,
+	oTlsServerCert,
 	oConfig,
 	oIpv4,
 	oIpv6,
@@ -361,8 +361,8 @@ static struct option_t options[] = {
 	{"--nss-port", 1, oNssPort},
 #endif
 #ifdef TLS
-	{"--tls-client-cert", 1, oTlsClientEntry},
-	{"--tls-server-cert", 1, oTlsServerEntry},
+	{"--tls-client-cert", 1, oTlsClientCert},
+	{"--tls-server-cert", 1, oTlsServerCert},
 #endif
 	{"--config", 1, oConfig},
 	{"--port", 1, oPort},
@@ -499,11 +499,11 @@ void conf_handle_option( const char opt[], const char val[] ) {
 			break;
 #endif
 #ifdef TLS
-		case oTlsClientEntry:
+		case oTlsClientCert:
 			// Add Certificate Authority (CA) entries for the TLS client
 			tls_client_add_ca( val );
 			break;
-		case oTlsServerEntry:
+		case oTlsServerCert:
 		{
 			// Add SNI entries for the TLS server (e.g. my.cert,my.key)
 			char crt_file[128];
