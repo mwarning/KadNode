@@ -137,6 +137,7 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 void conf_init( void ) {
 	gconf = (struct gconf_t *) calloc( 1, sizeof(struct gconf_t) );
 
+	gconf->af = AF_UNSPEC;
 	gconf->is_running = 1;
 
 #ifdef DEBUG
@@ -507,7 +508,7 @@ void conf_handle_option( const char opt[], const char val[] ) {
 			break;
 		case oIpv4:
 		case oIpv6:
-			if( gconf->af != 0 ) {
+			if( gconf->af != AF_UNSPEC ) {
 				log_err( "IPv4 or IPv6 mode already set: %s", opt );
 				exit( 1 );
 			}
