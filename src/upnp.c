@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "log.h"
+#include "conf.h"
 #include "ext-fwd.h"
 #include "upnp.h"
 

@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 
 #include "log.h"
+#include "conf.h"
 #include "ext-fwd.h"
 #include "natpmp.h"
 

@@ -4,6 +4,7 @@
 
 #include <miniupnpc/miniupnpc.h>
 #include <miniupnpc/upnpcommands.h>
+#include <stdint.h>
 
 /*
 * UPNP allows a program to add
