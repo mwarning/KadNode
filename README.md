@@ -2,7 +2,7 @@
 
 ## SYNOPSIS
 
-`kadnode`  [--value-id identifier] [--port port] [--daemon] [...]
+`kadnode`  [--announce <name>] [--daemon] [...]
 
 `kadnode-ctl`  [...]
 
@@ -43,7 +43,7 @@ There are three ways to archieve this:
 kadnode --peer bttracker.debian.org --peer 192.168.1.1
 ```
 
-2. Use the local peer discovery feature. Just start kadnode and it will try to discover other node in the local network.
+2. Use the local peer discovery feature. Just start KadNode and it will try to discover other node in the local network.
 
 3. Ping a node using the KadNode console if present:
 ```
@@ -62,24 +62,23 @@ KadNode provides two authentication schemes. One works via x509 certificates and
 
 Typically there are two KadNode instances involved.
 
-One node announcing a domain, e.g. mynode.p2p. The other one looking for the announcing IP address.
-X509 certificates are used for this an can be created e.g. using openssl tools.
+One node announces a domain, e.g. mynode.p2p. The other node looks for the IP address of the announcing node. Authentication happens via TLS, which in turn uses X509 certificates.
+The certificates can be created e.g. using openssl tools.
 
 ```
-kadnode --tls-server-cert mynode.crt,mynode.key
+kadnode --announce mynode.p2p --tls-server-cert mynode.crt,mynode.key
 ```
 
-mynode.crt needs to have the common name field set to 'mynode.p2p'.
-This files are used to announce mynode.p2p on the network and to prove ownership via TLS.
+The announced domain must match the content of the CA field of the certificate.
 
-As alternative, ownerhip can be proven by a https server running on the same host.
-In this case, kadnode only needs to announce the hostname:
+As an alternative, ownerhip can be proven using a https server running on the same host.
+In this case, KadNode only needs to announce the domain:
 
 ```
 kadnode --announce mynode.p2p:443
 ```
 
-The other node doing the lookup for mynode.p2p needs to have access to the root certificate that has been used to sign mynode.crt. These can be a common web browsers certificate authorities.
+The other node doing the lookup for mynode.p2p needs to have access to the root certificate that has been used to sign mynode.crt. These can be a common web browsers certificates:
 
 ```
 kadnode --tls-client-cert /usr/share/ca-certificates/mozilla
@@ -113,8 +112,7 @@ This is a plain use of the DHT.
 ## OPTIONS
 
   * `--announce` *name[:port]*  
-    Announce an name and port without providing authentication.  
-    This is useful if the authentication is provided via a HTTPS server on the same host instead.
+    Announce a name and optional port. The port may be used for the authentication provider, e.g. for TLS.  
     This option may occur multiple times.
 
   * `--peerfile` *file*  

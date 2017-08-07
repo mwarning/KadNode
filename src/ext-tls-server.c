@@ -27,7 +27,6 @@
 #include "kad.h"
 #include "net.h"
 #include "searches.h"
-#include "announces.h"
 #include "ext-tls-server.h"
 
 
@@ -312,13 +311,6 @@ void tls_server_setup( void ) {
 		(const unsigned char *) pers, strlen( pers ) ) ) != 0 ) {
 		log_err( "TLS: mbedtls_ctr_drbg_seed returned -0x%x", -ret );
 		exit( 1 );
-	}
-
-	// Announce server name entry
-	cur = g_sni_entries;
-	while( cur ) {
-		kad_announce( cur->name, atoi( gconf->dht_port ), LONG_MAX );
-		cur = cur->next;
 	}
 
 	// Without SNI entries, there is no reason to start the TLS server
