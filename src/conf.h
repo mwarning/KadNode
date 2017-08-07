@@ -16,12 +16,6 @@ void conf_info( void );
 void conf_reload( void );
 void conf_free( void );
 
-// value to announce
-struct value {
-	struct value *next;
-	uint8_t value_id[SHA1_BIN_LENGTH];
-	uint16_t port;
-};
 
 struct gconf_t {
 
