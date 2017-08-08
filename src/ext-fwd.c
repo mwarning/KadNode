@@ -146,7 +146,7 @@ void fwd_remove( struct forwarding_t *item ) {
 * We do not actually check if we are in a private network.
 * This function is called in intervals.
 */
-void fwd_handle( int _rc, int _sock, void *_data ) {
+void fwd_handle( int _rc, int _sock ) {
 	struct forwarding_t *item;
 	int rc;
 	time_t lifespan;
