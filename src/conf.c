@@ -233,7 +233,7 @@ void conf_info( void ) {
 
 	log_info( "Verbosity: %s", verbosity_str( gconf->verbosity ) );
 	log_info( "Query TLD: %s", gconf->query_tld );
-	log_info( "Peer File: %s", gconf->peerfile ? gconf->peerfile : "None" );
+	log_info( "Peer File: %s", gconf->peerfile ? gconf->peerfile : "none" );
 #ifdef LPD
 	log_info( "LPD Address: %s", gconf->lpd_disable ? "disabled" : "enabled" );
 #endif

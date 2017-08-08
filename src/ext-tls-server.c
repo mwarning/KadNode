@@ -206,7 +206,7 @@ char *get_common_name( const mbedtls_x509_crt *crt ) {
 int sni_callback( void *p_info, mbedtls_ssl_context *ssl, const unsigned char *name, size_t name_len ) {
 	struct sni_entry *cur;
 
-	log_debug( "Look certificate for domain: %s", name );
+	log_debug( "Lookup certificate for domain: %s", name );
 
 	cur = (struct sni_entry *) p_info;
 	while( cur != NULL ) {
