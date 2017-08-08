@@ -211,18 +211,6 @@ void conf_check( void ) {
 	gconf->startup_time = time_now_sec();
 }
 
-const char *lpd_str( int af ) {
-	if( gconf->lpd_disable ) {
-		return "disabled";
-	}
-
-	switch( af ) {
-		case AF_INET: return LPD_ADDR4;
-		case AF_INET6: return LPD_ADDR6;
-		default: return LPD_ADDR4" / "LPD_ADDR6;
-	}
-}
-
 const char *verbosity_str( int verbosity ) {
 	switch( verbosity ) {
 		case VERBOSITY_QUIET: return "quiet";
@@ -247,7 +235,7 @@ void conf_info( void ) {
 	log_info( "Query TLD: %s", gconf->query_tld );
 	log_info( "Peer File: %s", gconf->peerfile ? gconf->peerfile : "None" );
 #ifdef LPD
-	log_info( "LPD Address: %s", lpd_str( gconf->af ) );
+	log_info( "LPD Address: %s", gconf->lpd_disable ? "disabled" : "enabled" );
 #endif
 #ifdef DNS
 	if( gconf->dns_proxy_enable ) {
