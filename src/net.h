@@ -10,7 +10,8 @@ typedef void net_callback( int rc, int fd );
 int net_socket(
 	const char name[],
 	const char ifname[],
-	int protocol, int af
+	const int protocol,
+	const int af
 );
 
 // Create a socket and bind to address/interface
@@ -19,7 +20,7 @@ int net_bind(
 	const char addr[],
 	const char port[],
 	const char ifname[],
-	int protocol, int af
+	const int protocol
 );
 
 // Add callback with file descriptor to listen for packets

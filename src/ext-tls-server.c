@@ -316,8 +316,8 @@ void tls_server_setup( void ) {
 	// Without SNI entries, there is no reason to start the TLS server
 	if( g_sni_entries ) {
 		// May return -1 if protocol not enabled/supported
-		g_listen_fd4.fd = net_bind( "TLS", "0.0.0.0", gconf->dht_port, NULL, IPPROTO_TCP, AF_UNSPEC );
-		g_listen_fd6.fd = net_bind( "TLS", "::", gconf->dht_port, NULL, IPPROTO_TCP, AF_UNSPEC );
+		g_listen_fd4.fd = net_bind( "TLS", "0.0.0.0", gconf->dht_port, NULL, IPPROTO_TCP );
+		g_listen_fd6.fd = net_bind( "TLS", "::", gconf->dht_port, NULL, IPPROTO_TCP );
 
 		if( ( ret = mbedtls_ssl_config_defaults( &g_conf,
 			MBEDTLS_SSL_IS_SERVER,

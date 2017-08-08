@@ -286,8 +286,8 @@ void kad_setup( void ) {
 
 	dht_lock_init();
 
-	g_dht_socket4 = net_bind( "KAD", "0.0.0.0", gconf->dht_port, gconf->dht_ifname, IPPROTO_UDP, AF_INET );
-	g_dht_socket6 = net_bind( "KAD", "::", gconf->dht_port, gconf->dht_ifname, IPPROTO_UDP, AF_INET6 );
+	g_dht_socket4 = net_bind( "KAD", "0.0.0.0", gconf->dht_port, gconf->dht_ifname, IPPROTO_UDP );
+	g_dht_socket6 = net_bind( "KAD", "::", gconf->dht_port, gconf->dht_ifname, IPPROTO_UDP );
 
 	if ( g_dht_socket4 >= 0 ) {
 		net_add_handler( g_dht_socket4, &dht_handler );

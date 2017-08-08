@@ -68,7 +68,7 @@ int net_set_nonblocking( int fd ) {
     return fcntl( fd, F_SETFL, fcntl( fd, F_GETFL ) | O_NONBLOCK );
 }
 
-int net_socket( const char name[], const char ifname[], int protocol, int af ) {
+int net_socket( const char name[], const char ifname[], const int protocol, const int af ) {
 	int sock;
 
 	if( protocol == IPPROTO_TCP ) {
@@ -119,14 +119,14 @@ int net_bind(
 	const char addr[],
 	const char port[],
 	const char ifname[],
-	int protocol, int af
+	const int protocol
 ) {
 	const int opt_on = 1;
 	socklen_t addrlen;
 	IP sockaddr;
 	int sock;
 
-	if( addr_parse( &sockaddr, addr, port, af ) != 0 ) {
+	if( addr_parse( &sockaddr, addr, port, AF_UNSPEC ) != 0 ) {
 		log_err( "%s: Failed to parse IP address '%s' and port '%s'.",
 			name, addr, port
 		);
@@ -134,7 +134,7 @@ int net_bind(
 	}
 
 	// Disable IPv6 or IPv4
-	if( gconf->af != AF_UNSPEC && gconf->af != af ) {
+	if( gconf->af != AF_UNSPEC && gconf->af != sockaddr.ss_family ) {
 		return -1;
 	}
 

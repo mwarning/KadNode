@@ -66,14 +66,23 @@ void nss_handler( int rc, int sock ) {
 }
 
 void nss_setup( void ) {
-	int sock;
+	int sock4;
+	int sock6;
 
 	if( str_isZero( gconf->nss_port ) ) {
 		return;
 	}
 
-	sock = net_bind( "NSS", "::1", gconf->nss_port, NULL, IPPROTO_UDP, AF_UNSPEC );
-	net_add_handler( sock, &nss_handler );
+	sock4 = net_bind( "NSS", "127.0.0.1", gconf->nss_port, NULL, IPPROTO_UDP );
+	sock6 = net_bind( "NSS", "::1", gconf->nss_port, NULL, IPPROTO_UDP );
+
+	if( sock4 >= 0 ) {
+		net_add_handler( sock4, &nss_handler );
+	}
+
+	if( sock6 >= 0 ) {
+		net_add_handler( sock6, &nss_handler );
+	}
 }
 
 void nss_free( void ) {

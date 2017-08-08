@@ -329,14 +329,23 @@ void cmd_console_handler( int rc, int fd ) {
 }
 
 void cmd_setup( void ) {
-	int sock;
+	int sock4;
+	int sock6;
 
 	if( str_isZero( gconf->cmd_port ) ) {
 		return;
 	}
 
-	sock = net_bind( "CMD", "::1", gconf->cmd_port, NULL, IPPROTO_UDP, AF_UNSPEC );
-	net_add_handler( sock, &cmd_remote_handler );
+	sock4 = net_bind( "CMD", "127.0.0.1", gconf->cmd_port, NULL, IPPROTO_UDP );
+	sock6 = net_bind( "CMD", "::1", gconf->cmd_port, NULL, IPPROTO_UDP );
+
+	if( sock4 >= 0 ) {
+		net_add_handler( sock4, &cmd_remote_handler );
+	}
+
+	if( sock6 >= 0 ) {
+		net_add_handler( sock6, &cmd_remote_handler );
+	}
 
 	if( gconf->is_daemon == 0 && gconf->cmd_disable_stdin == 0 ) {
 		// Wait for other messages to be displayed

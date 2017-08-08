@@ -9,6 +9,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <ctype.h>
+
 #include "main.h"
 #include "log.h"
 #include "conf.h"
@@ -224,7 +225,7 @@ int str_isZero( const char str[] ) {
 }
 
 const char *str_id( const uint8_t id[] ) {
-	static char hexbuf[SHA1_HEX_LENGTH+1];
+	static char hexbuf[SHA1_HEX_LENGTH + 1];
 	return bytes_to_hex( hexbuf, id, SHA1_BIN_LENGTH );
 }
 
@@ -432,6 +433,11 @@ int addr_equal( const IP *addr1, const IP *addr2 ) {
 	} else {
 		return 0;
 	}
+}
+
+int socket_addr( int sock, IP *addr ) {
+	socklen_t len = sizeof(IP);
+	return getsockname( sock, (struct sockaddr *) addr, &len );
 }
 
 time_t time_add_secs( uint32_t seconds ) {

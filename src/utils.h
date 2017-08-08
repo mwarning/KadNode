@@ -53,6 +53,8 @@ int addr_port( const IP *addr );
 int addr_len( const IP *addr );
 int addr_equal( const IP *addr1, const IP *addr2 );
 
+int socket_addr( int sock, IP *addr );
+
 time_t time_add_secs( uint32_t seconds );
 time_t time_add_mins( uint32_t minutes );
 time_t time_add_hours( uint32_t hours );

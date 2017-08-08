@@ -357,9 +357,14 @@ void handle_mcast6( int rc, int sock ) {
 	handle_mcast( rc, sock, &g_lpd_addr6 );
 }
 
-int multicast_set_loop( int sock, int af, int val ) {
+int multicast_set_loop( int sock, int val ) {
+	IP addr;
 
-	switch( af ) {
+	if( socket_addr( sock, &addr ) != 0 ) {
+		return -1;
+	}
+
+	switch( addr.ss_family ) {
 		case AF_INET: {
 			unsigned char flag = val;
 			return setsockopt( sock, IPPROTO_IP, IP_MULTICAST_LOOP, &flag, sizeof(flag) );
@@ -374,18 +379,18 @@ int multicast_set_loop( int sock, int af, int val ) {
 	}
 }
 
-int create_receive_socket( const char addr[], int af ) {
+int create_listen_socket( const char addr[] ) {
 	const int opt_off = 0;
 	const int opt_on = 1;
 	int sock;
 
-	sock = net_bind( "LPD", addr, LPD_PORT, gconf->dht_ifname, IPPROTO_UDP, af );
+	sock = net_bind( "LPD", addr, LPD_PORT, gconf->dht_ifname, IPPROTO_UDP );
 
 	if( sock < 0) {
 		goto fail;
 	}
 
-	if( multicast_set_loop( sock, af, opt_off ) < 0 ) {
+	if( multicast_set_loop( sock, opt_off ) < 0 ) {
 		log_warn( "LPD: Failed to set IP_MULTICAST_LOOP: %s", strerror( errno ) );
 		goto fail;
 	}
@@ -409,14 +414,14 @@ void lpd_setup( void ) {
 
 	g_packet_limit = PACKET_LIMIT_MAX;
 	addr_parse( &g_lpd_addr4, LPD_ADDR4, LPD_PORT, AF_INET );
-	addr_parse( &g_lpd_addr6, LPD_ADDR6, LPD_PORT, AF_INET );
+	addr_parse( &g_lpd_addr6, LPD_ADDR6, LPD_PORT, AF_INET6 );
 
 	if( gconf->lpd_disable ) {
 		return;
 	}
 
-	sock4 = create_receive_socket( "0.0.0.0", AF_INET );
-	sock6 = create_receive_socket( "::", AF_INET6 );
+	sock4 = create_listen_socket( "0.0.0.0" );
+	sock6 = create_listen_socket( "::" );
 
 	if( sock4 >= 0 ) {
 		net_add_handler( sock4, &handle_mcast4 );
