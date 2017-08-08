@@ -2,7 +2,7 @@
 
 ## SYNOPSIS
 
-`kadnode`  [--announce <name>] [--daemon] [...]
+`kadnode`  [--announce domain] [--daemon] [...]
 
 `kadnode-ctl`  [...]
 
@@ -66,10 +66,10 @@ One node announces a domain, e.g. mynode.p2p. The other node looks for the IP ad
 The certificates can be created e.g. using openssl tools.
 
 ```
-kadnode --announce mynode.p2p --tls-server-cert mynode.crt,mynode.key
+kadnode --tls-server-cert mynode.crt,mynode.key
 ```
 
-The announced domain must match the content of the CA field of the certificate.
+KadNode will announce the cname field inside the certificate. No --announce is needed in this case.
 
 As an alternative, ownerhip can be proven using a https server running on the same host.
 In this case, KadNode only needs to announce the domain:
@@ -111,8 +111,8 @@ This is a plain use of the DHT.
 
 ## OPTIONS
 
-  * `--announce` *name[:port]*  
-    Announce a name and optional port. The port may be used for the authentication provider, e.g. for TLS.  
+  * `--announce` *name:port*  
+    Announce a name and port. The port may be used for the authentication provider, e.g. 443 for a webserver using HTTPS or the DHT port for Kadnode.  
     This option may occur multiple times.
 
   * `--peerfile` *file*  

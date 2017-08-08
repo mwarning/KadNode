@@ -72,7 +72,7 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 "\n"
 "Usage: kadnode [OPTIONS]*\n"
 "\n"
-" --announce <name>[:<port>]	Announce an name and port.\n\n"
+" --announce <name>:<port>	Announce an name and port.\n\n"
 " --peerfile <file>		Import/Export peers from and to a file.\n\n"
 " --peer <addr>			Add a static peer address.\n"
 "				This option may occur multiple times.\n\n"
@@ -424,10 +424,10 @@ void conf_handle_option( const char opt[], const char val[] ) {
 			uint16_t port = 0;
 			char name[QUERY_MAX_SIZE];
 
-			if( sscanf( val, "%254[^:]:%hu", name, &port ) > 0 ) {
+			if( sscanf( val, "%254[^:]:%hu", name, &port ) == 2 ) {
 				rc = kad_announce( name, port, LONG_MAX );
 			} else {
-				log_err( "Invalid value to announce: %s", val );
+				log_err( "Invalid announcement: %s", val );
 			}
 
 			if( rc < 0 ) {
