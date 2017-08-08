@@ -245,7 +245,7 @@ void search_restart( struct search_t *search ) {
 	}
 }
 
-// Start a new search (query is expected to be lower case and without .p2p)
+// Start a new search for a sanitized query
 struct search_t* searches_start( const char query[] ) {
 	uint8_t id[SHA1_BIN_LENGTH];
 	auth_callback *callback;

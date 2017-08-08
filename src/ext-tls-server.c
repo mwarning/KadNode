@@ -291,10 +291,28 @@ void tls_server_add_sni( const char crt_file[], const char key_file[] ) {
 	log_info( "TLS: Loaded server credentials for %s (crt: %s, key: %s)", name, crt_file, key_file );
 }
 
+void tls_announce_all_cnames( void ) {
+	struct sni_entry *cur;
+	char name[QUERY_MAX_SIZE];
+
+	// Announce cnames
+	cur = g_sni_entries;
+	while( cur ) {
+		if( query_sanitize( name, sizeof(name), cur->name ) == 0 ) {
+			kad_announce( name, atoi( gconf->dht_port ), LONG_MAX );
+		}
+		cur = cur->next;
+	}
+}
+
 void tls_server_setup( void ) {
 	const char *pers = "kadnode";
-	struct sni_entry *cur;
 	int ret;
+
+	// Without SNI entries, there is no reason to start the TLS server
+	if( g_sni_entries ) {
+		return;
+	}
 
 	// Initialize sockets
 	mbedtls_net_init( &g_client_fd4 );
@@ -315,41 +333,41 @@ void tls_server_setup( void ) {
 		exit( 1 );
 	}
 
-	// Without SNI entries, there is no reason to start the TLS server
-	if( g_sni_entries ) {
-		// May return -1 if protocol not enabled/supported
-		g_listen_fd4.fd = net_bind( "TLS", "0.0.0.0", gconf->dht_port, NULL, IPPROTO_TCP );
-		g_listen_fd6.fd = net_bind( "TLS", "::", gconf->dht_port, NULL, IPPROTO_TCP );
+	// Announce all cname from certificates
+	tls_announce_all_cnames();
 
-		if( ( ret = mbedtls_ssl_config_defaults( &g_conf,
-			MBEDTLS_SSL_IS_SERVER,
-			MBEDTLS_SSL_TRANSPORT_STREAM,
-			MBEDTLS_SSL_PRESET_DEFAULT ) ) != 0 )
-		{
-			log_err( "TLS: mbedtls_ssl_config_defaults returned -0x%x", -ret );
-			exit( 1 );
-		}
+	// May return -1 if protocol not enabled/supported
+	g_listen_fd4.fd = net_bind( "TLS", "0.0.0.0", gconf->dht_port, NULL, IPPROTO_TCP );
+	g_listen_fd6.fd = net_bind( "TLS", "::", gconf->dht_port, NULL, IPPROTO_TCP );
 
-		mbedtls_ssl_conf_authmode( &g_conf, MBEDTLS_SSL_VERIFY_REQUIRED );
-		mbedtls_ssl_conf_rng( &g_conf, mbedtls_ctr_drbg_random, &g_drbg );
-		//mbedtls_ssl_conf_dbg( &g_conf, my_debug, stdout );
+	if( ( ret = mbedtls_ssl_config_defaults( &g_conf,
+		MBEDTLS_SSL_IS_SERVER,
+		MBEDTLS_SSL_TRANSPORT_STREAM,
+		MBEDTLS_SSL_PRESET_DEFAULT ) ) != 0 )
+	{
+		log_err( "TLS: mbedtls_ssl_config_defaults returned -0x%x", -ret );
+		exit( 1 );
+	}
 
-		mbedtls_ssl_conf_sni( &g_conf, sni_callback, g_sni_entries );
+	mbedtls_ssl_conf_authmode( &g_conf, MBEDTLS_SSL_VERIFY_REQUIRED );
+	mbedtls_ssl_conf_rng( &g_conf, mbedtls_ctr_drbg_random, &g_drbg );
+	//mbedtls_ssl_conf_dbg( &g_conf, my_debug, stdout );
 
-		if( ( ret = mbedtls_ssl_setup( &g_ssl, &g_conf ) ) != 0 ) {
-			log_err( "TLS: mbedtls_ssl_setup returned -0x%x", -ret );
-			exit( 1 );
-		}
+	mbedtls_ssl_conf_sni( &g_conf, sni_callback, g_sni_entries );
 
-		if( g_listen_fd4.fd > -1 ) {
-			mbedtls_net_set_nonblock( &g_listen_fd4 );
-			net_add_handler( g_listen_fd4.fd, &tls_server_handler );
-		}
+	if( ( ret = mbedtls_ssl_setup( &g_ssl, &g_conf ) ) != 0 ) {
+		log_err( "TLS: mbedtls_ssl_setup returned -0x%x", -ret );
+		exit( 1 );
+	}
 
-		if( g_listen_fd6.fd > -1 ) {
-			mbedtls_net_set_nonblock( &g_listen_fd6 );
-			net_add_handler( g_listen_fd6.fd, &tls_server_handler );
-		}
+	if( g_listen_fd4.fd > -1 ) {
+		mbedtls_net_set_nonblock( &g_listen_fd4 );
+		net_add_handler( g_listen_fd4.fd, &tls_server_handler );
+	}
+
+	if( g_listen_fd6.fd > -1 ) {
+		mbedtls_net_set_nonblock( &g_listen_fd6 );
+		net_add_handler( g_listen_fd6.fd, &tls_server_handler );
 	}
 }
 

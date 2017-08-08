@@ -183,10 +183,11 @@ void tls_handle( int rc, int fd ) {
 
 		auth_end( resource, AUTH_FAILED );
 	} else {
-		// TLS handshake in progress.
+		// TLS handshake in progress
 	}
 }
 
+// Try to create a DHT id from sanitized domain query
 int tls_client_get_id( uint8_t id[], size_t len, const char query[] ) {
 	uint8_t hash[32];
 

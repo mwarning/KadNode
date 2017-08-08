@@ -76,6 +76,7 @@ void announces_debug( int fd ) {
 	dprintf( fd, " Found %d entries.\n", value_counter );
 }
 
+// Announce a sanitzed query
 struct value_t *announces_add( const char query[], int port, time_t lifetime ) {
 	uint8_t id[SHA1_BIN_LENGTH];
 	struct value_t *cur;

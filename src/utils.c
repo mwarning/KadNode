@@ -16,7 +16,7 @@
 #include "utils.h"
 
 
-// Convert hex query to bytes id
+// Try to create a DHT id from a sanitzed hex query
 int hex_get_id( uint8_t id[], size_t len, const char query[] ) {
 	size_t query_len = strlen( query );
 	if( str_isHex( query, query_len ) ) {
@@ -49,25 +49,22 @@ void* memdup( const void* src, size_t size ) {
 }
 
 /*
-void str_toLowercase( char str[] ) {
-	char *beg;
-
-	beg = str;
-	while( *beg ) {
-		*beg = tolower( *beg );
-		beg++;
-	}
-}*/
-
-// Remove .p2p suffix and convert to lowercase
+* Sanitize query.
+* Convert to lowercase and removing  TLDs if it matches --query-tld.
+*
+* example.com.p2p => example.com
+* example.com => example.com
+* example.p2p => example
+* eXample.COM.P2P => example.com
+*/
 int query_sanitize( char buf[], size_t buflen, const char query[] ) {
 	size_t len;
 	size_t i;
 
 	len = strlen( query );
 
-	// Buffer too small
 	if( (len + 1) >= buflen ) {
+		// Output buffer too small
 		return 1;
 	}
 
@@ -77,9 +74,9 @@ int query_sanitize( char buf[], size_t buflen, const char query[] ) {
 	}
 
 	// Remove .p2p suffix
-	//if( is_suffix( query, gconf->query_tld ) ) {
-	//	i -= strlen( gconf->query_tld );
-	//}
+	if( is_suffix( query, gconf->query_tld ) ) {
+		i -= strlen( gconf->query_tld );
+	}
 
 	buf[i] = '\0';
 
