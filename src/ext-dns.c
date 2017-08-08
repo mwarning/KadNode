@@ -611,6 +611,7 @@ void dns_handler( int rc, int sock ) {
 	uint8_t buffer[1472];
 	const char *hostname;
 	const char *domain;
+	const int af = gconf->af;
 
 	if( rc == 0 ) {
 		return;
@@ -649,7 +650,6 @@ void dns_handler( int rc, int sock ) {
 		return;
 	}
 
-	const int af = gconf->af;
 	if( af != AF_UNSPEC ) {
 		if( msg.question.qType == A_Resource_RecordType && af != AF_INET ) {
 			log_debug( "DNS: Received request for IPv4 record (A), but DHT uses IPv6 only." );

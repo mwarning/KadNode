@@ -279,7 +279,7 @@ void tls_client_add_ca( const char path[] ) {
 		((ret = mbedtls_x509_crt_parse_path( &g_cacert, path )) < 0)) {
 		mbedtls_strerror( ret, error_buf, sizeof(error_buf) );
 		log_err( "TLS: Failed to load the CA root certificate(s) from %s - %s", path, error_buf );
-		exit(1);
+		exit( 1 );
 	}
 
 	log_info( "TLS: Loaded certificates from %s (%d skipped)", path, ret );

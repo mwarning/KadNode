@@ -227,13 +227,6 @@ void bob_trigger_auth( void ) {
 		return;
 	}
 
-	//TODO: insert somewhere else?
-	if( mbedtls_pk_ec( resource->ctx_verify ) == NULL ) {
-		//printf( "set grp\n" );
-		mbedtls_pk_setup( &resource->ctx_verify, mbedtls_pk_info_from_type( MBEDTLS_PK_ECKEY ) );
-		mbedtls_ecp_group_load( &mbedtls_pk_ec( resource->ctx_verify )->grp, ECPARAMS );
-	}
-
 	// Shortcuts
 	mbedtls_ecp_keypair *kp = mbedtls_pk_ec( resource->ctx_verify );
 	char *query = &resource->query[0];
@@ -547,19 +540,27 @@ void bob_debug_keys( int fd ) {
 }
 
 void bob_setup( void ) {
+	struct bob_resource *resource;
 	struct key_t *key;
 	const char *hkey;
-	int port = atoi( gconf->dht_port );
+	int i;
 
 	mbedtls_ctr_drbg_init( &g_ctr_drbg );
 	mbedtls_entropy_init( &g_entropy );
+
+	// Initialize resources handlers ctx_verify value
+	for( i = 0; i < N_ELEMS(g_bob_resources); ++i ) {
+		resource = &g_bob_resources[i];
+		mbedtls_pk_setup( &resource->ctx_verify, mbedtls_pk_info_from_type( MBEDTLS_PK_ECKEY ) );
+		mbedtls_ecp_group_load( &mbedtls_pk_ec( resource->ctx_verify )->grp, ECPARAMS );
+	}
 
 	// Anounce keys via DHT
 	key = g_keys;
 	while( key ) {
 		// Start announcing public key for the entire runtime
 		hkey = get_pkey_hex( &key->ctx_sign );
-		announces_add( hkey, port, LONG_MAX );
+		announces_add( hkey, atoi( gconf->dht_port ), LONG_MAX );
 		key = key->next;
 	}
 }
