@@ -81,37 +81,38 @@ int net_socket( const char name[], const char ifname[], const int protocol, cons
 
 	if( sock < 0 ) {
 		log_err( "%s: Failed to create socket: %s", name, strerror( errno ) );
-		return -1;
+		goto fail;
 	}
 
 	if( net_set_nonblocking( sock ) < 0 ) {
-		close( sock );
 		log_err( "%s: Failed to make socket nonblocking: %s", name, strerror( errno ) );
-		return -1;
+		goto fail;
 	}
 
 #if defined(__APPLE__) || defined(__CYGWIN__) || defined(__FreeBSD__)
 	if( ifname ) {
-		close( sock );
 		log_err( "%s: Bind to device not supported on Windows and MacOSX.", name );
-		return -1;
+		goto fail;
 	}
 #else
 	if( ifname && setsockopt( sock, SOL_SOCKET, SO_BINDTODEVICE, ifname, strlen( ifname ) ) ) {
-		close( sock );
 		log_err( "%s: Unable to bind to device %s: %s", name, ifname, strerror( errno ) );
-		return -1;
+		goto fail;
 	}
 #endif
 
 	const int optval = 1;
 	if( setsockopt( sock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval) ) < 0 ) {
-		close( sock );
 		log_err( "%s: Unable to set SO_REUSEADDR for %s: %s", name, ifname, strerror( errno ) );
-		return -1;
+		goto fail;
 	}
 
 	return sock;
+
+fail:
+	close( sock );
+
+	return -1;
 }
 
 int net_bind(
@@ -124,48 +125,45 @@ int net_bind(
 	const int opt_on = 1;
 	socklen_t addrlen;
 	IP sockaddr;
-	int sock;
+	int sock = -1;;
 
 	if( addr_parse( &sockaddr, addr, port, AF_UNSPEC ) != 0 ) {
 		log_err( "%s: Failed to parse IP address '%s' and port '%s'.",
 			name, addr, port
 		);
-		return -1;
+		goto fail;
 	}
 
 	// Disable IPv6 or IPv4
 	if( gconf->af != AF_UNSPEC && gconf->af != sockaddr.ss_family ) {
-		return -1;
+		goto fail;
 	}
 
 	if( (sock = net_socket( name, ifname, protocol, sockaddr.ss_family )) < 0 ) {
-		return -1;
+		goto fail;
 	}
 
 	if( sockaddr.ss_family == AF_INET6 ) {
 		if( setsockopt( sock, IPPROTO_IPV6, IPV6_V6ONLY, &opt_on, sizeof(opt_on) ) < 0 ) {
-			close( sock );
 			log_err( "%s: Failed to set IPV6_V6ONLY for %s: %s",
 				name, str_addr( &sockaddr ), strerror( errno ) );
-			return -1;
+			goto fail;
 		}
 	}
 
 	addrlen = addr_len( &sockaddr );
 	if( bind( sock, (struct sockaddr*) &sockaddr, addrlen ) < 0 ) {
-		close( sock );
 		log_err( "%s: Failed to bind socket to %s: %s",
 			name, str_addr( &sockaddr ), strerror( errno )
 		);
-		return -1;
+		goto fail;
 	}
 
 	if( protocol == IPPROTO_TCP && listen( sock, 5 ) < 0 ) {
-		close( sock );
 		log_err( "%s: Failed to listen on %s: %s (%s)",
 			name, str_addr( &sockaddr ), strerror( errno )
 		);
-		return -1;
+		goto fail;
 	}
 
 	log_info( ifname ? "%s: Bind to %s, interface %s" : "%s: Bind to %s",
@@ -173,6 +171,10 @@ int net_bind(
 	);
 
 	return sock;
+
+fail:
+	close( sock );
+	return -1;
 }
 
 void net_loop( void ) {
