@@ -43,35 +43,35 @@ There are three ways to archieve this:
 kadnode --peer bttracker.debian.org --peer 192.168.1.1
 ```
 
-2. Use the local peer discovery feature. Just start KadNode and it will try to discover other node in the local network.
-
-3. Ping a node using the KadNode console if present:
+2. Ping a node using the KadNode console if present:
 ```
 kadnode-ctl ping bttracker.debian.org
 ```
 
+3. Use the local peer discovery feature. Just start KadNode and it will try to discover other KadNode nodes in the local network.
+
+
 Also provide a --peerfile argument to let KadNode backup its peerlist on shutdown and every 24h.
-This ensures successful boostrapping on the next startup.
+This ensures successful bootstrapping on next startup.
 
 
 ## AUTHENTICATION
 
-KadNode provides two authentication schemes. One works via x509 certificates and TLS. The other one uses raw secret/public keys and is hence called bob - why not.
+KadNode provides two authentication schemes. One works via x509 certificates and TLS. The other one uses raw secret/public keys and is hence called bob.
 
 ### Via TLS
 
 Typically there are two KadNode instances involved.
 
-One node announces a domain, e.g. mynode.p2p. The other node looks for the IP address of the announcing node. Authentication happens via TLS, which in turn uses X509 certificates.
-The certificates can be created e.g. using openssl tools.
+One node announces a domain, e.g. mynode.p2p. The other node looks for the IP address of the announcing node. Authentication happens via TLS, which in turn uses X509 certificates. This is the same as HTTPS, but without a HTTP session.
 
 ```
 kadnode --tls-server-cert mynode.crt,mynode.key
 ```
 
-KadNode will announce the cname field inside the certificate. No --announce is needed in this case.
+KadNode will announce the common name field inside the certificate. No --announce is needed in this case.
 
-As an alternative, ownerhip can be proven using a https server running on the same host.
+As an alternative, ownerhip can be proven using a HTTPS server running on the same host.
 In this case, KadNode only needs to announce the domain:
 
 ```
@@ -84,7 +84,7 @@ The other node doing the lookup for mynode.p2p needs to have access to the root 
 kadnode --tls-client-cert /usr/share/ca-certificates/mozilla
 ```
 
-Of course you can create your own certificate authority.
+Own certificates authorities can be created and used, of course.
 
 ### Via BOB
 
@@ -97,7 +97,7 @@ Public key: c492192ac20144ed2a43d57e7239f5ef5f6bb418a51600980e55ff565cc916a4
 Wrote secret key to mysecretkey.pem
 ```
 
-Now load the secret key on KadNode startup:
+Now make the secret key load on KadNode startup:
 ```
 kadnode --bob-load-key mysecretkey.pem
 ```
@@ -106,8 +106,8 @@ Any reachable node can now resolve c492192ac20144ed2a43d57e7239f5ef5f6bb418a5160
 
 ## No Authentication
 
-KadNode also allows to just lookup a hexdecimal string and to get IP address as return.
-This is a plain use of the DHT.
+KadNode also allows to just lookup a hexdecimal string and to get IP addresses as return.
+This is the plain use of the DHT. The hexadecimal string will be cut down or filled up with zeros internally to fit the size the DHT uses (currently 20 bytes).
 
 ## OPTIONS
 
