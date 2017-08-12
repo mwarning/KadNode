@@ -213,11 +213,13 @@ fail:
 }
 
 void lpd_setup( void ) {
+	const char *ifname = gconf->dht_ifname;
+
 	if( gconf->lpd_disable ) {
 		return;
 	}
 
-	if( gconf->dht_ifname && (gconf->af == AF_UNSPEC || gconf->af == AF_INET) ) {
+	if( ifname && (gconf->af == AF_UNSPEC || gconf->af == AF_INET) ) {
 		log_warn( "LPD: ifname setting not supported for IPv4" );
 	}
 
@@ -225,11 +227,11 @@ void lpd_setup( void ) {
 	addr_parse( &g_lpd6.mcast_addr, LPD_ADDR6, LPD_PORT, AF_INET6 );
 
 	// Setup IPv4 sockets
-	g_lpd4.sock_listen = create_receive_socket( &g_lpd4.mcast_addr, gconf->dht_ifname );
+	g_lpd4.sock_listen = create_receive_socket( &g_lpd4.mcast_addr, ifname );
 	g_lpd4.sock_send = create_send_socket( AF_INET, ifname );
 
 	// Setup IPv6 sockets
-	g_lpd6.sock_listen = create_receive_socket( &g_lpd6.mcast_addr, gconf->dht_ifname );
+	g_lpd6.sock_listen = create_receive_socket( &g_lpd6.mcast_addr, ifname );
 	g_lpd6.sock_send = create_send_socket( AF_INET6, ifname );
 
 	if( g_lpd4.sock_listen >= 0 && g_lpd4.sock_send >= 0 ) {
