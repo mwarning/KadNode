@@ -16,7 +16,7 @@
 #include "utils.h"
 
 
-// Try to create a DHT id from a sanitzed hex query
+// Try to create a DHT id from a sanitized hex query
 int hex_get_id( uint8_t id[], size_t len, const char query[] ) {
 	size_t query_len = strlen( query );
 	if( str_isHex( query, query_len ) ) {

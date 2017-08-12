@@ -139,7 +139,8 @@ This is a plain use of the DHT.
     Run in background.
 
   * `--query-tld` *domain*  
-    Top level domain used to filter queries to be resolved by KadNode. (Default: ".p2p")
+    Top level domain used to filter queries to be resolved by KadNode.  
+    Set to empty string to match all. (Default: ".p2p")
 
   * `--verbosity` *level*  
     Verbosity level: quiet, verbose or debug (Default: verbose).
