@@ -49,9 +49,7 @@ struct LPD_STATE g_lpd6 = {
 	.sock_send = -1, .sock_listen = -1
 };
 
-
-
-void handle_mcast( int rc, struct LPD_STATE* lpd) { //int sock_receive, int sock_send, const IP *lpd_addr ) {
+void handle_mcast( int rc, struct LPD_STATE* lpd) {
 	char buf[16];
 	socklen_t addrlen;
 	uint16_t port;
@@ -61,8 +59,8 @@ void handle_mcast( int rc, struct LPD_STATE* lpd) { //int sock_receive, int sock
 		// No peers known, send multicast
 		if( kad_count_nodes( 0 ) == 0 ) {
 			log_debug( "LPD: Try to send hello to %s", str_addr( &lpd->mcast_addr ) );
-			sprintf(buf, "DHT %s", gconf->dht_port );
-			sendto( lpd->sock_send, (void const*) buf, strlen(buf), 0, (struct sockaddr const*) &lpd->mcast_addr, sizeof(IP));
+			sprintf( buf, "DHT %s", gconf->dht_port );
+			sendto( lpd->sock_send, (void const*) buf, strlen(buf), 0, (struct sockaddr const*) &lpd->mcast_addr, sizeof(IP) );
 		}
 
 		// Cap number of received packets to 10 per minute
@@ -91,7 +89,7 @@ void handle_mcast( int rc, struct LPD_STATE* lpd) { //int sock_receive, int sock
 
 	buf[rc] = '\0';
 
-	if( sscanf(buf, "DHT %hu", &port) == 1 ) {
+	if( sscanf(buf, "DHT %hu", &port ) == 1 ) {
 		port_set( &addr, port );
 		log_debug( "LPD: Ping lonely peer at %s", str_addr( &addr ) );
 		kad_ping( &addr );
@@ -122,29 +120,29 @@ int create_send_socket( int af, const char ifname[] ) {
 	}
 
 	if(af == AF_INET) {
-		if( setsockopt(sock, IPPROTO_IP, IP_MULTICAST_TTL, (void const*)&scope, sizeof(scope)) != 0 ) {
+		if( setsockopt(sock, IPPROTO_IP, IP_MULTICAST_TTL, (void const*)&scope, sizeof(scope) ) != 0 ) {
 			goto fail;
 		}
 
 		in_addr_t iface = INADDR_ANY;
-		if( setsockopt (sock, IPPROTO_IP, IP_MULTICAST_IF, (char*)&iface, sizeof(iface)) != 0 ) {
+		if( setsockopt( sock, IPPROTO_IP, IP_MULTICAST_IF, (char*)&iface, sizeof(iface) ) != 0 ) {
 			goto fail;
 		}
 
-		if( setsockopt(sock, IPPROTO_IP, IP_MULTICAST_LOOP, (void const*)&opt_off, sizeof(opt_off)) != 0 ) {
+		if( setsockopt( sock, IPPROTO_IP, IP_MULTICAST_LOOP, (void const*)&opt_off, sizeof(opt_off) ) != 0 ) {
 			goto fail;
 		}
 	} else {
-		if( setsockopt(sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, (char*)&scope, sizeof(scope)) != 0) {
+		if( setsockopt( sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, (char*)&scope, sizeof(scope) ) != 0 ) {
 			goto fail;
 		}
 
 		unsigned int ifindex = ifname ? if_nametoindex( ifname ) : 0;
-		if(setsockopt (sock, IPPROTO_IPV6, IPV6_MULTICAST_IF, (char*)&ifindex, sizeof(ifindex)) != 0) { 
+		if( setsockopt( sock, IPPROTO_IPV6, IPV6_MULTICAST_IF, (char*)&ifindex, sizeof(ifindex) ) != 0 ) { 
 			goto fail;
 		}
 
-		if( setsockopt(sock, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, (void const*)&opt_off, sizeof(opt_off)) != 0) {
+		if( setsockopt( sock, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, (void const*)&opt_off, sizeof(opt_off) ) != 0 ) {
 			goto fail;
 		}
 	}
@@ -170,11 +168,11 @@ int create_receive_socket( const IP *addr, const char ifname[] ) {
 		goto fail;
 	}
 
-	if( setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (void const*) &opt_on, sizeof(opt_on)) != 0) {
+	if( setsockopt( sock, SOL_SOCKET, SO_REUSEADDR, (void const*) &opt_on, sizeof(opt_on) ) != 0 ) {
 		goto fail;
 	}
 
-	if( bind(sock, (struct sockaddr*)addr, sizeof(IP)) != 0) {
+	if( bind(sock, (struct sockaddr*)addr, sizeof(IP) ) != 0) {
 		goto fail;
 	}
 
@@ -185,11 +183,11 @@ int create_receive_socket( const IP *addr, const char ifname[] ) {
 		mcastReq.imr_multiaddr = ((IP4*) addr)->sin_addr;
 		mcastReq.imr_interface.s_addr = htonl(INADDR_ANY);
 
-		if( setsockopt(sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, (void const*)&mcastReq, sizeof(mcastReq)) != 0) {
+		if( setsockopt( sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, (void const*)&mcastReq, sizeof(mcastReq) ) != 0 ) {
 			goto fail;
 		}
 
-		if( setsockopt(sock, IPPROTO_IP, IP_MULTICAST_LOOP, (void const*)&opt_off, sizeof(opt_off)) != 0) {
+		if( setsockopt( sock, IPPROTO_IP, IP_MULTICAST_LOOP, (void const*)&opt_off, sizeof(opt_off) ) != 0 ) {
 			goto fail;
 		}
 	} else {
@@ -198,7 +196,7 @@ int create_receive_socket( const IP *addr, const char ifname[] ) {
 		memcpy( &mreq6.ipv6mr_multiaddr, &((IP6*) addr)->sin6_addr, 16 );
 		mreq6.ipv6mr_interface = ifname ? if_nametoindex( ifname ) : 0;
 
-		if( setsockopt(sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &mreq6, sizeof(mreq6)) < 0 ) {
+		if( setsockopt( sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &mreq6, sizeof(mreq6) ) < 0 ) {
 			goto fail;
 		}
 	}
@@ -215,31 +213,30 @@ fail:
 }
 
 void lpd_setup( void ) {
-	const char *ifname = gconf->dht_ifname;
-	const int af = gconf->af;
-
 	if( gconf->lpd_disable ) {
 		return;
 	}
 
-	if( ifname && (af == AF_UNSPEC || af == AF_INET) ) {
+	if( gconf->dht_ifname && (gconf->af == AF_UNSPEC || gconf->af == AF_INET) ) {
 		log_warn( "LPD: ifname setting not supported for IPv4" );
 	}
 
 	addr_parse( &g_lpd4.mcast_addr, LPD_ADDR4, LPD_PORT, AF_INET );
 	addr_parse( &g_lpd6.mcast_addr, LPD_ADDR6, LPD_PORT, AF_INET6 );
 
-	g_lpd4.sock_listen = create_receive_socket( &g_lpd4.mcast_addr, ifname );
+	// Setup IPv4 sockets
+	g_lpd4.sock_listen = create_receive_socket( &g_lpd4.mcast_addr, gconf->dht_ifname );
 	g_lpd4.sock_send = create_send_socket( AF_INET, ifname );
 
-	g_lpd6.sock_listen = create_receive_socket( &g_lpd6.mcast_addr, ifname );
+	// Setup IPv6 sockets
+	g_lpd6.sock_listen = create_receive_socket( &g_lpd6.mcast_addr, gconf->dht_ifname );
 	g_lpd6.sock_send = create_send_socket( AF_INET6, ifname );
 
 	if( g_lpd4.sock_listen >= 0 && g_lpd4.sock_send >= 0 ) {
 		net_add_handler( g_lpd4.sock_listen, &handle_mcast4 );
 	}
 
-	if( g_lpd6.sock_listen >= 0 && g_lpd6.sock_send >= 0) {
+	if( g_lpd6.sock_listen >= 0 && g_lpd6.sock_send >= 0 ) {
 		net_add_handler( g_lpd6.sock_listen, &handle_mcast6 );
 	}
 }
