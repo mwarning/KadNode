@@ -71,15 +71,12 @@ int net_set_nonblocking( int fd ) {
 int net_socket( const char name[], const char ifname[], const int protocol, const int af ) {
 	int sock;
 
-	if( protocol == IPPROTO_TCP ) {
-		sock = socket( af, SOCK_STREAM, IPPROTO_TCP );
-	} else if( protocol == IPPROTO_UDP ) {
-		sock = socket( af, SOCK_DGRAM, IPPROTO_UDP );
-	} else {
-		sock = -1;
+	// Disable IPv6 or IPv4
+	if( gconf->af != AF_UNSPEC && gconf->af != af ) {
+		return -1;
 	}
 
-	if( sock < 0 ) {
+	if( (sock = socket( af, (protocol == IPPROTO_TCP) ? SOCK_STREAM : SOCK_DGRAM, protocol ) ) < 0 ) {
 		log_err( "%s: Failed to create socket: %s", name, strerror( errno ) );
 		goto fail;
 	}
@@ -131,11 +128,6 @@ int net_bind(
 		log_err( "%s: Failed to parse IP address '%s' and port '%s'.",
 			name, addr, port
 		);
-		goto fail;
-	}
-
-	// Disable IPv6 or IPv4
-	if( gconf->af != AF_UNSPEC && gconf->af != sockaddr.ss_family ) {
 		goto fail;
 	}
 
