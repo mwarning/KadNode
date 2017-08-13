@@ -19,9 +19,6 @@
 #include "ext-lpd.h"
 
 
-// Set a socket non-blocking; defined in src/net.c
-int net_set_nonblocking( int fd );
-
 enum {
 	// Packets per minute to be handled
 	PACKET_LIMIT_MAX = 20,
@@ -38,18 +35,18 @@ struct LPD_STATE {
 };
 
 struct LPD_STATE g_lpd4 = {
-	.mcast_addr = {0}, .mcast_time = 0,
+	.mcast_addr = { 0 }, .mcast_time = 0,
 	.packet_limit = PACKET_LIMIT_MAX,
 	.sock_send = -1, .sock_listen = -1
 };
 
 struct LPD_STATE g_lpd6 = {
-	.mcast_addr = {0}, .mcast_time = 0,
+	.mcast_addr = { 0 }, .mcast_time = 0,
 	.packet_limit = PACKET_LIMIT_MAX,
 	.sock_send = -1, .sock_listen = -1
 };
 
-void handle_mcast( int rc, struct LPD_STATE* lpd) {
+void handle_mcast( int rc, struct LPD_STATE* lpd ) {
 	char buf[16];
 	socklen_t addrlen;
 	uint16_t port;
@@ -111,15 +108,11 @@ int create_send_socket( int af, const char ifname[] ) {
 	const int opt_off = 0;
 	int sock;
 
-	if( (sock = socket( af, SOCK_DGRAM, IPPROTO_IP ) ) < 0 ) {
+	if( (sock = net_socket( "LPD", ifname, IPPROTO_IP, af ) ) < 0 ) {
 		goto fail;
 	}
 
-	if( net_set_nonblocking( sock ) != 0 ) {
-		goto fail;
-	}
-
-	if(af == AF_INET) {
+	if( af == AF_INET ) {
 		if( setsockopt(sock, IPPROTO_IP, IP_MULTICAST_TTL, (void const*)&scope, sizeof(scope) ) != 0 ) {
 			goto fail;
 		}
@@ -150,7 +143,7 @@ int create_send_socket( int af, const char ifname[] ) {
 	return sock;
 
 fail:
-	close(sock);
+	close( sock );
 
 	log_warn( "LPD: Cannot create send %s socket: %s",  str_af( af ), strerror( errno ) );
 
@@ -158,25 +151,19 @@ fail:
 }
 
 int create_receive_socket( const IP *addr, const char ifname[] ) {
-	const int opt_on = 1;
 	const int opt_off = 0;
 	const int af = addr->ss_family;
+	int sock;
 
-	int sock = socket( addr->ss_family, SOCK_DGRAM, IPPROTO_IP );
-
-	if( net_set_nonblocking( sock ) != 0 ) {
+	if( (sock = net_socket( "LPD", ifname, IPPROTO_IP, af ) ) < 0 ) {
 		goto fail;
 	}
 
-	if( setsockopt( sock, SOL_SOCKET, SO_REUSEADDR, (void const*) &opt_on, sizeof(opt_on) ) != 0 ) {
+	if( bind( sock, (struct sockaddr*)addr, sizeof(IP) ) != 0) {
 		goto fail;
 	}
 
-	if( bind(sock, (struct sockaddr*)addr, sizeof(IP) ) != 0) {
-		goto fail;
-	}
-
-	if(af == AF_INET) {
+	if( af == AF_INET ) {
 		struct ip_mreq mcastReq;
 
 		memset( &mcastReq, 0, sizeof(mcastReq) );
