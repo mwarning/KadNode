@@ -21,8 +21,8 @@
 
 
 struct task_t {
-    int fd;
-    net_callback *callback;
+	int fd;
+	net_callback *callback;
 };
 
 static struct task_t g_tasks[16] = { { 0 } };
@@ -30,42 +30,42 @@ static int g_tasks_changed = 1;
 
 
 void net_add_handler( int fd, net_callback *callback ) {
-    int i;
+	int i;
 
-    for (i = 0; i < N_ELEMS(g_tasks); i++) {
-        struct task_t *task = &g_tasks[i];
-        if (task->callback == NULL) {
-            task->fd = fd;
-            task->callback = callback;
-            g_tasks_changed = 1;
-            return;
-        }
-    }
+	for (i = 0; i < N_ELEMS(g_tasks); i++) {
+		struct task_t *task = &g_tasks[i];
+		if (task->callback == NULL) {
+			task->fd = fd;
+			task->callback = callback;
+			g_tasks_changed = 1;
+			return;
+		}
+	}
 
-    log_err("NET: No more space for handlers.");
-    exit(1);
+	log_err("NET: No more space for handlers.");
+	exit(1);
 }
 
 void net_remove_handler( int fd, net_callback *callback ) {
-    int i;
+	int i;
 
-    for (i = 0; i < N_ELEMS(g_tasks); i++) {
-        struct task_t *task = &g_tasks[i];
-        if (task->fd == fd && task->callback == callback) {
-            task->fd = -1;
-            task->callback = NULL;
-            g_tasks_changed = 1;
-            return;
-        }
-    }
+	for (i = 0; i < N_ELEMS(g_tasks); i++) {
+		struct task_t *task = &g_tasks[i];
+		if (task->fd == fd && task->callback == callback) {
+			task->fd = -1;
+			task->callback = NULL;
+			g_tasks_changed = 1;
+			return;
+		}
+	}
 
-    log_err("NET: Handler not found to remove.");
-    exit(1);
+	log_err("NET: Handler not found to remove.");
+	exit(1);
 }
 
 // Set a socket non-blocking
 int net_set_nonblocking( int fd ) {
-    return fcntl( fd, F_SETFL, fcntl( fd, F_GETFL ) | O_NONBLOCK );
+	return fcntl( fd, F_SETFL, fcntl( fd, F_GETFL ) | O_NONBLOCK );
 }
 
 int net_socket( const char name[], const char ifname[], const int protocol, const int af ) {
@@ -170,67 +170,67 @@ fail:
 }
 
 void net_loop( void ) {
-    int i;
-    int rc;
-    fd_set fds_working;
-    fd_set fds;
-    int max_fd = -1;
-    struct timeval tv;
+	int i;
+	int rc;
+	fd_set fds_working;
+	fd_set fds;
+	int max_fd = -1;
+	struct timeval tv;
 
-    // Make sure we generate a new set
-    g_tasks_changed = 1;
+	// Make sure we generate a new set
+	g_tasks_changed = 1;
 
-    while( gconf->is_running ) {
-        // Wait one second for inconing traffic
-        tv.tv_sec = 1;
-        tv.tv_usec = 0;
+	while( gconf->is_running ) {
+		// Wait one second for inconing traffic
+		tv.tv_sec = 1;
+		tv.tv_usec = 0;
 
-        // Update clock
-        gconf->time_now = time( NULL );
+		// Update clock
+		gconf->time_now = time( NULL );
 
-        if( g_tasks_changed ) {
-            // Create new file descriptor set
-            FD_ZERO( &fds );
-            max_fd = -1;
+		if( g_tasks_changed ) {
+			// Create new file descriptor set
+			FD_ZERO( &fds );
+			max_fd = -1;
 
-            for( i = 0; i < N_ELEMS(g_tasks); ++i ) {
-                struct task_t *task = &g_tasks[i];
-                if( task->callback && task->fd >= 0) {
-                    if( task->fd > max_fd ) {
-                        max_fd = task->fd;
-                    }
-                    FD_SET( task->fd, &fds );
-                }
-            }
-            g_tasks_changed = 0;
-        }
+			for( i = 0; i < N_ELEMS(g_tasks); ++i ) {
+				struct task_t *task = &g_tasks[i];
+				if( task->callback && task->fd >= 0) {
+					if( task->fd > max_fd ) {
+						max_fd = task->fd;
+					}
+					FD_SET( task->fd, &fds );
+				}
+			}
+			g_tasks_changed = 0;
+		}
 
-        // Get a fresh copy
-        memcpy( &fds_working, &fds, sizeof(fd_set) );
+		// Get a fresh copy
+		memcpy( &fds_working, &fds, sizeof(fd_set) );
 
-        rc = select( max_fd + 1, &fds_working, NULL, NULL, &tv );
+		rc = select( max_fd + 1, &fds_working, NULL, NULL, &tv );
 
-        if( rc < 0 ) {
-            if( errno == EINTR ) {
-                continue;
-            } else {
-                printf( "NET: Error using select: %s", strerror( errno ) );
-                exit( 1 );
-            }
-        }
+		if( rc < 0 ) {
+			if( errno == EINTR ) {
+				continue;
+			} else {
+				printf( "NET: Error using select: %s", strerror( errno ) );
+				exit( 1 );
+			}
+		}
 
-        // Call all callbacks
-        for( i = 0; i < N_ELEMS(g_tasks); ++i ) {
-            struct task_t *task = &g_tasks[i];
-            if( task->callback ) {
-                if( task->fd >= 0 && FD_ISSET( task->fd, &fds_working ) ) {
-                    task->callback( rc, task->fd );
-                } else {
-                    task->callback( 0, task->fd );
-                }
-            }
-        }
-    }
+		// Call all callbacks
+		for( i = 0; i < N_ELEMS(g_tasks); ++i ) {
+			struct task_t *task = &g_tasks[i];
+			if( task->callback ) {
+				if( task->fd >= 0 && FD_ISSET( task->fd, &fds_working ) ) {
+					task->callback( rc, task->fd );
+				} else {
+					task->callback( 0, task->fd );
+				}
+			}
+		}
+	}
 }
 
 void net_free( void ) {
