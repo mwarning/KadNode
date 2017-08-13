@@ -69,6 +69,7 @@ int net_set_nonblocking( int fd ) {
 }
 
 int net_socket( const char name[], const char ifname[], const int protocol, const int af ) {
+	const int opt_on = 1;
 	int sock;
 
 	// Disable IPv6 or IPv4
@@ -98,8 +99,7 @@ int net_socket( const char name[], const char ifname[], const int protocol, cons
 	}
 #endif
 
-	const int optval = 1;
-	if( setsockopt( sock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval) ) < 0 ) {
+	if( setsockopt( sock, SOL_SOCKET, SO_REUSEADDR, &opt_on, sizeof(opt_on) ) < 0 ) {
 		log_err( "%s: Unable to set SO_REUSEADDR for %s: %s", name, ifname, strerror( errno ) );
 		goto fail;
 	}
