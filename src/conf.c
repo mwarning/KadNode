@@ -486,13 +486,18 @@ void conf_handle_option( const char opt[], const char val[] ) {
 				tls_server_add_sni( crt_file, key_file );
 			} else {
 				log_err( "Invalid value format: %s", val );
-				exit(1);
+				exit( 1 );
 			}
 			break;
 		}
 #endif
 		case oConfig:
+			if( gconf->configfile ) {
+				log_err( "Option only allowed one time: %s", opt );
+				exit( 1 );
+			}
 			conf_str( opt, &gconf->configfile, val );
+			conf_load_file( gconf->configfile );
 			break;
 		case oIpv4:
 		case oIpv6:
@@ -555,7 +560,7 @@ void conf_handle_option( const char opt[], const char val[] ) {
 			break;
 #endif
 		default:
-			log_err( "Unkown parameter: %s", opt );
+			log_err( "Unknown parameter: %s", opt );
 			exit(1);
 	}
 }
@@ -593,7 +598,7 @@ void conf_load_file( const char path[] ) {
 	}
 
 	while( fgets( line, sizeof(line), file ) != NULL ) {
-		nline++;
+		nline += 1;
 
 		// Cut off comments
 		last = strchr( line, '#' );
@@ -601,22 +606,24 @@ void conf_load_file( const char path[] ) {
 			*last = '\0';
 		}
 
-		ret = sscanf( line, " %31s %127s %3s", option, value, dummy );
+		if( line[0] != '\n' && line[0] != '\0' ) {
+			ret = sscanf( line, " %31s %127s %3s", option, value, dummy );
 
-		if( ret == 1 || ret == 2) {
-			// Prevent recursive inclusion
-			if( strcmp( option, "--config " ) == 0) {
+			if( ret == 1 || ret == 2) {
+				// Prevent recursive inclusion
+				if( strcmp( option, "--config " ) == 0 ) {
+					fclose( file );
+					log_err( "Option '--config' not allowed inside a configuration file, line %ld.", nline );
+					exit( 1 );
+				}
+
+				// --option value / --option
+				conf_append( option, (ret == 2) ? value : NULL );
+			} else {
 				fclose( file );
-				log_err( "Option '--config' not allowed inside a configuration file, line %ld.", nline );
+				log_err( "Invalid line in config file: %s (%d)", path, nline );
 				exit( 1 );
 			}
-
-			// --option value / --option
-			conf_append( option, (ret == 2) ? value : NULL );
-		} else if( line[0] != '\0' ) {
-			fclose( file );
-			log_err( "Invalid line in config file: %s (%d)", path, nline );
-			exit( 1 );
 		}
 	}
 
@@ -634,19 +641,17 @@ void conf_load_args( int argc, char **argv ) {
 	for( i = 1; i < g_argc; i++ ) {
 		const char *opt = g_argv[i];
 		const char *val = g_argv[i + 1];
+
 		if( val && val[0] != '-') {
 			// -x abc
 			conf_handle_option( opt, val );
-			i++;
+			i += 1;
 		} else {
 			// -x
 			conf_handle_option( opt, NULL );
 		}
 	}
 
-	if( gconf->configfile ) {
-		conf_load_file( gconf->configfile );
-	}
 
 	conf_check();
 }
