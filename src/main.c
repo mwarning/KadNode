@@ -159,7 +159,7 @@ int main( int argc, char **argv ) {
 
 		// Get kadnode.exe binary lcoation
 		if( GetModuleFileNameA( NULL, path, sizeof(path) ) && (p = strrchr( path, '\\' )) ) {
-			*(p + 1) = 0;
+			*(p + 1) = '\0';
 		} else {
 			log_err( "Cannot get location of KadNode binary." );
 			exit( 1 );

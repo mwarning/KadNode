@@ -86,7 +86,7 @@ int peerfile_import_peer( const char addr_str[] ) {
 	IP addr;
 	int rc;
 
-	if( (rc = addr_parse_full( &addr, addr_str, DHT_PORT, gconf->af )) == 0 ) {
+	if( (rc = addr_parse_full( &addr, addr_str, DHT_PORT, gconf->af ) ) == 0 ) {
 		if( kad_ping( &addr ) == 0 ) {
 			return 1;
 		} else {

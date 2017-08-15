@@ -122,7 +122,7 @@ int net_bind(
 	const int opt_on = 1;
 	socklen_t addrlen;
 	IP sockaddr;
-	int sock = -1;;
+	int sock = -1;
 
 	if( addr_parse( &sockaddr, addr, port, AF_UNSPEC ) != 0 ) {
 		log_err( "%s: Failed to parse IP address '%s' and port '%s'.",

@@ -113,7 +113,7 @@ int create_send_socket( int af, const char ifname[] ) {
 	}
 
 	if( af == AF_INET ) {
-		if( setsockopt(sock, IPPROTO_IP, IP_MULTICAST_TTL, (void const*)&scope, sizeof(scope) ) != 0 ) {
+		if( setsockopt( sock, IPPROTO_IP, IP_MULTICAST_TTL, (void const*)&scope, sizeof(scope) ) != 0 ) {
 			goto fail;
 		}
 
