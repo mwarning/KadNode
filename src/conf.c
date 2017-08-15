@@ -361,7 +361,7 @@ static struct option_t options[] = {
 #endif
 	{"--ifname", 1, oIfname},
 	{"--user", 1, oUser},
-	{"--daemon", 1, oDaemon},
+	{"--daemon", 0, oDaemon},
 	{"-h", 0, oHelp},
 	{"--help", 0, oHelp},
 	{"-v", 0, oVersion},
