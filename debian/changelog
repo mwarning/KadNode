@@ -1,7 +1,11 @@
 kadnode (2.0.0) UNRELEASED; urgency=medium
 
-  * rename previous authentication scheme to bob (uses libsodium)
-  * introduce new TLS based authentication scheme (uses mbedtls)
+  * refactor most code
+  * IPv4 and IPv6 works at the same time
+  * add a new TLS based authentication scheme (uses mbedtls)
+  * rename previous authentication scheme to bob (uses mbedtls)
+
+ -- mwarning <moritzwarning@web.de>  Tue, 14 Aug 2017 00:56:45 +0100
 
 kadnode (1.1.0) UNRELEASED; urgency=medium
 
