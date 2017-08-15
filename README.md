@@ -1,4 +1,4 @@
-## kadnode(1) - P2P name resolution daemon
+## kadnode(1) - P2P name resolver daemon
 
 ## SYNOPSIS
 
@@ -8,10 +8,10 @@
 
 ## DESCRIPTION
 
-**KadNode** is a small P2P DNS resolution daemon based on a Distributed Hash Table (DHT).
+**KadNode** is a small P2P DNS resolver based on a Distributed Hash Table (DHT).
 KadNode can intercept and resolve DNS request in the systems background.
 Every instance can also announce any domain like e.g. myname.p2p. People on others
-devices running KadNode can then enter myname.p2p into their browsers or console in order
+devices running KadNode can then enter myname.p2p into their browsers or other programs in order
 to reach the announcing host. To avoid name clashes, cryptographic public/private key pairs can be used.
 This makes it possible to have a personal and decentralized DynDNS service.
 The [DHT](https://github.com/jech/dht) is identical to the one used in the Transmission Bittorrent client and works'on the Internet as well as on local networks.
