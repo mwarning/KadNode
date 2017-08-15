@@ -1,4 +1,4 @@
-#! /bin/sh
+#!/bin/sh
 ### BEGIN INIT INFO
 # Provides:          kadnode
 # Required-Start:    $syslog $network $named
@@ -13,7 +13,7 @@
 
 CONFIG_FILE="/etc/kadnode/kadnode.conf"
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
-DESC="P2P DNS service"
+DESC="P2P DNS resolver"
 NAME=kadnode
 PIDFILE=/var/run/$NAME.pid
 DAEMON=/usr/bin/$NAME
