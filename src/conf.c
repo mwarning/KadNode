@@ -37,17 +37,11 @@ static char **g_argv = NULL;
 
 
 const char *kadnode_version_str = "KadNode v"MAIN_VERSION" ("
-#ifdef LPD
-" lpd"
-#endif
 #ifdef BOB
 " bob"
 #endif
 #ifdef CMD
 " cmd"
-#endif
-#ifdef NSS
-" nss"
 #endif
 #ifdef DEBUG
 " debug"
@@ -55,14 +49,20 @@ const char *kadnode_version_str = "KadNode v"MAIN_VERSION" ("
 #ifdef DNS
 " dns"
 #endif
+#ifdef LPD
+" lpd"
+#endif
 #ifdef FWD_NATPMP
 " natpmp"
 #endif
-#ifdef FWD_UPNP
-" upnp"
+#ifdef NSS
+" nss"
 #endif
 #ifdef TLS
 " tls"
+#endif
+#ifdef FWD_UPNP
+" upnp"
 #endif
 " )";
 
