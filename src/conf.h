@@ -53,7 +53,7 @@ struct gconf_t {
 	int af;
 
 	// DHT port number
-	char* dht_port;
+	int dht_port;
 
 	// DHT interface
 	char *dht_ifname;
@@ -77,18 +77,18 @@ struct gconf_t {
 #endif
 
 #ifdef CMD
-	char *cmd_port;
+	int cmd_port;
 	int cmd_disable_stdin;
 #endif
 
 #ifdef DNS
-	char *dns_port;
+	int dns_port;
 	int dns_proxy_enable;
 	char *dns_proxy_server;
 #endif
 
 #ifdef NSS
-	char *nss_port;
+	int nss_port;
 #endif
 
 #ifdef PTHREAD

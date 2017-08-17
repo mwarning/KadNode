@@ -716,7 +716,7 @@ void dns_handler( int rc, int sock ) {
 }
 
 void dns_setup( void ) {
-	if( str_isZero( gconf->dns_port ) ) {
+	if( gconf->dns_port ) {
 		return;
 	}
 

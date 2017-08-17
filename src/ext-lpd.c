@@ -56,7 +56,7 @@ void handle_mcast( int rc, struct LPD_STATE* lpd ) {
 		// No peers known, send multicast
 		if( kad_count_nodes( 0 ) == 0 ) {
 			log_debug( "LPD: Try to send hello to %s", str_addr( &lpd->mcast_addr ) );
-			sprintf( buf, "DHT %s", gconf->dht_port );
+			sprintf( buf, "DHT %hu", gconf->dht_port );
 			sendto( lpd->sock_send, (void const*) buf, strlen(buf), 0, (struct sockaddr const*) &lpd->mcast_addr, sizeof(IP) );
 		}
 
@@ -94,12 +94,12 @@ void handle_mcast( int rc, struct LPD_STATE* lpd ) {
 }
 
 void handle_mcast4( int rc, int sock ) {
-	assert(sock == g_lpd4.sock_listen);
+	assert( sock == g_lpd4.sock_listen );
 	handle_mcast( rc, &g_lpd4 );
 }
 
 void handle_mcast6( int rc, int sock ) {
-	assert(sock == g_lpd6.sock_listen);
+	assert( sock == g_lpd6.sock_listen );
 	handle_mcast( rc, &g_lpd6 );
 }
 
@@ -210,8 +210,8 @@ void lpd_setup( void ) {
 		log_warn( "LPD: ifname setting not supported for IPv4" );
 	}
 
-	addr_parse( &g_lpd4.mcast_addr, LPD_ADDR4, LPD_PORT, AF_INET );
-	addr_parse( &g_lpd6.mcast_addr, LPD_ADDR6, LPD_PORT, AF_INET6 );
+	addr_parse( &g_lpd4.mcast_addr, LPD_ADDR4, STR(LPD_PORT), AF_INET );
+	addr_parse( &g_lpd6.mcast_addr, LPD_ADDR6, STR(LPD_PORT), AF_INET6 );
 
 	// Setup IPv4 sockets
 	g_lpd4.sock_listen = create_receive_socket( &g_lpd4.mcast_addr, ifname );

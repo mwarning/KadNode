@@ -18,7 +18,7 @@ int net_socket(
 int net_bind(
 	const char name[],
 	const char addr[],
-	const char port[],
+	const int port,
 	const char ifname[],
 	const int protocol
 );

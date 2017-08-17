@@ -115,7 +115,7 @@ fail:
 int net_bind(
 	const char name[],
 	const char addr[],
-	const char port[],
+	const int port,
 	const char ifname[],
 	const int protocol
 ) {
@@ -124,12 +124,14 @@ int net_bind(
 	IP sockaddr;
 	int sock = -1;
 
-	if( addr_parse( &sockaddr, addr, port, AF_UNSPEC ) != 0 ) {
-		log_err( "%s: Failed to parse IP address '%s' and port '%s'.",
-			name, addr, port
+	if( addr_parse( &sockaddr, addr, "0", AF_UNSPEC ) != 0 ) {
+		log_err( "%s: Failed to parse IP address '%s'",
+			name, addr
 		);
 		goto fail;
 	}
+
+	port_set( &sockaddr, port );
 
 	if( (sock = net_socket( name, ifname, protocol, sockaddr.ss_family )) < 0 ) {
 		goto fail;

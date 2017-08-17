@@ -209,7 +209,7 @@ static void bob_send_challenge( int sock, const struct bob_resource *resource ) 
 	// Append challenge bytes
 	memcpy( buf + 3 + ECPARAMS_SIZE, resource->challenge, CHALLENGE_BIN_LENGTH );
 
-	log_debug( "Send challenge to %s: %s", str_addr(&resource->addr), bytes_to_hex( hexbuf, buf, sizeof(buf) ) );
+	log_debug( "Send challenge to %s: %s", str_addr( &resource->addr ), bytes_to_hex( hexbuf, buf, sizeof(buf) ) );
 
 	sendto( sock, buf, sizeof(buf), 0, (struct sockaddr*) &resource->addr, sizeof(IP) );
 }
@@ -561,7 +561,7 @@ void bob_setup( void ) {
 	while( key ) {
 		// Start announcing public key for the entire runtime
 		hkey = get_pkey_hex( &key->ctx_sign );
-		announces_add( hkey, atoi( gconf->dht_port ), LONG_MAX );
+		announces_add( hkey, gconf->dht_port, LONG_MAX );
 		key = key->next;
 	}
 }

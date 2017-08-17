@@ -78,7 +78,7 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 "				This option may occur multiple times.\n\n"
 " --user <user>			Change the UUID after start.\n\n"
 " --port	<port>			Bind DHT to this port.\n"
-"				Default: "DHT_PORT"\n\n"
+"				Default: "STR(DHT_PORT)"\n\n"
 " --config <file>		Provide a configuration file with one command line\n"
 "				option on each line. Comments start after '#'.\n\n"
 " --ifname <interface>		Bind to this interface.\n"
@@ -103,17 +103,17 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 #ifdef CMD
 " --cmd-disable-stdin		Disable the local control interface.\n\n"
 " --cmd-port <port>		Bind the remote control interface to this local port.\n"
-"				Default: "CMD_PORT"\n\n"
+"				Default: "STR(CMD_PORT)"\n\n"
 #endif
 #ifdef DNS
 " --dns-port <port>		Bind the DNS server interface to this local port.\n"
-"				Default: "DNS_PORT"\n\n"
+"				Default: "STR(DNS_PORT)"\n\n"
 " --dns-proxy-enable		Enable DNS proxy mode. Reads /etc/resolv.conf by default.\n\n"
 " --dns-proxy-server <ip-addr>	Use IP address of an external DNS server instead of resolv.conf.\n\n"
 #endif
 #ifdef NSS
 " --nss-port <port>		Bind the Network Service Switch to this local port.\n"
-"				Default: "NSS_PORT"\n\n"
+"				Default: "STR(NSS_PORT)"\n\n"
 #endif
 #ifdef FWD
 " --fwd-disable			Disable UPnP/NAT-PMP to forward router ports.\n\n"
@@ -135,16 +135,26 @@ const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
 
 
 void conf_init( void ) {
-	gconf = (struct gconf_t *) calloc( 1, sizeof(struct gconf_t) );
-
-	gconf->af = AF_UNSPEC;
-	gconf->is_running = 1;
-
-#ifdef DEBUG
-	gconf->verbosity = VERBOSITY_DEBUG;
-#else
-	gconf->verbosity = VERBOSITY_VERBOSE;
+	gconf = (struct gconf_t*) calloc( 1, sizeof(struct gconf_t) );
+	*gconf = ((struct gconf_t) {
+		.dht_port = -1,
+		.af = AF_UNSPEC,
+		.is_running = 1,
+#ifdef CMD
+		.cmd_port = -1,
 #endif
+#ifdef DNS
+		.dns_port = -1,
+#endif
+#ifdef NSS
+		.nss_port = -1,
+#endif
+#ifdef DEBUG
+		.verbosity = VERBOSITY_DEBUG
+#else
+		.verbosity = VERBOSITY_VERBOSE
+#endif
+	});
 }
 
 // Set default if setting was not set and validate settings
@@ -158,51 +168,25 @@ void conf_check( void ) {
 		gconf->query_tld = strdup( QUERY_TLD_DEFAULT );
 	}
 
-	if( gconf->dht_port == NULL ) {
-		gconf->dht_port = strdup( DHT_PORT );
+	if( gconf->dht_port < 0 ) {
+		gconf->dht_port = DHT_PORT;
 	}
 
 #ifdef CMD
-	if( gconf->cmd_port == NULL )  {
-		gconf->cmd_port = strdup( CMD_PORT );
+	if( gconf->cmd_port < 0 ) {
+		gconf->cmd_port = CMD_PORT;
 	}
 #endif
 
 #ifdef DNS
-	if( gconf->dns_port == NULL ) {
-		gconf->dns_port = strdup( DNS_PORT );
+	if( gconf->dns_port < 0 ) {
+		gconf->dns_port = DNS_PORT;
 	}
 #endif
 
 #ifdef NSS
-	if( gconf->nss_port == NULL ) {
-		gconf->nss_port = strdup( NSS_PORT );
-	}
-#endif
-
-	if( port_parse( gconf->dht_port, -1 ) < 1 ) {
-		log_err( "Invalid DHT port: %s", gconf->dht_port );
-		exit( 1 );
-	}
-
-#ifdef CMD
-	if( port_parse( gconf->cmd_port, -1 ) < 0 ) {
-		log_err( "Invalid CMD port: %s", gconf->cmd_port );
-		exit( 1 );
-	}
-#endif
-
-#ifdef DNS
-	if( port_parse( gconf->dns_port, -1 ) < 0 ) {
-		log_err( "Invalid DNS port: %s", gconf->dns_port );
-		exit( 1 );
-	}
-#endif
-
-#ifdef NSS
-	if( port_parse( gconf->nss_port, -1 ) < 0 ) {
-		log_err( "Invalid NSS port: %s", gconf->nss_port );
-		exit( 1 );
+	if( gconf->nss_port < 0 ) {
+		gconf->nss_port = NSS_PORT;
 	}
 #endif
 
@@ -253,19 +237,11 @@ void conf_free( void ) {
 	free( gconf->user );
 	free( gconf->pidfile );
 	free( gconf->peerfile );
-	free( gconf->dht_port );
 	free( gconf->dht_ifname );
 	free( gconf->configfile );
 
-#ifdef CMD
-	free( gconf->cmd_port );
-#endif
 #ifdef DNS
-	free( gconf->dns_port );
 	free( gconf->dns_proxy_server );
-#endif
-#ifdef NSS
-	free( gconf->nss_port );
 #endif
 
 	free( gconf );
@@ -383,11 +359,27 @@ const struct option_t *find_option(const char name[]) {
 // Set a string once - error when already set
 void conf_str( const char opt[], char *dst[], const char src[] ) {
 	if( *dst != NULL ) {
-		log_err( "Option was already set: %s", opt );
+		log_err( "Option was already set for %s: %s", opt, src );
 		exit( 1 );
 	}
 
 	*dst = strdup( src );
+}
+
+void conf_port( const char opt[], int *dst, const char src[] ) {
+	int n = port_parse( src, -1 );
+
+	if( n < 0 ) {
+		log_err( "Invalid port for %s: %s", opt, src );
+		exit( 1 );
+	}
+
+	if( *dst < 0 ) {
+		log_err( "Option was already set for %s: %s", opt, src );
+		exit( 1 );
+	}
+
+	*dst = n;
 }
 
 void conf_handle_option( const char opt[], const char val[] ) {
@@ -419,7 +411,7 @@ void conf_handle_option( const char opt[], const char val[] ) {
 			}
 
 			if( rc < 0 ) {
-				exit ( 1 );
+				exit( 1 );
 			}
 			break;
 		}
@@ -452,12 +444,12 @@ void conf_handle_option( const char opt[], const char val[] ) {
 			gconf->cmd_disable_stdin = 1;
 			break;
 		case oCmdPort:
-			conf_str( opt, &gconf->cmd_port, val );
+			conf_port( opt, &gconf->cmd_port, val );
 			break;
 #endif
 #ifdef DNS
 		case oDnsPort:
-			conf_str( opt, &gconf->dns_port, val );
+			conf_port( opt, &gconf->dns_port, val );
 			break;
 		case oDnsProxyEnable:
 			gconf->dns_proxy_enable = 1;
@@ -468,7 +460,7 @@ void conf_handle_option( const char opt[], const char val[] ) {
 #endif
 #ifdef NSS
 		case oNssPort:
-			conf_str( opt, &gconf->nss_port, val );
+			conf_port( opt, &gconf->nss_port, val );
 			break;
 #endif
 #ifdef TLS
@@ -509,7 +501,7 @@ void conf_handle_option( const char opt[], const char val[] ) {
 			gconf->af = (option->code == oIpv6) ? AF_INET6 : AF_INET;
 			break;
 		case oPort:
-			conf_str( opt, &gconf->dht_port, val );
+			conf_port( opt, &gconf->dht_port, val );
 			break;
 #ifdef LPD
 		case oLpdDisable:
@@ -561,7 +553,7 @@ void conf_handle_option( const char opt[], const char val[] ) {
 #endif
 		default:
 			log_err( "Unknown parameter: %s", opt );
-			exit(1);
+			exit( 1 );
 	}
 }
 
@@ -606,24 +598,26 @@ void conf_load_file( const char path[] ) {
 			*last = '\0';
 		}
 
-		if( line[0] != '\n' && line[0] != '\0' ) {
-			ret = sscanf( line, " %31s %127s %3s", option, value, dummy );
+		if( line[0] == '\n' || line[0] == '\0' ) {
+			continue;
+		}
 
-			if( ret == 1 || ret == 2) {
-				// Prevent recursive inclusion
-				if( strcmp( option, "--config " ) == 0 ) {
-					fclose( file );
-					log_err( "Option '--config' not allowed inside a configuration file, line %ld.", nline );
-					exit( 1 );
-				}
+		ret = sscanf( line, " %31s %127s %3s", option, value, dummy );
 
-				// --option value / --option
-				conf_append( option, (ret == 2) ? value : NULL );
-			} else {
+		if( ret == 1 || ret == 2 ) {
+			// Prevent recursive inclusion
+			if( strcmp( option, "--config " ) == 0 ) {
 				fclose( file );
-				log_err( "Invalid line in config file: %s (%d)", path, nline );
+				log_err( "Option '--config' not allowed inside a configuration file, line %ld.", nline );
 				exit( 1 );
 			}
+
+			// --option value / --option
+			conf_append( option, (ret == 2) ? value : NULL );
+		} else {
+			fclose( file );
+			log_err( "Invalid line in config file: %s (%d)", path, nline );
+			exit( 1 );
 		}
 	}
 
@@ -642,7 +636,7 @@ void conf_load_args( int argc, char **argv ) {
 		const char *opt = g_argv[i];
 		const char *val = g_argv[i + 1];
 
-		if( val && val[0] != '-') {
+		if( val && val[0] != '-' ) {
 			// -x abc
 			conf_handle_option( opt, val );
 			i += 1;

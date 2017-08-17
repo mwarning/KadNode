@@ -84,7 +84,7 @@ int cmd_ping( struct reply_t *r, const char *addr_str) {
 	int rc;
 
 	// If the address contains no port - use the default port
-	if( (rc = addr_parse_full( &addr, addr_str, DHT_PORT, gconf->af )) == 0 ) {
+	if( (rc = addr_parse_full( &addr, addr_str, STR(DHT_PORT), gconf->af )) == 0 ) {
 		if( kad_ping( &addr ) == 0 ) {
 			r_printf( r, "Send ping to: %s\n", str_addr( &addr ) );
 			return 0;
@@ -332,7 +332,7 @@ void cmd_setup( void ) {
 	int sock4;
 	int sock6;
 
-	if( str_isZero( gconf->cmd_port ) ) {
+	if( gconf->cmd_port == 0 ) {
 		return;
 	}
 

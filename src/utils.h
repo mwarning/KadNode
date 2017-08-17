@@ -11,6 +11,9 @@
 #define MAX(x, y) ((x) >= (y) ? (x) : (y))
 #define MIN(x, y) ((x) <= (y) ? (x) : (y))
 
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
+
 // IPv6 address length including port, e.g. [::1]:12345
 #define FULL_ADDSTRLEN (INET6_ADDRSTRLEN + 8)
 
@@ -35,11 +38,8 @@ char *bytes_to_hex( char hex[], const uint8_t bin[], size_t length );
 
 int id_equal( const uint8_t id1[], const uint8_t id2[] );
 
-
 int str_isHex( const char str[], size_t size );
 int str_isValidHostname( const char hostname[] );
-int str_isZero( const char str[] );
-//void str_toLowercase( char str[] );
 
 const char *str_af( int af );
 const char *str_id( const uint8_t id[] );

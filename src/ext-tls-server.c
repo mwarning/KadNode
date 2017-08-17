@@ -299,7 +299,7 @@ void tls_announce_all_cnames( void ) {
 	cur = g_sni_entries;
 	while( cur ) {
 		if( query_sanitize( name, sizeof(name), cur->name ) == 0 ) {
-			kad_announce( name, atoi( gconf->dht_port ), LONG_MAX );
+			kad_announce( name, gconf->dht_port, LONG_MAX );
 		}
 		cur = cur->next;
 	}
