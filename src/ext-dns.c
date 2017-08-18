@@ -513,6 +513,7 @@ static int dns_setup_msg( struct Message *msg, IP addrs[], size_t addrs_num, con
 	return (c == 0) ? -1 : 1;
 }
 
+#ifdef DEBUG
 // Get a small string representation of the query type
 static const char* qtype_str( int qType ) {
 	switch( qType ) {
@@ -528,6 +529,7 @@ static const char* qtype_str( int qType ) {
 			return "???";
 	}
 }
+#endif
 
 // Read DNS proxy server from /etc/resolv.conf
 static void proxy_read_resolv( IP *dst, const char path[] ) {
@@ -723,7 +725,7 @@ void dns_setup( void ) {
 	// Initialize g_proxy_addr
 	if( gconf->dns_proxy_enable && gconf->dns_proxy_server ) {
 		if( addr_parse( &g_proxy_addr, gconf->dns_proxy_server, "53", AF_UNSPEC ) != 0 ) {
-			log_err( "DNS: Failed to parse IP address '%s'.", gconf->dns_proxy_server );
+			log_err( "DNS: Failed to parse IP address: %s", gconf->dns_proxy_server );
 			exit( 1 );
 		}
 	}

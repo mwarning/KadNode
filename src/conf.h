@@ -12,7 +12,6 @@ void conf_init( void );
 void conf_load_args( int argc, char **argv );
 void conf_check( void );
 void conf_info( void );
-void conf_reload( void );
 void conf_free( void );
 
 

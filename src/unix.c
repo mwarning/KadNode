@@ -61,7 +61,7 @@ void unix_fork( void ) {
 	// Become session leader
 	sid = setsid();
 	if( sid < 0 ) {
-		exit( 1);
+		exit( 1 );
 	}
 
 	// Clear out the file mode creation mask
