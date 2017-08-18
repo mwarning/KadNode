@@ -46,17 +46,49 @@
 #endif
 
 
+void main_setup()
+{
+	// Setup port-forwarding
+#ifdef FWD
+	fwd_setup();
+#endif
+
+	// Setup the Kademlia DHT
+	kad_setup();
+
+	// Setup handler to announces
+	announces_setup();
+
+	// Setup handler to expire results
+	searches_setup();
+
+	// Setup import of peerfile
+	peerfile_setup();
+
+	// Setup extensions
+#ifdef LPD
+	lpd_setup();
+#endif
+#ifdef BOB
+	bob_setup();
+#endif
+#ifdef DNS
+	dns_setup();
+#endif
+#ifdef NSS
+	nss_setup();
+#endif
+#ifdef TLS
+	tls_client_setup();
+	tls_server_setup();
+#endif
+#ifdef CMD
+	cmd_setup();
+#endif
+}
+
 // Cleanup resources on any non crash program exit
-void main_cleanup( void ) {
-	static volatile int clean_in_progress = 0;
-
-	// Prevent recursive calls
-	if( clean_in_progress ) {
-		return;
-	} else {
-		clean_in_progress = 1;
-	}
-
+void main_free( void ) {
 #ifdef CMD
 	cmd_free();
 #endif
@@ -96,51 +128,18 @@ void main_cleanup( void ) {
 
 int main_start( void ) {
 
-	atexit( main_cleanup );
+	// Set missing settings with defaults
+	conf_check();
 
-	// Setup port-forwarding
-#ifdef FWD
-	fwd_setup();
-#endif
-
-	// Setup the Kademlia DHT
-	kad_setup();
-
-	// Setup handler to announces
-	announces_setup();
-
-	// Setup handler to expire results
-	searches_setup();
-
-	// Setup import of peerfile
-	peerfile_setup();
-
-	// Setup extensions
-#ifdef LPD
-	lpd_setup();
-#endif
-#ifdef BOB
-	bob_setup();
-#endif
-#ifdef DNS
-	dns_setup();
-#endif
-#ifdef NSS
-	nss_setup();
-#endif
-#ifdef TLS
-	tls_client_setup();
-	tls_server_setup();
-#endif
-#ifdef CMD
-	cmd_setup();
-#endif
+	main_setup();
 
 	// Loop over all sockets and file descriptors
 	net_loop();
 
 	// Export peers if a file is provided
 	peerfile_export();
+
+	main_free();
 
 	return 0;
 }
@@ -186,7 +185,7 @@ int main( int argc, char **argv ) {
 
 		// Change working directory to C:\ directory or disk equivalent
 		if( GetModuleFileNameA( NULL, path, sizeof(path) ) && (p = strchr( path, '\\' )) ) {
-			*(p+1) = 0;
+			*(p + 1) = 0;
 			SetCurrentDirectoryA( path );
 		}
 

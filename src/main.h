@@ -27,4 +27,8 @@ typedef struct sockaddr_in IP4;
 typedef struct sockaddr_in6 IP6;
 
 
+void main_setup( void );
+void main_free( void );
+
+
 #endif // _MAIN_H_
