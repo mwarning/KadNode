@@ -4,7 +4,7 @@
 
 
 // Add Certifiacte Authorities (CAs)
-void tls_client_add_ca( const char ca_path[] );
+int tls_client_add_ca( const char ca_path[] );
 
 // Decide if the query is meant to be authorized via an CA
 int tls_client_get_id( uint8_t id[], size_t len, const char query[] );

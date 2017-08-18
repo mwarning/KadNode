@@ -357,47 +357,49 @@ static const struct option_t *find_option( const char name[] ) {
 }
 
 // Set a string once - error when already set
-static void conf_str( const char opt[], char *dst[], const char src[] ) {
+static int conf_str( const char opt[], char *dst[], const char src[] ) {
 	if( *dst != NULL ) {
-		log_err( "Option was already set for %s: %s", opt, src );
-		exit( 1 );
+		log_err( "Value was already set for %s: %s", opt, src );
+		return 1;
 	}
 
 	*dst = strdup( src );
+	return 0;
 }
 
-static void conf_port( const char opt[], int *dst, const char src[] ) {
+static int conf_port( const char opt[], int *dst, const char src[] ) {
 	int n = port_parse( src, -1 );
 
 	if( n < 0 ) {
 		log_err( "Invalid port for %s: %s", opt, src );
-		exit( 1 );
+		return 1;
 	}
 
-	if( *dst < 0 ) {
-		log_err( "Option was already set for %s: %s", opt, src );
-		exit( 1 );
+	if( *dst >= 0 ) {
+		log_err( "Value was already set for %s: %s", opt, src );
+		return 1;
 	}
 
 	*dst = n;
+	return 0;
 }
 
 // Forward declaration
-static void conf_load_file( const char path[] );
+static int conf_load_file( const char path[] );
 
-static void conf_handle_option( const char opt[], const char val[] ) {
+static int conf_handle_option( const char opt[], const char val[] ) {
 	const struct option_t *option;
 
 	option = find_option( opt );
 
 	if( option->num_args == 1 && val == NULL ) {
 		log_err( "Argument expected for option: %s", opt );
-		exit( 1 );
+		return 1;
 	}
 
 	if( option->num_args == 0 && val != NULL ) {
 		log_err( "No argument expected for option: %s", opt );
-		exit( 1 );
+		return 1;
 	}
 
 	switch( option->code ) {
@@ -413,23 +415,16 @@ static void conf_handle_option( const char opt[], const char val[] ) {
 				log_err( "Invalid announcement: %s", val );
 			}
 
-			if( rc < 0 ) {
-				exit( 1 );
-			}
-			break;
+			return (rc < 0);
 		}
 		case oQueryTld:
-			conf_str( opt, &gconf->query_tld, val );
-			break;
+			return conf_str( opt, &gconf->query_tld, val );
 		case oPidFile:
-			conf_str( opt, &gconf->pidfile, val );
-			break;
+			return conf_str( opt, &gconf->pidfile, val );
 		case oPeerFile:
-			conf_str( opt, &gconf->peerfile, val );
-			break;
+			return conf_str( opt, &gconf->peerfile, val );
 		case oPeer:
-			peerfile_add_peer( val );
-			break;
+			return peerfile_add_peer( val );
 		case oVerbosity:
 			if( strcmp( val, "quiet" ) == 0 ) {
 				gconf->verbosity = VERBOSITY_QUIET;
@@ -439,38 +434,33 @@ static void conf_handle_option( const char opt[], const char val[] ) {
 				gconf->verbosity = VERBOSITY_DEBUG;
 			} else {
 				log_err( "Invalid argument for %s", opt );
-				exit( 1 );
+				return 1;
 			}
-			break;
+			return 0;
 #ifdef CMD
 		case oCmdDisableStdin:
 			gconf->cmd_disable_stdin = 1;
-			break;
+			return 0;
 		case oCmdPort:
-			conf_port( opt, &gconf->cmd_port, val );
-			break;
+			return conf_port( opt, &gconf->cmd_port, val );
 #endif
 #ifdef DNS
 		case oDnsPort:
-			conf_port( opt, &gconf->dns_port, val );
-			break;
+			return conf_port( opt, &gconf->dns_port, val );
 		case oDnsProxyEnable:
 			gconf->dns_proxy_enable = 1;
-			break;
+			return 0;
 		case oDnsProxyServer:
-			conf_str( opt, &gconf->dns_proxy_server, val );
-			break;
+			return conf_str( opt, &gconf->dns_proxy_server, val );
 #endif
 #ifdef NSS
 		case oNssPort:
-			conf_port( opt, &gconf->nss_port, val );
-			break;
+			return conf_port( opt, &gconf->nss_port, val );
 #endif
 #ifdef TLS
 		case oTlsClientCert:
 			// Add Certificate Authority (CA) entries for the TLS client
-			tls_client_add_ca( val );
-			break;
+			return tls_client_add_ca( val );
 		case oTlsServerCert:
 		{
 			// Add SNI entries for the TLS server (e.g. my.cert,my.key)
@@ -478,85 +468,75 @@ static void conf_handle_option( const char opt[], const char val[] ) {
 			char key_file[128];
 
 			if( sscanf( val, "%127[^,],%127[^,]", crt_file, key_file ) == 2 ) {
-				tls_server_add_sni( crt_file, key_file );
+				return tls_server_add_sni( crt_file, key_file );
 			} else {
 				log_err( "Invalid value format: %s", val );
-				exit( 1 );
+				return 1;
 			}
-			break;
 		}
 #endif
 		case oConfig:
-			if( gconf->configfile ) {
-				log_err( "Option only allowed one time: %s", opt );
-				exit( 1 );
+		{
+			int rc = conf_str( opt, &gconf->configfile, val );
+			if( rc != 0 ) {
+				return 0;
 			}
-			conf_str( opt, &gconf->configfile, val );
-			conf_load_file( gconf->configfile );
-			break;
+			return conf_load_file( gconf->configfile );
+		}
 		case oIpv4:
 		case oIpv6:
 			if( gconf->af != AF_UNSPEC ) {
 				log_err( "IPv4 or IPv6 mode already set: %s", opt );
-				exit( 1 );
+				return 1;
 			}
 
 			gconf->af = (option->code == oIpv6) ? AF_INET6 : AF_INET;
-			break;
+			return 0;
 		case oPort:
-			conf_port( opt, &gconf->dht_port, val );
-			break;
+			return conf_port( opt, &gconf->dht_port, val );
 #ifdef LPD
 		case oLpdDisable:
 			gconf->lpd_disable = 1;
-			break;
+			return 0;
 #endif
 #ifdef FWD
 		case oFwdDisable:
 			gconf->fwd_disable = 1;
-			break;
+			return 0;
 #endif
 #ifdef __CYGWIN__
 		case oServiceInstall:
 			windows_service_install();
-			exit(0);
-			break;
+			exit( 0 );
 		case oServiceRemove:
 			windows_service_remove();
-			exit(0);
-			break;
+			exit( 0 );
 		case oServiceStart:
 			gconf->service_start = 1;
-			break;
+			return 0;
 #endif
 		case oIfname:
-			conf_str( opt, &gconf->dht_ifname, val );
-			break;
+			return conf_str( opt, &gconf->dht_ifname, val );
 		case oUser:
-			conf_str( opt, &gconf->user, val );
-			break;
+			return conf_str( opt, &gconf->user, val );
 		case oDaemon:
 			gconf->is_daemon = 1;
-			break;
+			return 0;
 		case oHelp:
 			printf( "%s\n", kadnode_usage_str );
 			exit( 0 );
-			break;
 		case oVersion:
 			printf( "%s\n", kadnode_version_str );
 			exit( 0 );
-			break;
 #ifdef BOB
 		case oBobCreateKey:
 			exit( bob_create_key( val ) < 0 );
-			break;
 		case oBobLoadKey:
-			bob_load_key( val );
-			break;
+			return bob_load_key( val );
 #endif
 		default:
 			log_err( "Unknown parameter: %s", opt );
-			exit( 1 );
+			return 1;
 	}
 }
 
@@ -569,7 +549,7 @@ static void conf_append( const char opt[], const char val[] ) {
 	g_argc += 2;
 }
 
-static void conf_load_file( const char path[] ) {
+static int conf_load_file( const char path[] ) {
 	char line[256];
 	char option[32];
 	char value[128];
@@ -582,14 +562,14 @@ static void conf_load_file( const char path[] ) {
 
 	if( stat( path, &s ) == 0 && !(s.st_mode & S_IFREG) ) {
 		log_err( "File expected: %s", path );
-		exit( 1 );
+		return 1;
 	}
 
 	nline = 0;
 	file = fopen( path, "r" );
 	if( file == NULL ) {
 		log_err( "Cannot open file: %s (%s)", path, strerror( errno ) );
-		exit( 1 );
+		return 1;
 	}
 
 	while( fgets( line, sizeof(line), file ) != NULL ) {
@@ -612,23 +592,29 @@ static void conf_load_file( const char path[] ) {
 			if( strcmp( option, "--config " ) == 0 ) {
 				fclose( file );
 				log_err( "Option '--config' not allowed inside a configuration file, line %ld.", nline );
-				exit( 1 );
+				return 1;
 			}
 
 			// --option value / --option
-			conf_append( option, (ret == 2) ? value : NULL );
+			ret = conf_handle_option( option, (ret == 2) ? value : NULL );
+			if( ret != 0 ) {
+				fclose( file );
+				return 1;
+			}
 		} else {
 			fclose( file );
 			log_err( "Invalid line in config file: %s (%d)", path, nline );
-			exit( 1 );
+			return 1;
 		}
 	}
 
 	fclose( file );
+	return 0;
 }
 
 
 void conf_load_args( int argc, char **argv ) {
+	int rc;
 	int i;
 
 	// Duplicate memory to get an array that can be appended to
@@ -641,11 +627,15 @@ void conf_load_args( int argc, char **argv ) {
 
 		if( val && val[0] != '-' ) {
 			// -x abc
-			conf_handle_option( opt, val );
+			rc = conf_handle_option( opt, val );
 			i += 1;
 		} else {
 			// -x
-			conf_handle_option( opt, NULL );
+			rc = conf_handle_option( opt, NULL );
+		}
+
+		if( rc != 0 ) {
+			exit( rc );
 		}
 	}
 

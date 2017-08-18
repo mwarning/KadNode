@@ -147,13 +147,15 @@ static void peerfile_import_static( const struct peer *peers ) {
 	}
 }
 
-void peerfile_add_peer( const char addr_str[] ) {
+int peerfile_add_peer( const char addr_str[] ) {
 	struct peer *new;
 
 	new = (struct peer *) malloc( sizeof(struct peer) );
 	new->addr_str = strdup( addr_str );
 	new->next = g_peers;
 	g_peers = new;
+
+	return 0;
 }
 
 static void peerfile_handle_peerfile( int _rc, int _sock ) {

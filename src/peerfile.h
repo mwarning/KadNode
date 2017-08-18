@@ -16,7 +16,7 @@ void peerfile_free( void );
 void peerfile_export( void );
 
 // Add a static peer
-void peerfile_add_peer( const char addr_str[] );
+int peerfile_add_peer( const char addr_str[] );
 
 
 #endif // _PEERFILE_H

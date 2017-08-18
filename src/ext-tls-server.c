@@ -226,7 +226,7 @@ static int sni_callback( void *p_info, mbedtls_ssl_context *ssl, const unsigned 
 	return -1;
 }
 
-void tls_server_add_sni( const char crt_file[], const char key_file[] ) {
+int tls_server_add_sni( const char crt_file[], const char key_file[] ) {
 	char error_buf[100];
 	mbedtls_x509_crt crt;
 	mbedtls_pk_context key;
@@ -241,19 +241,19 @@ void tls_server_add_sni( const char crt_file[], const char key_file[] ) {
 	if( (ret = mbedtls_x509_crt_parse_file( &crt, crt_file )) != 0 ) {
 		mbedtls_strerror( ret, error_buf, sizeof(error_buf) );
 		log_err( "TLS: %s: %s", crt_file, error_buf );
-		exit( 1 );
+		return 1;
 	}
 
 	if( (ret = mbedtls_pk_parse_keyfile( &key, key_file, "" /* no password */ )) != 0 ) {
 		mbedtls_strerror( ret, error_buf, sizeof(error_buf) );
 		log_err( "TLS: %s: %s", key_file, error_buf );
-		exit( 1 );
+		return 1;
 	}
 
 	// Check if common name is set
 	if( (name = get_common_name( &crt )) == NULL ) {
 		log_err( "TLS: No common name set in %s", crt_file );
-		exit( 1 );
+		return 1;
 	}
 
 	// Check for duplicate entries
@@ -261,7 +261,7 @@ void tls_server_add_sni( const char crt_file[], const char key_file[] ) {
 	while( cur ) {
 		if( strcmp( cur->name, name ) == 0 ) {
 			log_err( "TLS: Duplicate entry %s", name );
-			exit( 1 );
+			return 1;
 		}
 		cur = cur->next;
 	}
@@ -269,7 +269,7 @@ void tls_server_add_sni( const char crt_file[], const char key_file[] ) {
 	// Create new entry
 	if( (new = calloc( 1, sizeof(struct sni_entry))) == NULL ) {
 		log_err( "TLS: Error calling calloc()" );
-		exit( 1 );
+		return 1;
 	}
 
 	new->name = name;
@@ -289,6 +289,7 @@ void tls_server_add_sni( const char crt_file[], const char key_file[] ) {
 	g_sni_entries = new;
 
 	log_info( "TLS: Loaded server credentials for %s (crt: %s, key: %s)", name, crt_file, key_file );
+	return 0;
 }
 
 static void tls_announce_all_cnames( void ) {
