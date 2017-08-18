@@ -135,7 +135,6 @@ void conf_init( void ) {
 	*gconf = ((struct gconf_t) {
 		.dht_port = -1,
 		.af = AF_UNSPEC,
-		.is_running = 1,
 #ifdef CMD
 		.cmd_port = -1,
 #endif
@@ -189,6 +188,7 @@ void conf_check( void ) {
 	// Store startup time
 	gconf->time_now = time( NULL );
 	gconf->startup_time = time_now_sec();
+	gconf->is_running = 1;
 }
 
 const char *verbosity_str( int verbosity ) {
