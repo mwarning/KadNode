@@ -31,10 +31,6 @@
 // Global object variables
 struct gconf_t *gconf = NULL;
 
-// Program arguments (extendable
-static int g_argc = 0;
-static char **g_argv = NULL;
-
 
 const char *kadnode_version_str = "KadNode v"MAIN_VERSION" ("
 #ifdef BOB
@@ -540,15 +536,6 @@ static int conf_handle_option( const char opt[], const char val[] ) {
 	}
 }
 
-// Append arguments to g_argv / g_argc
-static void conf_append( const char opt[], const char val[] ) {
-	g_argv = (char**) realloc( g_argv, (g_argc + 3) * sizeof(char*) );
-	g_argv[g_argc] = strdup( opt );
-	g_argv[g_argc + 1] = val ? strdup( val ) : NULL;
-	g_argv[g_argc + 2] = NULL;
-	g_argc += 2;
-}
-
 static int conf_load_file( const char path[] ) {
 	char line[256];
 	char option[32];
@@ -617,13 +604,9 @@ void conf_load_args( int argc, char **argv ) {
 	int rc;
 	int i;
 
-	// Duplicate memory to get an array that can be appended to
-	g_argv = (char**) memdup(argv, (argc + 1) * sizeof(char*));
-	g_argc = argc;
-
-	for( i = 1; i < g_argc; i++ ) {
-		const char *opt = g_argv[i];
-		const char *val = g_argv[i + 1];
+	for( i = 1; i < argc; ++i ) {
+		const char *opt = argv[i];
+		const char *val = argv[i + 1];
 
 		if( val && val[0] != '-' ) {
 			// -x abc
