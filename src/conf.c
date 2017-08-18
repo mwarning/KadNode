@@ -380,10 +380,70 @@ static int conf_port( const char opt[], int *dst, const char src[] ) {
 	return 0;
 }
 
-// Forward declaration
-static int conf_load_file( const char path[] );
+static int conf_load_file( const char path[] ) {
+	char line[256];
+	char option[32];
+	char value[128];
+	char dummy[4];
+	char *last;
+	struct stat s;
+	int ret;
+	FILE *file;
+	size_t nline;
 
-static int conf_handle_option( const char opt[], const char val[] ) {
+	if( stat( path, &s ) == 0 && !(s.st_mode & S_IFREG) ) {
+		log_err( "File expected: %s", path );
+		return 1;
+	}
+
+	nline = 0;
+	file = fopen( path, "r" );
+	if( file == NULL ) {
+		log_err( "Cannot open file: %s (%s)", path, strerror( errno ) );
+		return 1;
+	}
+
+	while( fgets( line, sizeof(line), file ) != NULL ) {
+		nline += 1;
+
+		// Cut off comments
+		last = strchr( line, '#' );
+		if( last ) {
+			*last = '\0';
+		}
+
+		if( line[0] == '\n' || line[0] == '\0' ) {
+			continue;
+		}
+
+		ret = sscanf( line, " %31s %127s %3s", option, value, dummy );
+
+		if( ret == 1 || ret == 2 ) {
+			// Prevent recursive inclusion
+			if( strcmp( option, "--config " ) == 0 ) {
+				fclose( file );
+				log_err( "Option '--config' not allowed inside a configuration file, line %ld.", nline );
+				return 1;
+			}
+
+			// --option value / --option
+			ret = conf_set( option, (ret == 2) ? value : NULL );
+			if( ret != 0 ) {
+				fclose( file );
+				return 1;
+			}
+		} else {
+			fclose( file );
+			log_err( "Invalid line in config file: %s (%d)", path, nline );
+			return 1;
+		}
+	}
+
+	fclose( file );
+	return 0;
+}
+
+int conf_set( const char opt[], const char val[] ) {
 	const struct option_t *option;
 
 	option = find_option( opt );
@@ -536,70 +596,6 @@ static int conf_handle_option( const char opt[], const char val[] ) {
 	}
 }
 
-static int conf_load_file( const char path[] ) {
-	char line[256];
-	char option[32];
-	char value[128];
-	char dummy[4];
-	char *last;
-	struct stat s;
-	int ret;
-	FILE *file;
-	size_t nline;
-
-	if( stat( path, &s ) == 0 && !(s.st_mode & S_IFREG) ) {
-		log_err( "File expected: %s", path );
-		return 1;
-	}
-
-	nline = 0;
-	file = fopen( path, "r" );
-	if( file == NULL ) {
-		log_err( "Cannot open file: %s (%s)", path, strerror( errno ) );
-		return 1;
-	}
-
-	while( fgets( line, sizeof(line), file ) != NULL ) {
-		nline += 1;
-
-		// Cut off comments
-		last = strchr( line, '#' );
-		if( last ) {
-			*last = '\0';
-		}
-
-		if( line[0] == '\n' || line[0] == '\0' ) {
-			continue;
-		}
-
-		ret = sscanf( line, " %31s %127s %3s", option, value, dummy );
-
-		if( ret == 1 || ret == 2 ) {
-			// Prevent recursive inclusion
-			if( strcmp( option, "--config " ) == 0 ) {
-				fclose( file );
-				log_err( "Option '--config' not allowed inside a configuration file, line %ld.", nline );
-				return 1;
-			}
-
-			// --option value / --option
-			ret = conf_handle_option( option, (ret == 2) ? value : NULL );
-			if( ret != 0 ) {
-				fclose( file );
-				return 1;
-			}
-		} else {
-			fclose( file );
-			log_err( "Invalid line in config file: %s (%d)", path, nline );
-			return 1;
-		}
-	}
-
-	fclose( file );
-	return 0;
-}
-
-
 void conf_load_args( int argc, char **argv ) {
 	int rc;
 	int i;
@@ -610,11 +606,11 @@ void conf_load_args( int argc, char **argv ) {
 
 		if( val && val[0] != '-' ) {
 			// -x abc
-			rc = conf_handle_option( opt, val );
+			rc = conf_set( opt, val );
 			i += 1;
 		} else {
 			// -x
-			rc = conf_handle_option( opt, NULL );
+			rc = conf_set( opt, NULL );
 		}
 
 		if( rc != 0 ) {

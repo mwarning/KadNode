@@ -10,6 +10,7 @@ extern const char *kadnode_version_str;
 
 void conf_init( void );
 void conf_load_args( int argc, char **argv );
+int conf_set( const char opt[], const char val[] );
 void conf_check( void );
 void conf_info( void );
 void conf_free( void );
