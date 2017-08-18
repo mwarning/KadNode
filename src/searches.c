@@ -205,7 +205,7 @@ void searches_debug( int fd ) {
 	dprintf( fd, " Found %d searches.\n", search_counter );
 }
 
-void search_restart( struct search_t *search ) {
+static void search_restart( struct search_t *search ) {
 	struct result_t *result;
 	struct result_t *prev;
 	struct result_t *next;

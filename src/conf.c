@@ -344,7 +344,7 @@ static struct option_t options[] = {
 	{"--version", 0, oVersion},
 };
 
-const struct option_t *find_option(const char name[]) {
+static const struct option_t *find_option( const char name[] ) {
 	int i;
 
 	for( i = 0; i < N_ELEMS(options); i++) {
@@ -357,7 +357,7 @@ const struct option_t *find_option(const char name[]) {
 }
 
 // Set a string once - error when already set
-void conf_str( const char opt[], char *dst[], const char src[] ) {
+static void conf_str( const char opt[], char *dst[], const char src[] ) {
 	if( *dst != NULL ) {
 		log_err( "Option was already set for %s: %s", opt, src );
 		exit( 1 );
@@ -366,7 +366,7 @@ void conf_str( const char opt[], char *dst[], const char src[] ) {
 	*dst = strdup( src );
 }
 
-void conf_port( const char opt[], int *dst, const char src[] ) {
+static void conf_port( const char opt[], int *dst, const char src[] ) {
 	int n = port_parse( src, -1 );
 
 	if( n < 0 ) {
@@ -382,7 +382,10 @@ void conf_port( const char opt[], int *dst, const char src[] ) {
 	*dst = n;
 }
 
-void conf_handle_option( const char opt[], const char val[] ) {
+// Forward declaration
+static void conf_load_file( const char path[] );
+
+static void conf_handle_option( const char opt[], const char val[] ) {
 	const struct option_t *option;
 
 	option = find_option( opt );
@@ -558,7 +561,7 @@ void conf_handle_option( const char opt[], const char val[] ) {
 }
 
 // Append arguments to g_argv / g_argc
-void conf_append( const char opt[], const char val[] ) {
+static void conf_append( const char opt[], const char val[] ) {
 	g_argv = (char**) realloc( g_argv, (g_argc + 3) * sizeof(char*) );
 	g_argv[g_argc] = strdup( opt );
 	g_argv[g_argc + 1] = val ? strdup( val ) : NULL;
@@ -566,7 +569,7 @@ void conf_append( const char opt[], const char val[] ) {
 	g_argc += 2;
 }
 
-void conf_load_file( const char path[] ) {
+static void conf_load_file( const char path[] ) {
 	char line[256];
 	char option[32];
 	char value[128];

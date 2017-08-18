@@ -13,7 +13,7 @@
 #define MAX_ADDRS 32
 
 
-void nss_lookup( int sock, IP *clientaddr, const char hostname[] ) {
+static void nss_lookup( int sock, IP *clientaddr, const char hostname[] ) {
 	socklen_t addrlen;
 	IP addrs[MAX_ADDRS];
 
@@ -33,7 +33,7 @@ void nss_lookup( int sock, IP *clientaddr, const char hostname[] ) {
 }
 
 // Handle a local connection
-void nss_handler( int rc, int sock ) {
+static void nss_handler( int rc, int sock ) {
 	IP clientaddr;
 	socklen_t addrlen_ret;
 	char hostname[512];

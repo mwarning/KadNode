@@ -46,7 +46,7 @@ struct LPD_STATE g_lpd6 = {
 	.sock_send = -1, .sock_listen = -1
 };
 
-void handle_mcast( int rc, struct LPD_STATE* lpd ) {
+static void handle_mcast( int rc, struct LPD_STATE* lpd ) {
 	char buf[16];
 	socklen_t addrlen;
 	uint16_t port;
@@ -93,17 +93,17 @@ void handle_mcast( int rc, struct LPD_STATE* lpd ) {
 	}
 }
 
-void handle_mcast4( int rc, int sock ) {
+static void handle_mcast4( int rc, int sock ) {
 	assert( sock == g_lpd4.sock_listen );
 	handle_mcast( rc, &g_lpd4 );
 }
 
-void handle_mcast6( int rc, int sock ) {
+static void handle_mcast6( int rc, int sock ) {
 	assert( sock == g_lpd6.sock_listen );
 	handle_mcast( rc, &g_lpd6 );
 }
 
-int create_send_socket( int af, const char ifname[] ) {
+static int create_send_socket( int af, const char ifname[] ) {
 	const int scope = TTL_SAME_SUBNET;
 	const int opt_off = 0;
 	int sock;
@@ -150,7 +150,7 @@ fail:
 	return -1;
 }
 
-int create_receive_socket( const IP *addr, const char ifname[] ) {
+static int create_receive_socket( const IP *addr, const char ifname[] ) {
 	const int opt_off = 0;
 	const int af = addr->ss_family;
 	int sock;

@@ -82,7 +82,7 @@ void peerfile_export( void ) {
 	log_info( "PEERFILE: %d peers exported: %s", i, filename );
 }
 
-int peerfile_import_peer( const char addr_str[] ) {
+static int peerfile_import_peer( const char addr_str[] ) {
 	IP addr;
 	int rc;
 
@@ -100,7 +100,7 @@ int peerfile_import_peer( const char addr_str[] ) {
 	return 0;
 }
 
-void peerfile_import( void ) {
+static void peerfile_import( void ) {
 	const char *filename;
 	char linebuf[256];
 	FILE *fp;
@@ -133,7 +133,7 @@ void peerfile_import( void ) {
 	log_info( "PEERFILE: Imported %d peers from: '%s'", num, filename );
 }
 
-void peerfile_import_static( const struct peer *peers ) {
+static void peerfile_import_static( const struct peer *peers ) {
 	int num;
 
 	num = 0;
@@ -156,7 +156,7 @@ void peerfile_add_peer( const char addr_str[] ) {
 	g_peers = new;
 }
 
-void peerfile_handle_peerfile( int _rc, int _sock ) {
+static void peerfile_handle_peerfile( int _rc, int _sock ) {
 
 	if( peerfile_import_time <= time_now_sec() && kad_count_nodes( 0 ) == 0 ) {
 		// Ping peers from peerfile, if present

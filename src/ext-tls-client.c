@@ -50,7 +50,7 @@ static struct tls_resource g_tls_resources[2];
 
 
 // Start TLS connection
-int tls_connect( mbedtls_ssl_context *ssl, mbedtls_net_context *fd, const char query[], const IP *addr ) {
+static int tls_connect( mbedtls_ssl_context *ssl, mbedtls_net_context *fd, const char query[], const IP *addr ) {
 	int ret;
 
 	mbedtls_ssl_set_bio( ssl, fd, mbedtls_net_send, mbedtls_net_recv, NULL );
@@ -86,7 +86,7 @@ int tls_connect( mbedtls_ssl_context *ssl, mbedtls_net_context *fd, const char q
 }
 
 // Find resource used by socket
-struct tls_resource *tls_find_resource( int fd ) {
+static struct tls_resource *tls_find_resource( int fd ) {
 	int i;
 
 	for( i = 0; i < N_ELEMS(g_tls_resources); ++i ) {
@@ -100,9 +100,9 @@ struct tls_resource *tls_find_resource( int fd ) {
 
 
 // Forward declaration
-void tls_handle( int rc, int fd );
+static void tls_handle( int rc, int fd );
 
-void auth_end( struct tls_resource* resource, int state ) {
+static void auth_end( struct tls_resource* resource, int state ) {
 	int ret;
 
 	// Done and close connection
@@ -124,7 +124,7 @@ void auth_end( struct tls_resource* resource, int state ) {
 	tls_client_trigger_auth();
 }
 
-void tls_handle( int rc, int fd ) {
+static void tls_handle( int rc, int fd ) {
 	struct tls_resource* resource;
 	mbedtls_ssl_context* ssl;
 	const char *query;
@@ -208,7 +208,7 @@ int tls_client_get_id( uint8_t id[], size_t len, const char query[] ) {
 }
 
 // Find a resource instance that is currently not in use
-struct tls_resource *tls_next_resource( void ) {
+static struct tls_resource *tls_next_resource( void ) {
 	int i;
 
 	for( i = 0; i < N_ELEMS(g_tls_resources); ++i ) {
@@ -246,7 +246,7 @@ void tls_client_trigger_auth( void ) {
 
 #if DEBUG
 // Verify configuration
-int tls_conf_verify( void *data, mbedtls_x509_crt *crt, int depth, uint32_t *flags ) {
+static int tls_conf_verify( void *data, mbedtls_x509_crt *crt, int depth, uint32_t *flags ) {
 	char buf1[MBEDTLS_SSL_MAX_CONTENT_LEN + 1];
 	char buf2[MBEDTLS_SSL_MAX_CONTENT_LEN + 1];
 	((void) data);

@@ -63,7 +63,7 @@ void r_init( struct reply_t *r, bool allow_debug ) {
 }
 
 // Append a formatted string to the packet buffer
-void r_printf( struct reply_t *r, const char *format, ... ) {
+static void r_printf( struct reply_t *r, const char *format, ... ) {
 	va_list vlist;
 	int written;
 
@@ -79,7 +79,7 @@ void r_printf( struct reply_t *r, const char *format, ... ) {
 	}
 }
 
-int cmd_ping( struct reply_t *r, const char *addr_str) {
+static int cmd_ping( struct reply_t *r, const char addr_str[] ) {
 	IP addr;
 	int rc;
 
@@ -99,11 +99,11 @@ int cmd_ping( struct reply_t *r, const char *addr_str) {
 	return 1;
 }
 
-void cmd_print_status( struct reply_t *r ) {
+static void cmd_print_status( struct reply_t *r ) {
 	r->size += kad_status( r->data + r->size, REPLY_DATA_SIZE - r->size );
 }
 
-int cmd_blacklist( struct reply_t *r, const char *addr_str ) {
+static int cmd_blacklist( struct reply_t *r, const char *addr_str ) {
 	IP addr;
 
 	if( addr_parse( &addr, addr_str, NULL, gconf->af ) == 0 ) {
@@ -117,7 +117,7 @@ int cmd_blacklist( struct reply_t *r, const char *addr_str ) {
 }
 
 // Export up to 32 peer addresses - more might not fit into one UDP packet
-int cmd_debug_nodes( struct reply_t *r ) {
+static int cmd_debug_nodes( struct reply_t *r ) {
 	IP addr_array[32];
 	size_t addr_num;
 	size_t i;
@@ -136,7 +136,7 @@ int cmd_debug_nodes( struct reply_t *r ) {
 	return 0;
 }
 
-int cmd_announce( struct reply_t *r, const char hostname[], int port, int minutes ) {
+static int cmd_announce( struct reply_t *r, const char hostname[], int port, int minutes ) {
 	time_t lifetime;
 
 	if( port < 0 || port > 65534 ) {
@@ -172,13 +172,13 @@ int cmd_announce( struct reply_t *r, const char hostname[], int port, int minute
 }
 
 // Match a format string with only %n at the end
-int match( const char input[], const char fmt[] ) {
+static int match( const char input[], const char fmt[] ) {
 	int n = -1;
 	sscanf( input, fmt, &n );
 	return (n > 0 && input[n] == '\0');
 }
 
-int cmd_exec( struct reply_t *r, const char input[] ) {
+static int cmd_exec( struct reply_t *r, const char input[] ) {
 	struct value_t *value;
 	int minutes;
 	IP addrs[16];
@@ -275,7 +275,7 @@ int cmd_exec( struct reply_t *r, const char input[] ) {
 	return (rc != 0);
 }
 
-void cmd_remote_handler( int rc, int sock ) {
+static void cmd_remote_handler( int rc, int sock ) {
 	IP clientaddr;
 	socklen_t addrlen;
 	char request[REPLY_DATA_SIZE];
@@ -303,7 +303,7 @@ void cmd_remote_handler( int rc, int sock ) {
 	rc = sendto( sock, reply.data, reply.size, 0, (struct sockaddr *)&clientaddr, addrlen );
 }
 
-void cmd_console_handler( int rc, int fd ) {
+static void cmd_console_handler( int rc, int fd ) {
 	char request[512];
 	struct reply_t reply;
 	char *req;

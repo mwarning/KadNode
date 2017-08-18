@@ -179,7 +179,7 @@ static const char g_names[MAX_ADDR_RECORDS][3] = {
 * Basic memory operations.
 */
 
-size_t get16bits( const uint8_t** buffer ) {
+static size_t get16bits( const uint8_t** buffer ) {
 	uint16_t value;
 
 	memcpy( &value, *buffer, 2 );
@@ -188,13 +188,13 @@ size_t get16bits( const uint8_t** buffer ) {
 	return ntohs( value );
 }
 
-void put16bits( uint8_t** buffer, uint16_t value ) {
+static void put16bits( uint8_t** buffer, uint16_t value ) {
 	value = htons( value );
 	memcpy( *buffer, &value, 2 );
 	*buffer += 2;
 }
 
-void put32bits( uint8_t** buffer, uint32_t value ) {
+static void put32bits( uint8_t** buffer, uint32_t value ) {
 	value = htons( value );
 	memcpy( *buffer, &value, 4 );
 	*buffer += 4;
@@ -205,7 +205,7 @@ void put32bits( uint8_t** buffer, uint32_t value ) {
 */
 
 // 3foo3bar3com0 => foo.bar.com
-int dns_decode_domain( char *domain, const uint8_t** buffer, size_t size ) {
+static int dns_decode_domain( char *domain, const uint8_t** buffer, size_t size ) {
 	const uint8_t *p = *buffer;
 	size_t i = 0;
 	size_t len = 0;
@@ -238,7 +238,7 @@ int dns_decode_domain( char *domain, const uint8_t** buffer, size_t size ) {
 }
 
 // foo.bar.com => 3foo3bar3com0
-int dns_encode_domain( uint8_t** buffer, const char *domain ) {
+static int dns_encode_domain( uint8_t** buffer, const char *domain ) {
 	char *buf = (char*) *buffer;
 	const char *beg = domain;
 	const char *pos = NULL;
@@ -272,7 +272,7 @@ int dns_encode_domain( uint8_t** buffer, const char *domain ) {
 	return 1;
 }
 
-int dns_encode_header( uint8_t** buffer, const struct Message *msg ) {
+static int dns_encode_header( uint8_t** buffer, const struct Message *msg ) {
 	size_t fields;
 
 	put16bits( buffer, msg->id );
@@ -291,7 +291,7 @@ int dns_encode_header( uint8_t** buffer, const struct Message *msg ) {
 	return 1;
 }
 
-int dns_decode_header( struct Message *msg, const uint8_t** buffer ) {
+static int dns_decode_header( struct Message *msg, const uint8_t** buffer ) {
 	size_t fields;
 
 	msg->id = get16bits( buffer );
@@ -313,7 +313,7 @@ int dns_decode_header( struct Message *msg, const uint8_t** buffer ) {
 }
 
 // Decode the message from a byte array into a message structure
-int dns_decode_msg( struct Message *msg, const uint8_t *buffer ) {
+static int dns_decode_msg( struct Message *msg, const uint8_t *buffer ) {
 	size_t i;
 
 	if( dns_decode_header( msg, &buffer ) < 0 ) {
@@ -346,7 +346,7 @@ int dns_decode_msg( struct Message *msg, const uint8_t *buffer ) {
 }
 
 // Encode the message structure into a byte array
-int dns_encode_msg( uint8_t *buffer, size_t size, const struct Message *msg ) {
+static int dns_encode_msg( uint8_t *buffer, size_t size, const struct Message *msg ) {
 	const size_t qName_offset = 12;
 	const struct ResourceRecord *rr;
 	uint8_t *beg;
@@ -405,7 +405,7 @@ int dns_encode_msg( uint8_t *buffer, size_t size, const struct Message *msg ) {
 	return (buffer - beg);
 }
 
-const char* dns_lookup_ptr( const char ptr_name[] ) {
+static const char* dns_lookup_ptr( const char ptr_name[] ) {
 	typedef struct {
 		const char* ptr_name;
 		const char* hostname;
@@ -426,7 +426,7 @@ const char* dns_lookup_ptr( const char ptr_name[] ) {
 	return NULL;
 }
 
-void setAddressRecord( struct ResourceRecord *rr, const char name[], const IP *addr ) {
+static void setAddressRecord( struct ResourceRecord *rr, const char name[], const IP *addr ) {
 
 	if( addr->ss_family == AF_INET ) {
 		rr->name = name;
@@ -447,7 +447,7 @@ void setAddressRecord( struct ResourceRecord *rr, const char name[], const IP *a
 	}
 }
 
-void setServiceRecord( struct ResourceRecord *rr, const char name[], const char target[], int port ) {
+static void setServiceRecord( struct ResourceRecord *rr, const char name[], const char target[], int port ) {
 	rr->name = name;
 	rr->type = SRV_Resource_RecordType;
 	rr->class = 1;
@@ -460,7 +460,7 @@ void setServiceRecord( struct ResourceRecord *rr, const char name[], const char 
 	rr->rd_data.srv_record.target = target;
 }
 
-void setPointerRecord( struct ResourceRecord *rr, const char name[], const char domain[] ) {
+static void setPointerRecord( struct ResourceRecord *rr, const char name[], const char domain[] ) {
 	rr->name = name;
 	rr->type = PTR_Resource_RecordType;
 	rr->class = 1;
@@ -470,7 +470,7 @@ void setPointerRecord( struct ResourceRecord *rr, const char name[], const char 
 	rr->rd_data.ptr_record.name = domain;
 }
 
-int dns_setup_msg( struct Message *msg, IP addrs[], size_t addrs_num, const char* hostname ) {
+static int dns_setup_msg( struct Message *msg, IP addrs[], size_t addrs_num, const char* hostname ) {
 	const char *qName;
 	size_t i, c;
 
@@ -514,7 +514,7 @@ int dns_setup_msg( struct Message *msg, IP addrs[], size_t addrs_num, const char
 }
 
 // Get a small string representation of the query type
-const char* qtype_str( int qType ) {
+static const char* qtype_str( int qType ) {
 	switch( qType ) {
 		case A_Resource_RecordType:
 			return "A";
@@ -530,7 +530,7 @@ const char* qtype_str( int qType ) {
 }
 
 // Read DNS proxy server from /etc/resolv.conf
-void proxy_read_resolv( IP *dst, const char path[] ) {
+static void proxy_read_resolv( IP *dst, const char path[] ) {
 	static time_t last_checked = 0;
 	static time_t last_modified = 0;
 	const char *m = "\nnameserver ";
@@ -570,7 +570,7 @@ void proxy_read_resolv( IP *dst, const char path[] ) {
 }
 
 // Forward request to external DNS server
-void proxy_forward_request( uint8_t *buffer, ssize_t buflen, IP *clientaddr, uint16_t id ) {
+static void proxy_forward_request( uint8_t *buffer, ssize_t buflen, IP *clientaddr, uint16_t id ) {
 	int sock;
 
 	sock = (g_proxy_addr.ss_family == AF_INET) ? g_sock4 : g_sock6;
@@ -586,7 +586,7 @@ void proxy_forward_request( uint8_t *buffer, ssize_t buflen, IP *clientaddr, uin
 }
 
 // Forward DNS response back to client address
-void proxy_forward_response( uint8_t *buffer, ssize_t buflen, uint16_t id ) {
+static void proxy_forward_response( uint8_t *buffer, ssize_t buflen, uint16_t id ) {
 	int sock;
 	int i;
 
@@ -601,7 +601,7 @@ void proxy_forward_response( uint8_t *buffer, ssize_t buflen, uint16_t id ) {
 	log_warn( "DNS: Failed to find client for request." );
 }
 
-void dns_handler( int rc, int sock ) {
+static void dns_handler( int rc, int sock ) {
 	struct Message msg;
 	IP clientaddr;
 	size_t addrs_num;

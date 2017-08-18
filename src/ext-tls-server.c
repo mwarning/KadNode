@@ -58,10 +58,10 @@ static struct sni_entry *g_sni_entries = NULL;
 
 
 // Forward declaration
-void tls_client_handler( int rc, int sock );
+static void tls_client_handler( int rc, int sock );
 
 
-void end_client_connection( mbedtls_net_context *client_fd, int result ) {
+static void end_client_connection( mbedtls_net_context *client_fd, int result ) {
 	int ret;
 
 	net_remove_handler( client_fd->fd, tls_client_handler );
@@ -86,7 +86,7 @@ void end_client_connection( mbedtls_net_context *client_fd, int result ) {
 	}
 }
 
-void tls_client_handler( int rc, int sock ) {
+static void tls_client_handler( int rc, int sock ) {
 	mbedtls_net_context *client_fd;
 	int ret;
 	int exp;
@@ -138,7 +138,7 @@ void tls_client_handler( int rc, int sock ) {
 	}
 }
 
-void tls_server_handler( int rc, int sock ) {
+static void tls_server_handler( int rc, int sock ) {
 	unsigned char client_ip[16] = { 0 };
 	mbedtls_net_context *listen_fd;
 	mbedtls_net_context *client_fd;
@@ -181,7 +181,7 @@ void tls_server_handler( int rc, int sock ) {
 }
 
 // Get the CN field of an certificate
-char *get_common_name( const mbedtls_x509_crt *crt ) {
+static char *get_common_name( const mbedtls_x509_crt *crt ) {
 	const mbedtls_x509_name *name;
 	const char *short_name;
 	int ret;
@@ -203,7 +203,7 @@ char *get_common_name( const mbedtls_x509_crt *crt ) {
 
 // SNI callback. The client submits the domain it is looking for.
 // The proper certificate needs to be selected and returned.
-int sni_callback( void *p_info, mbedtls_ssl_context *ssl, const unsigned char *name, size_t name_len ) {
+static int sni_callback( void *p_info, mbedtls_ssl_context *ssl, const unsigned char *name, size_t name_len ) {
 	struct sni_entry *cur;
 
 	log_debug( "Lookup certificate for domain: %s", name );
@@ -291,7 +291,7 @@ void tls_server_add_sni( const char crt_file[], const char key_file[] ) {
 	log_info( "TLS: Loaded server credentials for %s (crt: %s, key: %s)", name, crt_file, key_file );
 }
 
-void tls_announce_all_cnames( void ) {
+static void tls_announce_all_cnames( void ) {
 	struct sni_entry *cur;
 	char name[QUERY_MAX_SIZE];
 

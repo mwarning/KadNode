@@ -148,7 +148,7 @@ void value_free( struct value_t *value ) {
 }
 
 // Remove an element from the list - internal use only
-void announces_remove( struct value_t *value ) {
+static void announces_remove( struct value_t *value ) {
 	struct value_t *pre;
 	struct value_t *cur;
 
@@ -169,7 +169,7 @@ void announces_remove( struct value_t *value ) {
 	}
 }
 
-void announces_expire( void ) {
+static void announces_expire( void ) {
 	struct value_t *pre;
 	struct value_t *cur;
 	time_t now;
@@ -192,7 +192,7 @@ void announces_expire( void ) {
 	}
 }
 
-void announces_announce( void ) {
+static void announces_announce( void ) {
 	struct value_t *value;
 	time_t now;
 
@@ -210,7 +210,7 @@ void announces_announce( void ) {
 	}
 }
 
-void announces_handle( int _rc, int _sock ) {
+static void announces_handle( int _rc, int _sock ) {
 	// Expire search results
 	if( g_announces_expire <= time_now_sec() ) {
 		announces_expire();
