@@ -147,28 +147,6 @@ void value_free( struct value_t *value ) {
 	free( value );
 }
 
-// Remove an element from the list - internal use only
-static void announces_remove( struct value_t *value ) {
-	struct value_t *pre;
-	struct value_t *cur;
-
-	pre = NULL;
-	cur = g_values;
-	while( cur ) {
-		if( cur == value ) {
-			if( pre ) {
-				pre->next = cur->next;
-			} else {
-				g_values = cur->next;
-			}
-			value_free( cur );
-			return;
-		}
-		pre = cur;
-		cur = cur->next;
-	}
-}
-
 static void announces_expire( void ) {
 	struct value_t *pre;
 	struct value_t *cur;
