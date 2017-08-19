@@ -16,8 +16,8 @@ else
 endif
 
 
-.PHONY: all clean strip install kadnode kadnode-ctl kandode-lib \
-	kadnode-libnss arch-pkg deb-pkg osx-pkg install uninstall
+.PHONY: all clean strip install kadnode kadnode-ctl libkadnode.so libkanode.a \
+	libnss-kadnode.so.2 arch-pkg deb-pkg osx-pkg install uninstall
 
 all: kadnode
 
@@ -86,12 +86,15 @@ build/%.o : src/%.c src/%.h
 kadnode-ctl:
 	$(CC) $(CFLAGS) src/kadnode-ctl.c -o build/kadnode-ctl
 
-kadnode-libnss:
+libnss-kadnode.so.2:
 	$(CC) $(CFLAGS) -fPIC -c -o build/ext-libnss.o src/ext-libnss.c
 	$(CC) $(CFLAGS) -fPIC -shared -Wl,-soname,libnss_kadnode.so.2 -o build/libnss_kadnode.so.2 build/ext-libnss.o
 
-kadnode-lib: CFLAGS += -fpic
-kadnode-lib: clean build/libkadnode.o $(OBJS)
+libkadnode.a: clean build/libkadnode.o $(OBJS)
+	ar rcs build/libkadnode.a build/libkadnode.o $(OBJS)
+
+libkadnode.so: CFLAGS += -fpic
+libkadnode.so: clean build/libkadnode.o $(OBJS)
 	$(CC) -shared $(OBJS) build/libkadnode.o -o build/libkadnode.so
 
 kadnode: clean build/main.o $(OBJS) $(EXTRA)
@@ -102,8 +105,9 @@ clean:
 
 strip:
 	strip build/kadnode 2> /dev/null || true
-	strip build/libkadnode.so 2> /dev/null  || true
 	strip build/kadnode-ctl 2> /dev/null || true
+	strip build/libkadnode.a 2> /dev/null  || true
+	strip build/libkadnode.so 2> /dev/null  || true
 	strip build/libnss_kadnode.so.2 2> /dev/null || true
 
 arch-pkg:
