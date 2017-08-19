@@ -28,23 +28,6 @@ static time_t g_dht_maintenance = 0;
 static int g_dht_socket4 = -1;
 static int g_dht_socket6 = -1;
 
-void dht_lock_init( void ) {
-#ifdef PTHREAD
-	pthread_mutex_init( &gconf->dht_mutex, NULL );
-#endif
-}
-
-void dht_lock( void ) {
-#ifdef PTHREAD
-	pthread_mutex_lock( &gconf->dht_mutex );
-#endif
-}
-
-void dht_unlock( void ) {
-#ifdef PTHREAD
-	pthread_mutex_unlock( &gconf->dht_mutex );
-#endif
-}
 
 /*
 * Put an address and port into a sockaddr_storages struct.
@@ -186,9 +169,7 @@ void dht_handler( int rc, int sock ) {
 
 	if( buflen > 0 ) {
 		// Handle incoming data
-		dht_lock();
 		rc = dht_periodic( buf, buflen, (struct sockaddr*) &from, fromlen, &time_wait, dht_callback_func, NULL );
-		dht_unlock();
 
 		if( rc < 0 && errno != EINTR ) {
 			if( rc == EINVAL || rc == EFAULT ) {
@@ -201,9 +182,7 @@ void dht_handler( int rc, int sock ) {
 		}
 	} else if( g_dht_maintenance <= time_now_sec() ) {
 		// Do a maintenance call
-		dht_lock();
 		rc = dht_periodic( NULL, 0, NULL, 0, &time_wait, dht_callback_func, NULL );
-		dht_unlock();
 
 		// Wait for the next maintenance call
 		g_dht_maintenance = time_now_sec() + time_wait;
@@ -284,8 +263,6 @@ void kad_setup( void ) {
 
 	bytes_random( node_id, SHA1_BIN_LENGTH );
 
-	dht_lock_init();
-
 	g_dht_socket4 = net_bind( "KAD", "0.0.0.0", gconf->dht_port, gconf->dht_ifname, IPPROTO_UDP );
 	g_dht_socket6 = net_bind( "KAD", "::", gconf->dht_port, gconf->dht_ifname, IPPROTO_UDP );
 
@@ -305,7 +282,7 @@ void kad_setup( void ) {
 }
 
 void kad_free( void ) {
-	dht_uninit();
+	// Nothing to do
 }
 
 int kad_count_bucket( const struct bucket *bucket, int good ) {
@@ -392,9 +369,7 @@ int kad_status( char buf[], size_t size ) {
 int kad_ping( const IP* addr ) {
 	int rc;
 
-	dht_lock();
 	rc = dht_ping_node( (struct sockaddr *)addr, addr_len( addr ) );
-	dht_unlock();
 
 	return (rc < 0) ? -1 : 0;
 }
@@ -410,10 +385,8 @@ int kad_announce_once( const uint8_t id[], int port ) {
 		return -1;
 	}
 
-	dht_lock();
 	dht_search( id, port, AF_INET, dht_callback_func, NULL );
 	dht_search( id, port, AF_INET6, dht_callback_func, NULL );
-	dht_unlock();
 
 	return 0;
 }
@@ -461,10 +434,8 @@ int kad_lookup( const char query[], IP addr_array[], size_t addr_num ) {
 		kad_lookup_own_announcements( search );
 
 		// Start a new DHT search
-		dht_lock();
 		dht_search( search->id, 0, AF_INET, dht_callback_func, NULL );
 		dht_search( search->id, 0, AF_INET6, dht_callback_func, NULL );
-		dht_unlock();
 	}
 
 	// Collect addresses to be returned
@@ -488,8 +459,6 @@ int kad_lookup_node( const char query[], IP *addr_return ) {
 
 	bytes_from_hex( id, query, SHA1_HEX_LENGTH );
 
-	dht_lock();
-
 	rc = 1;
 	sr = searches;
 	while( sr ) {
@@ -508,17 +477,13 @@ int kad_lookup_node( const char query[], IP *addr_return ) {
 
 	done:;
 
-	dht_unlock();
-
 	return rc;
 }
 #endif
 
 int kad_blacklist( const IP* addr ) {
 
-	dht_lock();
 	blacklist_node( NULL, (struct sockaddr *) addr, sizeof(IP) );
-	dht_unlock();
 
 	return 0;
 }
@@ -536,9 +501,7 @@ int kad_export_nodes( IP addrs[], size_t num ) {
 	num6 = MIN(num, N_ELEMS(addr4));
 	num4 = MIN(num, N_ELEMS(addr6));
 
-	dht_lock();
 	dht_get_nodes( addr4, &num4, addr6, &num6 );
-	dht_unlock();
 
 	// Export IPv4 and IPv6 addresses in equal parts
 	while( (num4 || num6 ) && num ) {
@@ -564,8 +527,6 @@ void kad_debug_buckets( int fd ) {
 	struct node *n;
 	int i, j;
 
-	dht_lock();
-
 	b = (gconf->af == AF_INET) ? buckets : buckets6;
 	for( j = 0; b; ++j ) {
 		dprintf( fd, " Bucket: %s\n", str_id( b->first ) );
@@ -581,8 +542,6 @@ void kad_debug_buckets( int fd ) {
 		b = b->next;
 	}
 	dprintf( fd, " Found %d buckets.\n", j );
-
-	dht_unlock();
 }
 
 // Print searches
@@ -590,8 +549,6 @@ void kad_debug_searches( int fd ) {
 	struct search *s;
 	int i;
 	int j;
-
-	dht_lock();
 
 	s = searches;
 	for( j = 0; s; ++j ) {
@@ -611,8 +568,6 @@ void kad_debug_searches( int fd ) {
 		s = s->next;
 	}
 	dprintf( fd, " Found %d searches.\n", j );
-
-	dht_unlock();
 }
 
 // Print announced ids we have received
@@ -621,8 +576,6 @@ void kad_debug_storage( int fd ) {
 	struct peer* p;
 	IP addr;
 	int i, j;
-
-	dht_lock();
 
 	s = storage;
 	for( j = 0; s; ++j ) {
@@ -636,22 +589,16 @@ void kad_debug_storage( int fd ) {
 		s = s->next;
 	}
 	dprintf( fd, " Found %d stored hashes from received announcements.\n", j );
-
-	dht_unlock();
 }
 
 void kad_debug_blacklist( int fd ) {
 	int i;
-
-	dht_lock();
 
 	for( i = 0; i < (next_blacklisted % DHT_MAX_BLACKLISTED); i++ ) {
 		dprintf( fd, " %s\n", str_addr( &blacklist[i] ) );
 	}
 
 	dprintf( fd, " Found %d blacklisted addresses.\n", i );
-
-	dht_unlock();
 }
 
 void kad_debug_constants( int fd ) {

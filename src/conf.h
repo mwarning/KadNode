@@ -89,12 +89,6 @@ struct gconf_t {
 #ifdef NSS
 	int nss_port;
 #endif
-
-#ifdef PTHREAD
-	// DHT thread stuff
-	pthread_t dht_thread;
-	pthread_mutex_t dht_mutex;
-#endif
 };
 
 extern struct gconf_t *gconf;
