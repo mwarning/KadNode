@@ -1,5 +1,5 @@
 [Unit]
-Description=Decentralized DNS resolver
+Description=P2P DNS resolver
 After=network.target
 
 [Service]

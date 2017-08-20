@@ -1,9 +1,12 @@
 [Unit]
-Description=P2P DNS service
+Description=P2P DNS resolver
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/kadnode --daemon --config /etc/kadnode/kadnode.conf
+ExecStart=/usr/bin/kadnode --daemon --pidfile /var/run/kadnode.pid --config /etc/kadnode/kadnode.conf
+KillMode=mixed
+Restart=on-failure
+PIDFile=/var/run/kadnode.pid
 Type=forking
 
 [Install]
