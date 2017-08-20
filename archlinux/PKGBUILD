@@ -4,28 +4,30 @@ pkgname=kadnode
 pkgver=2.0.0
 pkgrel=1
 
-pkgdesc='A P2P based DNS service using the Kademlia Distributed Hash Table (DHT)'
+pkgdesc='A P2P based DNS resolver'
 arch=('x86_64' 'i686')
 url='http://github.com/mwarning/KadNode'
 license=('MIT')
-depends=('libmbedtls')
+depends=('mbedtls')
 
 backup=('etc/kadnode/kadnode.conf' 'etc/kadnode/peers.txt')
 
+source=(https://github.com/mwarning/KadNode.git)
 #source=(https://github.com/mwarning/KadNode/archive/v${pkgver}.tar.gz)
-source=(git+file:///home/mwarning/KadNode)
+#source=(git+file:///home/mwarning/KadNode)
 
 md5sums=('SKIP')
 
 install="kadnode.install"
 
 build() {
-	cd $srcdir/KadNode*
-	make FEATURES="tls bob lpd nss"
+	cd $srcdir/KadNode
+	make FEATURES="tls bob cmd lpd nss"
+	make kadnode-ctl
 }
 
 package() {
-	cd $srcdir/KadNode*
+	cd $srcdir/KadNode
 
 	install -Dm755 build/kadnode "$pkgdir"/usr/bin/kadnode
 	install -Dm755 build/kadnode-ctl "$pkgdir"/usr/bin/kadnode-ctl
