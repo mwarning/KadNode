@@ -332,7 +332,7 @@ void cmd_setup( void ) {
 	int sock4;
 	int sock6;
 
-	if( gconf->cmd_port == 0 ) {
+	if( gconf->cmd_port < 1 ) {
 		return;
 	}
 

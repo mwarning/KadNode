@@ -249,8 +249,7 @@ void fwd_setup( void ) {
 #endif
 
 	// Add a port forwarding for the DHT for the entire run time
-	int port = atoi( gconf->dht_port );
-	fwd_add( port, LONG_MAX );
+	fwd_add( gconf->dht_port, LONG_MAX );
 
 	// Cause the callback to be called in intervals
 	net_add_handler( -1, &fwd_handle );

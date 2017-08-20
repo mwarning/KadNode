@@ -69,7 +69,7 @@ void nss_setup( void ) {
 	int sock4;
 	int sock6;
 
-	if( str_isZero( gconf->nss_port ) ) {
+	if( gconf->nss_port < 1 ) {
 		return;
 	}
 
