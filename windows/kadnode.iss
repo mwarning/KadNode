@@ -20,7 +20,6 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
 Source: "C:\cygwin64\bin\cygwin1.dll"; DestDir: "{app}"
-Source: "C:\cygwin64\usr\local\bin\cygsodium-18.dll"; DestDir: "{app}"
 Source: "C:\cygwin64\bin\cyggcc_s-1.dll"; DestDir: "{app}"
 Source: "..\build\kadnode.exe"; DestDir: "{app}"
 Source: "..\build\kadnode-ctl.exe"; DestDir: "{app}"
