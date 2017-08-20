@@ -275,8 +275,7 @@ enum OPCODE {
 	oUser,
 	oDaemon,
 	oHelp,
-	oVersion,
-	oUnknown
+	oVersion
 };
 
 struct option_t {
@@ -286,7 +285,6 @@ struct option_t {
 };
 
 static struct option_t options[] = {
-	{"", 0, oUnknown},
 	{"--announce", 1, oAnnounce},
 	{"--query-tld", 1, oQueryTld},
 	{"--pidfile", 1, oPidFile},
@@ -349,7 +347,7 @@ static const struct option_t *find_option( const char name[] ) {
 		}
 	}
 
-	return &options[0];
+	return NULL;
 }
 
 // Set a string once - error when already set
@@ -447,6 +445,11 @@ int conf_set( const char opt[], const char val[] ) {
 	const struct option_t *option;
 
 	option = find_option( opt );
+
+	if( option == NULL ) {
+		log_err( "Unknown parameter: %s", opt );
+		return 1;
+	}
 
 	if( option->num_args == 1 && val == NULL ) {
 		log_err( "Argument expected for option: %s", opt );
@@ -591,7 +594,7 @@ int conf_set( const char opt[], const char val[] ) {
 			return bob_load_key( val );
 #endif
 		default:
-			log_err( "Unknown parameter: %s", opt );
+			log_err( "Unhandled parameter: %s", opt );
 			return 1;
 	}
 }
