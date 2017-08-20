@@ -127,8 +127,9 @@ int natpmp_handler( struct natpmp_handle_t *handle, uint16_t port, time_t lifesp
 			handle->state = NATPMP_STATE_RECEIVE_PORTMAPPING;
 			return PF_RETRY;
 		} else {
-			log_debug( "NAT-PMP: Method sendnewportmappingrequest returned %d (%s): %s",
-				rc, strnatpmperr( (rc_udp >= 0) ? rc_tcp : rc_udp ), strerror( errno ) );
+
+			log_debug( "NAT-PMP: Method sendnewportmappingrequest returned an error: %s",
+				strnatpmperr( (rc_udp >= 0) ? rc_tcp : rc_udp ) );
 			goto error;
 		}
 	}
