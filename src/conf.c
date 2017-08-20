@@ -185,9 +185,9 @@ void conf_check( void ) {
 	}
 #endif
 
-	// Store startup time
-	gconf->time_now = time( NULL );
-	gconf->startup_time = time_now_sec();
+	time_t now = time( NULL );
+	gconf->time_now = now;
+	gconf->startup_time = now;
 	gconf->is_running = 1;
 }
 

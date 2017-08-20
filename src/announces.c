@@ -178,9 +178,7 @@ static void announces_announce( void ) {
 	value = g_values;
 	while( value ) {
 		if( value->refresh < now ) {
-#ifdef DEBUG
 			log_debug( "Announce %s:%hu",  str_id( value->id ), value->port );
-#endif
 			kad_announce_once( value->id, value->port );
 			value->refresh = now + ANNOUNCES_INTERVAL;
 		}

@@ -21,6 +21,9 @@ struct gconf_t {
 	// Current time
 	time_t time_now;
 
+	// KadNode startup time
+	time_t startup_time;
+
 	// Drop privileges to user
 	char *user;
 
@@ -56,9 +59,6 @@ struct gconf_t {
 
 	// DHT interface
 	char *dht_ifname;
-
-	// KadNode startup time
-	time_t startup_time;
 
 #ifdef __CYGWIN__
 	// Start as windows service

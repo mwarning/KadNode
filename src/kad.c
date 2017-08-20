@@ -348,7 +348,7 @@ int kad_status( char buf[], size_t size ) {
 	int nodes4_good = kad_count_bucket( buckets, 1 );
 	int nodes6_good = kad_count_bucket( buckets6, 1 );
 
-	bprintf( "Version: %s\n", kadnode_version_str );
+	bprintf( "%s\n", kadnode_version_str );
 	bprintf( "DHT id: %s\n", str_id( myid ) );
 	bprintf( "DHT listen on: %s / %s\n", str_af( gconf->af ),
 		gconf->dht_ifname ? gconf->dht_ifname : "<any>");
