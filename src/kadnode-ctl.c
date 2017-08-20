@@ -60,24 +60,25 @@ int select_read( int sockfd, char buffer[], int bufsize, struct timeval *tv ) {
 	}
 }
 
-int udp_send( char buffer[], uint8_t port ) {
+int udp_send( char buffer[], uint16_t port ) {
 	struct timeval tv;
-	IP6 sockaddr;
+	IP4 addr;
 	socklen_t addrlen;
 	int sockfd;
 	int n;
 
-	sockaddr.sin6_family = AF_INET6;
-	inet_pton( AF_INET6, "::1", &sockaddr.sin6_addr);
-	sockaddr.sin6_port = htons( port );
+	memset( &addr, 0, sizeof(addr) );
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons( port );
+	inet_pton( AF_INET, "127.0.0.1", &addr.sin_addr );
 
-	if( (sockfd = socket( sockaddr.sin6_family, SOCK_DGRAM, IPPROTO_UDP )) < 0 ) {
+	if( (sockfd = socket( addr.sin_family, SOCK_DGRAM, IPPROTO_UDP )) < 0 ) {
 		fprintf( stderr, "Failed to create socket: %s\n", strerror( errno ) );
 		return 1;
 	}
 
-	addrlen = sizeof( sockaddr );
-	if( sendto( sockfd, buffer, strlen(buffer), 0, (struct sockaddr *)&sockaddr, addrlen ) < 0 ) {
+	addrlen = sizeof( addr );
+	if( sendto( sockfd, buffer, strlen(buffer), 0, (struct sockaddr *)&addr, addrlen ) < 0 ) {
 		fprintf( stderr, "Cannot connect to server: %s\n", strerror( errno ) );
 		return 1;
 	}
