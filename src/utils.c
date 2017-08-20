@@ -242,18 +242,18 @@ const char *str_addr( const IP *addr ) {
 
 	switch( addr->ss_family ) {
 		case AF_INET6:
-			port = ntohs( ((IP6 *)addr)->sin6_port );
+			port = ((IP6 *)addr)->sin6_port;
 			inet_ntop( AF_INET6, &((IP6 *)addr)->sin6_addr, buf, sizeof(buf) );
-			sprintf( addrbuf, "[%s]:%hu", buf, port );
 			break;
 		case AF_INET:
-			port = ntohs( ((IP4 *)addr)->sin_port );
+			port = ((IP4 *)addr)->sin_port;
 			inet_ntop( AF_INET, &((IP4 *)addr)->sin_addr, buf, sizeof(buf) );
-			sprintf( addrbuf, "%s:%hu", buf, port );
 			break;
 		default:
-			sprintf( addrbuf, "<invalid address>" );
+			return "<invalid address>";
 	}
+
+	sprintf( addrbuf, "%s:%hu", buf, ntohs( port ) );
 
 	return addrbuf;
 }
