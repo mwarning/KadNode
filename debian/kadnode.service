@@ -3,7 +3,7 @@ Description=Decentralized DNS resolver
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/kadnode --daemon --cmd-disable-stdin --pidfile /var/run/kadnode.pid --config /etc/kadnode/kadnode.conf
+ExecStart=/usr/bin/kadnode --daemon --pidfile /var/run/kadnode.pid --config /etc/kadnode/kadnode.conf
 KillMode=mixed
 Restart=on-failure
 PIDFile=/var/run/kadnode.pid
