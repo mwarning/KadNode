@@ -84,7 +84,7 @@ void unix_write_pidfile( int pid, const char* pidfile ) {
 		exit( 1 );
 	}
 
-	if( fprintf( file, "%i", pid ) < 0 ) {
+	if( fprintf( file, "%i\n", pid ) < 0 ) {
 		log_err( "UNX: Failed to write PID file." );
 		exit( 1 );
 	}
