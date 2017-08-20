@@ -17,6 +17,9 @@
 
 #include "main.h"
 
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
+
 #define MAX_ADDRS 32
 
 static int g_sock = -1;
@@ -62,7 +65,7 @@ int _nss_kadnode_init() {
 	struct timeval tv;
 	const int opt_on = 1;
 
-	if( _nss_kadnode_addr_parse( &g_sockaddr, "::1", NSS_PORT, AF_UNSPEC ) < 0 ) {
+	if( _nss_kadnode_addr_parse( &g_sockaddr, "::1", STR(NSS_PORT), AF_UNSPEC ) < 0 ) {
 		return 0;
 	}
 

@@ -51,7 +51,7 @@ endif
 ifeq ($(findstring nss,$(FEATURES)),nss)
   OBJS += build/ext-nss.o
   CFLAGS += -DNSS
-  EXTRA += kadnode-libnss
+  EXTRA += libnss-kadnode.so.2
 endif
 
 ifeq ($(findstring tls,$(FEATURES)),tls)
