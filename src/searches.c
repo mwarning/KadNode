@@ -5,18 +5,18 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "log.h"
-#include "main.h"
-#include "conf.h"
-#include "utils.h"
-#include "net.h"
+#include "kadnode/log.h"
+#include "kadnode/main.h"
+#include "kadnode/conf.h"
+#include "kadnode/utils.h"
+#include "kadnode/net.h"
 #ifdef BOB
-#include "ext-bob.h"
+#include "kadnode/ext-bob.h"
 #endif
 #ifdef TLS
-#include "ext-tls-client.h"
+#include "kadnode/ext-tls-client.h"
 #endif
-#include "searches.h"
+#include "kadnode/searches.h"
 
 
 /*

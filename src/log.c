@@ -5,9 +5,9 @@
 #include <stdarg.h>
 #include <time.h>
 
-#include "main.h"
-#include "conf.h"
-#include "log.h"
+#include "kadnode/main.h"
+#include "kadnode/conf.h"
+#include "kadnode/log.h"
 
 
 #ifdef DEBUG

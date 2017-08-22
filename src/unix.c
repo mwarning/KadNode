@@ -8,10 +8,10 @@
 #include <fcntl.h>
 #include <signal.h>
 
-#include "main.h"
-#include "conf.h"
-#include "log.h"
-#include "unix.h"
+#include "kadnode/main.h"
+#include "kadnode/conf.h"
+#include "kadnode/log.h"
+#include "kadnode/unix.h"
 
 
 void unix_sig_stop( int signo ) {

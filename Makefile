@@ -1,7 +1,7 @@
 
 CC ?= gcc
 CFLAGS ?= -Os -Wall -Wwrite-strings -pedantic
-CFLAGS += -std=gnu99 -I/usr/local/include
+CFLAGS += -std=gnu99 -Iinclude -I/usr/local/include
 LFLAGS += -L/usr/local/lib -lc
 FEATURES ?= dns lpd tls bob cmd debug #nss natpmp upnp
 
@@ -80,7 +80,7 @@ ifeq ($(ENABLE_FORWARDING),1)
 endif
 
 
-build/%.o : src/%.c src/%.h
+build/%.o : src/%.c include/kadnode/%.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 kadnode-ctl:

@@ -8,24 +8,24 @@
 #include <limits.h>
 #include <errno.h>
 
-#include "main.h"
-#include "log.h"
-#include "utils.h"
-#include "conf.h"
-#include "peerfile.h"
-#include "kad.h"
+#include "kadnode/main.h"
+#include "kadnode/log.h"
+#include "kadnode/utils.h"
+#include "kadnode/conf.h"
+#include "kadnode/peerfile.h"
+#include "kadnode/kad.h"
 #ifdef TLS
-#include "ext-tls-client.h"
-#include "ext-tls-server.h"
+#include "kadnode/ext-tls-client.h"
+#include "kadnode/ext-tls-server.h"
 #endif
 #ifdef BOB
-#include "ext-bob.h"
+#include "kadnode/ext-bob.h"
 #endif
 #ifdef FWD
-#include "ext-fwd.h"
+#include "kadnode/ext-fwd.h"
 #endif
 #ifdef __CYGWIN__
-#include "windows.h"
+#include "kadnode/windows.h"
 #endif
 
 // Global object variables

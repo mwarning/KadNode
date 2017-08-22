@@ -4,10 +4,10 @@
 #include <errno.h>
 #include <string.h>
 
-#include "log.h"
-#include "conf.h"
-#include "ext-fwd.h"
-#include "upnp.h"
+#include "kadnode/log.h"
+#include "kadnode/conf.h"
+#include "kadnode/ext-fwd.h"
+#include "kadnode/upnp.h"
 
 
 /*
