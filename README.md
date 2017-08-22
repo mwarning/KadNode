@@ -270,5 +270,5 @@ configure port forwardings manually.
 
 ## AUTHORS
 
-  * KadNode: Moritz Warning (http://github.com/mwarning)
-  * Kademlia: Juliusz Chroboczek
+  * KadNode: Moritz Warning (http://github.com/mwarning/KadNode)
+  * DHT: Juliusz Chroboczek (https://github.com/jech/dht)
