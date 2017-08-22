@@ -6,9 +6,6 @@ LIST_SEP="
 "
 KADNODE_BIN=/usr/bin/kadnode
 
-count() {
-	echo $#
-}
 
 append_opts() {
 	local p vl v s="$1"; shift

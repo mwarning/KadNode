@@ -240,11 +240,11 @@ void fwd_setup( void ) {
 	}
 
 #ifdef FWD_NATPMP
-	log_info("FWD: enable NAT-PMP");
+	log_info( "FWD: enable NAT-PMP" );
 	natpmp_init( &natpmp );
 #endif
 #ifdef FWD_UPNP
-	log_info("FWD: enable UPnP");
+	log_info( "FWD: enable UPnP" );
 	upnp_init( &upnp );
 #endif
 

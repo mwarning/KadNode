@@ -2,7 +2,7 @@
 # $FreeBSD$
 
 PORTNAME=	kadnode
-PORTVERSION=	1.0.0
+PORTVERSION=	2.0.0
 PORTREVISION=	1
 CATEGORIES=	dns
 MASTER_SITES=	https://github.com/mwarning/KadNode/archive/
@@ -26,12 +26,12 @@ NATPMP_DESC=	 NAT-PMP support. Enables remote port forwarding on the router.
 NSS_DESC=	Name Service Switch support to intercept host queries (/etc/nsswitch.conf).
 UPNP_DESC=	UPnP support. Enable remote port forwarding on the router.
 
-OPTIONS_DEFAULT=	AUTH CMD LPD NSS
+OPTIONS_DEFAULT=	BOB TLS CMD LPD NSS
 
 .include <bsd.port.options.mk>
 
 .if ${PORT_OPTIONS:MAUTH}
-FEATURES+=auth
+FEATURES+=bob tls
 DEPENDS+=	${PORTSDIR}/security/libsodium
 .endif
 

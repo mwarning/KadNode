@@ -20,3 +20,5 @@ Use this command if you want to create an unsigned package:
 ```
 dpkg-buildpackage -b -rfakeroot -us -uc
 ```
+
+The .deb package can be found under the kadnode source folder.
