@@ -12,13 +12,13 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
-#include "main.h"
-#include "conf.h"
-#include "log.h"
-#include "utils.h"
-#include "kad.h"
-#include "net.h"
-#include "ext-dns.h"
+#include "kadnode/main.h"
+#include "kadnode/conf.h"
+#include "kadnode/log.h"
+#include "kadnode/utils.h"
+#include "kadnode/kad.h"
+#include "kadnode/net.h"
+#include "kadnode/ext-dns.h"
 
 #define MAX_ADDR_RECORDS 32
 

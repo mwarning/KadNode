@@ -10,21 +10,21 @@
 #include <stdbool.h>
 #include <sys/socket.h>
 
-#include "main.h"
-#include "conf.h"
-#include "utils.h"
-#include "log.h"
-#include "kad.h"
-#include "net.h"
-#include "announces.h"
-#include "searches.h"
+#include "kadnode/main.h"
+#include "kadnode/conf.h"
+#include "kadnode/utils.h"
+#include "kadnode/log.h"
+#include "kadnode/kad.h"
+#include "kadnode/net.h"
+#include "kadnode/announces.h"
+#include "kadnode/searches.h"
 #ifdef BOB
-#include "ext-bob.h"
+#include "kadnode/ext-bob.h"
 #endif
 #ifdef FWD
-#include "ext-fwd.h"
+#include "kadnode/ext-fwd.h"
 #endif
-#include "ext-cmd.h"
+#include "kadnode/ext-cmd.h"
 
 
 static const char* cmd_usage =

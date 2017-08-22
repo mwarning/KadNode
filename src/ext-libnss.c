@@ -15,7 +15,7 @@
 #include <sys/param.h>
 #endif
 
-#include "main.h"
+#include "kadnode/main.h"
 
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)

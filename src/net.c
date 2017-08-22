@@ -13,11 +13,11 @@
 #include <netinet/in.h>
 #include <fcntl.h>
 
-#include "main.h"
-#include "conf.h"
-#include "log.h"
-#include "utils.h"
-#include "net.h"
+#include "kadnode/main.h"
+#include "kadnode/conf.h"
+#include "kadnode/log.h"
+#include "kadnode/utils.h"
+#include "kadnode/net.h"
 
 
 struct task_t {

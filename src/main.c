@@ -8,41 +8,41 @@
 #include <windows.h>
 #endif
 
-#include "main.h"
-#include "conf.h"
-#include "log.h"
-#include "kad.h"
-#include "utils.h"
-#include "unix.h"
-#include "net.h"
-#include "announces.h"
-#include "searches.h"
-#include "peerfile.h"
+#include "kadnode/main.h"
+#include "kadnode/conf.h"
+#include "kadnode/log.h"
+#include "kadnode/kad.h"
+#include "kadnode/utils.h"
+#include "kadnode/unix.h"
+#include "kadnode/net.h"
+#include "kadnode/announces.h"
+#include "kadnode/searches.h"
+#include "kadnode/peerfile.h"
 #ifdef __CYGWIN__
-#include "windows.h"
+#include "kadnode/windows.h"
 #endif
 
 #ifdef LPD
-#include "ext-lpd.h"
+#include "kadnode/ext-lpd.h"
 #endif
 #ifdef BOB
-#include "ext-bob.h"
+#include "kadnode/ext-bob.h"
 #endif
 #ifdef DNS
-#include "ext-dns.h"
+#include "kadnode/ext-dns.h"
 #endif
 #ifdef NSS
-#include "ext-nss.h"
+#include "kadnode/ext-nss.h"
 #endif
 #ifdef CMD
-#include "ext-cmd.h"
+#include "kadnode/ext-cmd.h"
 #endif
 #ifdef FWD
-#include "ext-fwd.h"
+#include "kadnode/ext-fwd.h"
 #endif
 #ifdef TLS
-#include "ext-tls-client.h"
-#include "ext-tls-server.h"
+#include "kadnode/ext-tls-client.h"
+#include "kadnode/ext-tls-server.h"
 #endif
 
 
