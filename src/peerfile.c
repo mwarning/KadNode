@@ -32,7 +32,8 @@ static struct peer *g_peers = NULL;
 void peerfile_export( void ) {
 	const char *filename;
 	IP addrs[200];
-	size_t i, num;
+	size_t i;
+	int num;
 	FILE *fp;
 
 	filename = gconf->peerfile;
@@ -47,13 +48,8 @@ void peerfile_export( void ) {
 
 	num = kad_export_nodes( addrs, N_ELEMS(addrs) );
 
-	if( num < 0 ) {
-		log_warn("PEERFILE: Failed to export nodes.");
-		return;
-	}
-
 	// No peers to export
-	if( num == 0 ) {
+	if( num <= 0 ) {
 		log_info( "PEERFILE: No peers to export." );
 		return;
 	}
