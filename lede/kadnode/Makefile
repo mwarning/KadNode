@@ -32,7 +32,7 @@ define Package/kadnode
 endef
 
 define Package/kadnode/description
-	P2P name resolution daemon
+	P2P DNS resolver
 endef
 
 define Package/kadnode/config
