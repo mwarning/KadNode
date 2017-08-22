@@ -17,11 +17,11 @@ static struct timespec log_start = { 0, 0 };
 
 const char *log_time() {
 	struct timespec now = { 0, 0 };
-	clock_gettime( CLOCK_MONOTONIC_COARSE, &now );
+	clock_gettime( CLOCK_MONOTONIC, &now );
 
 	// Initialize clock
 	if( log_start.tv_sec == 0 && log_start.tv_nsec == 0 ) {
-		clock_gettime( CLOCK_MONOTONIC_COARSE, &log_start );
+		clock_gettime( CLOCK_MONOTONIC, &log_start );
 	}
 
 	static char buf[10];
