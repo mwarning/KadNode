@@ -231,11 +231,11 @@ void dht_hash( void *hash_return, int hash_size,
 	assert( len2 == 4 || len2 == 16 );
 	if( len2 == 4 ) {
 		const uint32_t d2 = *((uint32_t*) v2);
+		hash.num2[0] ^= d2;
 		hash.num2[1] ^= d2;
-		hash.num2[2] ^= d2;
 	} else {
-		hash.num1[1] ^= *((uint64_t*) v2);
-		hash.num1[1] ^= *((uint64_t*) v2 + 8);
+		hash.num1[0] ^= *((uint64_t*) v2);
+		hash.num1[0] ^= *((uint64_t*) v2 + 8);
 	}
 
 	assert( len3 == 2 );
