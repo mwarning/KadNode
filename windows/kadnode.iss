@@ -2,7 +2,7 @@
 
 [Setup]
 AppName=KadNode
-AppVersion="1.0.0"
+AppVersion="2.0.0"
 AppPublisher="Moritz Warning"
 AppPublisherURL="https://github.com/mwarning/KadNode"
 DefaultDirName={pf}\KadNode
@@ -11,7 +11,7 @@ PrivilegesRequired=admin
 AllowNoIcons=yes
 LicenseFile=..\LICENSE
 OutputDir=..\build
-OutputBaseFilename=kadnode_1.0.0_i386
+OutputBaseFilename=kadnode_2.0.0_i386
 Compression=lzma
 SolidCompression=yes
 
@@ -20,14 +20,14 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
 Source: "C:\cygwin64\bin\cygwin1.dll"; DestDir: "{app}"
-Source: "C:\cygwin64\bin\cyggcc_s-1.dll"; DestDir: "{app}"
+Source: "C:\cygwin64\bin\cyggcc_s-seh-1.dll"; DestDir: "{app}"
 Source: "..\build\kadnode.exe"; DestDir: "{app}"
 Source: "..\build\kadnode-ctl.exe"; DestDir: "{app}"
 Source: "..\windows\dns_setup.bat"; DestDir: "{app}"
 Source: "..\windows\dns_reset.bat"; DestDir: "{app}"
 Source: "..\windows\kadnode_start.bat"; DestDir: "{app}"
 Source: "..\windows\kadnode_stop.bat"; DestDir: "{app}"
-Source: "..\windows\config.txt"; DestDir: "{app}"
+Source: "..\misc\kadnode.conf"; DestDir: "{app}"; AfterInstall: ConvertLineEndings
 Source: "..\README.md"; DestDir: "{app}"; DestName: "readme.txt"; AfterInstall: ConvertLineEndings 
 Source: "..\LICENSE"; DestDir: "{app}"; DestName: "license.txt"; AfterInstall: ConvertLineEndings
 Source: "..\misc\peers.txt"; DestDir: "{app}"; AfterInstall: ConvertLineEndings
@@ -67,9 +67,11 @@ procedure ConvertLineEndings();
 var
   FilePath : String;
   FileContents : String;
+  UTF8FileContents : AnsiString;
 begin
-  FilePath := ExpandConstant(CurrentFileName)
-  LoadStringFromFile(FilePath, FileContents);
+  FilePath := ExpandConstant(CurrentFileName);
+  UTF8FileContents := String(FileContents);
+  LoadStringFromFile(FilePath, UTF8FileContents);
   StringChangeEx(FileContents, LF, CRLF, False);
-  SaveStringToFile(FilePath, FileContents, False);
+  SaveStringToFile(FilePath, UTF8FileContents, False);
 end;

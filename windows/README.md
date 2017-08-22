@@ -15,9 +15,10 @@ you need to download and install [mbedtls](https://github.com/ARMmbed/mbedtls/).
 Open the Cygwin terminal and execute:
 
 ```
-wget https://tls.mbed.org/download/mbedtls-2.5.1-apache.tgz
+wget https://tls.mbed.org/download/start/mbedtls-2.5.1-apache.tgz
 tar -xvf mbedtls-2.5.1-apache.tgz
-cd mbedtls-2.5.1
+cd mbedtls-2.5.1-apache
+./configure
 make
 make install
 cd ..
