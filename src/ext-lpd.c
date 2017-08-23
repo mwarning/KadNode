@@ -183,7 +183,7 @@ static int create_receive_socket( const IP *addr, const char ifname[] ) {
 		memcpy( &mreq6.ipv6mr_multiaddr, &((IP6*) addr)->sin6_addr, 16 );
 		mreq6.ipv6mr_interface = ifname ? if_nametoindex( ifname ) : 0;
 
-		if( setsockopt( sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &mreq6, sizeof(mreq6) ) < 0 ) {
+		if( setsockopt( sock, IPPROTO_IPV6, IPV6_JOIN_GROUP /* IPV6_ADD_MEMBERSHIP */, &mreq6, sizeof(mreq6) ) < 0 ) {
 			goto fail;
 		}
 	}
