@@ -5,13 +5,13 @@
 #include <errno.h>
 #include <netdb.h>
 
-#include "kadnode/main.h"
-#include "kadnode/conf.h"
-#include "kadnode/log.h"
-#include "kadnode/utils.h"
-#include "kadnode/net.h"
-#include "kadnode/kad.h"
-#include "kadnode/peerfile.h"
+#include "main.h"
+#include "conf.h"
+#include "log.h"
+#include "utils.h"
+#include "net.h"
+#include "kad.h"
+#include "peerfile.h"
 
 
 struct peer {

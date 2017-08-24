@@ -5,9 +5,9 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include "kadnode/main.h"
-#include "kadnode/conf.h"
-#include "kadnode/log.h"
+#include "main.h"
+#include "conf.h"
+#include "log.h"
 
 
 static SERVICE_STATUS sStatus;

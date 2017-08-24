@@ -21,14 +21,14 @@
 #include "mbedtls/debug.h"
 #include "mbedtls/sha256.h"
 
-#include "kadnode/main.h"
-#include "kadnode/conf.h"
-#include "kadnode/log.h"
-#include "kadnode/utils.h"
-#include "kadnode/kad.h"
-#include "kadnode/net.h"
-#include "kadnode/searches.h"
-#include "kadnode/ext-tls-client.h"
+#include "main.h"
+#include "conf.h"
+#include "log.h"
+#include "utils.h"
+#include "kad.h"
+#include "net.h"
+#include "searches.h"
+#include "ext-tls-client.h"
 
 
 // SSL structures for parallel connection handling.

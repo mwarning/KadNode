@@ -4,16 +4,16 @@
 #include <sys/time.h>
 #include <assert.h>
 
-#include "kadnode/log.h"
-#include "kadnode/main.h"
-#include "kadnode/utils.h"
-#include "kadnode/conf.h"
-#include "kadnode/utils.h"
-#include "kadnode/net.h"
-#include "kadnode/searches.h"
-#include "kadnode/announces.h"
+#include "log.h"
+#include "main.h"
+#include "utils.h"
+#include "conf.h"
+#include "utils.h"
+#include "net.h"
+#include "searches.h"
+#include "announces.h"
 #ifdef BOB
-#include "kadnode/ext-bob.h"
+#include "ext-bob.h"
 #endif
 
 #include "dht.c"

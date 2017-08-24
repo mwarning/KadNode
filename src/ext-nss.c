@@ -2,13 +2,13 @@
 #include <stdio.h>
 #include <sys/socket.h>
 
-#include "kadnode/main.h"
-#include "kadnode/conf.h"
-#include "kadnode/log.h"
-#include "kadnode/utils.h"
-#include "kadnode/kad.h"
-#include "kadnode/net.h"
-#include "kadnode/ext-nss.h"
+#include "main.h"
+#include "conf.h"
+#include "log.h"
+#include "utils.h"
+#include "kad.h"
+#include "net.h"
+#include "ext-nss.h"
 
 #define MAX_ADDRS 32
 

@@ -5,18 +5,18 @@
 #include <string.h>
 #include <limits.h>
 
-#include "kadnode/log.h"
-#include "kadnode/conf.h"
-#include "kadnode/utils.h"
-#include "kadnode/net.h"
-#include "kadnode/kad.h"
+#include "log.h"
+#include "conf.h"
+#include "utils.h"
+#include "net.h"
+#include "kad.h"
 #ifdef BOB
-#include "kadnode/ext-bob.h"
+#include "ext-bob.h"
 #endif
 #ifdef TLS
-#include "kadnode/ext-tls-client.h"
+#include "ext-tls-client.h"
 #endif
-#include "kadnode/announces.h"
+#include "announces.h"
 
 
 // Announce values every 20 minutes

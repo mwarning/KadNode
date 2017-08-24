@@ -10,10 +10,10 @@
 #include <netdb.h>
 #include <ctype.h>
 
-#include "kadnode/main.h"
-#include "kadnode/log.h"
-#include "kadnode/conf.h"
-#include "kadnode/utils.h"
+#include "main.h"
+#include "log.h"
+#include "conf.h"
+#include "utils.h"
 
 
 // Try to create a DHT id from a sanitized hex query

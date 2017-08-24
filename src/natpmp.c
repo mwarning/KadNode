@@ -5,10 +5,10 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
-#include "kadnode/log.h"
-#include "kadnode/conf.h"
-#include "kadnode/ext-fwd.h"
-#include "kadnode/natpmp.h"
+#include "log.h"
+#include "conf.h"
+#include "ext-fwd.h"
+#include "natpmp.h"
 
 
 enum {

@@ -5,17 +5,17 @@
 #include <string.h>
 #include <limits.h>
 
-#include "kadnode/main.h"
-#include "kadnode/conf.h"
-#include "kadnode/net.h"
-#include "kadnode/log.h"
-#include "kadnode/utils.h"
-#include "kadnode/ext-fwd.h"
+#include "main.h"
+#include "conf.h"
+#include "net.h"
+#include "log.h"
+#include "utils.h"
+#include "ext-fwd.h"
 #ifdef FWD_NATPMP
-#include "kadnode/natpmp.h"
+#include "natpmp.h"
 #endif
 #ifdef FWD_UPNP
-#include "kadnode/upnp.h"
+#include "upnp.h"
 #endif
 
 

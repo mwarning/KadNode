@@ -1,11 +1,11 @@
 
-#include "kadnode/conf.h"
-#include "kadnode/kad.h"
-#include "kadnode/net.h"
-#include "kadnode/main.h"
-#include "kadnode/peerfile.h"
+#include "conf.h"
+#include "kad.h"
+#include "net.h"
+#include "main.h"
+#include "peerfile.h"
 
-#include "kadnode/libkadnode.h"
+#include "libkadnode.h"
 
 
 int kadnode_init( void ) {

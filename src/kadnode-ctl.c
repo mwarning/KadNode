@@ -11,7 +11,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#include "kadnode/main.h"
+#include "main.h"
 
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)

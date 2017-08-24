@@ -14,15 +14,15 @@
 #include "mbedtls/rsa.h"
 #include "mbedtls/x509.h"
 
-#include "kadnode/main.h"
-#include "kadnode/conf.h"
-#include "kadnode/log.h"
-#include "kadnode/utils.h"
-#include "kadnode/kad.h"
-#include "kadnode/net.h"
-#include "kadnode/announces.h"
-#include "kadnode/searches.h"
-#include "kadnode/ext-bob.h"
+#include "main.h"
+#include "conf.h"
+#include "log.h"
+#include "utils.h"
+#include "kad.h"
+#include "net.h"
+#include "announces.h"
+#include "searches.h"
+#include "ext-bob.h"
 
 
 /*
