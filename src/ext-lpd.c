@@ -153,13 +153,15 @@ fail:
 static int create_receive_socket( const IP *addr, const char ifname[] ) {
 	const int opt_off = 0;
 	const int af = addr->ss_family;
+	socklen_t addrlen;
 	int sock;
 
 	if( (sock = net_socket( "LPD", ifname, IPPROTO_IP, af ) ) < 0 ) {
 		goto fail;
 	}
 
-	if( bind( sock, (struct sockaddr*)addr, sizeof(IP) ) != 0) {
+	addrlen = addr_len( addr );
+	if( bind( sock, (struct sockaddr*)addr, addrlen ) != 0) {
 		goto fail;
 	}
 
