@@ -120,7 +120,9 @@ osx-pkg:
 	cd macosx && ./build.sh
 
 freebsd-pkg:
-	cd freebsd && make package
+	git archive master --prefix kadnode/ -o freebsd/kadnode.tar.gz
+	cd freebsd
+	make package
 
 install:
 	cp build/kadnode $(DESTDIR)/usr/bin/ 2> /dev/null || true
