@@ -45,3 +45,8 @@ using the public key as you would use a domain name. The resolved IP addresses a
     When a peer file is given (--peerfile), good peers are written to it every 24 hours and on proper shutdown (but only after at least 5min runtime).
 * **Where does the name *KadNode* come from?**  
     It is a short form Kademlia Node; Kademlia is the name of the DHT design used for BitTorrent.
+* **Multicast Discovery does not seem to work.** 
+    If there is no error message, then the multicast packet might leave the computer on the wrong network port.  
+    The peer discovery packets follow the default network route that probably points to the Internet.  
+    This behavior can be changed for IPv4 with this command (route through eth0):  
+    `route add -net 224.0.0.0 netmask 240.0.0.0 eth0`
