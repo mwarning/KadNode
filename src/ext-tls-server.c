@@ -311,7 +311,7 @@ void tls_server_setup( void ) {
 	int ret;
 
 	// Without SNI entries, there is no reason to start the TLS server
-	if( g_sni_entries ) {
+	if( g_sni_entries == NULL ) {
 		return;
 	}
 
