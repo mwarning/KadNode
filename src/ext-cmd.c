@@ -192,8 +192,6 @@ static int cmd_exec( struct reply_t *r, const char input[] ) {
 	if( sscanf( input, " ping %255s %c", hostname, &d ) == 1 ) {
 		rc = cmd_ping( r, hostname );
 	} else if( sscanf( input, " lookup %255s %c", hostname, &d ) == 1 ) {
-		printf("lookup: '%s'\n", hostname);
-
 		// Check searches for node
 		rc = kad_lookup( hostname, addrs, N_ELEMS(addrs) );
 
