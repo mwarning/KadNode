@@ -1,10 +1,10 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "README" "" "August 2017" "" ""
+.TH "MANPAGE" "" "August 2017" "" ""
 .
 .SH "NAME"
-\fBREADME\fR
+\fBmanpage\fR
 .
 .SH "kadnode(1) \- P2P name resolver daemon"
 .
@@ -15,51 +15,7 @@
 \fBkadnode\-ctl\fR [\.\.\.]
 .
 .SH "DESCRIPTION"
-\fBKadNode\fR is a small P2P DNS resolver based on a Distributed Hash Table (DHT)\. KadNode can intercept and resolve DNS request in the systems background\. Every instance can also announce any domain like e\.g\. myname\.p2p\. People on others devices running KadNode can then enter myname\.p2p into their browsers or other programs in order to reach the announcing host\. To avoid name clashes, cryptographic public/private key pairs can be used\. This makes it possible to have a personal and decentralized DynDNS service\. The DHT \fIhttps://github\.com/jech/dht\fR is identical to the one used in the Transmission Bittorrent client and works\'on the Internet as well as on local networks\.
-.
-.P
-Features:
-.
-.IP "\(bu" 4
-IPv4/IPv6 support
-.
-.IP "\(bu" 4
-TLS support (e\.g\. can use browser CA chain)
-.
-.IP "\(bu" 4
-Plain public key links as \fIpublic\-hex\-key\fR\.p2p
-.
-.IP "\(bu" 4
-UPnP/NAT\-PMP support
-.
-.IP "\(bu" 4
-local peer discovery
-.
-.IP "\(bu" 4
-small size, ~85KB depending on features
-.
-.IP "\(bu" 4
-public/secret key authentication
-.
-.IP "\(bu" 4
-command line interface (kadnode\-ctl)
-.
-.IP "\(bu" 4
-NSS support through /etc/nsswitch\.conf
-.
-.IP "\(bu" 4
-integrated simplified DNS server and proxy (handles A, AAAA, and SRV requests)
-.
-.IP "\(bu" 4
-packages for ArchLinux/Debian/FreeBSD/MacOSX/LEDE/Windows
-.
-.IP "\(bu" 4
-peer file import/export on startup/shutdown and every 24h
-.
-.IP "" 0
-.
-.P
-Crypto/TLS support is provided by libmbedtls \fIhttps://github\.com/ARMmbed/mbedtls/\fR\. The library is also used by OpenWrt\.
+\fBKadNode\fR is a small P2P DNS resolver\. It supports authentication based on x509 certificates and hexadecimal public key queries\.
 .
 .SH "JOIN THE SWARM"
 KadNode needs to know at least one active peer to join / bootstrap into the swarm\. There are three ways to archieve this:
@@ -423,54 +379,8 @@ Print this help\.
 .
 .IP "" 0
 .
-.SH "Features List"
-Most features are optional and can be left out to reduce the binary size:
-.
-.IP "\(bu" 4
-cmd \- Command line\. Mostly useful for debugging\.
-.
-.IP "\(bu" 4
-debug \- Enabled debug output\. For debugging\.
-.
-.IP "\(bu" 4
-lpd \- Local peer discovery\. Finds local peers\.
-.
-.IP "\(bu" 4
-tls \- TLS authentication\. Uses libmbedtls\.
-.
-.IP "\(bu" 4
-bob \- Raw secret/public key authentication\. Uses libmbedtls\.
-.
-.IP "\(bu" 4
-dns \- DNS interface support\.
-.
-.IP "\(bu" 4
-nss \- Name Service Switch interface support\.
-.
-.IP "\(bu" 4
-upnp \- Universal Plug and Play support\. For automatic port forwarding\.
-.
-.IP "\(bu" 4
-natpmp \- NAT Port Mapping support\. For automatic port forwarding\.
-.
-.IP "" 0
-.
-.P
-Call \fBkadnode \-\-version\fR to get the list of included features\.
-.
 .SH "Automatic Port Forwarding"
 If KadNode runs on a computer in a private network, it will try to establish a port forwarding for the DHT port and ports used for announcements\. Port forwarding only works if UPnP/NAT\-PMP is compiled into KadNode and is supported by the gateway/router\. This is useful to make a local service (e\.g\. a web server) reachable from the Internet without the need to configure port forwardings manually\.
 .
 .SH "LICENSE"
 MIT/X11
-.
-.SH "AUTHORS"
-.
-.IP "\(bu" 4
-KadNode: Moritz Warning (http://github\.com/mwarning/KadNode)
-.
-.IP "\(bu" 4
-DHT: Juliusz Chroboczek (https://github\.com/jech/dht)
-.
-.IP "" 0
-
