@@ -1,5 +1,6 @@
-# Use KadNode with Let's Encrypt certificates
+# Examples
 
+## Use KadNode with Let's Encrypt certificates
 
 You might want to use KadNode with certificates from Let's Encrypt. In this example we assume to have certificates for mydomain.com.
 
@@ -19,7 +20,7 @@ Client configuration:
 ```
 Note: You can also add a whole folder of CA root certificates.
 
-# Use HTTPS server for server authentication
+## Use HTTPS server for server authentication
 
 Instead of KadNode, a HTTPS server (e.g. apache, nginx) on the same host can provide the authentication. In this case KadNode only does the announcements:
 
@@ -28,9 +29,7 @@ Server configuration:
 ./build/kadnode --announce mydomain.com:443
 ```
 
-Other 
-
-# Create your own Certificate Authority and Certificates
+## Create your own Certificate Authority and Certificates
 
 You can use a script to create your own root certifactes:
 
@@ -39,6 +38,7 @@ You can use a script to create your own root certifactes:
 ```
 
 This will create the following files:
+
 File             | Description
 -----------------|---------------------------------
 rootCA.key       | Private key for root certificate
