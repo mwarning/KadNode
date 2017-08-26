@@ -55,7 +55,7 @@ static void handle_mcast( int rc, struct LPD_STATE* lpd ) {
 	if( lpd->mcast_time <= time_now_sec() ) {
 		// No peers known, send multicast
 		if( kad_count_nodes( 0 ) == 0 ) {
-			log_debug( "LPD: Try to send hello to %s", str_addr( &lpd->mcast_addr ) );
+			log_debug( "LPD: Send discovery message to %s", str_addr( &lpd->mcast_addr ) );
 			sprintf( buf, "DHT %d", gconf->dht_port );
 			sendto( lpd->sock_send, (void const*) buf, strlen(buf), 0, (struct sockaddr const*) &lpd->mcast_addr, sizeof(IP) );
 		}
