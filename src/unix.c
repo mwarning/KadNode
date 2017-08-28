@@ -15,11 +15,19 @@
 
 
 void unix_sig_stop( int signo ) {
+	if( gconf->is_running == 0 ) {
+		exit( 1 );
+	}
+
 	gconf->is_running = 0;
 	log_info( "Shutting down..." );
 }
 
 void unix_sig_term( int signo ) {
+	if( gconf->is_running == 0 ) {
+		exit( 1 );
+	}
+
 	gconf->is_running = 0;
 }
 
