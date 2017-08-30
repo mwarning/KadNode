@@ -128,6 +128,7 @@ static void tls_handle( int rc, int fd ) {
 	struct tls_resource* resource;
 	mbedtls_ssl_context* ssl;
 	const char *query;
+	uint32_t flags;
 	int ret;
 
 	resource = tls_find_resource( fd );
@@ -178,11 +179,12 @@ static void tls_handle( int rc, int fd ) {
 		);
 
 		// Verify peer X.509 certificate
+		flags = mbedtls_ssl_get_verify_result( ssl );
 
-		uint32_t flags = 0;
+#ifdef DEBUG
 		char buf[MBEDTLS_SSL_MAX_CONTENT_LEN + 1];
 
-		if( ( flags = mbedtls_ssl_get_verify_result( ssl ) ) != 0 ) {
+		if( flags != 0 ) {
 			mbedtls_x509_crt_verify_info( buf, sizeof( buf ), "", flags );
 			log_debug( "TLS: Peer verification failed: %s", buf);
 		}
@@ -191,7 +193,7 @@ static void tls_handle( int rc, int fd ) {
 			mbedtls_x509_crt_info( (char *) buf, sizeof( buf ) - 1, "", mbedtls_ssl_get_peer_cert( ssl ) );
 			log_debug( "TLS: Peer certificate information: %s", buf);
 		}
-
+#endif
 		auth_end( resource, flags == 0 ? AUTH_OK : AUTH_FAILED );
 	}
 }

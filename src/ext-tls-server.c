@@ -73,6 +73,7 @@ static void end_client_connection( mbedtls_net_context *client_fd, int result ) 
 	mbedtls_net_free( client_fd );
 	mbedtls_ssl_session_reset( &g_ssl );
 
+#ifdef DEBUG
 	if( result == MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED )  {
 		log_debug( "TLS: Hello verification requested" );
 	} else if( result == MBEDTLS_ERR_SSL_CLIENT_RECONNECT ) {
@@ -84,14 +85,13 @@ static void end_client_connection( mbedtls_net_context *client_fd, int result ) 
 	} else {
 		log_debug( "TLS: Authentication successful" );
 	}
+#endif
 }
 
 static void tls_client_handler( int rc, int sock ) {
 	mbedtls_net_context *client_fd;
 	int ret;
 	int exp;
-
-	log_debug( "TLS: tls_client_handler, rc: %d", rc );
 
 	if( sock == g_client_fd4.fd ) {
 		client_fd = &g_client_fd4;
