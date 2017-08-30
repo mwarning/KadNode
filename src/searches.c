@@ -145,7 +145,7 @@ void searches_set_auth_state( const char query[], const IP *addr, const int stat
 	struct search_t *search;
 	struct result_t *result;
 
-	log_debug( "Set authentication state for %s: %s", query, str_state( state ) );
+	log_debug( "SRC: Set authentication state for %s: %s", query, str_state( state ) );
 
 	search = searches_find( query );
 
@@ -210,7 +210,7 @@ static void search_restart( struct search_t *search ) {
 	struct result_t *prev;
 	struct result_t *next;
 
-	log_debug( "Restart search for query: %s", search->query );
+	log_debug( "SRC: Restart search for query: %s", search->query );
 
 	search->start_time = time_now_sec();
 	search->done = 0;
@@ -282,7 +282,7 @@ struct search_t* searches_start( const char query[] ) {
 		callback = NULL;
 	} else {
 		// No idea what to do
-		log_debug( "No idea how what method to use for %s", query );
+		log_debug( "SRC: No idea how what method to use for %s", query );
 		return NULL;
 	}
 
@@ -293,7 +293,7 @@ struct search_t* searches_start( const char query[] ) {
 	memcpy( &new->query, query, sizeof(new->query) );
 	new->start_time = time_now_sec();
 
-	log_debug( "Create new search for query: %s", query );
+	log_debug( "SRC: Create new search for query: %s", query );
 
 	// Free slot if taken
 	if( g_searches[g_searches_idx] != NULL ) {

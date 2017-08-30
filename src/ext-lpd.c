@@ -161,7 +161,7 @@ static int create_receive_socket( const IP *addr, const char ifname[] ) {
 	}
 
 	addrlen = addr_len( addr );
-	if( bind( sock, (struct sockaddr*)addr, addrlen ) != 0) {
+	if( bind( sock, (struct sockaddr*)addr, addrlen ) != 0 ) {
 		goto fail;
 	}
 

@@ -419,7 +419,7 @@ int kad_lookup( const char query[], IP addr_array[], size_t addr_num ) {
 
 	log_debug( "Lookup identifier: %s", hostname );
 
-	// Find existing or create new item
+	// Find existing or create new search
 	search = searches_start( hostname );
 
 	if( search == NULL ) {
