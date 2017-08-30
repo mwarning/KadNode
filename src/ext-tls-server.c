@@ -100,18 +100,14 @@ static void tls_client_handler( int rc, int sock ) {
 	}
 
 	do ret = mbedtls_ssl_handshake( &g_ssl );
-	while( ret == MBEDTLS_ERR_SSL_WANT_READ ||
-		ret == MBEDTLS_ERR_SSL_WANT_WRITE );
-/*
-	int ret = mbedtls_ssl_handshake( &g_ssl );
-	if( ret == MBEDTLS_ERR_SSL_WANT_READ ||
-	   ret == MBEDTLS_ERR_SSL_WANT_WRITE )
-	{
-		printf("wait\n");
-		// retry
+	while( ret == MBEDTLS_ERR_SSL_WANT_WRITE );
+
+	if( ret == MBEDTLS_ERR_SSL_WANT_READ ) {
+		// TLS handshake in progress
 		return;
 	}
-	else*/ if( ret != 0 ) {
+
+	if( ret ) {
 #ifdef DEBUG
 		if( ret == MBEDTLS_ERR_X509_CERT_VERIFY_FAILED ) {
 			char vrfy_buf[512];
@@ -123,7 +119,6 @@ static void tls_client_handler( int rc, int sock ) {
 #endif
 		end_client_connection( client_fd, ret );
 	} else {
-		// ret == 0
 		log_debug( "TLS: Protocol is %s, ciphersuite is %s",
 			mbedtls_ssl_get_version( &g_ssl ), mbedtls_ssl_get_ciphersuite( &g_ssl ) );
 

@@ -149,7 +149,28 @@ static void tls_handle( int rc, int fd ) {
 		} else {
 			// Still connecting.
 		}
-	} else if( (ret = mbedtls_ssl_handshake( ssl ) ) == 0) {
+		return;
+	}
+
+	do ret = mbedtls_ssl_handshake( ssl );
+	while( ret == MBEDTLS_ERR_SSL_WANT_WRITE );
+
+	if( ret == MBEDTLS_ERR_SSL_WANT_READ ) {
+		// TLS handshake in progress
+		return;
+	}
+
+	if( ret ) {
+		// TLS handshake failure.
+#ifdef DEBUG
+		log_debug( "TLS: mbedtls_ssl_handshake returned -0x%x: %s", -ret, query );
+		if( ret == MBEDTLS_ERR_X509_CERT_VERIFY_FAILED ) {
+			log_debug( "TLS: Unable to verify the server's certificate: %s", query );
+		}
+#endif
+
+		auth_end( resource, AUTH_FAILED );
+	} else {
 		// TLS handshake done
 		log_debug( "TLS: Protocol [%s], Ciphersuite [%s] and fragment length %u: %s",
 			mbedtls_ssl_get_version( ssl ), mbedtls_ssl_get_ciphersuite( ssl ),
@@ -172,18 +193,6 @@ static void tls_handle( int rc, int fd ) {
 		}
 
 		auth_end( resource, flags == 0 ? AUTH_OK : AUTH_FAILED );
-	} else if( ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE ) {
-		// TLS handshake failure.
-#ifdef DEBUG
-		log_debug( "TLS: mbedtls_ssl_handshake returned -0x%x: %s", -ret, query );
-		if( ret == MBEDTLS_ERR_X509_CERT_VERIFY_FAILED ) {
-			log_debug( "TLS: Unable to verify the server's certificate: %s", query );
-		}
-#endif
-
-		auth_end( resource, AUTH_FAILED );
-	} else {
-		// TLS handshake in progress
 	}
 }
 
