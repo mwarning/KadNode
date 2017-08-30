@@ -238,22 +238,25 @@ const char *str_af( int af ) {
 const char *str_addr( const IP *addr ) {
 	static char addrbuf[FULL_ADDSTRLEN + 1];
 	char buf[INET6_ADDRSTRLEN + 1];
-	uint16_t port;
+	const char *fmt;
+	int port;
 
 	switch( addr->ss_family ) {
 		case AF_INET6:
 			port = ((IP6 *)addr)->sin6_port;
 			inet_ntop( AF_INET6, &((IP6 *)addr)->sin6_addr, buf, sizeof(buf) );
+			fmt = "[%s]:%d";
 			break;
 		case AF_INET:
 			port = ((IP4 *)addr)->sin_port;
 			inet_ntop( AF_INET, &((IP4 *)addr)->sin_addr, buf, sizeof(buf) );
+			fmt = "%s:%d";
 			break;
 		default:
 			return "<invalid address>";
 	}
 
-	sprintf( addrbuf, "%s:%hu", buf, ntohs( port ) );
+	sprintf( addrbuf, fmt, buf, ntohs( port ) );
 
 	return addrbuf;
 }
