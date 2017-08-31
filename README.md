@@ -1,21 +1,20 @@
 # KadNode
 
-KadNode is a small P2P DNS resolver to resolve and authenticate domains using the BitTorrent Peer-to-Peer network.
+KadNode is a small P2P DNS resolver to resolve and authenticate custom domains using the BitTorrent Peer-to-Peer network.
 
 Domain queries for the .p2p TLD are intercepted on the systems level. This makes it possible to use it with programs like browsers or console tools.
 
-Support for x509 certificates allows authentication using existing Certificate Authorities (CA), but also your own CA.
-As an alternative, domains can consist of 32 Byte hexadecimal public keys.
+Support for TLS allows authentication using existing Certificate Authorities (CA).
+As an alternative, domains can consist of 32 Byte hexadecimal domains representing public keys.
 
-Features:
+## Features:
 
 * IPv4/IPv6 support
 * TLS support (e.g. can use browser CA chain)
-* Plain public key links as <public-hex-key>.p2p
+* Public key links as <public-hex-key>.p2p
 * UPnP/NAT-PMP support
 * local peer discovery
 * small size, ~85KB depending on features
-* public/secret key authentication
 * command line interface (kadnode-ctl)
 * NSS support through /etc/nsswitch.conf
 * integrated simplified DNS server and proxy (handles A, AAAA, and SRV requests)

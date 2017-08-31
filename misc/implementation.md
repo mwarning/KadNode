@@ -1,5 +1,9 @@
 # Implementation Details
 
+## About Lookups
+
+A announcement is done every 20 minutes. The lifetime of those entries on other peer is expected to be around 15 minutes.
+Search results will be cached for about 20 minutes. If a lookup is done after 10 minutes after the search has been started, the search will be restarted and the cached results will be returned.
 
 ## Components
 

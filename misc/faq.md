@@ -3,10 +3,13 @@
     In short, KadNode is the Transmissions DHT with interfaces and packaging.  
     Slightly longer; KadNode is a tool that resolves names to IP addresses using the BitTorrent DHT network.
     KadNode runs in background and intercepts and answers name request for the .p2p domain.
-    It has a very low resource consumption. The main task is to just return IP addresses for identifiers,
-    not necessarly traditional DNS.
+    It has a very low resource consumption. The main task is to just return IP addresses for identifiers, not necessarly traditional DNS.
+* **Is the .p2p TLS mandatory?**  
+    No, it is only used to intercept requests and then stripped for the entire lookup process.
 * **How does KadNode intercept DNS reqests?**  
     On some systems the Name Service Switch (NSS) support (see /etc/nsswitch.conf) is used. For other systems KadNode includes a basic DNS server that listens on the local host (Supported are A, AAAA and SRV requests - to transmit the port). It can also act as a simple DNS proxy.
+* **Can annoucements be made for other nodes? Can I announce the IP address of e.g. google.de?**  
+    No, the IP address of the sender of an announcement is used. This can be seen as a pro and cons.
 * **How long does it take to resolve an address?**  
     An estimate would be 8 seconds. Unless the address has been been cached.
 * **So, it's all about DNS?**  
