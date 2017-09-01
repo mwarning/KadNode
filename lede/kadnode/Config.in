@@ -16,8 +16,13 @@ config KADNODE_ENABLE_DNS
 	depends on PACKAGE_kadnode
 	default y
 
-config KADNODE_ENABLE_AUTH
-	bool "Enable authentication support"
+config KADNODE_ENABLE_TLS
+	bool "Enable TLS authentication support"
+	depends on PACKAGE_kadnode
+	default n
+
+config KADNODE_ENABLE_BOB
+	bool "Enable BOB authentication support"
 	depends on PACKAGE_kadnode
 	default n
 
