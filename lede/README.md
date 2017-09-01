@@ -8,7 +8,7 @@ apt-get install git subversion g++ libncurses5-dev gawk zlib1g-dev build-essenti
 
 Now build LEDE:
 ```
-git clone -b lede-17.01 git://git.lede-project.org/source.git
+git clone -b v17.01.2 git://git.lede-project.org/source.git
 cd source
 
 ./scripts/feeds update -a
