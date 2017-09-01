@@ -303,7 +303,7 @@ void tls_client_setup( void ) {
 	int ret;
 	int i;
 
-	mbedtls_debug_set_threshold( 0 );
+	//mbedtls_debug_set_threshold( 0 );
 
 	mbedtls_ctr_drbg_init( &g_drbg );
 	mbedtls_entropy_init( &g_entropy );

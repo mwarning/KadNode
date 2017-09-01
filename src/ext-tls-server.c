@@ -320,7 +320,7 @@ void tls_server_setup( void ) {
 	mbedtls_ssl_config_init( &g_conf );
 	mbedtls_ctr_drbg_init( &g_drbg );
 
-	mbedtls_debug_set_threshold( 0 );
+	//mbedtls_debug_set_threshold( 0 );
 
 	mbedtls_entropy_init( &g_entropy );
 	if( ( ret = mbedtls_ctr_drbg_seed( &g_drbg, mbedtls_entropy_func, &g_entropy,
