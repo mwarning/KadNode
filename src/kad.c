@@ -64,23 +64,13 @@ typedef struct {
 
 // This callback is called when a search result arrives or a search completes
 void dht_callback_func( void *closure, int event, const uint8_t *info_hash, const void *data, size_t data_len ) {
-	struct search_t **searches;
 	struct search_t *search;
 	dht_addr4_t *data4;
 	dht_addr6_t *data6;
 	IP addr;
 	size_t i;
 
-	// Find search
-	search = NULL;
-	searches = searches_get();
-	while( *searches ) {
-		if( memcmp( (*searches)->id, info_hash, SHA1_BIN_LENGTH ) == 0 ) {
-			search = *searches;
-			break;
-		}
-		searches++;
-	}
+	search = searches_find_by_id( info_hash );
 
 	if( search == NULL ) {
 		return;

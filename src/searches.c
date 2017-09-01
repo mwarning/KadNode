@@ -51,13 +51,22 @@ static const char *str_state( int state ) {
 	}
 }
 
-// External access to all current results
-struct search_t** searches_get( void ) {
-	return &g_searches[0];
+struct search_t *searches_find_by_id( const uint8_t id[] ) {
+	struct search_t **searches;
+
+	searches = &g_searches[0];
+	while( *searches ) {
+		if( memcmp( (*searches)->id, id, SHA1_BIN_LENGTH ) == 0 ) {
+			return *searches;
+		}
+		searches++;
+	}
+
+	return NULL;
 }
 
-// Find a value search result
-static struct search_t *searches_find( const char query[] ) {
+
+static struct search_t *searches_find_by_query( const char query[] ) {
 	struct search_t **search;
 	struct search_t *searches;
 
@@ -108,7 +117,7 @@ static struct result_t *find_next_result( struct search_t *search ) {
 static struct search_t *find_next_search( auth_callback *callback ) {
 	struct search_t **searches;
 
-	searches = searches_get();
+	searches = &g_searches[0];
 	while( *searches ) {
 		if( !(*searches)->done && (*searches)->callback == callback ) {
 			return *searches;
@@ -147,7 +156,7 @@ void searches_set_auth_state( const char query[], const IP *addr, const int stat
 
 	log_debug( "SRC: Set authentication state for %s: %s", query, str_state( state ) );
 
-	search = searches_find( query );
+	search = searches_find_by_query( query );
 
 	if( search ) {
 		// Search and set authentication state of result
@@ -253,7 +262,7 @@ struct search_t* searches_start( const char query[] ) {
 	struct search_t* new;
 
 	// Find existing search
-	if( (search = searches_find( query )) != NULL ) {
+	if( (search = searches_find_by_query( query )) != NULL ) {
 		// Restart search after half of search lifetime
 		if( (time_now_sec() - search->start_time) > (MAX_SEARCH_LIFETIME / 2) ) {
 			search_restart( search );
