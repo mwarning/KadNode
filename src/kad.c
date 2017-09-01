@@ -384,16 +384,16 @@ int kad_announce_once( const uint8_t id[], int port ) {
 /*
 * Add a new value to the announcement list or refresh an announcement.
 */
-int kad_announce( const char query_raw[], int port, time_t lifetime ) {
-	char query[QUERY_MAX_SIZE];
+int kad_announce( const char query[], int port, time_t lifetime ) {
+	char hostname[QUERY_MAX_SIZE];
 
 	// Remove .p2p suffix and convert to lowercase
-	if( query_sanitize( query, sizeof(query), query_raw ) != 0 ) {
+	if( query_sanitize( hostname, sizeof(hostname), query ) != 0 ) {
 		return -1;
 	}
 
 	// Store query to call kad_announce_once() later/multiple times
-	return announces_add( query, port, lifetime ) ? 0 : -2;
+	return announces_add( hostname, port, lifetime ) ? 0 : -2;
 }
 
 // Lookup known nodes that are nearest to the given id
@@ -403,18 +403,18 @@ int kad_lookup( const char query[], IP addr_array[], size_t addr_num ) {
 
 	// Trim spaces, remove .p2p suffix and convert to lowercase
 	if( query_sanitize( hostname, sizeof(hostname), query ) != 0 ) {
-		log_debug( "query_sanitize error" );
+		log_debug( "KAD: query_sanitize error" );
 		return -1;
 	}
 
-	log_debug( "Lookup identifier: %s", hostname );
+	log_debug( "KAD: Lookup identifier: %s", hostname );
 
 	// Find existing or create new search
 	search = searches_start( hostname );
 
 	if( search == NULL ) {
 		// Failed to create a new search
-		log_debug("searches_start error");
+		log_debug( "KAD: searches_start error" );
 		return -1;
 	}
 
@@ -569,7 +569,7 @@ void kad_debug_storage( int fd ) {
 
 	s = storage;
 	for( j = 0; s; ++j ) {
-		dprintf( fd, " id: %s\n", str_id(s->id ));
+		dprintf( fd, " id: %s\n", str_id( s->id ));
 		for( i = 0; i < s->numpeers; ++i ) {
 			p = &s->peers[i];
 			to_addr( &addr, &p->ip, p->len, htons( p->port ) );

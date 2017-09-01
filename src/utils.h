@@ -8,9 +8,11 @@
 // Number of elements in an array
 #define N_ELEMS(x)  (sizeof(x) / sizeof(x[0]))
 
+// Typical min/max methods
 #define MAX(x, y) ((x) >= (y) ? (x) : (y))
 #define MIN(x, y) ((x) <= (y) ? (x) : (y))
 
+// Make a symbol into a string literal
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
 
@@ -24,7 +26,6 @@
 int hex_get_id( uint8_t id[], size_t len, const char query[] );
 
 int is_suffix( const char str[], const char suffix[] );
-void* memdup(const void* src, size_t size);
 
 int query_sanitize( char buf[], size_t buflen, const char query[] );
 

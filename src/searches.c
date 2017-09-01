@@ -47,7 +47,7 @@ static const char *str_state( int state ) {
 		case AUTH_WAITING: return "WAITING";
 		default:
 			log_err( "Invalid state: %d", state );
-			exit(1);
+			exit( 1 );
 	}
 }
 
@@ -127,6 +127,7 @@ static struct search_t *find_next_search( auth_callback *callback ) {
 	return NULL;
 }
 
+// Find query/IP-address to authenticate; callback is used as a marker.
 struct result_t *searches_get_auth_target( char query[], IP *addr, auth_callback *callback ) {
 	struct search_t *search;
 	struct result_t *result;
@@ -150,6 +151,7 @@ struct result_t *searches_get_auth_target( char query[], IP *addr, auth_callback
 	return result;
 }
 
+// Set the authentication state of a result
 void searches_set_auth_state( const char query[], const IP *addr, const int state ) {
 	struct search_t *search;
 	struct result_t *result;

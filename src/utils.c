@@ -20,7 +20,7 @@
 int hex_get_id( uint8_t id[], size_t len, const char query[] ) {
 	size_t query_len = strlen( query );
 	if( str_isHex( query, query_len ) ) {
-		memset( id, 0, len ); // Fill up id with random numbers?
+		memset( id, 0, len );
 		bytes_from_hex( id, query, MIN( 2 * len, query_len ) );
 		return 1;
 	}
@@ -43,14 +43,9 @@ int is_suffix( const char str[], const char suffix[] ) {
 	}
 }
 
-void* memdup( const void* src, size_t size ) {
-	void* out = malloc(size);
-	return memcpy( out, src, size );
-}
-
 /*
-* Sanitize query.
-* Convert to lowercase and removing  TLDs if it matches --query-tld.
+* Sanitize a query string.
+* Convert to lowercase and remove the TLD if it matches --query-tld.
 *
 * example.com.p2p => example.com
 * example.com => example.com
@@ -176,10 +171,10 @@ int id_equal( const uint8_t id1[], const uint8_t id2[] ) {
 }
 
 // Check if string consist of hexdecimal characters
-int str_isHex( const char str[], size_t size ) {
+int str_isHex( const char str[], size_t len ) {
 	size_t i = 0;
 
-	for( i = 0; i < size; i++ ) {
+	for( i = 0; i < len; i++ ) {
 		const char c = str[i];
 		if( (c >= '0' && c <= '9')
 				|| (c >= 'A' && c <= 'F')
@@ -190,8 +185,8 @@ int str_isHex( const char str[], size_t size ) {
 		}
 	}
 
-	// Return 1 if size is even
-	return !(size & 1);
+	// Return 1 if len is even
+	return !(len & 1);
 }
 
 // Matches [0-9a-zA-Z._-]*
@@ -261,8 +256,7 @@ const char *str_addr( const IP *addr ) {
 	return addrbuf;
 }
 
-int addr_is_localhost( const IP *addr )
-{
+int addr_is_localhost( const IP *addr ) {
 	// 127.0.0.1
 	const uint32_t inaddr_loopback = htonl( INADDR_LOOPBACK );
 
@@ -276,8 +270,7 @@ int addr_is_localhost( const IP *addr )
 	}
 }
 
-int addr_is_multicast( const IP *addr )
-{
+int addr_is_multicast( const IP *addr ) {
 	switch( addr->ss_family ) {
 		case AF_INET:
 			return IN_MULTICAST(ntohl(((IP4*) addr)->sin_addr.s_addr));
