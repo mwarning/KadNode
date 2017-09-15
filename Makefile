@@ -84,7 +84,7 @@ build/%.o : src/%.c src/%.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 kadnode-ctl:
-	$(CC) $(CFLAGS) src/kadnode-ctl.c -o build/kadnode-ctl
+	$(CC) $(CFLAGS) src/kadnode-ctl.c -o build/kadnode-ctl $(LFLAGS)
 
 libnss-kadnode.so.2:
 	$(CC) $(CFLAGS) -fPIC -c -o build/ext-libnss.o src/ext-libnss.c
