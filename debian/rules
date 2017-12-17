@@ -2,7 +2,7 @@
 
 export DEB_BUILD_HARDENING=1
 
-export FEATURES="tls bob lpd cmd nss upnp natpmp"
+export FEATURES="tls bob lpd cmd nss"
 
 %:
 	dh $@ 

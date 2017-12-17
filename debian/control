@@ -8,6 +8,6 @@ Homepage: https://github.com/mwarning/kadnode
 
 Package: kadnode
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends},libminiupnpc10 (>=1.9), libnatpmp1 (>=20110808),libmbedtls10  (>=2.4.2)
+Depends: ${shlibs:Depends}, ${misc:Depends}, libmbedtls10  (>=2.4.2)
 Description: A decentralized DNS system based that let everyone announce domains. X509 certificates can be used.
 
