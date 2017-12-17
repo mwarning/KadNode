@@ -307,7 +307,6 @@ int kad_status( char buf[], size_t size ) {
 	struct search *srch = searches;
 	int numsearches_active = 0;
 	int numsearches_done = 0;
-	int numsearches = 0;
 	int numstorage = 0;
 	int numstorage_peers = 0;
 	//int numvalues = 0;
@@ -320,7 +319,6 @@ int kad_status( char buf[], size_t size ) {
 		} else {
 			numsearches_active += 1;
 		}
-		numsearches += 1;
 		srch = srch->next;
 	}
 
@@ -348,7 +346,6 @@ int kad_status( char buf[], size_t size ) {
 		numstorage, DHT_MAX_HASHES, numstorage_peers, DHT_MAX_PEERS );
 	bprintf( "DHT Searches: %d active, %d completed (max %d)\n",
 		numsearches_active, numsearches_done, DHT_MAX_SEARCHES );
-	bprintf( "DHT Searches: %d (max %d)\n", numsearches, DHT_MAX_SEARCHES );
 	bprintf( "DHT Blacklist: %d (max %d)\n",
 		(next_blacklisted % DHT_MAX_BLACKLISTED), DHT_MAX_BLACKLISTED );
 	//bprintf( "DHT Values to announce: %d\n", numvalues );
