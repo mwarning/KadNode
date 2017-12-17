@@ -68,12 +68,14 @@ int query_sanitize( char buf[], size_t buflen, const char query[] ) {
 		buf[i] = tolower( query[i] );
 	}
 
+	buf[len] = '\0';
+
 	// Remove .p2p suffix
-	if( is_suffix( query, gconf->query_tld ) ) {
-		i -= strlen( gconf->query_tld );
+	if( is_suffix( buf, gconf->query_tld ) ) {
+		len -= strlen( gconf->query_tld );
 	}
 
-	buf[i] = '\0';
+	buf[len] = '\0';
 
 	return 0;
 }
