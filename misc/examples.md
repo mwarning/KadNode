@@ -6,20 +6,17 @@ You might want to use KadNode with certificates from Let's Encrypt. In this exam
 
 A server running KadNode will be provided with the certificates for mydomain.com and will announce it to the P2P network.
 
-When someone enters mydomain.com.p2p in the browser, then KadNode will intercept that request and look up the IP address. KadNode use the hosts CA chain (e.g. those of the browser) to verifiy the certificate behind the IP address.
-Ìf the verification is successful, the browser will receive the IP address.
+When someone else enters mydomain.com.p2p in the browser, then a running KadNode instance will intercept that request and look up the IP address. KadNode use the hosts CA chain (e.g. those of the browser) to verifiy the certificate behind the IP address. If the verification is successful, the browser will receive the IP address and can load the web page.
 
-Server configuration:
+Server configuratiion:
 ```  
-./build/kadnode --tls-server-cert cert.pem,privkey.pem
+./build/kadnode --tls-server-cert /etc/letsencrypt/live/mydomain.com/fullchain.pem,/etc/letsencrypt/live/mydomain.com/privkey.pem
 ```
 
 Client configuration:
 ```  
-./build/kadnode --tls-client-cert chain.pem
+./build/kadnode --tls-client-cert /usr/share/ca-certificates/mozilla/
 ```
-
-Note: You can also add a whole folder of CA root certificates.
 
 ## Use existing HTTPS server for authentication
 
