@@ -71,8 +71,9 @@ int query_sanitize( char buf[], size_t buflen, const char query[] ) {
 	buf[len] = '\0';
 
 	// Remove .p2p suffix
-	if( is_suffix( buf, gconf->query_tld ) ) {
-		len -= strlen( gconf->query_tld );
+	char *tld = gconf->query_tld;
+	if( tld && is_suffix( buf, tld ) ) {
+		len -= strlen( tld );
 	}
 
 	buf[len] = '\0';
