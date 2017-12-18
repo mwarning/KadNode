@@ -56,9 +56,9 @@ int query_sanitize( char buf[], size_t buflen, const char query[] ) {
 	size_t len;
 	size_t i;
 
-	len = strlen( query );
+	len = strlen( query ) + 1;
 
-	if( (len + 1) >= buflen ) {
+	if( len >= buflen ) {
 		// Output buffer too small
 		return 1;
 	}
@@ -68,15 +68,12 @@ int query_sanitize( char buf[], size_t buflen, const char query[] ) {
 		buf[i] = tolower( query[i] );
 	}
 
-	buf[len] = '\0';
-
 	// Remove .p2p suffix
 	char *tld = gconf->query_tld;
 	if( tld && is_suffix( buf, tld ) ) {
 		len -= strlen( tld );
+		buf[len] = '\0';
 	}
-
-	buf[len] = '\0';
 
 	return 0;
 }
