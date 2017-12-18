@@ -56,6 +56,7 @@ void announces_debug( int fd ) {
 	dprintf( fd, "Announcements:\n" );
 	while( value ) {
 		dprintf( fd, " id: %s\n", str_id( value->id ) );
+		dprintf( fd, "  name: %s\n", value->name );
 		dprintf( fd, "  port: %d\n", value->port );
 		if( value->refresh < now ) {
 			dprintf( fd, "  refresh: now\n" );
@@ -128,6 +129,7 @@ struct value_t *announces_add( const char query[], int port, time_t lifetime ) {
 	// Prepend new entry
 	new = (struct value_t*) calloc( 1, sizeof(struct value_t) );
 	memcpy( new->id, id, SHA1_BIN_LENGTH );
+	new->name = strdup(query);
 	new->port = port;
 	new->refresh = now - 1; // Send first announcement as soon as possible
 	new->lifetime = lifetime;
@@ -149,6 +151,7 @@ struct value_t *announces_add( const char query[], int port, time_t lifetime ) {
 }
 
 void value_free( struct value_t *value ) {
+	free( value->name );
 	free( value );
 }
 
@@ -183,7 +186,7 @@ static void announces_announce( void ) {
 	value = g_values;
 	while( value ) {
 		if( value->refresh < now ) {
-			log_debug( "Announce %s:%hu",  str_id( value->id ), value->port );
+			log_debug( "Announce %s:%hu",  value->name, value->port );
 			kad_announce_once( value->id, value->port );
 			value->refresh = now + ANNOUNCES_INTERVAL;
 		}
