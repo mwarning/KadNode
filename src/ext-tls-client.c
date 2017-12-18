@@ -50,7 +50,7 @@ static struct tls_resource g_tls_resources[2];
 
 
 // Start TLS connection
-static int tls_connect( mbedtls_ssl_context *ssl, mbedtls_net_context *fd, const char query[], const IP *addr ) {
+static int tls_connect_init( mbedtls_ssl_context *ssl, mbedtls_net_context *fd, const char query[], const IP *addr ) {
 	int ret;
 
 	mbedtls_ssl_set_bio( ssl, fd, mbedtls_net_send, mbedtls_net_recv, NULL );
@@ -74,6 +74,7 @@ static int tls_connect( mbedtls_ssl_context *ssl, mbedtls_net_context *fd, const
 		return -1;
 	}
 
+	// Start connection
 	ret = connect( fd->fd, (const struct sockaddr *) addr, sizeof(IP) );
 	if( ret < 0 && errno != EINPROGRESS ) {
 		mbedtls_net_free( fd );
@@ -245,10 +246,17 @@ void tls_client_trigger_auth( void ) {
 	if( (result = searches_get_auth_target(
 			&resource->query[0], &resource->addr,
 			&tls_client_trigger_auth )) != NULL ) {
-		// State authentication process
-		if( tls_connect( &resource->ssl, &resource->fd, &resource->query[0], &result->addr ) < 0 ) {
+
+		if (g_cacert.version < 1) {
+			// No certificates loaded
 			result->state = AUTH_ERROR;
+			log_warn( "TLS: No certificates loaded." );
+		} else if( tls_connect_init( &resource->ssl, &resource->fd, &resource->query[0], &result->addr ) < 0 ) {
+			// Failed to initiate connection
+			result->state = AUTH_ERROR;
+			log_warn( "TLS: Cannot certificates loaded." );
 		} else {
+			// Start authentication process
 			result->state = AUTH_PROGRESS;
 			net_add_handler( resource->fd.fd, &tls_handle );
 		}
