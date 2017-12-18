@@ -28,7 +28,7 @@ struct search_t {
 	struct search_t *next;
 	uint8_t id[SHA1_BIN_LENGTH];
 	uint16_t done;
-	char query[256];
+	char query[QUERY_MAX_SIZE];
 	time_t start_time;
 	struct result_t *results;
 	auth_callback *callback;

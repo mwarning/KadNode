@@ -12,7 +12,7 @@
 struct value_t {
 	struct value_t *next;
 	uint8_t id[SHA1_BIN_LENGTH];
-	char *name;
+	char query[QUERY_MAX_SIZE];
 	int port;
 	time_t lifetime; // Keep entry refreshed until the lifetime expires
 	time_t refresh; // Next time the entry need to be refreshed
