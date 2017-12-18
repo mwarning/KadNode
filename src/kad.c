@@ -305,11 +305,12 @@ int kad_count_nodes( int good ) {
 int kad_status( char buf[], size_t size ) {
 	struct storage *strg = storage;
 	struct search *srch = searches;
+	struct value_t *announces = announces_get();
 	int numsearches_active = 0;
 	int numsearches_done = 0;
 	int numstorage = 0;
 	int numstorage_peers = 0;
-	//int numvalues = 0;
+	int numannounces = 0;
 	int written = 0;
 
 	// count searches
@@ -329,8 +330,12 @@ int kad_status( char buf[], size_t size ) {
 		strg = strg->next;
 	}
 
+	while( announces ) {
+		numannounces += 1;
+		announces = announces->next;
+	}
+
 	// Use dht data structure!
-	//numvalues = announces_count();
 	int nodes4 = kad_count_bucket( buckets, 0 );
 	int nodes6 = kad_count_bucket( buckets6, 0 );
 	int nodes4_good = kad_count_bucket( buckets, 1 );
@@ -346,9 +351,9 @@ int kad_status( char buf[], size_t size ) {
 		numstorage, DHT_MAX_HASHES, numstorage_peers, DHT_MAX_PEERS );
 	bprintf( "DHT Searches: %d active, %d completed (max %d)\n",
 		numsearches_active, numsearches_done, DHT_MAX_SEARCHES );
+	bprintf( "DHT Announcements: %d\n", numannounces );
 	bprintf( "DHT Blacklist: %d (max %d)\n",
 		(next_blacklisted % DHT_MAX_BLACKLISTED), DHT_MAX_BLACKLISTED );
-	//bprintf( "DHT Values to announce: %d\n", numvalues );
 
 	return written;
 }
