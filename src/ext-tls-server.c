@@ -272,8 +272,8 @@ int tls_server_add_sni( const char crt_file[], const char key_file[] ) {
 	memcpy( &new->crt, &crt, sizeof(crt) );
 
 #ifdef DEBUG
-	char buf[MBEDTLS_SSL_MAX_CONTENT_LEN + 1];
-	mbedtls_x509_crt_info( buf, sizeof( buf ) - 1, "  ", &new->crt );
+	char buf[MBEDTLS_SSL_MAX_CONTENT_LEN];
+	mbedtls_x509_crt_info( buf, sizeof( buf ), "  ", &new->crt );
 	printf( "%s:\n%s", crt_file, buf );
 #endif
 

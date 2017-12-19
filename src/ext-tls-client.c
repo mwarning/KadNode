@@ -183,7 +183,7 @@ static void tls_handle( int rc, int fd ) {
 		flags = mbedtls_ssl_get_verify_result( ssl );
 
 #ifdef DEBUG
-		char buf[MBEDTLS_SSL_MAX_CONTENT_LEN + 1];
+		char buf[MBEDTLS_SSL_MAX_CONTENT_LEN];
 
 		if( flags != 0 ) {
 			mbedtls_x509_crt_verify_info( buf, sizeof( buf ), "", flags );
@@ -264,13 +264,14 @@ void tls_client_trigger_auth( void ) {
 }
 
 #if DEBUG
+
 // Verify configuration
 static int tls_conf_verify( void *data, mbedtls_x509_crt *crt, int depth, uint32_t *flags ) {
-	char buf1[MBEDTLS_SSL_MAX_CONTENT_LEN + 1];
-	char buf2[MBEDTLS_SSL_MAX_CONTENT_LEN + 1];
+	char buf1[MBEDTLS_SSL_MAX_CONTENT_LEN];
+	char buf2[MBEDTLS_SSL_MAX_CONTENT_LEN];
 	((void) data);
 
-	mbedtls_x509_crt_info( buf1, sizeof( buf1 ) - 1, "", crt );
+	mbedtls_x509_crt_info( buf1, sizeof( buf1 ), "", crt );
 
 	if ( *flags ) {
 		mbedtls_x509_crt_verify_info( buf2, sizeof( buf2 ), "", *flags );
