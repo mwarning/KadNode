@@ -44,6 +44,7 @@ static mbedtls_x509_crt g_cacert;
 static mbedtls_entropy_context g_entropy;
 static mbedtls_ctr_drbg_context g_drbg;
 static mbedtls_ssl_config g_conf;
+static int g_client_enable = 0;
 
 // Allow two parallel authentications at once
 static struct tls_resource g_tls_resources[2];
@@ -203,6 +204,11 @@ static void tls_handle( int rc, int fd ) {
 int tls_client_get_id( uint8_t id[], size_t len, const char query[] ) {
 	uint8_t hash[32];
 
+	// Reject query if TLS client is disabled
+	if( g_client_enable == 0 ) {
+		return 0;
+	}
+
 	// Match dot in query, e.g. 'example.com'
 	if( strchr( query, '.' ) ) {
 		mbedtls_sha256_context ctx;
@@ -237,6 +243,11 @@ void tls_client_trigger_auth( void ) {
 	struct tls_resource *resource;
 	struct result_t *result;
 
+	// Reject query if TLS client disabled
+	if( g_client_enable == 0 ) {
+		return;
+	}
+
 	// Get next free SSL resource
 	resource = tls_next_resource();
 	if( resource == NULL ) {
@@ -247,14 +258,9 @@ void tls_client_trigger_auth( void ) {
 			&resource->query[0], &resource->addr,
 			&tls_client_trigger_auth )) != NULL ) {
 
-		if (g_cacert.version < 1) {
-			// No certificates loaded
-			result->state = AUTH_ERROR;
-			log_warn( "TLS: No certificates loaded." );
-		} else if( tls_connect_init( &resource->ssl, &resource->fd, &resource->query[0], &result->addr ) < 0 ) {
+		if( tls_connect_init( &resource->ssl, &resource->fd, &resource->query[0], &result->addr ) < 0 ) {
 			// Failed to initiate connection
 			result->state = AUTH_ERROR;
-			log_warn( "TLS: Cannot certificates loaded." );
 		} else {
 			// Start authentication process
 			result->state = AUTH_PROGRESS;
@@ -284,23 +290,23 @@ static int tls_conf_verify( void *data, mbedtls_x509_crt *crt, int depth, uint32
 }
 #endif
 
-// Load the trusted CA
+// Load the trusted CA root certificates
 int tls_client_add_ca( const char path[] ) {
 	char error_buf[100];
 	int ret;
-	static int done = 1;
 
-	// Initialize only once
-	if( done ) {
+	// Enable client and initialize certs storage
+	if( g_client_enable == 0 ) {
 		mbedtls_x509_crt_init( &g_cacert );
-		done = 0;
+		g_client_enable = 1;
 	}
 
 	if( ((ret = mbedtls_x509_crt_parse_file( &g_cacert, path )) < 0) &&
 		((ret = mbedtls_x509_crt_parse_path( &g_cacert, path )) < 0)) {
 		mbedtls_strerror( ret, error_buf, sizeof(error_buf) );
-		log_err( "TLS: Failed to load the CA root certificate(s) from %s - %s", path, error_buf );
-		return 1;
+		log_warn( "TLS-Client: Failed to load the CA root certificates from %s (%s)", path, error_buf );
+		// We do not abort when a path was not loaded
+		return 0;
 	}
 
 	log_info( "TLS-Client: Loaded certificates from %s (%d skipped)", path, ret );
@@ -311,6 +317,16 @@ void tls_client_setup( void ) {
 	const char *pers = "kadnode";
 	int ret;
 	int i;
+
+	// Reject query if TLS client disabled
+	if (g_client_enable == 0) {
+		return;
+	}
+
+	if (g_cacert.version <= 0) {
+		log_err( "TLS-Client: No root CA certificates found." );
+		return;
+	}
 
 	//mbedtls_debug_set_threshold( 0 );
 
