@@ -204,11 +204,6 @@ static void tls_handle( int rc, int fd ) {
 int tls_client_get_id( uint8_t id[], size_t len, const char query[] ) {
 	uint8_t hash[32];
 
-	// Reject query if TLS client is disabled
-	if( g_client_enable == 0 ) {
-		return 0;
-	}
-
 	// Match dot in query, e.g. 'example.com'
 	if( strchr( query, '.' ) ) {
 		mbedtls_sha256_context ctx;
