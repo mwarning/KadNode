@@ -151,6 +151,7 @@ This is the plain use of the DHT. The hexadecimal string will be cut down or fil
 
   * `--tls-client-cert` *path*  
     Path to file or folder of CA root certificates.  
+    The path may start with a + to ignore any errors.  
     This option may occur multiple times.
 
   * `--tls-server-cert` *tuple*  

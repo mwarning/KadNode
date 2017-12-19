@@ -621,6 +621,5 @@ void conf_load_args( int argc, char **argv ) {
 		}
 	}
 
-
 	conf_check();
 }

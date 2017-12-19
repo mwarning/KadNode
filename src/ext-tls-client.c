@@ -57,20 +57,20 @@ static int tls_connect_init( mbedtls_ssl_context *ssl, mbedtls_net_context *fd, 
 
 	if( ( ret = mbedtls_ssl_set_hostname( ssl, query ) ) != 0 )
 	{
-		log_err( "TLS: mbedtls_ssl_set_hostname returned -0x%x", -ret );
+		log_err( "TLS-Client: mbedtls_ssl_set_hostname returned -0x%x", -ret );
 		return -1;
 	}
 
 	fd->fd = socket( addr->ss_family, SOCK_STREAM, IPPROTO_TCP );
 	if( fd->fd < 0 )
 	{
-		log_err( "TLS: Socket creation failed: %s", strerror( errno ) );
+		log_err( "TLS-Client: Socket creation failed: %s", strerror( errno ) );
 		return -1;
 	}
 
 	ret = mbedtls_net_set_nonblock( fd );
 	if( ret < 0) {
-		log_err( "TLS: Failed to set socket non-blocking: %s", strerror( errno ) );
+		log_err( "TLS-Client: Failed to set socket non-blocking: %s", strerror( errno ) );
 		return -1;
 	}
 
@@ -79,7 +79,7 @@ static int tls_connect_init( mbedtls_ssl_context *ssl, mbedtls_net_context *fd, 
 	if( ret < 0 && errno != EINPROGRESS ) {
 		mbedtls_net_free( fd );
 		mbedtls_net_init( fd );
-		log_err( "TLS: Connect failed: %s", strerror( errno ) );
+		log_err( "TLS-Client: Connect failed: %s", strerror( errno ) );
 		return -1;
 	}
 
@@ -146,7 +146,7 @@ static void tls_handle( int rc, int fd ) {
 	if( rc < 0 ) {
 		if( errno != EINPROGRESS ) {
 			// Failed to create TCP/IP connection.
-			log_warn( "TLS: Socket error for '%s': %s", query, strerror( errno ) );
+			log_warn( "TLS-Client: Socket error for '%s': %s", query, strerror( errno ) );
 			auth_end( resource, AUTH_ERROR );
 		} else {
 			// Still connecting.
@@ -165,16 +165,16 @@ static void tls_handle( int rc, int fd ) {
 	if( ret ) {
 		// TLS handshake failure.
 #ifdef DEBUG
-		log_debug( "TLS: mbedtls_ssl_handshake returned -0x%x: %s", -ret, query );
+		log_debug( "TLS-Client: mbedtls_ssl_handshake returned -0x%x: %s", -ret, query );
 		if( ret == MBEDTLS_ERR_X509_CERT_VERIFY_FAILED ) {
-			log_debug( "TLS: Unable to verify the server's certificate: %s", query );
+			log_debug( "TLS-Client: Unable to verify the servers certificate: %s", query );
 		}
 #endif
 
 		auth_end( resource, AUTH_FAILED );
 	} else {
 		// TLS handshake done
-		log_debug( "TLS: Protocol [%s], Ciphersuite [%s] and fragment length %u: %s",
+		log_debug( "TLS-Client: Protocol [%s], Ciphersuite [%s] and fragment length %u: %s",
 			mbedtls_ssl_get_version( ssl ), mbedtls_ssl_get_ciphersuite( ssl ),
 			(unsigned int) mbedtls_ssl_get_max_frag_len( ssl ), query
 		);
@@ -187,12 +187,12 @@ static void tls_handle( int rc, int fd ) {
 
 		if( flags != 0 ) {
 			mbedtls_x509_crt_verify_info( buf, sizeof( buf ), "", flags );
-			log_debug( "TLS: Peer verification failed: %s", buf);
+			log_debug( "TLS-Client: Peer verification failed: %s", buf);
 		}
 
 		if( mbedtls_ssl_get_peer_cert( ssl ) != NULL ) {
 			mbedtls_x509_crt_info( (char *) buf, sizeof( buf ) - 1, "", mbedtls_ssl_get_peer_cert( ssl ) );
-			log_debug( "TLS: Peer certificate information: %s", buf);
+			log_debug( "TLS-Client: Peer certificate information: %s", buf);
 		}
 #endif
 		auth_end( resource, flags == 0 ? AUTH_OK : AUTH_FAILED );
@@ -276,8 +276,8 @@ static int tls_conf_verify( void *data, mbedtls_x509_crt *crt, int depth, uint32
 		mbedtls_x509_crt_verify_info( buf2, sizeof( buf2 ), "", *flags );
 	}
 
-	log_debug( "TLS: Verify requested for (Depth %d)\n%s\nFlags:\n%s", depth, buf1,
-		*flags ? buf2 : "No flags" );
+	log_debug( "TLS-Client: Verify requested for (Depth %d)\n%sflags             : %s", depth, buf1,
+		*flags ? buf2 : "None\n" );
 
 	return 0;
 }
@@ -302,7 +302,7 @@ int tls_client_add_ca( const char path[] ) {
 		return 1;
 	}
 
-	log_info( "TLS: Loaded certificates from %s (%d skipped)", path, ret );
+	log_info( "TLS-Client: Loaded certificates from %s (%d skipped)", path, ret );
 	return 0;
 }
 
@@ -318,7 +318,7 @@ void tls_client_setup( void ) {
 
 	if( ( ret = mbedtls_ctr_drbg_seed( &g_drbg, mbedtls_entropy_func, &g_entropy,
 		(const unsigned char *) pers, strlen( pers ) ) ) != 0 ) {
-		log_err( "TLS: mbedtls_ctr_drbg_seed returned -0x%x", -ret );
+		log_err( "TLS-Client: mbedtls_ctr_drbg_seed returned -0x%x", -ret );
 		exit( 1 );
 		return;
 	}
@@ -335,7 +335,7 @@ void tls_client_setup( void ) {
 		MBEDTLS_SSL_IS_CLIENT,
 		MBEDTLS_SSL_TRANSPORT_STREAM,
 		MBEDTLS_SSL_PRESET_DEFAULT ) ) != 0 ) {
-		log_err( "TLS: mbedtls_ssl_config_defaults returned -0x%x", -ret );
+		log_err( "TLS-Client: mbedtls_ssl_config_defaults returned -0x%x", -ret );
 		exit( 1 );
 	}
 
@@ -350,7 +350,7 @@ void tls_client_setup( void ) {
 	// Initialize a bunch ob SSL contexts
 	for( i = 0; i < N_ELEMS(g_tls_resources); ++i ) {
 		if( ( ret = mbedtls_ssl_setup( &g_tls_resources[i].ssl, &g_conf ) ) != 0 ) {
-			log_err( "TLS: mbedtls_ssl_setup returned -0x%x", -ret );
+			log_err( "TLS-Client: mbedtls_ssl_setup returned -0x%x", -ret );
 			exit( 1 );
 		}
 	}

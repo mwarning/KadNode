@@ -75,15 +75,15 @@ static void end_client_connection( mbedtls_net_context *client_fd, int result ) 
 
 #ifdef DEBUG
 	if( result == MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED )  {
-		log_debug( "TLS: Hello verification requested" );
+		log_debug( "TLS-Server: Hello verification requested" );
 	} else if( result == MBEDTLS_ERR_SSL_CLIENT_RECONNECT ) {
-		log_debug( "TLS: Client initiated reconnection from same port" );
+		log_debug( "TLS-Server: Client initiated reconnection from same port" );
 	} else if( result != 0 ) {
 		char error_buf[100];
 		mbedtls_strerror( result, error_buf, 100 );
-		log_debug( "TLS: Error -0x%x - %s", -result, error_buf );
+		log_debug( "TLS-Server: Error -0x%x - %s", -result, error_buf );
 	} else {
-		log_debug( "TLS: Authentication successful" );
+		log_debug( "TLS-Server: Authentication successful" );
 	}
 #endif
 }
@@ -114,18 +114,18 @@ static void tls_client_handler( int rc, int sock ) {
 			int flags = mbedtls_ssl_get_verify_result( &g_ssl );
 			mbedtls_x509_crt_verify_info( vrfy_buf, sizeof( vrfy_buf ), "", flags );
 
-			log_debug( "TLS: Verify failed: %s", vrfy_buf );
+			log_debug( "TLS-Server: Verify failed: %s", vrfy_buf );
 		}
 #endif
 		end_client_connection( client_fd, ret );
 	} else {
-		log_debug( "TLS: Protocol is %s, ciphersuite is %s",
+		log_debug( "TLS-Server: Protocol is %s, ciphersuite is %s",
 			mbedtls_ssl_get_version( &g_ssl ), mbedtls_ssl_get_ciphersuite( &g_ssl ) );
 
 		if( ( exp = mbedtls_ssl_get_record_expansion( &g_ssl ) ) >= 0 ) {
-			log_debug( "TLS: Record expansion is %d", exp );
+			log_debug( "TLS-Server: Record expansion is %d", exp );
 		} else {
-			log_debug( "TLS: Record expansion is unknown (compression)" );
+			log_debug( "TLS-Server: Record expansion is unknown (compression)" );
 		}
 
 		// All ok
@@ -155,15 +155,15 @@ static void tls_server_handler( int rc, int sock ) {
 
 	if( ( ret = mbedtls_net_accept( listen_fd, client_fd,
 				client_ip, sizeof( client_ip ), &cliip_len ) ) != 0 ) {
-		log_warn( "TLS: mbedtls_net_accept returned -0x%x", -ret );
+		log_warn( "TLS-Server: mbedtls_net_accept returned -0x%x", -ret );
 		return;
 	}
 
-	log_debug( "TLS: Got incoming connection" );
+	log_debug( "TLS-Server: Got incoming connection" );
 
 	ret = mbedtls_net_set_nonblock( client_fd );
 	if( ret != 0 ) {
-		log_warn( "TLS: net_set_nonblock() returned -0x%x", -ret );
+		log_warn( "TLS-Server: net_set_nonblock() returned -0x%x", -ret );
 		return;
 	}
 
@@ -201,7 +201,7 @@ static char *get_common_name( const mbedtls_x509_crt *crt ) {
 static int sni_callback( void *p_info, mbedtls_ssl_context *ssl, const unsigned char *name, size_t name_len ) {
 	struct sni_entry *cur;
 
-	log_debug( "TLS: Lookup certificate for domain: %s", name );
+	log_debug( "TLS-Server: Lookup certificate for domain: %s", name );
 
 	cur = (struct sni_entry *) p_info;
 	while( cur != NULL ) {
@@ -235,13 +235,13 @@ int tls_server_add_sni( const char crt_file[], const char key_file[] ) {
 
 	if( (ret = mbedtls_x509_crt_parse_file( &crt, crt_file )) != 0 ) {
 		mbedtls_strerror( ret, error_buf, sizeof(error_buf) );
-		log_err( "TLS: %s: %s", crt_file, error_buf );
+		log_err( "TLS-Server: %s: %s", crt_file, error_buf );
 		return 1;
 	}
 
 	if( (ret = mbedtls_pk_parse_keyfile( &key, key_file, "" /* no password */ )) != 0 ) {
 		mbedtls_strerror( ret, error_buf, sizeof(error_buf) );
-		log_err( "TLS: %s: %s", key_file, error_buf );
+		log_err( "TLS-Server: %s: %s", key_file, error_buf );
 		return 1;
 	}
 
@@ -255,7 +255,7 @@ int tls_server_add_sni( const char crt_file[], const char key_file[] ) {
 	cur = g_sni_entries;
 	while( cur ) {
 		if( strcmp( cur->name, name ) == 0 ) {
-			log_err( "TLS: Duplicate entry %s", name );
+			log_err( "TLS-Server: Duplicate entry %s", name );
 			return 1;
 		}
 		cur = cur->next;
@@ -263,7 +263,7 @@ int tls_server_add_sni( const char crt_file[], const char key_file[] ) {
 
 	// Create new entry
 	if( (new = calloc( 1, sizeof(struct sni_entry))) == NULL ) {
-		log_err( "TLS: Error calling calloc()" );
+		log_err( "TLS-Server: Error calling calloc()" );
 		return 1;
 	}
 
@@ -283,7 +283,7 @@ int tls_server_add_sni( const char crt_file[], const char key_file[] ) {
 	}
 	g_sni_entries = new;
 
-	log_info( "TLS: Loaded server credentials for %s (crt: %s, key: %s)", name, crt_file, key_file );
+	log_info( "TLS-Server: Loaded server credentials for %s (%s, %s)", name, crt_file, key_file );
 	return 0;
 }
 
@@ -325,7 +325,7 @@ void tls_server_setup( void ) {
 	mbedtls_entropy_init( &g_entropy );
 	if( ( ret = mbedtls_ctr_drbg_seed( &g_drbg, mbedtls_entropy_func, &g_entropy,
 		(const unsigned char *) pers, strlen( pers ) ) ) != 0 ) {
-		log_err( "TLS: mbedtls_ctr_drbg_seed returned -0x%x", -ret );
+		log_err( "TLS-Server: mbedtls_ctr_drbg_seed returned -0x%x", -ret );
 		exit( 1 );
 	}
 
@@ -341,7 +341,7 @@ void tls_server_setup( void ) {
 		MBEDTLS_SSL_TRANSPORT_STREAM,
 		MBEDTLS_SSL_PRESET_DEFAULT ) ) != 0 )
 	{
-		log_err( "TLS: mbedtls_ssl_config_defaults returned -0x%x", -ret );
+		log_err( "TLS-Server: mbedtls_ssl_config_defaults returned -0x%x", -ret );
 		exit( 1 );
 	}
 
@@ -352,7 +352,7 @@ void tls_server_setup( void ) {
 	mbedtls_ssl_conf_sni( &g_conf, sni_callback, g_sni_entries );
 
 	if( ( ret = mbedtls_ssl_setup( &g_ssl, &g_conf ) ) != 0 ) {
-		log_err( "TLS: mbedtls_ssl_setup returned -0x%x", -ret );
+		log_err( "TLS-Server: mbedtls_ssl_setup returned -0x%x", -ret );
 		exit( 1 );
 	}
 
