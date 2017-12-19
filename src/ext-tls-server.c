@@ -176,7 +176,7 @@ static void tls_server_handler( int rc, int sock ) {
 }
 
 // Get the CN field of an certificate
-static char *get_common_name( const mbedtls_x509_crt *crt ) {
+static int get_common_name( char buf[], size_t len, const mbedtls_x509_crt *crt ) {
 	const mbedtls_x509_name *name;
 	const char *short_name;
 	int ret;
@@ -185,15 +185,17 @@ static char *get_common_name( const mbedtls_x509_crt *crt ) {
 	while( name ) {
 		if( name->oid.p ) {
 			ret = mbedtls_oid_get_attr_short_name( &name->oid, &short_name );
-			if( ret == 0 && strcmp( short_name, "CN" ) == 0 ) {
-				return strndup( (char*)name->val.p, name->val.len );
+			if( ret == 0 && strcmp( short_name, "CN" ) == 0 && name->val.len < len ) {
+				memcpy( buf, (char*)name->val.p, name->val.len );
+				buf[name->val.len] = '\0';
+				return 0;
 			}
 		}
 
 		name = name->next;
 	}
 
-	return NULL;
+	return 1;
 }
 
 // SNI callback. The client submits the domain it is looking for.
@@ -227,7 +229,7 @@ int tls_server_add_sni( const char crt_file[], const char key_file[] ) {
 	mbedtls_pk_context key;
 	struct sni_entry *new;
 	struct sni_entry *cur;
-	char *name;
+	char name[QUERY_MAX_SIZE];
 	int ret;
 
 	mbedtls_x509_crt_init( &crt );
@@ -246,8 +248,8 @@ int tls_server_add_sni( const char crt_file[], const char key_file[] ) {
 	}
 
 	// Check if common name is set
-	if( (name = get_common_name( &crt )) == NULL ) {
-		log_err( "TLS: No common name set in %s", crt_file );
+	if( get_common_name( name, sizeof(name), &crt ) != 0) {
+		log_err( "TLS-Server: No common name set in %s", crt_file );
 		return 1;
 	}
 
@@ -267,7 +269,7 @@ int tls_server_add_sni( const char crt_file[], const char key_file[] ) {
 		return 1;
 	}
 
-	new->name = name;
+	new->name = strdup( name );
 	memcpy( &new->key, &key, sizeof(key) );
 	memcpy( &new->crt, &crt, sizeof(crt) );
 
