@@ -1,4 +1,4 @@
-To inlcude KadNode into your LEDE image or to create an .ipk package (equivalent to Debians .deb files), you have to build an LEDE image.
+To inlcude KadNode into your OpenWrtLEDE image or to create an .ipk package (equivalent to Debians .deb files), you have to build an LEDE image.
 These steps were tested using LEDE-17.01:
 
 For building LEDE on Debian, you need to install these packages:
@@ -8,7 +8,7 @@ apt-get install git subversion g++ libncurses5-dev gawk zlib1g-dev build-essenti
 
 Now build LEDE:
 ```
-git clone -b v17.01.2 git://git.lede-project.org/source.git
+git clone -b v17.01.1 git://git.lede-project.org/source.git
 cd source
 
 ./scripts/feeds update -a

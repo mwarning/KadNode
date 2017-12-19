@@ -18,7 +18,7 @@ Domains consisting of public keys represented as hexadecimal characters can also
 * NSS support through /etc/nsswitch.conf
 * DNS interface and proxy support
 * integrated simplified DNS server and proxy (handles A, AAAA, and SRV requests)
-* packages for ArchLinux/Debian/FreeBSD/MacOSX/LEDE/Windows
+* packages for ArchLinux/Debian/FreeBSD/MacOSX/OpenWrt/Windows
 * peer file import/export on startup/shutdown and every 24h
 * uses sha256 hash method
 
