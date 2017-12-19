@@ -347,7 +347,7 @@ int kad_status( char buf[], size_t size ) {
 		gconf->dht_ifname ? gconf->dht_ifname : "<any>");
 	bprintf( "DHT Nodes: %d IPv4 (%d good), %d IPv6 (%d good)\n",
 		nodes4, nodes4_good, nodes6, nodes6_good );
-	bprintf( "DHT Storage: %d (max %d), %d peers (max %d per storage)\n",
+	bprintf( "DHT Storage: %d (max %d) entries with %d addresses (max %d)\n",
 		numstorage, DHT_MAX_HASHES, numstorage_peers, DHT_MAX_PEERS );
 	bprintf( "DHT Searches: %d active, %d completed (max %d)\n",
 		numsearches_active, numsearches_done, DHT_MAX_SEARCHES );
