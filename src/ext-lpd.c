@@ -109,7 +109,7 @@ static int create_send_socket( int af, const char ifname[] ) {
 	int sock;
 
 	if( (sock = net_socket( "LPD", ifname, IPPROTO_IP, af ) ) < 0 ) {
-		goto fail;
+		return -1;
 	}
 
 	if( af == AF_INET ) {
@@ -157,7 +157,7 @@ static int create_receive_socket( const IP *addr, const char ifname[] ) {
 	int sock;
 
 	if( (sock = net_socket( "LPD", ifname, IPPROTO_IP, af ) ) < 0 ) {
-		goto fail;
+		return -1;
 	}
 
 	addrlen = addr_len( addr );
