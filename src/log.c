@@ -36,7 +36,7 @@ const char *log_time() {
 #endif
 
 void log_print( int priority, const char format[], ... ) {
-	char buf[512];
+	char buf[1024];
 	const char *prefix;
 	const char *time;
 	va_list vlist;
