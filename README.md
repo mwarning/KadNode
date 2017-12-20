@@ -10,7 +10,7 @@ Supported are also domains consisting of public keys represented as hexadecimal 
 
 * IPv4/IPv6 support
 * TLS support (CA chain for browsers, "Let's Encrypt" certs, ...)
-* Public key links as <public-hex-key>.p2p
+* Public key links as \<public-hex-key\>.p2p
 * UPnP/NAT-PMP support
 * local peer discovery
 * small size, ~85KB depending on features, ~35KB compressed
