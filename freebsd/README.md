@@ -1,4 +1,4 @@
-## How to create FreeBSD a KadNode package
+# Packaging KadNode on FreeBSD
 
 Install gmake, git and mbedtls:
 
@@ -15,7 +15,7 @@ Make sure /usr/ports is populated:
 portsnap fetch extract
 ```
 
-To create a FreeBSD package (.txz file) execute:
+To create a [FreeBSD](https://www.freebsd.org) package (.txz file) execute:
 
 ```
 git archive master --prefix kadnode/ -o freebsd/kadnode.tar.gz

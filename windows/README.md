@@ -1,6 +1,6 @@
-## Compilation on Windows
+# Building and Packaging KadNode on Microsoft Windows
 
-KadNode can be build for Window systems using the [Cygwin](http://www.cygwin.com/) environment.
+KadNode can be build for [Windows](https://www.microsoft.com/windows) systems using the [Cygwin](https://www.cygwin.com) environment.
 
 To build KadNode on Windows you need to download an execute the Cygwin installer.
 The following packages and its dependencies need to be selected:
@@ -40,7 +40,7 @@ Finally, start KadNode:
 
 ## Packaging for Windows
 
-To create a package, [Inno Setup](http://www.jrsoftware.org/isinfo.php) is used.
+To create a package, [Inno Setup](https://www.jrsoftware.org/isinfo.php) is used.
 Install it and open kadnode.iss, press 'Run' to create a kadnode_setup.exe file.
 
 The package will register KadNode as a Windows service that is started on system startup.

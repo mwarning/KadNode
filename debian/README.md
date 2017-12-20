@@ -1,4 +1,6 @@
-To create a Debian package of KadNode (a *.deb file),
+# Packaging KadNode on Debian Linux
+
+To create a [Debian](https://www.debian.org) package of KadNode (a \*.deb file),
 you first need to have installed the following programs and libraries:
 
 ```

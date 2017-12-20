@@ -1,22 +1,24 @@
-To create an Archlinux package of KadNode (a *.pkg.tar.xz file).
+# Packaging KadNode on Arch Linux
+
+To create an [Archlinux](https://www.archlinux.org) package of KadNode (a \*.pkg.tar.xz file).
 
 Run these commands in the repository root folder to create the package:
 
-<pre>
+```
 cd archlinux
 makepkg
-</pre>
+```
 
-The package kadnode-git-*.pkg.tar.xz will be created.
+The package kadnode-git-\*.pkg.tar.xz will be created.
 
 To install the package, use:
 
-<pre>
+```
 pacman -U kadnode-*.pkg.tar.xz 
-</pre>
+```
 
 To remove the package, use:
 
-<pre>
+```
 pacman -R kadnode
-</pre>
+```

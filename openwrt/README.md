@@ -1,21 +1,23 @@
-To inlcude KadNode into your OpenWrtLEDE image or to create an .ipk package (equivalent to Debians .deb files), you have to build an LEDE image.
-These steps were tested using LEDE-17.01:
+# Building and Packaging KadNode on OpenWrt
 
-For building LEDE on Debian, you need to install these packages:
+To inlcude KadNode into your [OpenWrt](https://openwrt.org)/[LEDE](https://lede-project.org) image or to create an .ipk package (equivalent to Debian Linux .deb files), you have to build a firmware image.
+These steps were tested using LEDE-17.04:
+
+For building OpenWrt/LEDE on Debian Linux, you need to install these packages:
 ```
 apt-get install git subversion g++ libncurses5-dev gawk zlib1g-dev build-essential
 ```
 
-Now build LEDE:
+Now build OpenWrt/LEDE:
 ```
-git clone -b v17.01.1 git://git.lede-project.org/source.git
+git clone git://git.lede-project.org/source.git
 cd source
 
 ./scripts/feeds update -a
 ./scripts/feeds install -a
 
 git clone https://github.com/mwarning/KadNode.git
-cp -rf KadNode/lede/kadnode package/
+cp -rf KadNode/openwrt/kadnode package/
 rm -rf KadNode/
 
 make defconfig
@@ -32,12 +34,12 @@ Now compile/build everything:
 make
 ```
 
-The images and all *.ipk packages are now inside the bin/ folder.
-You can install the kadnode .ipk using "opkg install &lt;ipkg-file&gt;" on the router.
+The images and all \*.ipk packages are now inside the bin/ folder.
+You can install the kadnode .ipk using "opkg install \<ipkg-file\>" on the router.
 
-For details please check the LEDE documentation.
+For details please check the OpenWrt/LEDE documentation.
 
-### Note for developers
+# Notes for developers
 
 ## Build Notes
 
@@ -54,7 +56,7 @@ git commit -am "my change"
 Now create a symbolic link in the kadnode package folder using the abolute path:
 
 ```
-ln -s /my/own/project/folder/KadNode/.git lede/package/kadnode/git-src
+ln -s /my/own/project/folder/KadNode/.git openwrt/package/kadnode/git-src
 ```
 
 Also make sure to enable
@@ -72,8 +74,7 @@ make package/kadnode/{clean,compile} V=s
 
 ## Configuration Notes
 
-The LEDE package enables CMD and DNS support. Name Service Switch (NSS)
-is not available on LEDE.
+The OpenWrt/LEDE package enables CMD and DNS support. Name Service Switch (NSS) support is not available on OpenWrt/LEDE.
 
 To use the DNS interface you can hook up KadNode with the dnsmasq DNS server:
 
