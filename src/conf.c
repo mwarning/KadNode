@@ -62,8 +62,8 @@ const char *kadnode_version_str = "KadNode v"MAIN_VERSION" ("
 #endif
 " )";
 
-static const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n\n"
-"A dezentralized DNS resolver that can also utilize certificates.\n"
+static const char *kadnode_usage_str =
+"KadNode is a small decentralized DNS resolver.\n"
 "\n"
 "Usage: kadnode [OPTIONS]*\n"
 "\n"
@@ -126,7 +126,7 @@ static const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\
 " --service-remove			or on request by using the Service Control Manager.\n\n"
 #endif
 " -h, --help				Print this help.\n\n"
-" -v, --version				Print program version.\n\n";
+" -v, --version				Print program version.\n";
 
 
 void conf_init( void ) {
