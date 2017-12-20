@@ -19,12 +19,12 @@ config KADNODE_ENABLE_DNS
 config KADNODE_ENABLE_TLS
 	bool "Enable TLS authentication support"
 	depends on PACKAGE_kadnode
-	default n
+	default y
 
 config KADNODE_ENABLE_BOB
 	bool "Enable BOB authentication support"
 	depends on PACKAGE_kadnode
-	default n
+	default y
 
 config KADNODE_ENABLE_UPNP
 	bool "Enable UPnP support to add port forwardings on other routers"
