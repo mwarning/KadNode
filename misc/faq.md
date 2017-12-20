@@ -11,7 +11,7 @@
 * **Can annoucements be made for other nodes? Can I announce the IP address of e.g. google.de?**  
     No, the IP address of the sender of an announcement is used. This can be seen as a pro and cons.
 * **How long does it take to resolve an address?**  
-    An estimate would be 8 seconds. Unless the address has been been cached.
+    An estimate would be 8 seconds. Unless the address has been cached.
 * **So, it's all about DNS?**  
     No, KadNode is not traditional DNS. It just maps and 20 byte identifiers (or sha1(some-string)) to IP addresses. Everybody can announce identifiers. Use verification like HTTPS or other cryptography mechanisms.
 * **Are wildcard certificates supported?**  

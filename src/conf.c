@@ -67,7 +67,7 @@ static const char *kadnode_usage_str =
 "\n"
 "Usage: kadnode [OPTIONS]*\n"
 "\n"
-" --announce <name>:<port>		Announce an name and port.\n\n"
+" --announce <name>:<port>		Announce a name and port.\n\n"
 " --peerfile <file>			Import/Export peers from and to a file.\n\n"
 " --peer <addr>				Add a static peer address.\n"
 "					This option may occur multiple times.\n\n"
