@@ -68,66 +68,66 @@ static const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\
 "\n"
 "Usage: kadnode [OPTIONS]*\n"
 "\n"
-" --announce <name>:<port>	Announce an name and port.\n\n"
-" --peerfile <file>		Import/Export peers from and to a file.\n\n"
-" --peer <addr>			Add a static peer address.\n"
-"				This option may occur multiple times.\n\n"
-" --user <user>			Change the UUID after start.\n\n"
-" --port	<port>			Bind DHT to this port.\n"
-"				Default: "STR(DHT_PORT)"\n\n"
-" --config <file>		Provide a configuration file with one command line\n"
-"				option on each line. Comments start after '#'.\n\n"
-" --ifname <interface>		Bind to this interface.\n"
-"				Default: <any>\n\n"
-" --daemon			Run the node in background.\n\n"
-" --verbosity <level>		Verbosity level: quiet, verbose or debug.\n"
-"				Default: verbose\n\n"
-" --pidfile <file>		Write process pid to a file.\n\n"
-" --ipv4, -4, --ipv6, -6		Enable IPv4 or IPv6 only mode.\n"
-"				Default: IPv4+IPv6\n\n"
-" --query-tld <domain>		Top level domain to be handled by KadNode.\n"
-"				Default: "QUERY_TLD_DEFAULT"\n\n"
+" --announce <name>:<port>		Announce an name and port.\n\n"
+" --peerfile <file>			Import/Export peers from and to a file.\n\n"
+" --peer <addr>				Add a static peer address.\n"
+"					This option may occur multiple times.\n\n"
+" --user <user>				Change the UUID after start.\n\n"
+" --port	<port>				Bind DHT to this port.\n"
+"					Default: "STR(DHT_PORT)"\n\n"
+" --config <file>			Provide a configuration file with one command line\n"
+"					option on each line. Comments start after '#'.\n\n"
+" --ifname <interface>			Bind to this interface.\n"
+"					Default: <any>\n\n"
+" --daemon				Run the node in background.\n\n"
+" --verbosity <level>			Verbosity level: quiet, verbose or debug.\n"
+"					Default: verbose\n\n"
+" --pidfile <file>			Write process pid to a file.\n\n"
+" --ipv4, -4, --ipv6, -6			Enable IPv4 or IPv6 only mode.\n"
+"					Default: IPv4+IPv6\n\n"
+" --query-tld <domain>			Top level domain to be handled by KadNode.\n"
+"					Default: "QUERY_TLD_DEFAULT"\n\n"
 #ifdef LPD
-" --lpd-disable			Disable multicast to discover local peers.\n\n"
+" --lpd-disable				Disable multicast to discover local peers.\n\n"
 #endif
 #ifdef BOB
-" --bob-create-key <file>	Write a new secp256r1 secret key in PEM format to the file.\n"
-"				The public key will be printed to the terminal before exit.\n\n"
-" --bob-load-key <file>		Read a secret key in PEM format and announce the public key.\n"
-"				This option may occur multiple times.\n\n"
+" --bob-create-key <file>		Write a new secp256r1 secret key in PEM format to the file.\n"
+"					The public key will be printed to the terminal before exit.\n\n"
+" --bob-load-key <file>			Read a secret key in PEM format and announce the public key.\n"
+"					This option may occur multiple times.\n\n"
 #endif
 #ifdef CMD
-" --cmd-disable-stdin		Disable the local control interface.\n\n"
-" --cmd-port <port>		Bind the remote control interface to this local port.\n"
-"				Default: "STR(CMD_PORT)"\n\n"
+" --cmd-disable-stdin			Disable the local control interface.\n\n"
+" --cmd-port <port>			Bind the remote control interface to this local port.\n"
+"					Default: "STR(CMD_PORT)"\n\n"
 #endif
 #ifdef DNS
-" --dns-port <port>		Bind the DNS server interface to this local port.\n"
-"				Default: "STR(DNS_PORT)"\n\n"
-" --dns-proxy-enable		Enable DNS proxy mode. Reads /etc/resolv.conf by default.\n\n"
-" --dns-proxy-server <ip-addr>	Use IP address of an external DNS server instead of resolv.conf.\n\n"
+" --dns-port <port>			Bind the DNS server interface to this local port.\n"
+"					Default: "STR(DNS_PORT)"\n\n"
+" --dns-proxy-enable			Enable DNS proxy mode. Reads /etc/resolv.conf by default.\n\n"
+" --dns-proxy-server <ip-addr>		Use IP address of an external DNS server instead of resolv.conf.\n\n"
 #endif
 #ifdef NSS
-" --nss-port <port>		Bind the Network Service Switch to this local port.\n"
-"				Default: "STR(NSS_PORT)"\n\n"
+" --nss-port <port>			Bind the Network Service Switch to this local port.\n"
+"					Default: "STR(NSS_PORT)"\n\n"
 #endif
 #ifdef FWD
-" --fwd-disable			Disable UPnP/NAT-PMP to forward router ports.\n\n"
+" --fwd-disable				Disable UPnP/NAT-PMP to forward router ports.\n\n"
 #endif
 #ifdef TLS
-" --tls-client-cert <path>	Path to file or folder of CA root certificates.\n"
-"				This option may occur multiple times.\n\n"
-" --tls-server-cert <tuple>	Add a comma separated tuple of server certificate file and key.\n"
-"				This option may occur multiple times.\n"
-"				Example: kadnode.crt,kadnode.key\n\n"
+" --tls-client-cert <path>		Path to file or folder of CA root certificates.\n"
+"					This option may occur multiple times.\n\n"
+" --tls-server-cert <path>,<path>	Add a comma separated tuple of server certificate file and key.\n"
+"					This option may occur multiple times.\n"
+"					Example: kadnode.crt,kadnode.key\n\n"
 #endif
 #ifdef __CYGWIN__
-" --service-start		Start, install and remove KadNode as Windows service.\n"
-" --service-install		KadNode will be started/shut down along with Windows\n"
-" --service-remove		or on request by using the Service Control Manager.\n\n"
+" --service-start			Start, install and remove KadNode as Windows service.\n"
+" --service-install			KadNode will be started/shut down along with Windows\n"
+" --service-remove			or on request by using the Service Control Manager.\n\n"
 #endif
-" -h, --help			Print this help.\n\n"
-" -v, --version			Print program version.\n\n";
+" -h, --help				Print this help.\n\n"
+" -v, --version				Print program version.\n\n";
 
 
 void conf_init( void ) {
