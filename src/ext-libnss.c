@@ -17,6 +17,7 @@
 
 #include "main.h"
 
+// Create string literal from token x
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
 
@@ -152,7 +153,6 @@ int _nss_kadnode_valid_hostname( const char hostname[], int hostlen ) {
 	return 1;
 }
 
-#ifndef __FreeBSD__
 enum nss_status _nss_kadnode_gaih_addrtuple(
 	const char *hostname, int hostlen, struct gaih_addrtuple **pat,
 	char *buf, size_t buflen, int *errnop, int *h_errnop, int32_t *ttlp ) {
@@ -232,7 +232,6 @@ enum nss_status _nss_kadnode_gaih_addrtuple(
 
 	return NSS_STATUS_SUCCESS;
 }
-#endif
 
 enum nss_status _nss_kadnode_hostent(
 		const char *hostname, int af, struct hostent *host,
@@ -349,7 +348,6 @@ enum nss_status _nss_kadnode_gethostbyname2_r(
 		buf, buflen, errnop, h_errnop, NULL, NULL );
 }
 
-#ifndef __FreeBSD__
 enum nss_status _nss_kadnode_gethostbyname3_r(
 		const char *hostname, int af, struct hostent *host,
 		char *buf, size_t buflen, int *errnop,  int *h_errnop,
@@ -368,7 +366,6 @@ enum nss_status _nss_kadnode_gethostbyname4_r(
 		hostname, strlen( hostname ), pat,
 		buf, buflen, errnop, h_errnop, ttlp );
 }
-#endif
 
 #ifdef __FreeBSD__
 static NSS_METHOD_PROTOTYPE(__nss_compat_gethostbyname2_r);
