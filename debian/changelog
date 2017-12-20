@@ -1,4 +1,4 @@
-kadnode (2.0.0) UNRELEASED; urgency=medium
+kadnode (2.0.0) unstable; urgency=medium
 
   * refactor most code
   * IPv4 and IPv6 works at the same time
@@ -7,7 +7,7 @@ kadnode (2.0.0) UNRELEASED; urgency=medium
 
  -- mwarning <moritzwarning@web.de>  Tue, 14 Aug 2017 00:56:45 +0100
 
-kadnode (1.1.0) UNRELEASED; urgency=medium
+kadnode (1.1.0) unstable; urgency=medium
 
   * DNS answers were in additional records, not answer records
   * fix dependency selection in OpenWrt package
