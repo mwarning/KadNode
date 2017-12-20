@@ -62,9 +62,8 @@ const char *kadnode_version_str = "KadNode v"MAIN_VERSION" ("
 #endif
 " )";
 
-static const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n"
-"A Wrapper for the Kademlia implementation of a Distributed Hash Table (DHT)\n"
-"with several optional interfaces (use --version).\n"
+static const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\n\n"
+"A dezentralized DNS resolver that can also utilize certificates.\n"
 "\n"
 "Usage: kadnode [OPTIONS]*\n"
 "\n"
@@ -104,7 +103,7 @@ static const char *kadnode_usage_str = "KadNode - A P2P name resolution daemon.\
 #ifdef DNS
 " --dns-port <port>			Bind the DNS server interface to this local port.\n"
 "					Default: "STR(DNS_PORT)"\n\n"
-" --dns-proxy-enable			Enable DNS proxy mode. Reads /etc/resolv.conf by default.\n\n"
+" --dns-proxy-enable			Enable DNS proxy mode. The proxy reads /etc/resolv.conf by default.\n\n"
 " --dns-proxy-server <ip-addr>		Use IP address of an external DNS server instead of resolv.conf.\n\n"
 #endif
 #ifdef NSS
