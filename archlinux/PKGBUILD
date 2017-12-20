@@ -1,7 +1,7 @@
 # Maintainer: Moritz Warning <moritzwarning@web.de>
 
 pkgname=kadnode
-pkgver=2.0.0
+pkgver=2.0.1
 pkgrel=1
 
 pkgdesc='A P2P based DNS resolver'
@@ -12,9 +12,9 @@ depends=('mbedtls')
 
 backup=('etc/kadnode/kadnode.conf' 'etc/kadnode/peers.txt')
 
-source=(https://github.com/mwarning/KadNode.git)
+#source=(https://github.com/mwarning/KadNode.git)
 #source=(https://github.com/mwarning/KadNode/archive/v${pkgver}.tar.gz)
-#source=(git+file:///home/mwarning/KadNode)
+source=(git+file:///home/mwarning/myProjects/KadNode)
 
 md5sums=('SKIP')
 
