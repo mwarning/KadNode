@@ -39,8 +39,6 @@ You can install the kadnode .ipk using "opkg install \<ipkg-file\>" on the route
 
 For details please check the OpenWrt/LEDE documentation.
 
-# Notes for developers
-
 ## Build Notes
 
 You might want to use your own source location and not the remote respository.
