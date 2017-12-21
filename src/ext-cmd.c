@@ -139,10 +139,6 @@ static int cmd_debug_nodes( struct reply_t *r ) {
 static int cmd_announce( struct reply_t *r, const char hostname[], int port, int minutes ) {
 	time_t lifetime;
 
-	if( port < 0 || port > 65534 ) {
-		return 1;
-	}
-
 	if( minutes < 0 ) {
 		lifetime = LONG_MAX;
 	} else {
@@ -154,9 +150,7 @@ static int cmd_announce( struct reply_t *r, const char hostname[], int port, int
 	if( kad_announce( hostname, port, lifetime ) >= 0 ) {
 #ifdef FWD
 		// Add port forwarding
-		if( port != 0 ) {
-			fwd_add( port, lifetime );
-		}
+		fwd_add( port, lifetime );
 #endif
 		if( minutes < 0 ) {
 			r_printf( r ,"Start regular announcements for the entire run time (port %d).\n", port );
