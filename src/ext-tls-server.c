@@ -198,12 +198,13 @@ static int get_common_name( char buf[], size_t len, const mbedtls_x509_crt *crt 
 	return 1;
 }
 
-static int match_pattern(const char pattern[], const char name[]) {
+static int match_pattern( const char pattern[], const char name[] ) {
 	if( pattern[0] == '*' ) {
-		pattern += 1;
+		char *dot = strchr( name, '.' );
+		return dot && (strcmp( dot, pattern + 1 ) == 0);
+	} else {
+		return strcmp( pattern, name ) == 0;
 	}
-
-	return strcmp( pattern, name ) == 0;
 }
 
 // SNI callback. The client submits the domain it is looking for.
