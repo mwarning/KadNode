@@ -63,6 +63,10 @@ int query_sanitize( char buf[], size_t buflen, const char query[] ) {
 		return 1;
 	}
 
+	if( !str_isValidHostname( query ) ) {
+		return 1;
+	}
+
 	// Convert to lower case
 	for( i = 0; i <= len; ++i ) {
 		buf[i] = tolower( query[i] );
