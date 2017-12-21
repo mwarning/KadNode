@@ -31,6 +31,9 @@
 // Global object variables
 struct gconf_t *gconf = NULL;
 
+static const char *g_announce_args[64] = { 0 };
+static const char *g_tls_client_args[16] = { 0 };
+static const char *g_tls_server_args[16] = { 0 };
 
 const char *kadnode_version_str = "KadNode v"MAIN_VERSION" ("
 #ifdef BOB
@@ -152,7 +155,7 @@ void conf_init( void ) {
 }
 
 // Set default if setting was not set and validate settings
-void conf_check( void ) {
+void conf_defaults( void ) {
 
 	if( gconf->af == 0 ) {
 		gconf->af = AF_UNSPEC;
@@ -440,6 +443,23 @@ static int conf_load_file( const char path[] ) {
 	return 0;
 }
 
+// Append to an array (assumes there is alway enough space ...)
+void array_append( const char **array, const char *element ) {
+	while( *array ) {
+		array += 1;
+	}
+
+	*array = strdup( element );
+}
+
+// Free array elements
+void array_free( const char **array ) {
+	while( *array ) {
+		free( (void*) *array );
+		array += 1;
+	}
+}
+
 int conf_set( const char opt[], const char val[] ) {
 	const struct option_t *option;
 
@@ -462,18 +482,8 @@ int conf_set( const char opt[], const char val[] ) {
 
 	switch( option->code ) {
 		case oAnnounce:
-		{
-			uint16_t port = gconf->dht_port;
-			char name[QUERY_MAX_SIZE] = { 0 };
-
-			int rc = sscanf( val, "%254[^:]:%hu", name, &port );
-			if( rc == 1 || rc == 2 ) {
-				return kad_announce( name, port, LONG_MAX ) < 0;
-			} else {
-				log_err( "Invalid announcement: %s", val );
-				return 1;
-			}
-		}
+			array_append( &g_announce_args[0], val );
+			return 0;
 		case oQueryTld:
 			return conf_str( opt, &gconf->query_tld, val );
 		case oPidFile:
@@ -516,21 +526,11 @@ int conf_set( const char opt[], const char val[] ) {
 #endif
 #ifdef TLS
 		case oTlsClientCert:
-			// Add Certificate Authority (CA) entries for the TLS client
-			return tls_client_add_ca( val );
+			array_append( &g_tls_client_args[0], val );
+			return 0;
 		case oTlsServerCert:
-		{
-			// Add SNI entries for the TLS server (e.g. my.cert,my.key)
-			char crt_file[128];
-			char key_file[128];
-
-			if( sscanf( val, "%127[^,],%127[^,]", crt_file, key_file ) == 2 ) {
-				return tls_server_add_sni( crt_file, key_file );
-			} else {
-				log_err( "Invalid value format: %s", val );
-				return 1;
-			}
-		}
+			array_append( &g_tls_server_args[0], val );
+			return 0;
 #endif
 		case oConfig:
 		{
@@ -597,7 +597,54 @@ int conf_set( const char opt[], const char val[] ) {
 	}
 }
 
-void conf_load_args( int argc, char **argv ) {
+void conf_apply() {
+	const char **args;
+	int rc = 0;
+
+	args = g_announce_args;
+	while( rc == 0 && *args ) {
+		uint16_t port = gconf->dht_port;
+		char name[QUERY_MAX_SIZE] = { 0 };
+
+		int rc = sscanf( *args, "%254[^:]:%hu", name, &port );
+		if( rc == 1 || rc == 2 ) {
+			rc = kad_announce( name, port, LONG_MAX );
+		} else {
+			log_err( "Invalid announcement: %s", *args );
+			rc = 1;
+		}
+		args += 1;
+	}
+
+	args = g_tls_client_args;
+	while( rc == 0 && *args ) {
+		// Add Certificate Authority (CA) entries for the TLS client
+		rc = tls_client_add_ca( *args );
+		args += 1;
+	}
+
+	args = g_tls_server_args;
+	while( rc == 0 && *args ) {
+		// Add SNI entries for the TLS server (e.g. my.cert,my.key)
+		char crt_file[128];
+		char key_file[128];
+
+		if( sscanf( *args, "%127[^,],%127[^,]", crt_file, key_file ) == 2 ) {
+			rc = tls_server_add_sni( crt_file, key_file );
+		} else {
+			log_err( "Invalid value format: %s", *args );
+			rc = 1;
+		}
+		args += 1;
+	}
+
+
+	if( rc != 0 ) {
+		exit( 1 );
+	}
+}
+
+void conf_setup( int argc, char **argv ) {
 	int rc;
 	int i;
 
@@ -619,5 +666,13 @@ void conf_load_args( int argc, char **argv ) {
 		}
 	}
 
-	conf_check();
+	// Set defaults for unset settings
+	conf_defaults();
+
+	// Apply some values that depend on proper settings
+	conf_apply();
+
+	array_free( &g_announce_args[0] );
+	array_free( &g_tls_client_args[0] );
+	array_free( &g_tls_server_args[0] );
 }

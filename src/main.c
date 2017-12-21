@@ -128,9 +128,6 @@ void main_free( void ) {
 
 int main_start( void ) {
 
-	// Set missing settings with defaults
-	conf_check();
-
 	main_setup();
 
 	// Loop over all sockets and file descriptors
@@ -151,7 +148,7 @@ int main( int argc, char **argv ) {
 	char *p;
 
 	conf_init();
-	conf_load_args( argc, argv );
+	conf_setup( argc, argv );
 
 	if( gconf->service_start ) {
 		gconf->use_syslog = 1;
@@ -214,7 +211,7 @@ int main( int argc, char **argv ) {
 int main( int argc, char **argv ) {
 
 	conf_init();
-	conf_load_args( argc, argv );
+	conf_setup( argc, argv );
 
 	if( gconf->is_daemon ) {
 		gconf->use_syslog = 1;
