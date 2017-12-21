@@ -215,8 +215,7 @@ static int sni_callback( void *p_info, mbedtls_ssl_context *ssl, const unsigned 
 
 	cur = (struct sni_entry *) p_info;
 	while( cur != NULL ) {
-		if( match_pattern( cur->name, (const char*) name ) == 0 ) {
-
+		if( match_pattern( cur->name, (const char*) name ) ) {
 			// The client does not need to be authenticated
 			mbedtls_ssl_set_hs_authmode( ssl, MBEDTLS_SSL_VERIFY_NONE );
 
