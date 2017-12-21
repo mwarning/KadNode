@@ -463,17 +463,16 @@ int conf_set( const char opt[], const char val[] ) {
 	switch( option->code ) {
 		case oAnnounce:
 		{
-			int rc = -1;
-			uint16_t port = 0;
-			char name[QUERY_MAX_SIZE];
+			uint16_t port = DHT_PORT;
+			char name[QUERY_MAX_SIZE] = { 0 };
 
-			if( sscanf( val, "%254[^:]:%hu", name, &port ) == 2 ) {
-				rc = kad_announce( name, port, LONG_MAX );
+			int rc = sscanf( val, "%254[^:]:%hu", name, &port );
+			if( rc == 1 || rc == 2 ) {
+				return kad_announce( name, port, LONG_MAX ) < 0;
 			} else {
 				log_err( "Invalid announcement: %s", val );
+				return 1;
 			}
-
-			return (rc < 0);
 		}
 		case oQueryTld:
 			return conf_str( opt, &gconf->query_tld, val );
