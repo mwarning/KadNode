@@ -463,7 +463,7 @@ int conf_set( const char opt[], const char val[] ) {
 	switch( option->code ) {
 		case oAnnounce:
 		{
-			uint16_t port = DHT_PORT;
+			uint16_t port = gconf->dht_port;
 			char name[QUERY_MAX_SIZE] = { 0 };
 
 			int rc = sscanf( val, "%254[^:]:%hu", name, &port );
