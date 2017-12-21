@@ -32,8 +32,10 @@
 struct gconf_t *gconf = NULL;
 
 static const char *g_announce_args[64] = { 0 };
+#ifdef TLS
 static const char *g_tls_client_args[16] = { 0 };
 static const char *g_tls_server_args[16] = { 0 };
+#endif
 
 const char *kadnode_version_str = "KadNode v"MAIN_VERSION" ("
 #ifdef BOB
@@ -616,6 +618,7 @@ void conf_apply() {
 		args += 1;
 	}
 
+#ifdef TLS
 	args = g_tls_client_args;
 	while( rc == 0 && *args ) {
 		// Add Certificate Authority (CA) entries for the TLS client
@@ -637,7 +640,7 @@ void conf_apply() {
 		}
 		args += 1;
 	}
-
+#endif
 
 	if( rc != 0 ) {
 		exit( 1 );
@@ -673,6 +676,8 @@ void conf_setup( int argc, char **argv ) {
 	conf_apply();
 
 	array_free( &g_announce_args[0] );
+#ifdef TLS
 	array_free( &g_tls_client_args[0] );
 	array_free( &g_tls_server_args[0] );
+#endif
 }
