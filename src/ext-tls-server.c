@@ -198,6 +198,14 @@ static int get_common_name( char buf[], size_t len, const mbedtls_x509_crt *crt 
 	return 1;
 }
 
+static int match_pattern(const char pattern[], const char name[]) {
+	if( pattern[0] == '*' ) {
+		pattern += 1;
+	}
+
+	return strcmp( pattern, name ) == 0;
+}
+
 // SNI callback. The client submits the domain it is looking for.
 // The proper certificate needs to be selected and returned.
 static int sni_callback( void *p_info, mbedtls_ssl_context *ssl, const unsigned char *name, size_t name_len ) {
@@ -207,8 +215,7 @@ static int sni_callback( void *p_info, mbedtls_ssl_context *ssl, const unsigned 
 
 	cur = (struct sni_entry *) p_info;
 	while( cur != NULL ) {
-		if( name_len == strlen( cur->name ) &&
-			memcmp( name, cur->name, name_len ) == 0 ) {
+		if( match_pattern( cur->name, (const char*) name ) == 0 ) {
 
 			// The client does not need to be authenticated
 			mbedtls_ssl_set_hs_authmode( ssl, MBEDTLS_SSL_VERIFY_NONE );
@@ -289,20 +296,6 @@ int tls_server_add_sni( const char crt_file[], const char key_file[] ) {
 	return 0;
 }
 
-static void tls_announce_all_cnames( void ) {
-	struct sni_entry *cur;
-	char name[QUERY_MAX_SIZE];
-
-	// Announce cnames
-	cur = g_sni_entries;
-	while( cur ) {
-		if( query_sanitize( name, sizeof(name), cur->name ) == 0 ) {
-			kad_announce( name, gconf->dht_port, LONG_MAX );
-		}
-		cur = cur->next;
-	}
-}
-
 void tls_server_setup( void ) {
 	const char *pers = "kadnode";
 	int ret;
@@ -330,9 +323,6 @@ void tls_server_setup( void ) {
 		log_err( "TLS-Server: mbedtls_ctr_drbg_seed returned -0x%x", -ret );
 		exit( 1 );
 	}
-
-	// Announce all cname from certificates
-	tls_announce_all_cnames();
 
 	// May return -1 if protocol not enabled/supported
 	g_listen_fd4.fd = net_bind( "TLS", "0.0.0.0", gconf->dht_port, NULL, IPPROTO_TCP );
