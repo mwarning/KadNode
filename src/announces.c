@@ -135,9 +135,9 @@ struct value_t *announces_add( const char query[], int port, time_t lifetime ) {
 	new->lifetime = lifetime;
 
 	if( lifetime == LONG_MAX ) {
-		log_debug( "ANN: Add announcement for %s:%hu. Keep alive for entire runtime.", query, port );
+		log_debug( "Add announcement for %s:%hu. Keep alive for entire runtime.", query, port );
 	} else {
-		log_debug( "ANN: Add announcement for %s:%hu. Keep alive for %lu minutes.", query, port, (lifetime - now) / 60 );
+		log_debug( "Add announcement for %s:%hu. Keep alive for %lu minutes.", query, port, (lifetime - now) / 60 );
 	}
 
 	// Prepend to list
