@@ -606,8 +606,8 @@ void conf_apply() {
 		uint16_t port = gconf->dht_port;
 		char name[QUERY_MAX_SIZE] = { 0 };
 
-		int rc = sscanf( *args, "%254[^:]:%hu", name, &port );
-		if( rc == 1 || rc == 2 ) {
+		int n = sscanf( *args, "%254[^:]:%hu", name, &port );
+		if( n == 1 || n == 2 ) {
 			rc = kad_announce( name, port, LONG_MAX );
 		} else {
 			log_err( "Invalid announcement: %s", *args );
@@ -632,7 +632,7 @@ void conf_apply() {
 		if( sscanf( *args, "%127[^,],%127[^,]", crt_file, key_file ) == 2 ) {
 			rc = tls_server_add_sni( crt_file, key_file );
 		} else {
-			log_err( "Invalid value format: %s", *args );
+			log_err( "Invalid cert/key tuple: %s", *args );
 			rc = 1;
 		}
 		args += 1;
