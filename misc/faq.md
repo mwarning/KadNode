@@ -15,7 +15,7 @@
 * **So, it's all about DNS?**  
     No, KadNode is not traditional DNS. It just maps and 20 byte identifiers (or sha1(some-string)) to IP addresses. Everybody can announce identifiers. Use verification like HTTPS or other cryptography mechanisms.
 * **Are wildcard certificates supported?**  
-    No. Maybe it will be supported in future versions.
+    Yes, but all used domains have to be given explicitly via --announce. Wildcard support has not been tested yet.
 * **Can KadNode be used as a DNS server?**  
     KadNode is not a DNS server, it does not forward domains and its copabilities are quite simplistic.  
     It is meant to be an interface to a real DNS-Server (bind, dnsmasq etc.)

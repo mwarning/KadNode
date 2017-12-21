@@ -2,7 +2,7 @@
 
 ## SYNOPSIS
 
-`kadnode`  [--announce domain] [--daemon] [...]
+`kadnode`  [--announce \<domain\>] [--daemon] [...]
 
 `kadnode-ctl`  [...]
 
@@ -40,16 +40,14 @@ KadNode provides two authentication schemes. One works via x509 certificates and
 
 Typically there are two KadNode instances involved.
 
-One node announces a domain, e.g. mynode.p2p. The other node looks for the IP address of the announcing node. Authentication happens via TLS, which in turn uses X509 certificates. This is the same as HTTPS, but without a HTTP session.
+One node announces a domain, e.g. mynode.p2p. The other node looks for the IP address of the announcing node. Authentication happens via TLS, which in turn uses X509 certificates.
 
 ```
-kadnode --tls-server-cert mynode.crt,mynode.key
+kadnode --announce mynode.p2p --tls-server-cert mynode.crt,mynode.key
 ```
-
-KadNode will announce the common name field inside the certificate. No --announce is needed in this case.
 
 As an alternative, ownerhip can be proven using a HTTPS server running on the same host.
-In this case, KadNode only needs to announce the domain:
+In this case, KadNode itself does not need certificates, but needs to announce the HTTPS port:
 
 ```
 kadnode --announce mynode.p2p:443
@@ -88,8 +86,8 @@ This is the plain use of the DHT. The hexadecimal string will be cut down or fil
 
 ## OPTIONS
 
-  * `--announce` *name:port*  
-    Announce a name and port. The port may be used for the authentication provider, e.g. 443 for a webserver using HTTPS or the DHT port for Kadnode.  
+  * `--announce` *domain[:port]*  
+    Announce a domain and an optional port via the DHT.  
     This option may occur multiple times.
 
   * `--peerfile` *file*  
@@ -153,9 +151,8 @@ This is the plain use of the DHT. The hexadecimal string will be cut down or fil
     Path to file or folder of CA root certificates.  
     This option may occur multiple times.
 
-  * `--tls-server-cert` *tuple*  
-    Add a comma separated tuple of server certificate file and key.  
-    The certificates Common Name is announced.
+  * `--tls-server-cert` *path*,*path*  
+    Add a comma separated server certificate file path and key file path.  
     This option may occur multiple times.  
     Example: kadnode.crt,kadnode.key
 
@@ -183,14 +180,14 @@ When not started in background, KadNode accepts a variety of commands from stand
   * `status`  
     Print the node id, the number of known nodes / searches / stored hashes and more.
 
-  * `lookup` *query*  
-    Lookup the IP addresses of all nodes that claim to satisfy the query.  
+  * `lookup` *domain*  
+    Lookup the IP addresses of all nodes that claim to satisfy the domain.  
     The first call will start the search.
 
-  * `announce` [*query*[<i>:*port*</i>] [<i>*minutes*</i>]]  
-    Announce that this instance is associated with a query  
+  * `announce` [*domain*[<i>:*port*</i>] [<i>*minutes*</i>]]  
+    Announce that this instance is associated with a domain  
     and an optional port. The default port is random (but not equal 0).  
-    No *minutes* trigger a single announcement. Negative *minutes*  
+    A missing *minutes* argument trigger a single announcement. Negative *minutes*  
     last for the entire runtime. Otherwise the lifetime is set *minutes* into the future.  
     No arguments will announce all identifiers at once.
 
