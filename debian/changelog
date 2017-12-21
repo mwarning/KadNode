@@ -1,7 +1,8 @@
 kadnode (2.0.1) unstable; urgency=medium
 
   * various usability improvements
-  * various bugfixes
+  * make order of command line arguments irrelevant
+  * basic support for wildcard certificates
 
  -- mwarning <moritzwarning@web.de>  Wed, 20 Dec 2017 12:18:55 +0100
 
