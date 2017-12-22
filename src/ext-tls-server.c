@@ -296,6 +296,21 @@ int tls_server_add_sni( const char crt_file[], const char key_file[] ) {
 	return 0;
 }
 
+static void tls_announce_all_cnames( void ) {
+	struct sni_entry *cur;
+	char name[QUERY_MAX_SIZE];
+
+	// Announce cnames
+	cur = g_sni_entries;
+	while( cur ) {
+		// Won't announce wildcard domains
+		if( query_sanitize( name, sizeof(name), cur->name ) == 0 ) {
+			kad_announce( name, gconf->dht_port, LONG_MAX );
+		}
+		cur = cur->next;
+	}
+}
+
 void tls_server_setup( void ) {
 	const char *pers = "kadnode";
 	int ret;
@@ -314,6 +329,9 @@ void tls_server_setup( void ) {
 	mbedtls_ssl_init( &g_ssl );
 	mbedtls_ssl_config_init( &g_conf );
 	mbedtls_ctr_drbg_init( &g_drbg );
+
+	// Announce all common names from certificates
+	tls_announce_all_cnames();
 
 	//mbedtls_debug_set_threshold( 0 );
 
