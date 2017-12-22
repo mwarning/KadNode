@@ -61,6 +61,8 @@ kadnode --tls-client-cert /usr/share/ca-certificates/mozilla
 
 Own certificates authorities can be created and used, of course.
 
+Note: --announce is optional in many cases as domains from certificate and key files are announced automatically.
+
 ### Via BOB
 
 First create an elliptic curve secret key file:
