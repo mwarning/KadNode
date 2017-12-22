@@ -1,7 +1,7 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "MANPAGE" "" "August 2017" "" ""
+.TH "MANPAGE" "" "December 2017" "" ""
 .
 .SH "NAME"
 \fBmanpage\fR
@@ -9,7 +9,7 @@
 .SH "kadnode(1) \- P2P name resolver daemon"
 .
 .SH "SYNOPSIS"
-\fBkadnode\fR [\-\-announce domain] [\-\-daemon] [\.\.\.]
+\fBkadnode\fR [\-\-announce \e\fIdomain\e\fR] [\-\-daemon] [\.\.\.]
 .
 .P
 \fBkadnode\-ctl\fR [\.\.\.]
@@ -41,23 +41,20 @@ KadNode provides two authentication schemes\. One works via x509 certificates an
 Typically there are two KadNode instances involved\.
 .
 .P
-One node announces a domain, e\.g\. mynode\.p2p\. The other node looks for the IP address of the announcing node\. Authentication happens via TLS, which in turn uses X509 certificates\. This is the same as HTTPS, but without a HTTP session\.
+One node announces a domain, e\.g\. mynode\.p2p\. The other node looks for the IP address of the announcing node\. Authentication happens via TLS, which in turn uses X509 certificates\.
 .
 .IP "" 4
 .
 .nf
 
-kadnode \-\-tls\-server\-cert mynode\.crt,mynode\.key
+kadnode \-\-announce mynode\.p2p \-\-tls\-server\-cert mynode\.crt,mynode\.key
 .
 .fi
 .
 .IP "" 0
 .
 .P
-KadNode will announce the common name field inside the certificate\. No \-\-announce is needed in this case\.
-.
-.P
-As an alternative, ownerhip can be proven using a HTTPS server running on the same host\. In this case, KadNode only needs to announce the domain:
+As an alternative, ownerhip can be proven using a HTTPS server running on the same host\. In this case, KadNode itself does not need certificates, but needs to announce the HTTPS port:
 .
 .IP "" 4
 .
@@ -84,6 +81,9 @@ kadnode \-\-tls\-client\-cert /usr/share/ca\-certificates/mozilla
 .
 .P
 Own certificates authorities can be created and used, of course\.
+.
+.P
+Note: \-\-announce is optional in many cases as domains from certificate and key files are announced automatically\.
 .
 .SS "Via BOB"
 First create an elliptic curve secret key file:
@@ -113,10 +113,10 @@ KadNode also allows to just lookup a hexdecimal string and to get IP addresses a
 .SH "OPTIONS"
 .
 .IP "\(bu" 4
-\fB\-\-announce\fR \fIname:port\fR
+\fB\-\-announce\fR \fIdomain[:port]\fR
 .
 .br
-Announce a name and port\. The port may be used for the authentication provider, e\.g\. 443 for a webserver using HTTPS or the DHT port for Kadnode\.
+Announce a domain and an optional port via the DHT\.
 .
 .br
 This option may occur multiple times\.
@@ -248,13 +248,13 @@ Path to file or folder of CA root certificates\.
 This option may occur multiple times\.
 .
 .IP "\(bu" 4
-\fB\-\-tls\-server\-cert\fR \fItuple\fR
+\fB\-\-tls\-server\-cert\fR \fIpath\fR,\fIpath\fR
 .
 .br
-Add a comma separated tuple of server certificate file and key\.
+Add a comma separated server certificate file path and key file path\.
 .
 .br
-The certificates Common Name is announced\. This option may occur multiple times\.
+This option may occur multiple times\.
 .
 .br
 Example: kadnode\.crt,kadnode\.key
@@ -307,25 +307,25 @@ When not started in background, KadNode accepts a variety of commands from stand
 Print the node id, the number of known nodes / searches / stored hashes and more\.
 .
 .IP "\(bu" 4
-\fBlookup\fR \fIquery\fR
+\fBlookup\fR \fIdomain\fR
 .
 .br
-Lookup the IP addresses of all nodes that claim to satisfy the query\.
+Lookup the IP addresses of all nodes that claim to satisfy the domain\.
 .
 .br
 The first call will start the search\.
 .
 .IP "\(bu" 4
-\fBannounce\fR [\fIquery\fR[\fI:\fIport\fR\fR] [\fI\fIminutes\fR\fR]]
+\fBannounce\fR [\fIdomain\fR[\fI:\fIport\fR\fR] [\fI\fIminutes\fR\fR]]
 .
 .br
-Announce that this instance is associated with a query
+Announce that this instance is associated with a domain
 .
 .br
 and an optional port\. The default port is random (but not equal 0)\.
 .
 .br
-No \fIminutes\fR trigger a single announcement\. Negative \fIminutes\fR
+A missing \fIminutes\fR argument trigger a single announcement\. Negative \fIminutes\fR
 .
 .br
 last for the entire runtime\. Otherwise the lifetime is set \fIminutes\fR into the future\.
