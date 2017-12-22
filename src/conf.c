@@ -599,7 +599,8 @@ int conf_set( const char opt[], const char val[] ) {
 	}
 }
 
-void conf_apply() {
+// Load some values that depend on proper settings
+void conf_load( void ) {
 	const char **args;
 	int rc = 0;
 
@@ -642,6 +643,12 @@ void conf_apply() {
 	}
 #endif
 
+	array_free( &g_announce_args[0] );
+#ifdef TLS
+	array_free( &g_tls_client_args[0] );
+	array_free( &g_tls_server_args[0] );
+#endif
+
 	if( rc != 0 ) {
 		exit( 1 );
 	}
@@ -671,13 +678,4 @@ void conf_setup( int argc, char **argv ) {
 
 	// Set defaults for unset settings
 	conf_defaults();
-
-	// Apply some values that depend on proper settings
-	conf_apply();
-
-	array_free( &g_announce_args[0] );
-#ifdef TLS
-	array_free( &g_tls_client_args[0] );
-	array_free( &g_tls_server_args[0] );
-#endif
 }

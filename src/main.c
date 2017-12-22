@@ -128,6 +128,8 @@ void main_free( void ) {
 
 int main_start( void ) {
 
+	conf_load();
+
 	main_setup();
 
 	// Loop over all sockets and file descriptors
