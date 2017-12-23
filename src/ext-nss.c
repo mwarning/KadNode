@@ -36,7 +36,7 @@ static void nss_lookup( int sock, IP *clientaddr, const char hostname[] ) {
 static void nss_handler( int rc, int sock ) {
 	IP clientaddr;
 	socklen_t addrlen_ret;
-	char hostname[512];
+	char hostname[QUERY_MAX_SIZE];
 
 	if( rc == 0 ) {
 		return;
