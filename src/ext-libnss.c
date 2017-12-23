@@ -17,58 +17,20 @@
 
 #include "main.h"
 
-// Create string literal from token x
-#define STR_HELPER(x) #x
-#define STR(x) STR_HELPER(x)
-
 #define MAX_ADDRS 32
 
 static int g_sock = -1;
 static IP g_sockaddr = { 0 };
 
 
-/*
-* Parse/Resolve an IP address.
-* The port must be specified separately.
-*/
-int _nss_kadnode_addr_parse( IP *addr, const char addr_str[], const char port_str[], int af ) {
-	struct addrinfo hints;
-	struct addrinfo *info = NULL;
-	struct addrinfo *p = NULL;
-
-	memset( &hints, '\0', sizeof(struct addrinfo) );
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_family = af;
-
-	if( getaddrinfo( addr_str, port_str, &hints, &info ) != 0 ) {
-		return -2;
-	}
-
-	p = info;
-	while( p != NULL ) {
-		if( p->ai_family == AF_INET6 ) {
-			memcpy( addr, p->ai_addr, sizeof(IP6) );
-			freeaddrinfo( info );
-			return 0;
-		}
-		if( p->ai_family == AF_INET ) {
-			memcpy( addr, p->ai_addr, sizeof(IP4) );
-			freeaddrinfo( info );
-			return 0;
-		}
-	}
-
-	freeaddrinfo( info );
-	return -3;
-}
-
 int _nss_kadnode_init() {
 	struct timeval tv;
 	const int opt_on = 1;
 
-	if( _nss_kadnode_addr_parse( &g_sockaddr, "::1", STR(NSS_PORT), AF_UNSPEC ) < 0 ) {
-		return 0;
-	}
+	// Setup ::1 address
+	memcpy( &((IP6*) &g_sockaddr)->sin6_addr, &in6addr_loopback, sizeof(IP6));
+	((IP6*) &g_sockaddr)->sin6_family = AF_INET6;
+	((IP6*) &g_sockaddr)->sin6_port = htons(NSS_PORT);
 
 	// Setup UDP socket
 	if( (g_sock = socket( g_sockaddr.ss_family, SOCK_DGRAM, IPPROTO_UDP )) < 0 ) {
@@ -80,14 +42,20 @@ int _nss_kadnode_init() {
 	tv.tv_usec = 100000;
 
 	if( setsockopt( g_sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(struct timeval) ) < 0 ) {
-		return 0;
+		goto error;
 	}
 
 	if( setsockopt( g_sock, SOL_SOCKET, SO_REUSEADDR, &opt_on, sizeof(opt_on) ) < 0 ) {
-		return 0;
+		goto error;
 	}
 
 	return 1;
+
+error:
+	close(g_sock);
+	g_sock = -1;
+
+	return 0;
 }
 
 int _nss_kadnode_addr_len( const IP *addr ) {
@@ -121,11 +89,11 @@ int _nss_kadnode_lookup( const char hostname[], int hostlen, IP addrs[] ) {
 
 	size = recvfrom( g_sock, addrs, MAX_ADDRS * sizeof(IP), 0, (struct sockaddr *)&clientaddr, &addrlen );
 
-	if( size > 0 && (size % sizeof(IP)) == 0 ) {
+	if( size > 0 ) {
 		// Return number of addresses
 		return (size / sizeof(IP));
 	} else {
-		return 0;
+		return -1;
 	}
 }
 
@@ -154,7 +122,12 @@ enum nss_status _nss_kadnode_hostent(
 	}
 
 	memset( addrs, '\0', sizeof(addrs) );
-	if( (addrsnum = _nss_kadnode_lookup( hostname, hostlen, addrs )) <= 0 ) {
+	addrsnum = _nss_kadnode_lookup( hostname, hostlen, addrs );
+	if( addrsnum < 0 ) {
+		*errnop = ENOENT;
+		*h_errnop = HOST_NOT_FOUND;
+		return NSS_STATUS_UNAVAIL;
+	} else if( addrsnum == 0 ) {
 		*errnop = ENOENT;
 		*h_errnop = HOST_NOT_FOUND;
 		return NSS_STATUS_NOTFOUND;
