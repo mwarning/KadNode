@@ -24,3 +24,9 @@ dpkg-buildpackage -b -rfakeroot -us -uc
 ```
 
 The .deb package can be found beneath the kadnode source folder.
+
+Install the debian package:
+
+```
+dpkg -i kadnode_*.deb
+```
