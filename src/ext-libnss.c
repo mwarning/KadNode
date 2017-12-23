@@ -129,112 +129,8 @@ int _nss_kadnode_lookup( const char hostname[], int hostlen, IP addrs[] ) {
 	}
 }
 
-int _nss_kadnode_valid_hostname( const char hostname[], int hostlen ) {
-	size_t i;
-
-	if( hostlen < 0 || hostlen > 300 ) {
-		return 0;
-	}
-
-	for( i = 0; i < hostlen; i++ ) {
-		const char c = hostname[i];
-		if( (c >= '0' && c <= '9')
-				|| (c >= 'A' && c <= 'Z')
-				|| (c >= 'a' && c <= 'z')
-				|| (c == '-')
-				|| (c == '_')
-				|| (c == '.') ) {
-			continue;
-		} else {
-			return 0;
-		}
-	}
-
-	return 1;
-}
-
-enum nss_status _nss_kadnode_gaih_addrtuple(
-	const char *hostname, int hostlen, struct gaih_addrtuple **pat,
-	char *buf, size_t buflen, int *errnop, int *h_errnop, int32_t *ttlp ) {
-
-	IP addrs[MAX_ADDRS];
-	char *p_name;
-	char *p_idx;
-	struct gaih_addrtuple *p_tuple;
-	struct gaih_addrtuple *p_start;
-	int addrsnum;
-	int addrlen;
-	int af;
-	int i;
-
-	if( !_nss_kadnode_valid_hostname( hostname, hostlen ) ) {
-		*errnop = ENOENT;
-		*h_errnop = HOST_NOT_FOUND;
-		return NSS_STATUS_NOTFOUND;
-	}
-
-	memset( addrs, '\0', sizeof(addrs) );
-	if( (addrsnum = _nss_kadnode_lookup( hostname, hostlen, addrs )) <= 0 ) {
-		*errnop = ENOENT;
-		*h_errnop = HOST_NOT_FOUND;
-		return NSS_STATUS_NOTFOUND;
-	} else if( addrs[0].ss_family == AF_INET6 ) {
-		af = AF_INET6;
-		addrlen = sizeof(struct in6_addr);
-	} else {
-		af = AF_INET;
-		addrlen = sizeof(struct in_addr);
-	}
-
-	// Check upper bound
-	if( buflen < ((hostlen + 1) + sizeof(char*) + (addrsnum * sizeof(struct gaih_addrtuple))) ) {
-		*errnop = ENOMEM;
-		*h_errnop = NO_RECOVERY;
-		return NSS_STATUS_TRYAGAIN;
-	}
-
-	memset( buf, '\0', buflen );
-
-	// Hostname
-	p_name = buf;
-	memcpy( p_name, hostname, hostlen );
-
-	// Object
-	p_idx = p_name + hostlen + 1;
-	p_start = (struct gaih_addrtuple*) p_idx;
-	for( i = 0; i < addrsnum; i++ ) {
-		p_tuple = (struct gaih_addrtuple*) p_idx;
-		p_tuple->name = p_name;
-		p_tuple->family = af;
-		if( af == AF_INET6 ) {
-			memcpy( p_tuple->addr, &((IP6 *)&addrs[i])->sin6_addr, addrlen );
-		} else {
-			memcpy( p_tuple->addr, &((IP4 *)&addrs[i])->sin_addr, addrlen );
-		}
-		p_tuple->scopeid = 0;
-
-		// Linked list
-		if( i == addrsnum - 1 ) {
-			p_tuple->next = NULL;
-		} else {
-			p_tuple->next = (struct gaih_addrtuple*)
-			(p_idx + sizeof(struct gaih_addrtuple));
-		}
-
-		p_idx += sizeof(struct gaih_addrtuple);
-	}
-
-	*pat = p_start;
-
-	if( ttlp != NULL ) {
-		*ttlp = 0;
-	}
-
-	return NSS_STATUS_SUCCESS;
-}
-
 enum nss_status _nss_kadnode_hostent(
-		const char *hostname, int af, struct hostent *host,
+		const char *hostname, int af, struct hostent *result,
 		char *buf, size_t buflen, int *errnop,
 		int *h_errnop, int32_t *ttlp, char **canonp ) {
 
@@ -255,12 +151,6 @@ enum nss_status _nss_kadnode_hostent(
 		*errnop = EAFNOSUPPORT;
 		*h_errnop = NO_DATA;
 		return NSS_STATUS_UNAVAIL;
-	}
-
-	if( !_nss_kadnode_valid_hostname( hostname, hostlen ) ) {
-		*errnop = ENOENT;
-		*h_errnop = HOST_NOT_FOUND;
-		return NSS_STATUS_NOTFOUND;
 	}
 
 	memset( addrs, '\0', sizeof(addrs) );
@@ -315,11 +205,11 @@ enum nss_status _nss_kadnode_hostent(
 	}
 	((char**) p_addr_list)[addrsnum] = NULL;
 
-	host->h_name = p_name;
-	host->h_aliases = (char**) p_aliases;
-	host->h_addrtype = af;
-	host->h_length = addrlen;
-	host->h_addr_list = (char**) p_addr_list;
+	result->h_name = p_name;
+	result->h_aliases = (char**) p_aliases;
+	result->h_addrtype = af;
+	result->h_length = addrlen;
+	result->h_addr_list = (char**) p_addr_list;
 
 	if( ttlp != NULL ) {
 		*ttlp = 0;
@@ -333,38 +223,39 @@ enum nss_status _nss_kadnode_hostent(
 }
 
 enum nss_status _nss_kadnode_gethostbyname_r(
-		const char *hostname, struct hostent *host,
+		const char *hostname, struct hostent *result,
 		char *buf, size_t buflen, int *errnop, int *h_errnop ) {
 
-	return _nss_kadnode_hostent( hostname, AF_INET6, host,
+	return _nss_kadnode_hostent( hostname, AF_INET6, result,
 		buf, buflen, errnop, h_errnop, NULL, NULL );
 }
 
 enum nss_status _nss_kadnode_gethostbyname2_r(
-		const char *hostname, int af, struct hostent *host,
+		const char *hostname, int af, struct hostent *result,
 		char *buf, size_t buflen, int *errnop, int *h_errnop ) {
 
-	return _nss_kadnode_hostent( hostname, af, host,
+	return _nss_kadnode_hostent( hostname, af, result,
 		buf, buflen, errnop, h_errnop, NULL, NULL );
 }
 
 enum nss_status _nss_kadnode_gethostbyname3_r(
-		const char *hostname, int af, struct hostent *host,
+		const char *hostname, int af, struct hostent *result,
 		char *buf, size_t buflen, int *errnop,  int *h_errnop,
 		int32_t *ttlp, char **canonp ) {
 
-	return _nss_kadnode_hostent( hostname, af, host,
+	return _nss_kadnode_hostent( hostname, af, result,
 		buf, buflen, errnop, h_errnop, ttlp, canonp );
 }
 
-enum nss_status _nss_kadnode_gethostbyname4_r(
-	const char *hostname, struct gaih_addrtuple **pat,
-	char *buf, size_t buflen, int *errnop,
-	int *h_errnop, int32_t *ttlp ) {
+enum nss_status _nss_kadnode_gethostbyaddr_r(
+	const void* addr, int len, int af,
+	struct hostent *result, char *buf, size_t buflen,
+	int *errnop, int *h_errnop) {
 
-	return _nss_kadnode_gaih_addrtuple(
-		hostname, strlen( hostname ), pat,
-		buf, buflen, errnop, h_errnop, ttlp );
+	*errnop = EINVAL;
+	*h_errnop = NO_RECOVERY;
+
+	return NSS_STATUS_UNAVAIL;
 }
 
 #ifdef __FreeBSD__
