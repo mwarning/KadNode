@@ -18,10 +18,15 @@ portsnap fetch extract
 To create a [FreeBSD](https://www.freebsd.org) package (.txz file) execute:
 
 ```
-git archive master --prefix kadnode/ -o freebsd/kadnode.tar.gz
+git archive master --prefix kadnode/ -o freebsd/kadnode-2.0.2.tar.gz
 cd freebsd
 make makesum
-make
+make package
 ```
 
 The package can be found in freebsd/work/pkg/.
+
+Package installation:
+```
+pkg add kadnode-*.txz
+```

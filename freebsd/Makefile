@@ -10,7 +10,7 @@ MAINTAINER=	moritzwarning@web.de
 COMMENT=	P2P name resolution daemon
 LICENSE=	MIT
 USES=		gmake
-WRKSRC=		${WRKDIR}/KadNode
+WRKSRC=		${WRKDIR}/kadnode
 OPTIONS_DEFINE=	AUTH CMD DEBUG DNS LPD NATPMP NSS UPNP
 AUTH_DESC=	Authorization support based on mbedtls.
 CMD_DESC=	Command line control tool kadnode-ctl.
@@ -77,6 +77,6 @@ do-install:
 	${MKDIR} ${STAGEDIR}/etc/rc.d/
 	${INSTALL_SCRIPT} ${WRKSRC}/freebsd/files/kadnode.init ${STAGEDIR}/etc/rc.d/kadnode
 
-	${INSTALL_MAN} ${WRKSRC}/misc/kadnode.1 ${STAGEDIR}${MANPREFIX}/man/man1/
+	${INSTALL_MAN} ${WRKSRC}/misc/manpage ${STAGEDIR}${MANPREFIX}/man/man1/kadnode.1
 
 .include <bsd.port.mk>

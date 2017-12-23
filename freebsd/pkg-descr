@@ -1,10 +1,4 @@
-This tool translates hostnames to IPv6/IPv4 addresses
-using P2P technology. Every user can announce
-various hostnames and can resolve these hostnames
-on other computers running KadNode.
-KadNode wraps the Kademlia DHT implementation
-and offers support for the Name Service Switch (NSS)
-facility. The package also includes a control program
-called kadnode-ctl.
+KadNode is a small decentralized DNS resolver that can use existing public key infrastructures.
+It utilizes the BitTorrent P2P network and mbedtls for TLS/crypto support.
 
 WWW: https://github.com/mwarning/KadNode
