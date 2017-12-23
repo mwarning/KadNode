@@ -198,12 +198,13 @@ static int get_common_name( char buf[], size_t len, const mbedtls_x509_crt *crt 
 	return 1;
 }
 
-static int match_pattern( const char pattern[], const char name[] ) {
-	if( pattern[0] == '*' ) {
+// Match common name with domain name
+static int match_pattern( const char cname[], const char name[] ) {
+	if( cname[0] == '*' ) {
 		char *dot = strchr( name, '.' );
-		return dot && (strcmp( dot, pattern + 1 ) == 0);
+		return dot && (strcmp( dot, cname + 1 ) == 0);
 	} else {
-		return strcmp( pattern, name ) == 0;
+		return strcmp( cname, name ) == 0;
 	}
 }
 
