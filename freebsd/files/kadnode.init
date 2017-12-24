@@ -18,8 +18,16 @@ kadnode_flags="--config /etc/kadnode/kadnode.conf --pidfile $pidfile --daemon"
 required_files="/etc/kadnode/${name}.conf"
 
 #add/remove kadnode from /etc/nsswitch.conf
-start_precmd="sed -i -e '/kadnode/!s/^\(hosts:.*\)dns\(.*\)/\1kadnode dns\2/' /etc/nsswitch.conf"
-stop_postcmd="sed -i -e 's/^\(hosts:.*\)kadnode \(.*\)/\1\2/' /etc/nsswitch.conf"
+start_precmd="kadnode_precmd"
+stop_postcmd="kadnode_postcmd"
+
+kadnode_precmd() {
+	sed -i -e '/kadnode/!s/^\(hosts:.*\)dns\(.*\)/\1kadnode dns\2/' /etc/nsswitch.conf
+}
+
+kadnode_postcmd() {
+	sed -i -e 's/^\(hosts:.*\)kadnode \(.*\)/\1\2/' /etc/nsswitch.conf
+}
 
 load_rc_config $name
 : ${kadnode_enable:=yes}
