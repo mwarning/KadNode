@@ -24,7 +24,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/kadnode
 	SECTION:=net
 	CATEGORY:=Network
-	TITLE:=P2P DNS Server
+	TITLE:=P2P DNS Resolver
 	SUBMENU:=IP Addresses and Names
 	URL:=https://github.com/mwarning/KadNode
 	MENU:=1
@@ -33,7 +33,7 @@ define Package/kadnode
 endef
 
 define Package/kadnode/description
-	P2P DNS resolver
+	A P2P DNS system based on the BitTorrent network. It can be used as a decentralized DynDNS service.
 endef
 
 define Package/kadnode/config
@@ -50,8 +50,12 @@ ifeq ($(CONFIG_KADNODE_ENABLE_LPD),y)
 FEATURES += lpd
 endif
 
-ifeq ($(CONFIG_KADNODE_ENABLE_AUTH),y)
-FEATURES += bob tls
+ifeq ($(CONFIG_KADNODE_ENABLE_TLS),y)
+FEATURES += tls
+endif
+
+ifeq ($(CONFIG_KADNODE_ENABLE_BOB),y)
+FEATURES += bob
 endif
 
 ifeq ($(CONFIG_KADNODE_ENABLE_DNS),y)
@@ -82,11 +86,6 @@ endif
 	$(INSTALL_BIN) files/kadnode.init $(1)/etc/init.d/kadnode
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_CONF) files/kadnode.config $(1)/etc/config/kadnode
-endef
-
-define Package/kadnode/postinst
-	[ -n "$$IPKG_INSTROOT" ] || /etc/init.d/kadnode enable
-	exit 0
 endef
 
 $(eval $(call BuildPackage,kadnode))
