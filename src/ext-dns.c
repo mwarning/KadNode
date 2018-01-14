@@ -470,9 +470,9 @@ static void setPointerRecord( struct ResourceRecord *rr, const char name[], cons
 	rr->rd_data.ptr_record.name = domain;
 }
 
-static int dns_setup_msg( struct Message *msg, IP addrs[], size_t addrs_num, const char* hostname ) {
+static int dns_setup_msg( struct Message *msg, IP addrs[], int addrs_num, const char* hostname ) {
 	const char *qName;
-	size_t i, c;
+	int i, c;
 
 	// Header: leave most values intact for response
 	msg->qr = 1; // This is a response
@@ -606,7 +606,7 @@ static void proxy_forward_response( uint8_t *buffer, ssize_t buflen, uint16_t id
 static void dns_handler( int rc, int sock ) {
 	struct Message msg;
 	IP clientaddr;
-	size_t addrs_num;
+	int addrs_num;
 	IP addrs[MAX_ADDR_RECORDS];
 	socklen_t addrlen_ret;
 	ssize_t buflen;
@@ -700,7 +700,7 @@ static void dns_handler( int rc, int sock ) {
 			return;
 		}
 
-		log_debug( "DNS: Send back %lu addresses to: %s",
+		log_debug( "DNS: Send back %d addresses to: %s",
 			addrs_num, str_addr( &clientaddr )
 		);
 	}
