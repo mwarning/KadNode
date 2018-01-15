@@ -86,6 +86,8 @@ endif
 	$(INSTALL_BIN) files/kadnode.init $(1)/etc/init.d/kadnode
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_CONF) files/kadnode.config $(1)/etc/config/kadnode
+	$(INSTALL_DIR) $(1)/etc/uci-defaults
+	$(INSTALL_BIN) files/kadnode.postinst $(1)/etc/uci-defaults/99_kadnode
 endef
 
 $(eval $(call BuildPackage,kadnode))

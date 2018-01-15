@@ -3,7 +3,6 @@
 START=95
 USE_PROCD=1
 KADNODE_BIN=/usr/bin/kadnode
-CONFIG_FILE=/tmp/kadnode.conf
 OPTS=""
 
 
@@ -41,18 +40,9 @@ section_enabled() {
 	[ $enabled -gt 0 ]
 }
 
-first_cfg() {
-	local cfg
-	lookup() {
-		[ -z "$cfg" ] && cfg=$1
-	}
-	config_foreach lookup 'kadnode'
-	echo $cfg
-}
-
-start_service() {
-	config_load 'kadnode'
-	local cfg="$(first_cfg)"
+start_instance() {
+	local cfg="$1"
+	local CONFIG_FILE=/tmp/kadnode.${cfg}.conf
 
 	section_enabled "$cfg" || return
 
@@ -81,6 +71,19 @@ start_service() {
 	procd_close_instance
 }
 
-stop_service() {
+stop_instance() {
+	local cfg="$1"
+	local CONFIG_FILE=/tmp/kadnode.${cfg}.conf
+
 	rm -f $CONFIG_FILE
+}
+
+start_service() {
+	config_load 'kadnode'
+	config_foreach start_instance 'kadnode'
+}
+
+stop_service() {
+	config_load 'kadnode'
+	config_foreach stop_instance 'kadnode'
 }
