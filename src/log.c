@@ -42,7 +42,7 @@ void log_print( int priority, const char format[], ... ) {
 	va_list vlist;
 
 	va_start( vlist, format );
-	vsnprintf( buf, sizeof(buf) - 1, format, vlist );
+	vsnprintf( buf, sizeof(buf), format, vlist );
 	va_end( vlist );
 
 	// Select a prefix to quickly distinguish messages
