@@ -32,10 +32,10 @@ static const char* cmd_usage =
 	"	status\n"
 	"	lookup <query>\n"
 	"	announce [<query>[:<port>] [<minutes>]]\n"
-	"	ping <addr>\n"
-	"	blacklist <addr>\n";
+	"	ping <addr>\n";
 
 const char* cmd_usage_debug =
+	"	blacklist <addr>\n"
 	"	list blacklist|searches|announcements|nodes"
 #ifdef FWD
 	"|forwardings"
@@ -220,10 +220,10 @@ static int cmd_exec( struct reply_t *r, const char input[] ) {
 		rc = cmd_announce( r, hostname, 0, minutes );
 	} else if( sscanf( input, " announce %255[^: ]:%d %d %c", hostname, &port, &minutes, &d ) == 3 ) {
 		rc = cmd_announce( r, hostname, port, minutes );
-	} else if( match( input, " blacklist %255[^: ]%n" ) ) {
-		rc = cmd_blacklist( r, hostname );
 	} else if( match( input, " list %*s %n" ) && r->allow_debug ) {
-		if( gconf->is_daemon == 1 ) {
+		if( match( input, " blacklist %255[^: ]%n" ) ) {
+			rc = cmd_blacklist( r, hostname );
+		} else if( gconf->is_daemon == 1 ) {
 			r_printf( r ,"The 'list' command is not available while KadNode runs as daemon.\n" );
 			rc = 1;
 		} else if( match( input, " list blacklist %n" )) {
