@@ -2,13 +2,13 @@
 
 ## Use KadNode with Let's Encrypt certificates
 
-You might want to use KadNode with certificates from Let's Encrypt. In this example we assume to have certificates for mydomain.com.
+You might want to use KadNode with certificates from [Let's Encrypt](https://letsencrypt.org/). In this example we assume to have certificates for mydomain.com.
 
 A server running KadNode will be provided with the certificates for mydomain.com and will announce it to the P2P network.
 
 When someone else enters mydomain.com.p2p in the browser, then a running KadNode instance will intercept that request and look up the IP address. KadNode use the hosts CA chain (e.g. those of the browser) to verifiy the certificate behind the IP address. If the verification is successful, the browser will receive the IP address and can load the web page.
 
-Server configuratiion:
+Server configuration:
 ```  
 ./build/kadnode --tls-server-cert /etc/letsencrypt/live/mydomain.com/fullchain.pem,/etc/letsencrypt/live/mydomain.com/privkey.pem
 ```
@@ -31,7 +31,7 @@ Note: You cannot announce a domain for a different peer. Peers take the IP addre
 
 ## Create your own Certificate Authority and Certificates
 
-You can use a script to create your own root certifactes:
+You can use a [script](create-cert.sh) to create your own root certifactes:
 
 ```
 ./misc/create-cert.sh mydomain.com
