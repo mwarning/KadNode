@@ -17,7 +17,7 @@ endif
 
 
 .PHONY: all clean strip install kadnode kadnode-ctl libkadnode.so libkanode.a \
-	libnss-kadnode.so.2 arch-pkg deb-pkg osx-pkg install uninstall
+	libnss-kadnode.so.2 arch-pkg deb-pkg osx-pkg manpage install uninstall
 
 all: kadnode
 
@@ -124,6 +124,10 @@ freebsd-pkg:
 	cd freebsd
 	make makesum
 	make package
+
+manpage:
+	ronn --roff --manual=Kadnode\ Manual --organization=mwarning --date=2017-12-01 misc/manpage.md
+	mv misc/manpage.1 misc/manpage
 
 install:
 	cp build/kadnode $(DESTDIR)/usr/bin/ 2> /dev/null || true
