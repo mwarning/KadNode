@@ -1,12 +1,10 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "MANPAGE" "" "December 2017" "" ""
+.TH "KADNODE" "1" "December 2017" "mwarning" "Kadnode Manual"
 .
 .SH "NAME"
-\fBmanpage\fR
-.
-.SH "kadnode(1) \- P2P name resolver daemon"
+\fBkadnode\fR \- P2P name resolver daemon
 .
 .SH "SYNOPSIS"
 \fBkadnode\fR [\-\-announce \e\fIdomain\e\fR] [\-\-daemon] [\.\.\.]
