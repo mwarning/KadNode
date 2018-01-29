@@ -16,6 +16,8 @@
 static struct timespec log_start = { 0, 0 };
 
 const char *log_time() {
+	static char buf[16];
+
 	struct timespec now = { 0, 0 };
 	clock_gettime( CLOCK_MONOTONIC, &now );
 
@@ -24,7 +26,6 @@ const char *log_time() {
 		clock_gettime( CLOCK_MONOTONIC, &log_start );
 	}
 
-	static char buf[10];
 	sprintf( buf, "[%8.2f] ",
 		((double) now.tv_sec + 1.0e-9 * now.tv_nsec) -
 		((double) log_start.tv_sec + 1.0e-9 * log_start.tv_nsec)
