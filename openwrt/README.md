@@ -20,7 +20,6 @@ git clone https://github.com/mwarning/KadNode.git
 cp -rf KadNode/openwrt/kadnode package/
 rm -rf KadNode/
 
-make defconfig
 make menuconfig
 ```
 
