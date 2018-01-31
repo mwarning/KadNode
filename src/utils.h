@@ -6,7 +6,7 @@
 
 
 // Number of elements in an array
-#define N_ELEMS(x)  (sizeof(x) / sizeof(x[0]))
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
 // Typical min/max methods
 #define MAX(x, y) ((x) >= (y) ? (x) : (y))

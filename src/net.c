@@ -32,7 +32,7 @@ static int g_tasks_changed = 1;
 void net_add_handler( int fd, net_callback *callback ) {
 	int i;
 
-	for (i = 0; i < N_ELEMS(g_tasks); i++) {
+	for (i = 0; i < ARRAY_SIZE(g_tasks); i++) {
 		struct task_t *task = &g_tasks[i];
 		if (task->callback == NULL) {
 			task->fd = fd;
@@ -49,7 +49,7 @@ void net_add_handler( int fd, net_callback *callback ) {
 void net_remove_handler( int fd, net_callback *callback ) {
 	int i;
 
-	for (i = 0; i < N_ELEMS(g_tasks); i++) {
+	for (i = 0; i < ARRAY_SIZE(g_tasks); i++) {
 		struct task_t *task = &g_tasks[i];
 		if (task->fd == fd && task->callback == callback) {
 			task->fd = -1;
@@ -195,7 +195,7 @@ void net_loop( void ) {
 			FD_ZERO( &fds );
 			max_fd = -1;
 
-			for( i = 0; i < N_ELEMS(g_tasks); ++i ) {
+			for( i = 0; i < ARRAY_SIZE(g_tasks); ++i ) {
 				struct task_t *task = &g_tasks[i];
 				if( task->callback && task->fd >= 0) {
 					if( task->fd > max_fd ) {
@@ -222,7 +222,7 @@ void net_loop( void ) {
 		}
 
 		// Call all callbacks
-		for( i = 0; i < N_ELEMS(g_tasks); ++i ) {
+		for( i = 0; i < ARRAY_SIZE(g_tasks); ++i ) {
 			struct task_t *task = &g_tasks[i];
 			if( task->callback ) {
 				if( task->fd >= 0 && FD_ISSET( task->fd, &fds_working ) ) {
@@ -239,7 +239,7 @@ void net_free( void ) {
 	int i;
 
 	// Close sockets and FDs
-	for( i = 0; i < N_ELEMS(g_tasks); ++i ) {
+	for( i = 0; i < ARRAY_SIZE(g_tasks); ++i ) {
 		close( g_tasks[i].fd );
 	}
 }

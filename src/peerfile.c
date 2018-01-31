@@ -46,7 +46,7 @@ void peerfile_export( void ) {
 		return;
 	}
 
-	num = kad_export_nodes( addrs, N_ELEMS(addrs) );
+	num = kad_export_nodes( addrs, ARRAY_SIZE(addrs) );
 
 	// No peers to export
 	if( num <= 0 ) {

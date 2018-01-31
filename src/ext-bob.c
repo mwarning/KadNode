@@ -185,7 +185,7 @@ int bob_get_id( uint8_t id[], size_t ilen, const char query[] ) {
 static struct bob_resource *bob_next_resource( void ) {
 	int i;
 
-	for( i = 0; i < N_ELEMS(g_bob_resources); i++ ) {
+	for( i = 0; i < ARRAY_SIZE(g_bob_resources); i++ ) {
 		if( g_bob_resources[i].query[0] == '\0' ) {
 			return &g_bob_resources[i];
 		}
@@ -404,7 +404,7 @@ void bob_send_challenges( int sock ) {
 	int i;
 
 	// Send one packet per request
-	for( i = 0; i < N_ELEMS(g_bob_resources); ++i ) {
+	for( i = 0; i < ARRAY_SIZE(g_bob_resources); ++i ) {
 		resource = &g_bob_resources[i];
 		if( resource->query[0] == '\0' ) {
 			continue;
@@ -421,7 +421,7 @@ void bob_send_challenges( int sock ) {
 struct bob_resource *bob_find_resource( const IP *addr ) {
 	int i;
 
-	for( i = 0; i < N_ELEMS(g_bob_resources); ++i) {
+	for( i = 0; i < ARRAY_SIZE(g_bob_resources); ++i) {
 		if( addr_equal( &g_bob_resources[i].addr, addr ) ) {
 			return &g_bob_resources[i];
 		}
@@ -550,7 +550,7 @@ void bob_setup( void ) {
 	mbedtls_entropy_init( &g_entropy );
 
 	// Initialize resources handlers ctx_verify value
-	for( i = 0; i < N_ELEMS(g_bob_resources); ++i ) {
+	for( i = 0; i < ARRAY_SIZE(g_bob_resources); ++i ) {
 		resource = &g_bob_resources[i];
 		mbedtls_pk_setup( &resource->ctx_verify, mbedtls_pk_info_from_type( MBEDTLS_PK_ECKEY ) );
 		mbedtls_ecp_group_load( &mbedtls_pk_ec( resource->ctx_verify )->grp, ECPARAMS );

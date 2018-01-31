@@ -18,7 +18,7 @@ static void nss_lookup( int sock, IP *clientaddr, const char hostname[] ) {
 	IP addrs[MAX_ADDRS];
 
 	// Lookup id, starts search when not already started
-	int num = kad_lookup( hostname, addrs, N_ELEMS(addrs) );
+	int num = kad_lookup( hostname, addrs, ARRAY_SIZE(addrs) );
 	if( num > 0 ) {
 		// Found addresses
 		log_debug( "NSS: Send %lu addresses to %s. Packet has %d bytes.",

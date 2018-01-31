@@ -417,7 +417,7 @@ static const char* dns_lookup_ptr( const char ptr_name[] ) {
 	};
 
 	size_t i;
-	for( i = 0; i < N_ELEMS(entries); i++ ) {
+	for( i = 0; i < ARRAY_SIZE(entries); i++ ) {
 		if( strcmp( ptr_name, entries[i].ptr_name )  == 0 ) {
 			return entries[i].hostname;
 		}
@@ -584,7 +584,7 @@ static void proxy_forward_request( uint8_t *buffer, ssize_t buflen, IP *clientad
 	// Remember DNS request id and client address
 	proxy_entries_id[proxy_entries_count] = id;
 	proxy_entries_addr[proxy_entries_count] = *clientaddr;
-	proxy_entries_count = (proxy_entries_count + 1) % N_ELEMS(proxy_entries_id);
+	proxy_entries_count = (proxy_entries_count + 1) % ARRAY_SIZE(proxy_entries_id);
 }
 
 // Forward DNS response back to client address
@@ -592,7 +592,7 @@ static void proxy_forward_response( uint8_t *buffer, ssize_t buflen, uint16_t id
 	int sock;
 	int i;
 
-	for ( i = 0; i < N_ELEMS(proxy_entries_id); ++i ) {
+	for ( i = 0; i < ARRAY_SIZE(proxy_entries_id); ++i ) {
 		if( proxy_entries_id[i] == id ) {
 			sock = (proxy_entries_addr[i].ss_family == AF_INET) ? g_sock4 : g_sock6;
 			sendto( sock, buffer, buflen, 0, (struct sockaddr*) &proxy_entries_addr[i], sizeof(IP) );
@@ -690,7 +690,7 @@ static void dns_handler( int rc, int sock ) {
 		);
 	} else {
 		// Start lookup for one address
-		addrs_num = kad_lookup( hostname, addrs, N_ELEMS(addrs) );
+		addrs_num = kad_lookup( hostname, addrs, ARRAY_SIZE(addrs) );
 		if( addrs_num <= 0 ) {
 			log_debug( "DNS: Failed to resolve hostname: %s", hostname );
 			return;

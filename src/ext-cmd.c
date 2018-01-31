@@ -122,7 +122,7 @@ static int cmd_debug_nodes( struct reply_t *r ) {
 	size_t addr_num;
 	size_t i;
 
-	addr_num = kad_export_nodes( addr_array, N_ELEMS(addr_array) );
+	addr_num = kad_export_nodes( addr_array, ARRAY_SIZE(addr_array) );
 
 	if( addr_num == 0 ) {
 		r_printf( r, "No good nodes found.\n" );
@@ -187,7 +187,7 @@ static int cmd_exec( struct reply_t *r, const char input[] ) {
 		rc = cmd_ping( r, hostname );
 	} else if( sscanf( input, " lookup %255s %c", hostname, &d ) == 1 ) {
 		// Check searches for node
-		rc = kad_lookup( hostname, addrs, N_ELEMS(addrs) );
+		rc = kad_lookup( hostname, addrs, ARRAY_SIZE(addrs) );
 
 		if( rc > 0 ) {
 			// Print results

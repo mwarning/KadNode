@@ -345,7 +345,7 @@ static struct option_t options[] = {
 static const struct option_t *find_option( const char name[] ) {
 	int i;
 
-	for( i = 0; i < N_ELEMS(options); i++) {
+	for( i = 0; i < ARRAY_SIZE(options); i++) {
 		if( strcmp( name, options[i].name ) == 0 ) {
 			return &options[i];
 		}

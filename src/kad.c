@@ -490,8 +490,8 @@ int kad_export_nodes( IP addrs[], size_t num ) {
 	int j = 0;
 	int k = 0;
 
-	num6 = MIN(num, N_ELEMS(addr4));
-	num4 = MIN(num, N_ELEMS(addr6));
+	num6 = MIN(num, ARRAY_SIZE(addr4));
+	num4 = MIN(num, ARRAY_SIZE(addr6));
 
 	dht_get_nodes( addr4, &num4, addr6, &num6 );
 
