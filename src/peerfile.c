@@ -56,7 +56,7 @@ void peerfile_export( void ) {
 
 	fp = fopen( filename, "w" );
 	if( fp == NULL ) {
-		log_warn( "PEERFILE: Cannot open file '%s' for peer export: %s", filename, strerror( errno ) );
+		log_warning( "PEERFILE: Cannot open file '%s' for peer export: %s", filename, strerror( errno ) );
 		return;
 	}
 
@@ -86,11 +86,11 @@ static int peerfile_import_peer( const char addr_str[] ) {
 		if( kad_ping( &addr ) == 0 ) {
 			return 1;
 		} else {
-			log_warn( "PEERFILE: Cannot ping address '%s': %s", addr_str, strerror( errno ) );
+			log_warning( "PEERFILE: Cannot ping address '%s': %s", addr_str, strerror( errno ) );
 			return 0;
 		}
 	} else {
-		log_warn( "PEERFILE: Cannot resolve address '%s': %s", addr_str, gai_strerror(rc) );
+		log_warning( "PEERFILE: Cannot resolve address '%s': %s", addr_str, gai_strerror(rc) );
 	}
 
 	return 0;
@@ -109,7 +109,7 @@ static void peerfile_import( void ) {
 
 	fp = fopen( filename, "r" );
 	if( fp == NULL ) {
-		log_warn( "PEERFILE: Cannot open file '%s' for peer import: %s", filename, strerror( errno ) );
+		log_warning( "PEERFILE: Cannot open file '%s' for peer import: %s", filename, strerror( errno ) );
 		return;
 	}
 

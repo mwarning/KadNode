@@ -17,8 +17,8 @@ static struct timespec log_start = { 0, 0 };
 
 const char *log_time() {
 	static char buf[16];
-
 	struct timespec now = { 0, 0 };
+
 	clock_gettime( CLOCK_MONOTONIC, &now );
 
 	// Initialize clock
@@ -38,31 +38,12 @@ const char *log_time() {
 
 void log_print( int priority, const char format[], ... ) {
 	char buf[1024];
-	const char *prefix;
 	const char *time;
 	va_list vlist;
 
 	va_start( vlist, format );
 	vsnprintf( buf, sizeof(buf), format, vlist );
 	va_end( vlist );
-
-	// Select a prefix to quickly distinguish messages
-	switch( priority ) {
-		case LOG_INFO:
-			prefix = "(I)";
-			break;
-		case LOG_DEBUG:
-			prefix = "(D)";
-			break;
-		case LOG_WARNING:
-			prefix = "(W)";
-			break;
-		case LOG_ERR:
-			prefix = "(E)";
-			break;
-		default:
-			prefix = "(?)";
-	}
 
 #ifdef DEBUG
 	time = log_time();
@@ -77,6 +58,6 @@ void log_print( int priority, const char format[], ... ) {
 		closelog();
 	} else {
 		FILE *out = (priority == LOG_ERR) ? stderr : stdout;
-		fprintf( out, "%s%s %s\n", time, prefix, buf );
+		fprintf( out, "%s%s\n", time, buf );
 	}
 }

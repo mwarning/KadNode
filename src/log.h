@@ -16,20 +16,20 @@
 
 #define log_info(...)                   \
   do {                                  \
-    if (g_config.verbosity >= LOG_INFO) \
+    if (gconf->verbosity >= LOG_INFO)   \
       log_print(LOG_INFO, __VA_ARGS__); \
   } while (0)
 
 #define log_warning(...)                   \
   do {                                     \
-    if (g_config.verbosity >= LOG_WARNING) \
+    if (gconf->verbosity >= LOG_WARNING)   \
       log_print(LOG_WARNING, __VA_ARGS__); \
   } while (0)
 
 #ifdef DEBUG
   #define log_debug(...)                   \
     do {                                   \
-      if (g_config.verbosity >= LOG_DEBUG) \
+      if (gconf->verbosity >= LOG_DEBUG)   \
         log_print(LOG_DEBUG, __VA_ARGS__); \
     } while (0)
 #else

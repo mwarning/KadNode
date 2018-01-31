@@ -16,31 +16,253 @@
 #include "utils.h"
 
 
-// Try to create a DHT id from a sanitized hex query
-int hex_get_id( uint8_t id[], size_t len, const char query[] ) {
-	size_t query_len = strlen( query );
-	if( str_isHex( query, query_len ) ) {
-		memset( id, 0, len );
-		bytes_from_hex( id, query, MIN( 2 * len, query_len ) );
+int hex_get_id( uint8_t id[], size_t idsize, const char query[] ) {
+	size_t querysize = strlen(query);
+
+	if (0 == bytes_from_base32hex(id, idsize, query, querysize)) {
+		return 1;
+	}
+
+	if (0 == bytes_from_base16hex(id, idsize, query, querysize)) {
 		return 1;
 	}
 
 	return 0;
 }
 
-// Also matches on equality
-int is_suffix( const char str[], const char suffix[] ) {
-	size_t suffix_len;
-	size_t str_len;
+static size_t base16hex_len(size_t len) {
+	return 2 * len;
+}
 
-	suffix_len = strlen( suffix );
-	str_len = strlen( str );
+int bytes_from_base16hex( uint8_t dst[], size_t dstsize, const char src[], size_t srcsize ) {
+	size_t i;
+	size_t xv = 0;
 
-	if( suffix_len > str_len ) {
-		return 0;
-	} else {
-		return (memcmp( str + str_len - suffix_len, suffix, suffix_len ) == 0);
+	if (base16hex_len(dstsize) != srcsize) {
+		return -1;
 	}
+
+	for( i = 0; i < srcsize; ++i ) {
+		const char c = src[i];
+		if ( c >= '0' && c <= '9' ) {
+			xv += c - '0';
+		} else if( c >= 'a' && c <= 'f') {
+			xv += (c - 'a') + 10;
+		} else {
+			return -1;
+		}
+
+		if( i % 2 ) {
+			dst[i / 2] = xv;
+			xv = 0;
+		} else {
+			xv *= 16;
+		}
+	}
+
+	return 0;
+}
+
+char *bytes_to_base16hex( char dst[], size_t dstsize, const uint8_t src[], size_t srcsize ) {
+	static const char hexchars[16] = "0123456789abcdef";
+	size_t i;
+
+	// + 1 for the '\0'
+	if (dstsize != (base16hex_len(srcsize) + 1)) {
+		return NULL;
+	}
+
+	for( i = 0; i < srcsize; ++i ) {
+		dst[2 * i] = hexchars[src[i] / 16];
+		dst[2 * i + 1] = hexchars[src[i] % 16];
+	}
+
+	dst[2 * srcsize] = '\0';
+
+	return dst;
+}
+
+// get length of len hex string as bytes string
+// e.g.: 32 bytes need 52 characters to encode in base32hex
+static size_t base32hex_len(size_t len) {
+	const size_t mod = (len % 5);
+	return 8 * (len / 5) + 2 * mod - (mod > 2);
+}
+
+int bytes_from_base32hex(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize) {
+	size_t processed = 0;
+	unsigned char *d = dst;
+	int i;
+	int v;
+
+	if (srcsize != base32hex_len(dstsize)) {
+		return -1;
+	}
+
+	for (i = 0; i < srcsize; i++) {
+		if (*src >= 'a' && *src <= 'v') {
+			v = *src - 'a' + 10;
+		} else if (*src >= '0' && *src <= '9') {
+			v = *src - '0';
+		} else {
+			return -1;
+		}
+
+		src++;
+
+		switch (processed % 8) {
+		case 0:
+			if (dstsize <= 0) {
+				return -1;
+			}
+			d[0] &= 0x07;
+			d[0] |= (v << 3) & 0xF8;
+			break;
+		case 1:
+			if (dstsize < 1) {
+				return -1;
+			}
+			d[0] &= 0xF8;
+			d[0] |= (v >> 2) & 0x07;
+			if (dstsize >= 2) {
+				d[1] &= 0x3F;
+				d[1] |= (v << 6) & 0xC0;
+			}
+			break;
+		case 2:
+			if (dstsize < 2) {
+				return -1;
+			}
+			d[1] &= 0xC1;
+			d[1] |= (v << 1) & 0x3E;
+			break;
+		case 3:
+			if (dstsize < 2) {
+				return -1;
+			}
+			d[1] &= 0xFE;
+			d[1] |= (v >> 4) & 0x01;
+			if (dstsize >= 3) {
+				d[2] &= 0x0F;
+				d[2] |= (v << 4) & 0xF0;
+			}
+			break;
+		case 4:
+			if (dstsize < 3) {
+				return -1;
+			}
+			d[2] &= 0xF0;
+			d[2] |= (v >> 1) & 0x0F;
+			if (dstsize >= 4) {
+				d[3] &= 0x7F;
+				d[3] |= (v << 7) & 0x80;
+			}
+			break;
+		case 5:
+			if (dstsize < 4) {
+				return -1;
+			}
+			d[3] &= 0x83;
+			d[3] |= (v << 2) & 0x7C;
+			break;
+		case 6:
+			if (dstsize < 4) {
+				return -1;
+			}
+			d[3] &= 0xFC;
+			d[3] |= (v >> 3) & 0x03;
+			if (dstsize >= 5) {
+				d[4] &= 0x1F;
+				d[4] |= (v << 5) & 0xE0;
+			}
+			break;
+		default:
+			if (dstsize < 5) {
+				return -1;
+			}
+			d[4] &= 0xE0;
+			d[4] |= v & 0x1F;
+			d += 5;
+			dstsize -= 5;
+			break;
+		}
+		processed++;
+	}
+
+	return 0;
+}
+
+char *bytes_to_base32hex(char dst[], size_t dstsize, const uint8_t *src, size_t srcsize) {
+	const uint8_t *s = src;
+	int byte = 0;
+	uint8_t *d = (uint8_t*) dst;
+	int i;
+
+	// + 1 for the '\0'
+	if (dstsize != (base32hex_len(srcsize) + 1)) {
+		return NULL;
+	}
+
+	while (srcsize) {
+		switch (byte) {
+		case 0:
+			d[0] = *s >> 3;
+			d[1] = (*s & 0x07) << 2;
+			break;
+		case 1:
+			d[1] |= (*s >> 6) & 0x03;
+			d[2] = (*s >> 1) & 0x1f;
+			d[3] = (*s & 0x01) << 4;
+			break;
+		case 2:
+			d[3] |= (*s >> 4) & 0x0f;
+			d[4] = (*s & 0x0f) << 1;
+			break;
+		case 3:
+			d[4] |= (*s >> 7) & 0x01;
+			d[5] = (*s >> 2) & 0x1f;
+			d[6] = (*s & 0x03) << 3;
+			break;
+		case 4:
+			d[6] |= (*s >> 5) & 0x07;
+			d[7] = *s & 0x1f;
+			break;
+		}
+
+		srcsize--;
+		s++;
+		byte++;
+
+		if (byte == 5) {
+			d += 8;
+			byte = 0;
+		}
+	}
+
+	d = (uint8_t*) dst;
+
+	dstsize--;
+	for (i = 0; i < dstsize; i++) {
+		if (*d < 10) {
+			*d = *d +'0';
+		} else if (*d < 32) {
+			*d = *d - 10 + 'a';
+		} else {
+			*d = '?';
+		}
+		d++;
+	}
+
+	dst[dstsize] = '\0';
+
+	return dst;
+}
+
+// Check if a string has and extension.
+// ext is epected to start with a dot.
+int has_ext(const char str[], const char ext[]) {
+	const char *s = strrchr(str, '.');
+	return s && (strcmp(s, ext) == 0);
 }
 
 /*
@@ -63,10 +285,6 @@ int query_sanitize( char buf[], size_t buflen, const char query[] ) {
 		return 1;
 	}
 
-	if( !str_isValidHostname( query ) ) {
-		return 1;
-	}
-
 	// Convert to lower case
 	for( i = 0; i <= len; ++i ) {
 		buf[i] = tolower( query[i] );
@@ -74,7 +292,7 @@ int query_sanitize( char buf[], size_t buflen, const char query[] ) {
 
 	// Remove .p2p suffix
 	char *tld = gconf->query_tld;
-	if( is_suffix( buf, tld ) ) {
+	if( has_ext( buf, tld ) ) {
 		len -= strlen( tld );
 		buf[len] = '\0';
 	}
@@ -96,8 +314,9 @@ int port_random( void ) {
 // Parse a port - treats 0 as valid port
 int port_parse( const char pstr[], int err ) {
 	int port;
+	char c;
 
-	if( sscanf( pstr, "%d", &port ) == 1 && port >= 0 && port <= 65535 ) {
+	if( sscanf( pstr, "%d%c", &port, &c ) == 1 && port >= 0 && port <= 65535 ) {
 		return port;
 	} else {
 		return err;
@@ -124,7 +343,7 @@ int bytes_random( uint8_t buffer[], size_t size ) {
 
 	fd = open( "/dev/urandom", O_RDONLY );
 	if( fd < 0 ) {
-		log_err( "Failed to open /dev/urandom" );
+		log_error( "Failed to open /dev/urandom" );
 		exit( 1 );
 	}
 
@@ -135,90 +354,13 @@ int bytes_random( uint8_t buffer[], size_t size ) {
 	return rc;
 }
 
-void bytes_from_hex( uint8_t bin[], const char hex[], size_t length ) {
-	size_t i;
-	size_t xv = 0;
-
-	for( i = 0; i < length; ++i ) {
-		const char c = hex[i];
-		if( c >= 'a' ) {
-			xv += (c - 'a') + 10;
-		} else if ( c >= 'A') {
-			xv += (c - 'A') + 10;
-		} else {
-			xv += c - '0';
-		}
-
-		if( i % 2 ) {
-			bin[i / 2] = xv;
-			xv = 0;
-		} else {
-			xv *= 16;
-		}
-	}
-}
-
-char *bytes_to_hex( char hex[], const uint8_t bin[], size_t len ) {
-    static const char hexchars[16] = "0123456789abcdef";
-    size_t i;
-
-    for( i = 0; i < len; ++i ) {
-        hex[2 * i] = hexchars[bin[i] / 16];
-        hex[2 * i + 1] = hexchars[bin[i] % 16];
-    }
-    hex[2 * len] = '\0';
-    return hex;
-}
-
 int id_equal( const uint8_t id1[], const uint8_t id2[] ) {
 	return (memcmp( id1, id2, SHA1_BIN_LENGTH ) == 0);
 }
 
-// Check if string consist of hexdecimal characters
-int str_isHex( const char str[], size_t len ) {
-	size_t i = 0;
-
-	for( i = 0; i < len; i++ ) {
-		const char c = str[i];
-		if( (c >= '0' && c <= '9')
-				|| (c >= 'A' && c <= 'F')
-				|| (c >= 'a' && c <= 'f') ) {
-			continue;
-		} else {
-			return 0;
-		}
-	}
-
-	// Return 1 if len is even
-	return !(len & 1);
-}
-
-// Matches [0-9a-zA-Z._-]*
-int str_isValidHostname( const char hostname[] ) {
-	size_t size;
-	size_t i;
-
-	size = strlen( hostname );
-	for( i = 0; i < size; i++ ) {
-		const char c = hostname[i];
-		if( (c >= '0' && c <= '9')
-				|| (c >= 'A' && c <= 'Z')
-				|| (c >= 'a' && c <= 'z')
-				|| (c == '-')
-				|| (c == '.')
-				|| (c == '_') ) {
-			continue;
-		} else {
-			return 0;
-		}
-	}
-
-	return 1;
-}
-
 const char *str_id( const uint8_t id[] ) {
 	static char hexbuf[SHA1_HEX_LENGTH + 1];
-	return bytes_to_hex( hexbuf, id, SHA1_BIN_LENGTH );
+	return bytes_to_base16hex(hexbuf, sizeof(hexbuf), id, SHA1_BIN_LENGTH);
 }
 
 const char *str_af( int af ) {
@@ -346,7 +488,7 @@ int addr_parse( IP *addr, const char addr_str[], const char port_str[], int af )
 * Parse/Resolve various string representations of
 * IPv4/IPv6 addresses and optional port.
 * An address can also be a domain name.
-* A port can also be a service  (e.g. 'www').
+* A port can also be a service	(e.g. 'www').
 *
 * "<address>"
 * "<ipv4_address>:<port>"

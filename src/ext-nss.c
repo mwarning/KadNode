@@ -52,13 +52,7 @@ static void nss_handler( int rc, int sock ) {
 	// Add missing null terminator
 	hostname[rc] = '\0';
 
-	if( !is_suffix( hostname, gconf->query_tld ) ) {
-		return;
-	}
-
-	// Validate hostname
-	if( !str_isValidHostname( hostname ) ) {
-		log_warn( "NSS: Invalid hostname for lookup: '%s'", hostname );
+	if( !has_ext( hostname, gconf->query_tld ) ) {
 		return;
 	}
 

@@ -155,7 +155,7 @@ static void tls_server_handler( int rc, int sock ) {
 
 	if( ( ret = mbedtls_net_accept( listen_fd, client_fd,
 				client_ip, sizeof( client_ip ), &cliip_len ) ) != 0 ) {
-		log_warn( "TLS-Server: mbedtls_net_accept returned -0x%x", -ret );
+		log_warning( "TLS-Server: mbedtls_net_accept returned -0x%x", -ret );
 		return;
 	}
 
@@ -163,7 +163,7 @@ static void tls_server_handler( int rc, int sock ) {
 
 	ret = mbedtls_net_set_nonblock( client_fd );
 	if( ret != 0 ) {
-		log_warn( "TLS-Server: net_set_nonblock() returned -0x%x", -ret );
+		log_warning( "TLS-Server: net_set_nonblock() returned -0x%x", -ret );
 		return;
 	}
 
@@ -245,19 +245,19 @@ int tls_server_add_sni( const char crt_file[], const char key_file[] ) {
 
 	if( (ret = mbedtls_x509_crt_parse_file( &crt, crt_file )) != 0 ) {
 		mbedtls_strerror( ret, error_buf, sizeof(error_buf) );
-		log_err( "TLS-Server: %s: %s", crt_file, error_buf );
+		log_error( "TLS-Server: %s: %s", crt_file, error_buf );
 		return 1;
 	}
 
 	if( (ret = mbedtls_pk_parse_keyfile( &key, key_file, "" /* no password */ )) != 0 ) {
 		mbedtls_strerror( ret, error_buf, sizeof(error_buf) );
-		log_err( "TLS-Server: %s: %s", key_file, error_buf );
+		log_error( "TLS-Server: %s: %s", key_file, error_buf );
 		return 1;
 	}
 
 	// Check if common name is set
 	if( get_common_name( name, sizeof(name), &crt ) != 0) {
-		log_err( "TLS-Server: No common name set in %s", crt_file );
+		log_error( "TLS-Server: No common name set in %s", crt_file );
 		return 1;
 	}
 
@@ -265,7 +265,7 @@ int tls_server_add_sni( const char crt_file[], const char key_file[] ) {
 	cur = g_sni_entries;
 	while( cur ) {
 		if( strcmp( cur->name, name ) == 0 ) {
-			log_err( "TLS-Server: Duplicate entry %s", name );
+			log_error( "TLS-Server: Duplicate entry %s", name );
 			return 1;
 		}
 		cur = cur->next;
@@ -273,7 +273,7 @@ int tls_server_add_sni( const char crt_file[], const char key_file[] ) {
 
 	// Create new entry
 	if( (new = calloc( 1, sizeof(struct sni_entry))) == NULL ) {
-		log_err( "TLS-Server: Error calling calloc()" );
+		log_error( "TLS-Server: Error calling calloc()" );
 		return 1;
 	}
 
@@ -339,7 +339,7 @@ void tls_server_setup( void ) {
 	mbedtls_entropy_init( &g_entropy );
 	if( ( ret = mbedtls_ctr_drbg_seed( &g_drbg, mbedtls_entropy_func, &g_entropy,
 		(const unsigned char *) pers, strlen( pers ) ) ) != 0 ) {
-		log_err( "TLS-Server: mbedtls_ctr_drbg_seed returned -0x%x", -ret );
+		log_error( "TLS-Server: mbedtls_ctr_drbg_seed returned -0x%x", -ret );
 		exit( 1 );
 	}
 
@@ -352,7 +352,7 @@ void tls_server_setup( void ) {
 		MBEDTLS_SSL_TRANSPORT_STREAM,
 		MBEDTLS_SSL_PRESET_DEFAULT ) ) != 0 )
 	{
-		log_err( "TLS-Server: mbedtls_ssl_config_defaults returned -0x%x", -ret );
+		log_error( "TLS-Server: mbedtls_ssl_config_defaults returned -0x%x", -ret );
 		exit( 1 );
 	}
 
@@ -363,7 +363,7 @@ void tls_server_setup( void ) {
 	mbedtls_ssl_conf_sni( &g_conf, sni_callback, g_sni_entries );
 
 	if( ( ret = mbedtls_ssl_setup( &g_ssl, &g_conf ) ) != 0 ) {
-		log_err( "TLS-Server: mbedtls_ssl_setup returned -0x%x", -ret );
+		log_error( "TLS-Server: mbedtls_ssl_setup returned -0x%x", -ret );
 		exit( 1 );
 	}
 

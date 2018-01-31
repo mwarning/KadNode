@@ -201,7 +201,7 @@ const char *verbosity_str( int verbosity ) {
 		case VERBOSITY_VERBOSE: return "verbose";
 		case VERBOSITY_DEBUG: return "debug";
 		default:
-			log_err( "Invalid verbosity: %d", verbosity );
+			log_error( "Invalid verbosity: %d", verbosity );
 			exit( 1 );
 	}
 }
@@ -357,7 +357,7 @@ static const struct option_t *find_option( const char name[] ) {
 // Set a string once - error when already set
 static int conf_str( const char opt[], char *dst[], const char src[] ) {
 	if( *dst != NULL ) {
-		log_err( "Value was already set for %s: %s", opt, src );
+		log_error( "Value was already set for %s: %s", opt, src );
 		return 1;
 	}
 
@@ -369,12 +369,12 @@ static int conf_port( const char opt[], int *dst, const char src[] ) {
 	int n = port_parse( src, -1 );
 
 	if( n < 0 ) {
-		log_err( "Invalid port for %s: %s", opt, src );
+		log_error( "Invalid port for %s: %s", opt, src );
 		return 1;
 	}
 
 	if( *dst >= 0 ) {
-		log_err( "Value was already set for %s: %s", opt, src );
+		log_error( "Value was already set for %s: %s", opt, src );
 		return 1;
 	}
 
@@ -394,14 +394,14 @@ static int conf_load_file( const char path[] ) {
 	size_t nline;
 
 	if( stat( path, &s ) == 0 && !(s.st_mode & S_IFREG) ) {
-		log_err( "File expected: %s", path );
+		log_error( "File expected: %s", path );
 		return 1;
 	}
 
 	nline = 0;
 	file = fopen( path, "r" );
 	if( file == NULL ) {
-		log_err( "Cannot open file: %s (%s)", path, strerror( errno ) );
+		log_error( "Cannot open file: %s (%s)", path, strerror( errno ) );
 		return 1;
 	}
 
@@ -424,7 +424,7 @@ static int conf_load_file( const char path[] ) {
 			// Prevent recursive inclusion
 			if( strcmp( option, "--config " ) == 0 ) {
 				fclose( file );
-				log_err( "Option '--config' not allowed inside a configuration file, line %ld.", nline );
+				log_error( "Option '--config' not allowed inside a configuration file, line %ld.", nline );
 				return 1;
 			}
 
@@ -436,7 +436,7 @@ static int conf_load_file( const char path[] ) {
 			}
 		} else {
 			fclose( file );
-			log_err( "Invalid line in config file: %s (%d)", path, nline );
+			log_error( "Invalid line in config file: %s (%d)", path, nline );
 			return 1;
 		}
 	}
@@ -468,17 +468,17 @@ int conf_set( const char opt[], const char val[] ) {
 	option = find_option( opt );
 
 	if( option == NULL ) {
-		log_err( "Unknown parameter: %s", opt );
+		log_error( "Unknown parameter: %s", opt );
 		return 1;
 	}
 
 	if( option->num_args == 1 && val == NULL ) {
-		log_err( "Argument expected for option: %s", opt );
+		log_error( "Argument expected for option: %s", opt );
 		return 1;
 	}
 
 	if( option->num_args == 0 && val != NULL ) {
-		log_err( "No argument expected for option: %s", opt );
+		log_error( "No argument expected for option: %s", opt );
 		return 1;
 	}
 
@@ -502,7 +502,7 @@ int conf_set( const char opt[], const char val[] ) {
 			} else if( strcmp( val, "debug" ) == 0 ) {
 				gconf->verbosity = VERBOSITY_DEBUG;
 			} else {
-				log_err( "Invalid argument for %s", opt );
+				log_error( "Invalid argument for %s", opt );
 				return 1;
 			}
 			return 0;
@@ -545,7 +545,7 @@ int conf_set( const char opt[], const char val[] ) {
 		case oIpv4:
 		case oIpv6:
 			if( gconf->af != AF_UNSPEC ) {
-				log_err( "IPv4 or IPv6 mode already set: %s", opt );
+				log_error( "IPv4 or IPv6 mode already set: %s", opt );
 				return 1;
 			}
 
@@ -594,7 +594,7 @@ int conf_set( const char opt[], const char val[] ) {
 			return bob_load_key( val );
 #endif
 		default:
-			log_err( "Unhandled parameter: %s", opt );
+			log_error( "Unhandled parameter: %s", opt );
 			return 1;
 	}
 }
@@ -613,7 +613,7 @@ void conf_load( void ) {
 		if( n == 1 || n == 2 ) {
 			rc = kad_announce( name, port, LONG_MAX );
 		} else {
-			log_err( "Invalid announcement: %s", *args );
+			log_error( "Invalid announcement: %s", *args );
 			rc = 1;
 		}
 		args += 1;
@@ -636,7 +636,7 @@ void conf_load( void ) {
 		if( sscanf( *args, "%127[^,],%127[^,]", crt_file, key_file ) == 2 ) {
 			rc = tls_server_add_sni( crt_file, key_file );
 		} else {
-			log_err( "Invalid cert/key tuple: %s", *args );
+			log_error( "Invalid cert/key tuple: %s", *args );
 			rc = 1;
 		}
 		args += 1;

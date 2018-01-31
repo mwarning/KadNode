@@ -103,12 +103,12 @@ struct value_t *announces_add( const char query[], int port, time_t lifetime ) {
 	}
 
 	if( ret == 0 ) {
-		log_err( "Unrecognized announcement: %s", query );
+		log_error( "Unrecognized announcement: %s", query );
 		return NULL;
 	}
 
 	if( port < 1 || port > 65535 || lifetime < now ) {
-		log_err( "Invalid announcement: %s (port %d)", query, port );
+		log_error( "Invalid announcement: %s (port %d)", query, port );
 		return NULL;
 	}
 

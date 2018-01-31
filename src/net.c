@@ -42,7 +42,7 @@ void net_add_handler( int fd, net_callback *callback ) {
 		}
 	}
 
-	log_err("NET: No more space for handlers.");
+	log_error("NET: No more space for handlers.");
 	exit(1);
 }
 
@@ -59,7 +59,7 @@ void net_remove_handler( int fd, net_callback *callback ) {
 		}
 	}
 
-	log_err("NET: Handler not found to remove.");
+	log_error("NET: Handler not found to remove.");
 	exit(1);
 }
 
@@ -78,29 +78,29 @@ int net_socket( const char name[], const char ifname[], const int protocol, cons
 	}
 
 	if( (sock = socket( af, (protocol == IPPROTO_TCP) ? SOCK_STREAM : SOCK_DGRAM, protocol ) ) < 0 ) {
-		log_err( "%s: Failed to create socket: %s", name, strerror( errno ) );
+		log_error( "%s: Failed to create socket: %s", name, strerror( errno ) );
 		goto fail;
 	}
 
 	if( net_set_nonblocking( sock ) < 0 ) {
-		log_err( "%s: Failed to make socket nonblocking: %s", name, strerror( errno ) );
+		log_error( "%s: Failed to make socket nonblocking: %s", name, strerror( errno ) );
 		goto fail;
 	}
 
 #if defined(__APPLE__) || defined(__CYGWIN__) || defined(__FreeBSD__)
 	if( ifname ) {
-		log_err( "%s: Bind to device not supported on Windows and MacOSX.", name );
+		log_error( "%s: Bind to device not supported on Windows and MacOSX.", name );
 		goto fail;
 	}
 #else
 	if( ifname && setsockopt( sock, SOL_SOCKET, SO_BINDTODEVICE, ifname, strlen( ifname ) ) ) {
-		log_err( "%s: Unable to bind to device %s: %s", name, ifname, strerror( errno ) );
+		log_error( "%s: Unable to bind to device %s: %s", name, ifname, strerror( errno ) );
 		goto fail;
 	}
 #endif
 
 	if( setsockopt( sock, SOL_SOCKET, SO_REUSEADDR, &opt_on, sizeof(opt_on) ) < 0 ) {
-		log_err( "%s: Unable to set SO_REUSEADDR for %s: %s", name, ifname, strerror( errno ) );
+		log_error( "%s: Unable to set SO_REUSEADDR for %s: %s", name, ifname, strerror( errno ) );
 		goto fail;
 	}
 
@@ -125,7 +125,7 @@ int net_bind(
 	int sock = -1;
 
 	if( addr_parse( &sockaddr, addr, "0", AF_UNSPEC ) != 0 ) {
-		log_err( "%s: Failed to parse IP address '%s'",
+		log_error( "%s: Failed to parse IP address '%s'",
 			name, addr
 		);
 		goto fail;
@@ -139,7 +139,7 @@ int net_bind(
 
 	if( sockaddr.ss_family == AF_INET6 ) {
 		if( setsockopt( sock, IPPROTO_IPV6, IPV6_V6ONLY, &opt_on, sizeof(opt_on) ) < 0 ) {
-			log_err( "%s: Failed to set IPV6_V6ONLY for %s: %s",
+			log_error( "%s: Failed to set IPV6_V6ONLY for %s: %s",
 				name, str_addr( &sockaddr ), strerror( errno ) );
 			goto fail;
 		}
@@ -147,14 +147,14 @@ int net_bind(
 
 	addrlen = addr_len( &sockaddr );
 	if( bind( sock, (struct sockaddr*) &sockaddr, addrlen ) < 0 ) {
-		log_err( "%s: Failed to bind socket to %s: %s",
+		log_error( "%s: Failed to bind socket to %s: %s",
 			name, str_addr( &sockaddr ), strerror( errno )
 		);
 		goto fail;
 	}
 
 	if( protocol == IPPROTO_TCP && listen( sock, 5 ) < 0 ) {
-		log_err( "%s: Failed to listen on %s: %s (%s)",
+		log_error( "%s: Failed to listen on %s: %s (%s)",
 			name, str_addr( &sockaddr ), strerror( errno )
 		);
 		goto fail;

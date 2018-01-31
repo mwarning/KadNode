@@ -341,7 +341,7 @@ static int dns_decode_msg( struct Message *msg, const uint8_t *buffer ) {
 		}
 	}
 
-	log_warn( "DNS: No question for A, AAAA, SRV or PTR resource found in query." );
+	log_warning( "DNS: No question for A, AAAA, SRV or PTR resource found in query." );
 	return -1;
 }
 
@@ -558,14 +558,14 @@ static void proxy_read_resolv( IP *dst, const char path[] ) {
 				if( beg == NULL ) {
 					// Ignore missing address
 				} else if( addr_parse( &addr, beg + strlen(m), "53", AF_UNSPEC ) < 0 ) {
-					log_warn( "DNS: Failed to read DNS server from %s", path );
+					log_warning( "DNS: Failed to read DNS server from %s", path );
 				} else if( addr_is_localhost( &addr) ) {
 					// Ignore localhost entries
 				} else {
 					*dst = addr;
 				}
 			} else {
-				log_warn( "DNS: Failed to open %s", path );
+				log_warning( "DNS: Failed to open %s", path );
 			}
 		}
 	}
@@ -577,7 +577,7 @@ static void proxy_forward_request( uint8_t *buffer, ssize_t buflen, IP *clientad
 
 	sock = (g_proxy_addr.ss_family == AF_INET) ? g_sock4 : g_sock6;
 	if( sendto( sock, buffer, buflen, 0, (struct sockaddr*) &g_proxy_addr, sizeof(IP) ) < 0 ) {
-		log_warn( "DNS: Failed to send request to dns server %s", str_addr( &g_proxy_addr ) );
+		log_warning( "DNS: Failed to send request to dns server %s", str_addr( &g_proxy_addr ) );
 		return;
 	}
 
@@ -600,7 +600,7 @@ static void proxy_forward_response( uint8_t *buffer, ssize_t buflen, uint16_t id
 		}
 	}
 
-	log_warn( "DNS: Failed to find client for request." );
+	log_warning( "DNS: Failed to find client for request." );
 }
 
 static void dns_handler( int rc, int sock ) {
@@ -635,7 +635,7 @@ static void dns_handler( int rc, int sock ) {
 	hostname = msg.question.qName;
 
 	// Check if hostname ends with .p2p
-	if( !is_suffix( hostname, gconf->query_tld ) ) {
+	if( !has_ext( hostname, gconf->query_tld ) ) {
 		// Act as an DNS proxy
 		if( gconf->dns_proxy_enable ) {
 			// Update proxy server address if no fixed DNS server is given
@@ -662,11 +662,6 @@ static void dns_handler( int rc, int sock ) {
 			log_debug( "DNS: Received request for IPv6 record (AAAA), but DHT uses IPv4 only." );
 			return;
 		}
-	}
-
-	if ( !str_isValidHostname( hostname ) ) {
-		log_warn( "DNS: Invalid hostname for lookup: %s", hostname );
-		return;
 	}
 
 	log_debug( "DNS: Received %s query from %s for: %s",
@@ -710,10 +705,10 @@ static void dns_handler( int rc, int sock ) {
 
 	if( buflen > 0 ) {
 		if( sendto( sock, buffer, buflen, 0, (struct sockaddr*) &clientaddr, addr_len(&clientaddr) ) < 0 ) {
-			log_warn( "DNS: Cannot send message to '%s': %s", str_addr( &clientaddr ), strerror( errno ) );
+			log_warning( "DNS: Cannot send message to '%s': %s", str_addr( &clientaddr ), strerror( errno ) );
 		}
 	} else {
-		log_err( "DNS: Failed to create response packet." );
+		log_error( "DNS: Failed to create response packet." );
 	}
 }
 
@@ -725,7 +720,7 @@ void dns_setup( void ) {
 	// Initialize g_proxy_addr
 	if( gconf->dns_proxy_enable && gconf->dns_proxy_server ) {
 		if( addr_parse( &g_proxy_addr, gconf->dns_proxy_server, "53", AF_UNSPEC ) != 0 ) {
-			log_err( "DNS: Failed to parse IP address: %s", gconf->dns_proxy_server );
+			log_error( "DNS: Failed to parse IP address: %s", gconf->dns_proxy_server );
 			exit( 1 );
 		}
 	}

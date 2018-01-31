@@ -23,24 +23,21 @@
 #define time_now_sec() (gconf->time_now)
 
 
-int hex_get_id( uint8_t id[], size_t len, const char query[] );
+int hex_get_id(uint8_t id[], size_t idsize, const char query[]);
 
-int is_suffix( const char str[], const char suffix[] );
-
-int query_sanitize( char buf[], size_t buflen, const char query[] );
+int bytes_from_base32hex(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize);
+char *bytes_to_base32hex(char dst[], size_t dstsize, const uint8_t src[], size_t srcsize);
+int bytes_from_base16hex(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize);
+char *bytes_to_base16hex(char dst[], size_t dstsize, const uint8_t src[], size_t srcsize);
 
 int port_random( void );
 int port_parse( const char pstr[], int err );
 int port_set( IP *addr, uint16_t port );
 
+int has_ext(const char str[], const char ext[]);
+int query_sanitize( char buf[], size_t buflen, const char query[] );
 int bytes_random( uint8_t buffer[], size_t size );
-void bytes_from_hex( uint8_t bin[], const char hex[], size_t length );
-char *bytes_to_hex( char hex[], const uint8_t bin[], size_t length );
-
 int id_equal( const uint8_t id1[], const uint8_t id2[] );
-
-int str_isHex( const char str[], size_t size );
-int str_isValidHostname( const char hostname[] );
 
 const char *str_af( int af );
 const char *str_id( const uint8_t id[] );

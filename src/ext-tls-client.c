@@ -58,20 +58,20 @@ static int tls_connect_init( mbedtls_ssl_context *ssl, mbedtls_net_context *fd, 
 
 	if( ( ret = mbedtls_ssl_set_hostname( ssl, query ) ) != 0 )
 	{
-		log_err( "TLS-Client: mbedtls_ssl_set_hostname returned -0x%x", -ret );
+		log_error( "TLS-Client: mbedtls_ssl_set_hostname returned -0x%x", -ret );
 		return -1;
 	}
 
 	fd->fd = socket( addr->ss_family, SOCK_STREAM, IPPROTO_TCP );
 	if( fd->fd < 0 )
 	{
-		log_err( "TLS-Client: Socket creation failed: %s", strerror( errno ) );
+		log_error( "TLS-Client: Socket creation failed: %s", strerror( errno ) );
 		return -1;
 	}
 
 	ret = mbedtls_net_set_nonblock( fd );
 	if( ret < 0) {
-		log_err( "TLS-Client: Failed to set socket non-blocking: %s", strerror( errno ) );
+		log_error( "TLS-Client: Failed to set socket non-blocking: %s", strerror( errno ) );
 		return -1;
 	}
 
@@ -80,7 +80,7 @@ static int tls_connect_init( mbedtls_ssl_context *ssl, mbedtls_net_context *fd, 
 	if( ret < 0 && errno != EINPROGRESS ) {
 		mbedtls_net_free( fd );
 		mbedtls_net_init( fd );
-		log_err( "TLS-Client: Connect failed: %s", strerror( errno ) );
+		log_error( "TLS-Client: Connect failed: %s", strerror( errno ) );
 		return -1;
 	}
 
@@ -147,7 +147,7 @@ static void tls_handle( int rc, int fd ) {
 	if( rc < 0 ) {
 		if( errno != EINPROGRESS ) {
 			// Failed to create TCP/IP connection.
-			log_warn( "TLS-Client: Socket error for '%s': %s", query, strerror( errno ) );
+			log_warning( "TLS-Client: Socket error for '%s': %s", query, strerror( errno ) );
 			auth_end( resource, AUTH_ERROR );
 		} else {
 			// Still connecting.
@@ -299,7 +299,7 @@ int tls_client_add_ca( const char path[] ) {
 	if( ((ret = mbedtls_x509_crt_parse_file( &g_cacert, path )) < 0) &&
 		((ret = mbedtls_x509_crt_parse_path( &g_cacert, path )) < 0)) {
 		mbedtls_strerror( ret, error_buf, sizeof(error_buf) );
-		log_warn( "TLS-Client: Failed to load the CA root certificates from %s (%s)", path, error_buf );
+		log_warning( "TLS-Client: Failed to load the CA root certificates from %s (%s)", path, error_buf );
 		// We do not abort when a path was not loaded
 		return 0;
 	}
@@ -319,7 +319,7 @@ void tls_client_setup( void ) {
 	}
 
 	if (g_cacert.version <= 0) {
-		log_err( "TLS-Client: No root CA certificates found." );
+		log_error( "TLS-Client: No root CA certificates found." );
 		return;
 	}
 
@@ -330,7 +330,7 @@ void tls_client_setup( void ) {
 
 	if( ( ret = mbedtls_ctr_drbg_seed( &g_drbg, mbedtls_entropy_func, &g_entropy,
 		(const unsigned char *) pers, strlen( pers ) ) ) != 0 ) {
-		log_err( "TLS-Client: mbedtls_ctr_drbg_seed returned -0x%x", -ret );
+		log_error( "TLS-Client: mbedtls_ctr_drbg_seed returned -0x%x", -ret );
 		exit( 1 );
 		return;
 	}
@@ -347,7 +347,7 @@ void tls_client_setup( void ) {
 		MBEDTLS_SSL_IS_CLIENT,
 		MBEDTLS_SSL_TRANSPORT_STREAM,
 		MBEDTLS_SSL_PRESET_DEFAULT ) ) != 0 ) {
-		log_err( "TLS-Client: mbedtls_ssl_config_defaults returned -0x%x", -ret );
+		log_error( "TLS-Client: mbedtls_ssl_config_defaults returned -0x%x", -ret );
 		exit( 1 );
 	}
 
@@ -362,7 +362,7 @@ void tls_client_setup( void ) {
 	// Initialize a bunch ob SSL contexts
 	for( i = 0; i < ARRAY_SIZE(g_tls_resources); ++i ) {
 		if( ( ret = mbedtls_ssl_setup( &g_tls_resources[i].ssl, &g_conf ) ) != 0 ) {
-			log_err( "TLS-Client: mbedtls_ssl_setup returned -0x%x", -ret );
+			log_error( "TLS-Client: mbedtls_ssl_setup returned -0x%x", -ret );
 			exit( 1 );
 		}
 	}

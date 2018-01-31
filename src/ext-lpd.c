@@ -75,7 +75,7 @@ static void handle_mcast( int rc, struct LPD_STATE* lpd ) {
 	addrlen = sizeof(IP);
 	rc = recvfrom( lpd->sock_listen, buf, sizeof(buf) - 1, 0, (struct sockaddr*) &addr, (socklen_t*) &addrlen );
 	if( rc <= 0 ) {
-		log_warn( "LPD: Cannot receive multicast message: %s", strerror( errno ) );
+		log_warning( "LPD: Cannot receive multicast message: %s", strerror( errno ) );
 		return;
 	} else if( lpd->packet_limit < 0 ) {
 		// Too much traffic
@@ -145,7 +145,7 @@ static int create_send_socket( int af, const char ifname[] ) {
 fail:
 	close( sock );
 
-	log_warn( "LPD: Cannot create send %s socket: %s",  str_af( af ), strerror( errno ) );
+	log_warning( "LPD: Cannot create send %s socket: %s",  str_af( af ), strerror( errno ) );
 
 	return -1;
 }
@@ -196,7 +196,7 @@ fail:
 
 	close( sock );
 
-	log_warn( "LPD: Cannot create receive %s socket: %s", str_af( af ), strerror( errno ) );
+	log_warning( "LPD: Cannot create receive %s socket: %s", str_af( af ), strerror( errno ) );
 
 	return -1;
 }
@@ -209,7 +209,7 @@ void lpd_setup( void ) {
 	}
 
 	if( ifname && (gconf->af == AF_UNSPEC || gconf->af == AF_INET) ) {
-		log_warn( "LPD: ifname setting not supported for IPv4" );
+		log_warning( "LPD: ifname setting not supported for IPv4" );
 	}
 
 	addr_parse( &g_lpd4.mcast_addr, LPD_ADDR4, STR(LPD_PORT), AF_INET );

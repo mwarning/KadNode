@@ -33,21 +33,21 @@ static int g_dht_socket6 = -1;
 * Put an address and port into a sockaddr_storages struct.
 * Both addr and port are in network byte order.
 */
-void to_addr( IP *addr, const void *ip, size_t len, uint16_t port ) {
-	memset( addr, '\0', sizeof(IP) );
+void to_addr( IP *out_addr, const void *in_addr, size_t len, uint16_t port ) {
+	memset( out_addr, '\0', sizeof(IP) );
 
 	if( len == 4 ) {
-		IP4 *a = (IP4 *) addr;
+		IP4 *a = (IP4 *) out_addr;
 		a->sin_family = AF_INET;
 		a->sin_port = port;
-		memcpy( &a->sin_addr.s_addr, ip, 4 );
+		memcpy( &a->sin_addr.s_addr, in_addr, 4 );
 	}
 
 	if( len == 16 ) {
-		IP6 *a = (IP6 *) addr;
+		IP6 *a = (IP6 *) out_addr;
 		a->sin6_family = AF_INET6;
 		a->sin6_port = port;
-		memcpy( &a->sin6_addr.s6_addr, ip, 16 );
+		memcpy( &a->sin6_addr.s6_addr, in_addr, 16 );
 	}
 }
 
@@ -163,7 +163,7 @@ void dht_handler( int rc, int sock ) {
 
 		if( rc < 0 && errno != EINTR ) {
 			if( rc == EINVAL || rc == EFAULT ) {
-				log_err( "KAD: Error calling dht_periodic." );
+				log_error( "KAD: Error calling dht_periodic." );
 				exit( 1 );
 			}
 			g_dht_maintenance = time_now_sec() + 1;
@@ -185,7 +185,7 @@ void dht_handler( int rc, int sock ) {
 		if( errno == EINTR ) {
 			goto end;
 		} else if( rc == EINVAL || rc == EFAULT ) {
-			log_err( "KAD: Error using select: %s", strerror( errno ) );
+			log_error( "KAD: Error using select: %s", strerror( errno ) );
 			goto end;
 		} else {
 			g_dht_maintenance = time_now_sec() + 1;
@@ -266,7 +266,7 @@ void kad_setup( void ) {
 
 	// Init the DHT.  Also set the sockets into non-blocking mode.
 	if( dht_init( g_dht_socket4, g_dht_socket6, node_id, (uint8_t*) "KN\0\0") < 0 ) {
-		log_err( "KAD: Failed to initialize the DHT." );
+		log_error( "KAD: Failed to initialize the DHT." );
 		exit( 1 );
 	}
 }
@@ -403,7 +403,7 @@ int kad_lookup( const char query[], IP addr_array[], size_t addr_num ) {
 	char hostname[QUERY_MAX_SIZE];
 	struct search_t *search;
 
-	// Trim spaces, remove .p2p suffix and convert to lowercase
+	// Remove .p2p suffix and convert to lowercase
 	if( query_sanitize( hostname, sizeof(hostname), query ) != 0 ) {
 		log_debug( "KAD: query_sanitize error" );
 		return -1;
@@ -445,11 +445,9 @@ int kad_lookup_node( const char query[], IP *addr_return ) {
 	struct search *sr;
 	int i, rc;
 
-	if( strlen( query ) != SHA1_HEX_LENGTH || !str_isHex( query, SHA1_HEX_LENGTH ) ) {
+	if (0 != bytes_from_base16hex( id, query, SHA1_HEX_LENGTH ) {
 		return -1;
 	}
-
-	bytes_from_hex( id, query, SHA1_HEX_LENGTH );
 
 	rc = 1;
 	sr = searches;

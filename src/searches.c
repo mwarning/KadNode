@@ -46,7 +46,7 @@ static const char *str_state( int state ) {
 		case AUTH_PROGRESS: return "PROGRESS";
 		case AUTH_WAITING: return "WAITING";
 		default:
-			log_err( "Invalid state: %d", state );
+			log_error( "Invalid state: %d", state );
 			exit( 1 );
 	}
 }
@@ -73,7 +73,7 @@ static struct search_t *searches_find_by_query( const char query[] ) {
 	search = &g_searches[0];
 	while( *search ) {
 		searches = *search;
-		if( strcmp( query, &searches->query[0] ) == 0 ) {
+		if( 0 == strcmp( query, &searches->query[0] ) ) {
 			return searches;
 		}
 		search += 1;
@@ -289,7 +289,7 @@ struct search_t* searches_start( const char query[] ) {
 #endif
 	if( hex_get_id( id, sizeof(id), query ) ) {
 		// Use no authentication
-		// For e.g. <hex>.p2p
+		// For e.g. <base32hex>.p2p
 		callback = NULL;
 	} else {
 		// No idea what to do
