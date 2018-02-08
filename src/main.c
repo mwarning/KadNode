@@ -144,10 +144,14 @@ int main_start( void ) {
 }
 
 #ifdef __CYGWIN__
-int main( int argc, char **argv ) {
+int main( int argc, char *argv[] ) {
 	char cmd[MAX_PATH];
 	char path[MAX_PATH];
 	char *p;
+
+	if (strstr(argv[0], "kadnode-ctl")) {
+		return cmd_client(argc, argv);
+	}
 
 	conf_init();
 	conf_setup( argc, argv );
@@ -210,7 +214,11 @@ int main( int argc, char **argv ) {
 	return main_start();
 }
 #else
-int main( int argc, char **argv ) {
+int main( int argc, char *argv[] ) {
+
+	if (strstr(argv[0], "kadnode-ctl")) {
+		return cmd_client(argc, argv);
+	}
 
 	conf_init();
 	conf_setup( argc, argv );

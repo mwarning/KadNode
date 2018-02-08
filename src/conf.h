@@ -76,7 +76,7 @@ struct gconf_t {
 #endif
 
 #ifdef CMD
-	int cmd_port;
+	char *cmd_path;
 	int cmd_disable_stdin;
 #endif
 

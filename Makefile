@@ -16,7 +16,7 @@ else
 endif
 
 
-.PHONY: all clean strip install kadnode kadnode-ctl libkadnode.so libkanode.a \
+.PHONY: all clean strip install kadnode libkadnode.so libkanode.a \
 	libnss-kadnode.so.2 arch-pkg deb-pkg osx-pkg manpage install uninstall
 
 all: kadnode
@@ -36,7 +36,6 @@ endif
 ifeq ($(findstring cmd,$(FEATURES)),cmd)
   OBJS += build/ext-cmd.o
   CFLAGS += -DCMD
-  EXTRA += kadnode-ctl
 endif
 
 ifeq ($(findstring debug,$(FEATURES)),debug)
@@ -83,9 +82,6 @@ endif
 build/%.o : src/%.c src/%.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-kadnode-ctl:
-	$(CC) $(CFLAGS) src/kadnode-ctl.c -o build/kadnode-ctl $(LFLAGS)
-
 libnss-kadnode.so.2:
 	$(CC) $(CFLAGS) -fPIC -c -o build/ext-libnss.o src/ext-libnss.c
 	$(CC) $(CFLAGS) -fPIC -shared -Wl,-soname,libnss_kadnode.so.2 -o build/libnss_kadnode.so.2 build/ext-libnss.o
@@ -99,13 +95,13 @@ libkadnode.so: build/libkadnode.o $(OBJS)
 
 kadnode: build/main.o $(OBJS) $(EXTRA)
 	$(CC) build/main.o $(OBJS) -o build/kadnode $(LFLAGS)
+	ln -s kadnode build/kadnode-ctl 2> /dev/null || true
 
 clean:
 	rm -rf build/*
 
 strip:
 	strip build/kadnode 2> /dev/null || true
-	strip build/kadnode-ctl 2> /dev/null || true
 	strip build/libkadnode.a 2> /dev/null  || true
 	strip build/libkadnode.so 2> /dev/null  || true
 	strip build/libnss_kadnode.so.2 2> /dev/null || true
@@ -131,7 +127,7 @@ manpage:
 
 install:
 	cp build/kadnode $(DESTDIR)/usr/bin/ 2> /dev/null || true
-	cp build/kadnode-ctl $(DESTDIR)/usr/bin/ 2> /dev/null || true
+	ln -s kadnode $(DESTDIR)/usr/bin/kadnode-ctl || true
 	cp build/libnss_kadnode.so.2 $(DESTDIR)/lib/ 2> /dev/null || true
 	cp build/libkadnode.so $(DESTDIR)/lib/ 2> /dev/null || true
 	sed -i -e '/kadnode/!s/^\(hosts:.*\)\s\{1,\}dns\(.*\)/\1 kadnode dns\2/' $(DESTDIR)/etc/nsswitch.conf 2> /dev/null || true

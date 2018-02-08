@@ -2,6 +2,8 @@
 #ifndef _EXT_CMD_H_
 #define _EXT_CMD_H_
 
+// kadnode-ctl
+int cmd_client(int argc, char *argv[]);
 
 // Start the remote console interface
 void cmd_setup( void );

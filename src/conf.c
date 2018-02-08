@@ -102,8 +102,8 @@ static const char *kadnode_usage_str =
 #endif
 #ifdef CMD
 " --cmd-disable-stdin			Disable the local control interface.\n\n"
-" --cmd-port <port>			Bind the remote control interface to this local port.\n"
-"					Default: "STR(CMD_PORT)"\n\n"
+" --cmd-path <path>			Bind the remote control interface to this unix socket path.\n"
+"					Default: "CMD_PATH"\n\n"
 #endif
 #ifdef DNS
 " --dns-port <port>			Bind the DNS server interface to this local port.\n"
@@ -139,9 +139,6 @@ void conf_init( void ) {
 	*gconf = ((struct gconf_t) {
 		.dht_port = -1,
 		.af = AF_UNSPEC,
-#ifdef CMD
-		.cmd_port = -1,
-#endif
 #ifdef DNS
 		.dns_port = -1,
 #endif
@@ -172,8 +169,8 @@ void conf_defaults( void ) {
 	}
 
 #ifdef CMD
-	if( gconf->cmd_port < 0 ) {
-		gconf->cmd_port = CMD_PORT;
+	if( gconf->cmd_path == NULL) {
+		gconf->cmd_path = strdup(CMD_PATH);
 	}
 #endif
 
@@ -240,6 +237,9 @@ void conf_free( void ) {
 	free( gconf->dht_ifname );
 	free( gconf->configfile );
 
+#ifdef CMD
+	free( gconf->cmd_path );
+#endif
 #ifdef DNS
 	free( gconf->dns_proxy_server );
 #endif
@@ -256,7 +256,7 @@ enum OPCODE {
 	oPeer,
 	oVerbosity,
 	oCmdDisableStdin,
-	oCmdPort,
+	oCmdPath,
 	oDnsPort,
 	oDnsProxyEnable,
 	oDnsProxyServer,
@@ -297,7 +297,7 @@ static struct option_t options[] = {
 	{"--verbosity", 1, oVerbosity},
 #ifdef CMD
 	{"--cmd-disable-stdin", 0, oCmdDisableStdin},
-	{"--cmd-port", 1, oCmdPort},
+	{"--cmd-port", 1, oCmdPath},
 #endif
 #ifdef DNS
 	{"--dns-port", 1, oDnsPort},
@@ -510,8 +510,8 @@ int conf_set( const char opt[], const char val[] ) {
 		case oCmdDisableStdin:
 			gconf->cmd_disable_stdin = 1;
 			return 0;
-		case oCmdPort:
-			return conf_port( opt, &gconf->cmd_port, val );
+		case oCmdPath:
+			return conf_str( opt, &gconf->cmd_path, val );
 #endif
 #ifdef DNS
 		case oDnsPort:
