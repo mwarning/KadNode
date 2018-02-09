@@ -208,12 +208,13 @@ static void bob_send_challenge( int sock, struct bob_resource *resource ) {
 	// Append challenge bytes
 	memcpy( buf + 3 + ECPARAMS_SIZE, resource->challenge, CHALLENGE_BIN_LENGTH );
 
-	log_debug( "Send challenge to %s: %s",
+	resource->challenges_send += 1;
+	log_debug( "Send challenge to %s: %s (try %d)",
 		str_addr( &resource->addr ),
-		bytes_to_base32hex(hexbuf, sizeof(hexbuf), buf, sizeof(buf))
+		bytes_to_base32hex(hexbuf, sizeof(hexbuf), buf, sizeof(buf)),
+		resource->challenges_send
 	);
 
-	resource->challenges_send += 1;
 	sendto( sock, buf, sizeof(buf), 0, (struct sockaddr*) &resource->addr, sizeof(IP) );
 }
 
