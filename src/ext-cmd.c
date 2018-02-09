@@ -8,8 +8,6 @@
 #include <stdarg.h>
 #include <limits.h>
 #include <stdbool.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
 #include <sys/un.h>
 
 #include "main.h"
