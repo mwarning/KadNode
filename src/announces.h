@@ -3,6 +3,7 @@
 #define _EXT_announces_H_
 
 #include <sys/time.h>
+#include <stdio.h>
 
 /*
 * Announce a value id / port pair in regular
@@ -25,7 +26,7 @@ struct value_t* announces_get( void );
 struct value_t* announces_find( const uint8_t id[] );
 
 // List all entries
-void announces_debug( int fd );
+void announces_debug(FILE *fp);
 
 // Add a value id / port that will be announced until lifetime is exceeded
 struct value_t *announces_add( const char query[], int port, time_t lifetime );

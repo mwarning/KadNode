@@ -2,6 +2,7 @@
 #ifndef _EXT_BOB_H_
 #define _EXT_BOB_H_
 
+#include <stdio.h>
 
 // Decide if the query is meant to be authorized via BOB
 int bob_get_id( uint8_t id[], size_t ilen, const char query[] );
@@ -17,7 +18,7 @@ int bob_load_key( const char path[] );
 int bob_create_key( const char path[] );
 
 // Print secret/public keys to file descriptor
-void bob_debug_keys( int fd );
+void bob_debug_keys(FILE *fp);
 
 void bob_setup( void );
 void bob_free( void );

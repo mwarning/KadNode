@@ -45,7 +45,7 @@ struct value_t* announces_find( const uint8_t id[] ) {
 	return NULL;
 }
 
-void announces_debug( int fd ) {
+void announces_debug(FILE *fp) {
 	struct value_t *value;
 	time_t now;
 	int value_counter;
@@ -53,28 +53,29 @@ void announces_debug( int fd ) {
 	now = time_now_sec();
 	value_counter = 0;
 	value = g_values;
-	dprintf( fd, "Announcements:\n" );
-	while( value ) {
-		dprintf( fd, " id: %s\n", str_id( value->id ) );
-		dprintf( fd, "  query: %s\n", value->query );
-		dprintf( fd, "  port: %d\n", value->port );
-		if( value->refresh < now ) {
-			dprintf( fd, "  refresh: now\n" );
+
+	fprintf(fp, "Announcements:\n" );
+	while (value) {
+		fprintf(fp, " id: %s\n", str_id( value->id));
+		fprintf(fp, "  query: %s\n", value->query);
+		fprintf(fp, "  port: %d\n", value->port);
+		if (value->refresh < now) {
+			fprintf(fp, "  refresh: now\n");
 		} else {
-			dprintf( fd, "  refresh: in %ld min\n", (value->refresh - now) / 60 );
+			fprintf(fp, "  refresh: in %ld min\n", (value->refresh - now) / 60);
 		}
 
-		if( value->lifetime == LONG_MAX ) {
-			dprintf( fd, "  lifetime: entire runtime\n" );
+		if (value->lifetime == LONG_MAX) {
+			fprintf(fp, "  lifetime: entire runtime\n" );
 		} else {
-			dprintf( fd, "  lifetime: %ld min left\n", (value->lifetime -  now) / 60 );
+			fprintf(fp, "  lifetime: %ld min left\n", (value->lifetime -  now) / 60);
 		}
 
 		value_counter++;
 		value = value->next;
 	}
 
-	dprintf( fd, " Found %d entries.\n", value_counter );
+	fprintf(fp, " Found %d entries.\n", value_counter);
 }
 
 // Announce a sanitzed query

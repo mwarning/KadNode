@@ -2,6 +2,7 @@
 #ifndef _EXT_SEARCHES_H_
 #define _EXT_SEARCHES_H_
 
+#include <stdio.h>
 
 // Authentication states
 enum AUTH_STATE {
@@ -52,7 +53,7 @@ int searches_add_addr( struct search_t *search, const IP *addr );
 // Collect addresses
 int searches_collect_addrs( const struct search_t *search, IP addr_array[], size_t addr_num );
 
-void searches_debug( int fd );
+void searches_debug(FILE *fp);
 
 
 #endif // _EXT_SEARCHES_H_

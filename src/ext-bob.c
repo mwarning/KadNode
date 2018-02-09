@@ -528,17 +528,17 @@ int bob_handler( int fd, uint8_t buf[], uint32_t buflen, IP *from ) {
 	return 1;
 }
 
-void bob_debug_keys( int fd ) {
+void bob_debug_keys(FILE *fp) {
 	struct key_t *key;
 
-	if( g_keys == NULL ) {
-		dprintf( fd, "No keys found.\n" );
+	if (g_keys == NULL) {
+		fprintf(fp, "No keys found.\n");
 		return;
 	}
 
 	key = g_keys;
-	while( key ) {
-		dprintf( fd, "Public key: %s (%s)\n", get_pkey_base32hex( &key->ctx_sign ), key->path );
+	while (key) {
+		fprintf(fp, "Public key: %s (%s)\n", get_pkey_base32hex(&key->ctx_sign), key->path);
 		key = key->next;
 	}
 }

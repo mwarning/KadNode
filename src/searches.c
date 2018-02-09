@@ -185,7 +185,7 @@ void searches_set_auth_state( const char query[], const IP *addr, const int stat
 	}
 }
 
-void searches_debug( int fd ) {
+void searches_debug(FILE *fp) {
 	struct search_t **searches;
 	struct search_t *search;
 	struct result_t *result;
@@ -194,26 +194,26 @@ void searches_debug( int fd ) {
 
 	search_counter = 0;
 	searches = &g_searches[0];
-	dprintf( fd, "Result buckets:\n" );
-	while( *searches ) {
+	fprintf(fp, "Result buckets:\n");
+	while (*searches) {
 		search = *searches;
-		dprintf( fd, " query: '%s'\n", &search->query[0] );
-		dprintf( fd, "  id: %s\n", str_id( search->id ) );
-		dprintf( fd, "  done: %s\n", search->done ? "true" : "false" );
+		fprintf(fp, " query: '%s'\n", &search->query[0]);
+		fprintf(fp, "  id: %s\n", str_id( search->id));
+		fprintf(fp, "  done: %s\n", search->done ? "true" : "false");
 		result_counter = 0;
 		result = search->results;
-		while( result ) {
-			dprintf( fd, "   addr: %s\n", str_addr( &result->addr ) );
-			dprintf( fd, "   state: %s\n", str_state( result->state ) );
+		while (result) {
+			fprintf(fp, "   addr: %s\n", str_addr( &result->addr));
+			fprintf(fp, "   state: %s\n", str_state( result->state));
 			result_counter += 1;
 			result = result->next;
 		}
-		dprintf( fd, "  Found %d results.\n", result_counter );
+		fprintf(fp, "  Found %d results.\n", result_counter);
 		result_counter += 1;
 		search_counter += 1;
 		searches++;
 	}
-	dprintf( fd, " Found %d searches.\n", search_counter );
+	fprintf(fp, " Found %d searches.\n", search_counter);
 }
 
 static void search_restart( struct search_t *search ) {

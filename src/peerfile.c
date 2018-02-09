@@ -50,7 +50,7 @@ void peerfile_export( void ) {
 		return;
 	}
 
-	num = kad_export_nodes(fileno(fp));
+	num = kad_export_nodes(fp);
 	fclose(fp);
 
 	// No peers to export

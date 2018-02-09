@@ -24,10 +24,10 @@ int kad_blacklist( const IP* addr );
 int kad_lookup( const char query[], IP addr_array[], size_t addr_num );
 
 // Export good nodes
-int kad_export_nodes(int fd);
+int kad_export_nodes(FILE *fp);
 
 // Print status information
-void kad_status(int fd);
+void kad_status(FILE *fp);
 
 // Count good or all known peers
 int kad_count_nodes( int good );
@@ -42,10 +42,10 @@ int kad_announce_once( const uint8_t id[], int port );
 int kad_announce( const char query[], int port, time_t lifetime );
 
 // Various debug functions
-void kad_debug_buckets( int fd );
-void kad_debug_searches( int fd );
-void kad_debug_storage( int fd );
-void kad_debug_blacklist( int fd );
-void kad_debug_constants( int fd );
+void kad_debug_buckets(FILE *fp);
+void kad_debug_searches(FILE *fp);
+void kad_debug_storage(FILE *fp);
+void kad_debug_blacklist(FILE *fp);
+void kad_debug_constants(FILE *fp);
 
 #endif // _KAD_H_

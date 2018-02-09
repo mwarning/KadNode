@@ -57,28 +57,7 @@ const char* g_server_usage_debug =
 	"	list dht_buckets|dht_searches|dht_storage\n";
 
 
-static void r_printf(int fd, const char *format, ...)
-{
-	char buffer[512];
-	va_list vlist;
-	int rc;
-
-	va_start(vlist, format);
-	rc = vsnprintf(buffer, sizeof(buffer), format, vlist);
-	va_end(vlist);
-
-	if (rc > 0 && rc < sizeof(buffer)) {
-		if (fd == STDOUT_FILENO || fd == STDERR_FILENO) {
-			write(fd, buffer, strlen(buffer));
-		} else {
-			send(fd, buffer, strlen(buffer), 0);
-		}
-	} else {
-		log_error("Command buffer too small");
-	}
-}
-
-static void cmd_ping(int fd, const char addr_str[])
+static void cmd_ping(FILE *fp, const char addr_str[])
 {
 	IP addr;
 	int rc;
@@ -86,30 +65,30 @@ static void cmd_ping(int fd, const char addr_str[])
 	// If the address contains no port - use the default port
 	if ((rc = addr_parse_full(&addr, addr_str, STR(DHT_PORT), gconf->af)) == 0) {
 		if(kad_ping(&addr) == 0) {
-			r_printf(fd, "Send ping to: %s\n", str_addr(&addr));
+			fprintf(fp, "Send ping to: %s\n", str_addr(&addr));
 			return;
 		}
-		r_printf(fd, "Failed to send ping.\n");
+		fprintf(fp, "Failed to send ping.\n");
 	} else if (rc == -1) {
-		r_printf(fd, "Failed to parse address.\n");
+		fprintf(fp, "Failed to parse address.\n");
 	} else {
-		r_printf(fd, "Failed to resolve address.\n");
+		fprintf(fp, "Failed to resolve address.\n");
 	}
 }
 
-static void cmd_blacklist(int fd, const char *addr_str)
+static void cmd_blacklist(FILE *fp, const char *addr_str)
 {
 	IP addr;
 
 	if (addr_parse(&addr, addr_str, NULL, gconf->af) == 0) {
 		kad_blacklist(&addr);
-		r_printf(fd, "Added to blacklist: %s\n", str_addr(&addr));
+		fprintf(fp, "Added to blacklist: %s\n", str_addr(&addr));
 	} else {
-		r_printf(fd, "Invalid address.\n");
+		fprintf(fp, "Invalid address.\n");
 	}
 }
 
-static void cmd_announce(int fd, const char hostname[], int port, int minutes)
+static void cmd_announce(FILE *fp, const char hostname[], int port, int minutes)
 {
 	time_t lifetime;
 
@@ -127,12 +106,12 @@ static void cmd_announce(int fd, const char hostname[], int port, int minutes)
 		fwd_add(port, lifetime);
 #endif
 		if (minutes < 0) {
-			r_printf(fd ,"Start regular announcements for the entire run time (port %d).\n", port);
+			fprintf(fp ,"Start regular announcements for the entire run time (port %d).\n", port);
 		} else {
-			r_printf(fd ,"Start regular announcements for %d minutes (port %d).\n", minutes, port);
+			fprintf(fp ,"Start regular announcements for %d minutes (port %d).\n", minutes, port);
 		}
 	} else {
-		r_printf(fd ,"Invalid port or query too long.\n");
+		fprintf(fp ,"Invalid port or query too long.\n");
 	}
 }
 
@@ -144,7 +123,7 @@ static int match(const char request[], const char fmt[])
 	return (n > 0 && request[n] == '\0');
 }
 
-static void cmd_exec(int fd, const char request[], int allow_debug)
+static void cmd_exec(FILE *fp, const char request[], int allow_debug)
 {
 	struct value_t *value;
 	int minutes;
@@ -157,7 +136,7 @@ static void cmd_exec(int fd, const char request[], int allow_debug)
 	int rc = 0;
 
 	if (sscanf(request, "ping %255s %c", hostname, &d) == 1) {
-		cmd_ping(fd, hostname);
+		cmd_ping(fp, hostname);
 	} else if (sscanf(request, "lookup %255s %c", hostname, &d) == 1) {
 		// Check searches for node
 		rc = kad_lookup(hostname, addrs, ARRAY_SIZE(addrs));
@@ -165,16 +144,16 @@ static void cmd_exec(int fd, const char request[], int allow_debug)
 		if (rc > 0) {
 			// Print results
 			for (i = 0; i < rc; ++i) {
-				r_printf(fd, "%s\n", str_addr( &addrs[i] ));
+				fprintf(fp, "%s\n", str_addr( &addrs[i] ));
 			}
 		} else if (rc < 0) {
-			r_printf(fd ,"Some error occured.\n");
+			fprintf(fp ,"Some error occured.\n");
 		} else {
-			r_printf(fd ,"Search in progress.\n");
+			fprintf(fp ,"Search in progress.\n");
 		}
 	} else if (match(request, "status %n")) {
 		// Print node id and statistics
-		kad_status(fd);
+		kad_status(fp);
 	} else if (match(request, "announce %n")) {
 		// Announce all values
 		count = 0;
@@ -184,60 +163,59 @@ static void cmd_exec(int fd, const char request[], int allow_debug)
 			count += 1;
 			value = value->next;
 		}
-		r_printf(fd, "%d announcements started.\n", count);
+		fprintf(fp, "%d announcements started.\n", count);
 	} else if (sscanf(request, "announce %255s %c", hostname, &d) == 1) {
-		cmd_announce(fd, hostname, 0, -1);
+		cmd_announce(fp, hostname, 0, -1);
 	} else if (sscanf( request, "announce %255[^: ] %d %c", hostname, &minutes, &d) == 2) {
-		cmd_announce(fd, hostname, 0, minutes);
+		cmd_announce(fp, hostname, 0, minutes);
 	} else if (sscanf( request, "announce %255[^: ]:%d %d %c", hostname, &port, &minutes, &d) == 3) {
-		cmd_announce(fd, hostname, port, minutes );
+		cmd_announce(fp, hostname, port, minutes );
 	} else if (match(request, "list %*s %n") && allow_debug) {
 		if (match(request, "blacklist %255[^: ]%n")) {
-			cmd_blacklist(fd, hostname);
+			cmd_blacklist(fp, hostname);
 		} else if (gconf->is_daemon == 1) {
-			r_printf(fd ,"The 'list' command is not available while KadNode runs as daemon.\n" );
+			fprintf(fp ,"The 'list' command is not available while KadNode runs as daemon.\n" );
 		} else if (match(request, "list blacklist %n")) {
-			kad_debug_blacklist(fd);
+			kad_debug_blacklist(fp);
 		} else if (match(request, "list constants %n")) {
-			kad_debug_constants(fd);
+			kad_debug_constants(fp);
 		} else if (match(request, "list nodes %n")) {
-			rc = kad_export_nodes(fd);
+			rc = kad_export_nodes(fp);
 
 			if (rc == 0) {
-				r_printf(fd, "No good nodes found.\n" );
+				fprintf(fp, "No good nodes found.\n" );
 			}
 #ifdef FWD
 		} else if (match(request, "list forwardings %n")) {
-			fwd_debug(fd);
+			fwd_debug(fp);
 #endif
 #ifdef BOB
 		} else if (match(request, "list keys %n")) {
-			bob_debug_keys(fd);
+			bob_debug_keys(fp);
 #endif
 		} else if (match(request, "list searches %n")) {
-			searches_debug(fd);
+			searches_debug(fp);
 		} else if (match(request, "list announcements %n")) {
-			announces_debug(fd);
+			announces_debug(fp);
 		} else if (match(request, "list dht_buckets %n")) {
-			kad_debug_buckets(fd);
+			kad_debug_buckets(fp);
 		} else if (match(request, "list dht_searches %n")) {
-			kad_debug_searches(fd);
+			kad_debug_searches(fp);
 		} else if (match(request, "list dht_storage %n")) {
-			kad_debug_storage(fd);
+			kad_debug_storage(fp);
 		} else {
-			dprintf(fd, "Unknown command.\n");
+			fprintf(fp, "Unknown command.\n");
 		}
-		r_printf(fd ,"\nOutput send to console.\n" );
+		fprintf(fp ,"\nOutput send to console.\n" );
 	} else {
 		// Print usage
-		r_printf(fd, g_server_usage);
+		fprintf(fp, g_server_usage);
 
 		if (allow_debug) {
-			r_printf(fd, g_server_usage_debug);
+			fprintf(fp, g_server_usage_debug);
 		}
 	}
 }
-
 
 static void cmd_client_handler(int rc, int clientsock)
 {
@@ -252,11 +230,13 @@ static void cmd_client_handler(int rc, int clientsock)
 	if (size > 0) {
 		request[size] = '\0';
 		// Execute command line
-		cmd_exec(clientsock, request, 0);
+		FILE* fp = fdopen(clientsock, "w");
+		cmd_exec(fp, request, 0);
+		fclose(fp);
+	} else {
+		close(clientsock);
 	}
 
-	// Close connection after the request was processed
-	close(clientsock);
 	net_remove_handler(clientsock, &cmd_client_handler);
 }
 
@@ -295,8 +275,8 @@ static void cmd_console_handler(int rc, int fd)
 		return;
 	}
 
-	// Execute command line
-	cmd_exec(STDOUT_FILENO, request, 1);
+	// Output to stdout (not stdin)
+	cmd_exec(stdout, request, 1);
 }
 
 void cmd_setup( void)

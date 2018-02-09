@@ -300,7 +300,7 @@ int kad_count_nodes( int good ) {
 	return kad_count_bucket( buckets, good ) + kad_count_bucket( buckets6, good );
 }
 
-void kad_status(int fd) {
+void kad_status(FILE *fp) {
 	struct storage *strg = storage;
 	struct search *srch = searches;
 	struct value_t *announces = announces_get();
@@ -338,8 +338,8 @@ void kad_status(int fd) {
 	int nodes4_good = kad_count_bucket( buckets, 1 );
 	int nodes6_good = kad_count_bucket( buckets6, 1 );
 
-	dprintf(
-		fd,
+	fprintf(
+		fp,
 		"%s\n"
 		"DHT id: %s\n"
 		"DHT listen on: %s / %s\n"
@@ -480,7 +480,7 @@ int kad_blacklist( const IP* addr ) {
 }
 
 // Export known nodes; the maximum is 200 nodes
-int kad_export_nodes(int fd) {
+int kad_export_nodes(FILE *fp) {
 	IP4 addr4[150];
 	IP6 addr6[150];
 	int num4;
@@ -494,17 +494,17 @@ int kad_export_nodes(int fd) {
 
 	for (i = 0; i < num4; i++) {
 #ifdef __CYGWIN__
-		dprintf(fd, "%s\r\n", str_addr((IP*) &addr4[i]));
+		fprintf(fp, "%s\r\n", str_addr((IP*) &addr4[i]));
 #else
-		dprintf(fd, "%s\n", str_addr((IP*) &addr4[i]));
+		fprintf(fp, "%s\n", str_addr((IP*) &addr4[i]));
 #endif
 	}
 
 	for (i = 0; i < num6; i++) {
 #ifdef __CYGWIN__
-		dprintf(fd, "%s\r\n", str_addr((IP*) &addr6[i]));
+		fprintf(fp, "%s\r\n", str_addr((IP*) &addr6[i]));
 #else
-		dprintf(fd, "%s\n", str_addr((IP*) &addr6[i]));
+		fprintf(fp, "%s\n", str_addr((IP*) &addr6[i]));
 #endif
 	}
 
@@ -512,95 +512,96 @@ int kad_export_nodes(int fd) {
 }
 
 // Print buckets (leaf/finger table)
-void kad_debug_buckets( int fd ) {
+void kad_debug_buckets(FILE* fp) {
 	struct bucket *b;
 	struct node *n;
 	int i, j;
 
 	b = (gconf->af == AF_INET) ? buckets : buckets6;
 	for( j = 0; b; ++j ) {
-		dprintf( fd, " Bucket: %s\n", str_id( b->first ) );
+		fprintf(fp, " Bucket: %s\n", str_id(b->first));
 
 		n = b->nodes;
 		for( i = 0; n; ++i ) {
-			dprintf( fd, "   Node: %s\n", str_id( n->id ) );
-			dprintf( fd, "    addr: %s\n", str_addr( &n->ss ) );
-			dprintf( fd, "    pinged: %d\n", n->pinged );
+			fprintf(fp, "   Node: %s\n", str_id(n->id));
+			fprintf(fp, "    addr: %s\n", str_addr(&n->ss));
+			fprintf(fp, "    pinged: %d\n", n->pinged);
 			n = n->next;
 		}
-		dprintf( fd, "  Found %d nodes.\n", i );
+		fprintf(fp, "  Found %d nodes.\n", i);
 		b = b->next;
 	}
-	dprintf( fd, " Found %d buckets.\n", j );
+	fprintf(fp, " Found %d buckets.\n", j);
 }
 
 // Print searches
-void kad_debug_searches( int fd ) {
+void kad_debug_searches(FILE *fp) {
 	struct search *s;
 	int i;
 	int j;
 
 	s = searches;
-	for( j = 0; s; ++j ) {
-		dprintf( fd, " DHT-Search: %s\n", str_id( s->id ) );
-		dprintf( fd, "  af: %s\n", (s->af == AF_INET) ? "AF_INET" : "AF_INET6" );
-		dprintf( fd, "  port: %hu\n", s->port );
-		//dprintf( fd, "  done: %d\n", s->done );
-		for( i = 0; i < s->numnodes; ++i ) {
+	for (j = 0; s; ++j) {
+		fprintf(fp, " DHT-Search: %s\n", str_id(s->id));
+		fprintf(fp, "  af: %s\n", (s->af == AF_INET) ? "AF_INET" : "AF_INET6");
+		fprintf(fp, "  port: %hu\n", s->port);
+		//fprintf(fp, "  done: %d\n", s->done );
+		for (i = 0; i < s->numnodes; ++i) {
 			struct search_node *sn = &s->nodes[i];
-			dprintf( fd, "   Node: %s\n", str_id(sn->id ) );
-			dprintf( fd, "     addr: %s\n", str_addr( &sn->ss ) );
-			dprintf( fd, "     pinged: %d\n", sn->pinged );
-			dprintf( fd, "     replied: %d\n", sn->replied );
-			dprintf( fd, "     acked: %d\n", sn->acked );
+			fprintf(fp, "   Node: %s\n", str_id(sn->id));
+			fprintf(fp, "     addr: %s\n", str_addr(&sn->ss));
+			fprintf(fp, "     pinged: %d\n", sn->pinged);
+			fprintf(fp, "     replied: %d\n", sn->replied);
+			fprintf(fp, "     acked: %d\n", sn->acked);
 		}
-		dprintf( fd, "  Found %d nodes.\n", i );
+		fprintf(fp, "  Found %d nodes.\n", i);
 		s = s->next;
 	}
-	dprintf( fd, " Found %d searches.\n", j );
+
+	fprintf(fp, " Found %d searches.\n", j);
 }
 
 // Print announced ids we have received
-void kad_debug_storage( int fd ) {
+void kad_debug_storage(FILE *fp) {
 	struct storage *s;
 	struct peer* p;
 	IP addr;
 	int i, j;
 
 	s = storage;
-	for( j = 0; s; ++j ) {
-		dprintf( fd, " id: %s\n", str_id( s->id ));
-		for( i = 0; i < s->numpeers; ++i ) {
+	for (j = 0; s; ++j) {
+		fprintf(fp, " id: %s\n", str_id( s->id));
+		for (i = 0; i < s->numpeers; ++i) {
 			p = &s->peers[i];
-			to_addr( &addr, &p->ip, p->len, htons( p->port ) );
-			dprintf( fd, "   peer: %s\n", str_addr( &addr )  );
+			to_addr(&addr, &p->ip, p->len, htons(p->port));
+			fprintf(fp, "   peer: %s\n", str_addr(&addr));
 		}
-		dprintf( fd, "  Found %d peers.\n", i );
+		fprintf(fp, "  Found %d peers.\n", i);
 		s = s->next;
 	}
-	dprintf( fd, " Found %d stored hashes from received announcements.\n", j );
+	fprintf(fp, " Found %d stored hashes from received announcements.\n", j);
 }
 
-void kad_debug_blacklist( int fd ) {
+void kad_debug_blacklist(FILE *fp) {
 	int i;
 
-	for( i = 0; i < (next_blacklisted % DHT_MAX_BLACKLISTED); i++ ) {
-		dprintf( fd, " %s\n", str_addr( &blacklist[i] ) );
+	for (i = 0; i < (next_blacklisted % DHT_MAX_BLACKLISTED); i++) {
+		fprintf(fp, " %s\n", str_addr(&blacklist[i]));
 	}
 
-	dprintf( fd, " Found %d blacklisted addresses.\n", i );
+	fprintf(fp, " Found %d blacklisted addresses.\n", i);
 }
 
-void kad_debug_constants( int fd ) {
-	dprintf( fd, "DHT_SEARCH_EXPIRE_TIME: %d\n", DHT_SEARCH_EXPIRE_TIME );
-	dprintf( fd, "DHT_MAX_SEARCHES: %d\n", DHT_MAX_SEARCHES );
+void kad_debug_constants(FILE *fp) {
+	fprintf(fp, "DHT_SEARCH_EXPIRE_TIME: %d\n", DHT_SEARCH_EXPIRE_TIME);
+	fprintf(fp, "DHT_MAX_SEARCHES: %d\n", DHT_MAX_SEARCHES);
 
 	// Maximum number of announced hashes we track
-	dprintf( fd, "DHT_MAX_HASHES: %d\n", DHT_MAX_HASHES );
+	fprintf(fp, "DHT_MAX_HASHES: %d\n", DHT_MAX_HASHES);
 
 	// Maximum number of peers for each announced hash we track
-	dprintf( fd, "DHT_MAX_PEERS: %d\n", DHT_MAX_PEERS );
+	fprintf(fp, "DHT_MAX_PEERS: %d\n", DHT_MAX_PEERS);
 
 	// Maximum number of blacklisted nodes
-	dprintf( fd, "DHT_MAX_BLACKLISTED: %d\n", DHT_MAX_BLACKLISTED );
+	fprintf(fp, "DHT_MAX_BLACKLISTED: %d\n", DHT_MAX_BLACKLISTED);
 }
