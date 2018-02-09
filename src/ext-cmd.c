@@ -59,7 +59,7 @@ const char* g_server_usage_debug = "0"
 
 static void r_printf(int fd, const char *format, ...)
 {
-	char buffer[256];
+	char buffer[512];
 	va_list vlist;
 	int rc;
 
@@ -74,7 +74,7 @@ static void r_printf(int fd, const char *format, ...)
 			send(fd, buffer, strlen(buffer), 0);
 		}
 	} else {
-		log_error("command buffer too small");
+		log_error("Command buffer too small");
 	}
 }
 
@@ -99,7 +99,7 @@ static void cmd_ping(int fd, const char addr_str[])
 
 static void cmd_print_status(int fd)
 {
-	char buffer[256];
+	char buffer[512];
 	int rc;
 
 	rc = kad_status(buffer, sizeof(buffer));
