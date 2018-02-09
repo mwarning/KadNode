@@ -8,6 +8,9 @@
 // Number of elements in an array
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
+// Size of a struct element
+#define FIELD_SIZEOF(t, f) (sizeof(((t*)0)->f))
+
 // Typical min/max methods
 #define MAX(x, y) ((x) >= (y) ? (x) : (y))
 #define MIN(x, y) ((x) <= (y) ? (x) : (y))

@@ -17,8 +17,19 @@
 
 
 int hex_get_id( uint8_t id[], size_t idsize, const char query[] ) {
-	size_t querysize = strlen(query);
+	size_t querysize;
+/*
+	const char *dot;
 
+	// Cut out first domain
+	dot = strchr(query, '.');
+	if (dot) {
+		querysize = dot - &query[0];
+	} else {
+		querysize = strlen(query);
+	}
+*/
+	querysize = strlen(query);
 	if (0 == bytes_from_base32hex(id, idsize, query, querysize)) {
 		return 1;
 	}
@@ -104,6 +115,9 @@ int bytes_from_base32hex(uint8_t dst[], size_t dstsize, const char src[], size_t
 			v = *src - 'a' + 10;
 		} else if (*src >= '0' && *src <= '9') {
 			v = *src - '0';
+		} else if (*src == '=') {
+			src++;
+			continue;
 		} else {
 			return -1;
 		}
@@ -261,8 +275,8 @@ char *bytes_to_base32hex(char dst[], size_t dstsize, const uint8_t *src, size_t 
 // Check if a string has and extension.
 // ext is epected to start with a dot.
 int has_ext(const char str[], const char ext[]) {
-	const char *s = strrchr(str, '.');
-	return s && (strcmp(s, ext) == 0);
+	const char *dot = strrchr(str, '.');
+	return dot && (strcmp(dot, ext) == 0);
 }
 
 /*
