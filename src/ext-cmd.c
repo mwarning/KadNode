@@ -171,7 +171,7 @@ static void cmd_exec(FILE *fp, const char request[], int allow_debug)
 	} else if (sscanf( request, "announce %255[^: ]:%d %d %c", hostname, &port, &minutes, &d) == 3) {
 		cmd_announce(fp, hostname, port, minutes );
 	} else if (match(request, "list %*s %n") && allow_debug) {
-		if (match(request, "blacklist %255[^: ]%n")) {
+		if (sscanf(request, "blacklist %255[^: ]", hostname) == 1) {
 			cmd_blacklist(fp, hostname);
 		} else if (gconf->is_daemon == 1) {
 			fprintf(fp ,"The 'list' command is not available while KadNode runs as daemon.\n" );
@@ -206,7 +206,6 @@ static void cmd_exec(FILE *fp, const char request[], int allow_debug)
 		} else {
 			fprintf(fp, "Unknown command.\n");
 		}
-		fprintf(fp ,"\nOutput send to console.\n" );
 	} else {
 		// Print usage
 		fprintf(fp, g_server_usage);
