@@ -2,6 +2,7 @@ kadnode (2.1.0) UNRELEASED; urgency=medium
 
   * use base64hex to make 32 byte keys 54 characters long as the
     the official maximum length of domain parts are 63 characters
+  * increase counter for sending public key domain challenges
   * use unix sockets for kadnode-ctl
   * put kadnode-ctl code into kadnode and use a link instead
 
