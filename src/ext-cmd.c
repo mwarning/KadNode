@@ -310,7 +310,7 @@ static void cmd_console_handler(int rc, int fd)
 	}
 
 	// Execute command line
-	cmd_exec(fd, request, 1);
+	cmd_exec(STDOUT_FILENO, request, 1);
 }
 
 void cmd_setup( void)
