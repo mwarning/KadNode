@@ -193,7 +193,7 @@ static struct bob_resource *bob_next_resource( void ) {
 	return NULL;
 }
 
-static void bob_send_challenge( int sock, const struct bob_resource *resource ) {
+static void bob_send_challenge( int sock, struct bob_resource *resource ) {
 	uint8_t buf[3 + ECPARAMS_SIZE + CHALLENGE_BIN_LENGTH];
 #ifdef DEBUG
 	char hexbuf[108 + 1];
@@ -213,6 +213,7 @@ static void bob_send_challenge( int sock, const struct bob_resource *resource ) 
 		bytes_to_base32hex(hexbuf, sizeof(hexbuf), buf, sizeof(buf))
 	);
 
+	resource->challenges_send += 1;
 	sendto( sock, buf, sizeof(buf), 0, (struct sockaddr*) &resource->addr, sizeof(IP) );
 }
 
@@ -234,6 +235,7 @@ void bob_trigger_auth( void ) {
 	mbedtls_ecp_keypair *kp = mbedtls_pk_ec( resource->ctx_verify );
 	char *query = &resource->query[0];
 
+	// Find new query to authenticate and initialize resource
 	if( (result = searches_get_auth_target( query, &resource->addr, &bob_trigger_auth )) != NULL ) {
 		result->state = AUTH_PROGRESS;
 
