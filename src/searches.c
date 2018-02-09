@@ -156,7 +156,7 @@ void searches_set_auth_state( const char query[], const IP *addr, const int stat
 	struct search_t *search;
 	struct result_t *result;
 
-	log_debug( "Searches: Set authentication state for %s: %s", query, str_state( state ) );
+	log_debug( "Searches: Set authentication state for %s (%s): %s", str_addr(addr), query, str_state( state ) );
 
 	search = searches_find_by_query( query );
 
@@ -194,6 +194,7 @@ void searches_debug(FILE *fp) {
 
 	search_counter = 0;
 	searches = &g_searches[0];
+
 	fprintf(fp, "Result buckets:\n");
 	while (*searches) {
 		search = *searches;
