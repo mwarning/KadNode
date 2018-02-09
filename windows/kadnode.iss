@@ -2,7 +2,7 @@
 
 [Setup]
 AppName=KadNode
-AppVersion="2.0.2"
+AppVersion="2.1.0"
 AppPublisher="Moritz Warning"
 AppPublisherURL="https://github.com/mwarning/KadNode"
 DefaultDirName={pf}\KadNode
