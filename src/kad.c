@@ -300,8 +300,6 @@ int kad_count_nodes( int good ) {
 	return kad_count_bucket( buckets, good ) + kad_count_bucket( buckets6, good );
 }
 
-#define bprintf(...) (written += snprintf( buf+written, size-written, __VA_ARGS__))
-
 int kad_status( char buf[], size_t size ) {
 	struct storage *strg = storage;
 	struct search *srch = searches;
@@ -311,9 +309,8 @@ int kad_status( char buf[], size_t size ) {
 	int numstorage = 0;
 	int numstorage_peers = 0;
 	int numannounces = 0;
-	int written = 0;
 
-	// count searches
+	// Count searches
 	while( srch ) {
 		if( srch->done ) {
 			numsearches_done += 1;
@@ -341,21 +338,25 @@ int kad_status( char buf[], size_t size ) {
 	int nodes4_good = kad_count_bucket( buckets, 1 );
 	int nodes6_good = kad_count_bucket( buckets6, 1 );
 
-	bprintf( "%s\n", kadnode_version_str );
-	bprintf( "DHT id: %s\n", str_id( myid ) );
-	bprintf( "DHT listen on: %s / %s\n", str_af( gconf->af ),
-		gconf->dht_ifname ? gconf->dht_ifname : "<any>");
-	bprintf( "DHT Nodes: %d IPv4 (%d good), %d IPv6 (%d good)\n",
-		nodes4, nodes4_good, nodes6, nodes6_good );
-	bprintf( "DHT Storage: %d (max %d) entries with %d addresses (max %d)\n",
-		numstorage, DHT_MAX_HASHES, numstorage_peers, DHT_MAX_PEERS );
-	bprintf( "DHT Searches: %d active, %d completed (max %d)\n",
-		numsearches_active, numsearches_done, DHT_MAX_SEARCHES );
-	bprintf( "DHT Announcements: %d\n", numannounces );
-	bprintf( "DHT Blacklist: %d (max %d)\n",
-		(next_blacklisted % DHT_MAX_BLACKLISTED), DHT_MAX_BLACKLISTED );
-
-	return written;
+	return snprintf(
+		buf, size,
+		"%s\n"
+		"DHT id: %s\n"
+		"DHT listen on: %s / %s\n"
+		"DHT Nodes: %d IPv4 (%d good), %d IPv6 (%d good)\n"
+		"DHT Storage: %d (max %d) entries with %d addresses (max %d)\n"
+		"DHT Searches: %d active, %d completed (max %d)\n"
+		"DHT Announcements: %d\n"
+		"DHT Blacklist: %d (max %d)\n",
+		kadnode_version_str,
+		str_id(myid),
+		str_af(gconf->af), gconf->dht_ifname ? gconf->dht_ifname : "<any>",
+		nodes4, nodes4_good, nodes6, nodes6_good,
+		numstorage, DHT_MAX_HASHES, numstorage_peers, DHT_MAX_PEERS,
+		numsearches_active, numsearches_done, DHT_MAX_SEARCHES,
+		numannounces,
+		(next_blacklisted % DHT_MAX_BLACKLISTED), DHT_MAX_BLACKLISTED
+	);
 }
 
 int kad_ping( const IP* addr ) {
