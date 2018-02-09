@@ -341,7 +341,8 @@ void cmd_free(void)
 	unlink(gconf->cmd_path);
 }
 
-static __attribute__ ((unused)) int select_read(int sockfd, char buffer[], int bufsize, struct timeval *tv)
+#ifdef __CYGWIN__
+static int select_read(int sockfd, char buffer[], int bufsize, struct timeval *tv)
 {
 	fd_set rfds;
 	int retval;
@@ -362,6 +363,7 @@ static __attribute__ ((unused)) int select_read(int sockfd, char buffer[], int b
 		return 0;
 	}
 }
+#endif
 
 int cmd_client(int argc, char *argv[])
 {
