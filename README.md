@@ -18,8 +18,7 @@ Supported are also domains consisting of public keys represented as hexadecimal 
 * small size, ~85KB depending on features, ~35KB compressed
 * command line interface (kadnode-ctl)
 * NSS support through /etc/nsswitch.conf
-* DNS interface and proxy support
-* integrated simplified DNS server and proxy (handles A, AAAA, and SRV requests)
+* DNS server interface and DNS proxy (handles A, AAAA, and SRV requests)
 * packages for ArchLinux/Debian/FreeBSD/MacOSX/OpenWrt/Windows
 * peer file import/export on startup/shutdown and every 24h
 * uses sha256 hash method
