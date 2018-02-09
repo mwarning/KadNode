@@ -1,7 +1,7 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "KADNODE" "1" "December 2017" "mwarning" "Kadnode Manual"
+.TH "KADNODE" "1" "January 2018" "mwarning" "Kadnode Manual"
 .
 .SH "NAME"
 \fBkadnode\fR \- P2P name resolver daemon
@@ -201,10 +201,10 @@ Disable Local Peer Discovery (LPD)\.
 Disable the local control interface\.
 .
 .IP "\(bu" 4
-\fB\-\-cmd\-port\fR \fIport\fR
+\fB\-\-cmd\-path\fR \fIpath\fR
 .
 .br
-Bind the remote control interface to this local port (Default: 1700)\.
+Bind the remote control interface to a unix socket (Default: /tmp/kadnode\.sock)\.
 .
 .IP "\(bu" 4
 \fB\-\-dns\-port\fR \fIport\fR
@@ -361,13 +361,13 @@ Blacklist a specifc IP address\.
 KadNode allows a limited set of commands to be send from any user from other consoles\.
 .
 .P
-\fBkadnode\-ctl\fR [\-p port] [status|lookup|announce|import|export|blacklist]
+\fBkadnode\-ctl\fR [\-p path] [status|lookup|announce|import|export|blacklist]
 .
 .IP "\(bu" 4
-\fB\-p\fR \fIport\fR
+\fB\-p\fR \fIpath\fR
 .
 .br
-The port used to connect to the command shell of a local KadNode instance (Default: 1700)\.
+Unix socket used to connect to the command shell of a local KadNode instance (Default: /tmp/kadnode\.sock)\.
 .
 .IP "\(bu" 4
 \fB\-h\fR

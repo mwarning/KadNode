@@ -132,8 +132,8 @@ This is the plain use of the DHT. The hexadecimal string will be cut down or fil
   * `--cmd-disable-stdin`  
     Disable the local control interface.
 
-  * `--cmd-port` *port*  
-    Bind the remote control interface to this local port (Default: 1700).
+  * `--cmd-path` *path*  
+    Bind the remote control interface to a unix socket (Default: /tmp/kadnode.sock).
 
   * `--dns-port` *port*  
     Bind the DNS server interface to this local port (Default: 3535).
@@ -210,10 +210,10 @@ When not started in background, KadNode accepts a variety of commands from stand
 
 KadNode allows a limited set of commands to be send from any user from other consoles.
 
-`kadnode-ctl` [-p port] [status|lookup|announce|import|export|blacklist]
+`kadnode-ctl` [-p path] [status|lookup|announce|import|export|blacklist]
 
-  * `-p` *port*  
-    The port used to connect to the command shell of a local KadNode instance (Default: 1700).
+  * `-p` *path*  
+    Unix socket used to connect to the command shell of a local KadNode instance (Default: /tmp/kadnode.sock).
 
   * `-h`  
     Print this help.
