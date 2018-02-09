@@ -1,4 +1,4 @@
-kadnode (2.1.0) UNRELEASED; urgency=medium
+kadnode (2.1.0) unstable; urgency=medium
 
   * use base64hex to make 32 byte keys 54 characters long as the
     the official maximum length of domain parts are 63 characters
