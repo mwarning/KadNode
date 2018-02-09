@@ -479,36 +479,35 @@ int kad_blacklist( const IP* addr ) {
 }
 
 // Export known nodes; the maximum is 200 nodes
-int kad_export_nodes( IP addrs[], size_t num ) {
+int kad_export_nodes(int fd) {
 	IP4 addr4[150];
 	IP6 addr6[150];
 	int num4;
 	int num6;
-	int n = 0;
-	int j = 0;
-	int k = 0;
+	int i;
 
-	num6 = MIN(num, ARRAY_SIZE(addr4));
-	num4 = MIN(num, ARRAY_SIZE(addr6));
+	num6 = ARRAY_SIZE(addr4);
+	num4 = ARRAY_SIZE(addr6);
 
-	dht_get_nodes( addr4, &num4, addr6, &num6 );
+	dht_get_nodes(addr4, &num4, addr6, &num6);
 
-	// Export IPv4 and IPv6 addresses in equal parts
-	while( (num4 || num6 ) && num ) {
-		if( num && num4 ) {
-			memcpy( &addrs[n++], &addr4[j++], sizeof(IP4) );
-			num4--;
-			num--;
-		}
-
-		if( num && num6 ) {
-			memcpy( &addrs[n++], &addr6[k++], sizeof(IP6) );
-			num6--;
-			num--;
-		}
+	for (i = 0; i < num4; i++) {
+#ifdef __CYGWIN__
+		dprintf(fd, "%s\r\n", str_addr((IP*) &addr4[i]));
+#else
+		dprintf(fd, "%s\n", str_addr((IP*) &addr4[i]));
+#endif
 	}
 
-	return n;
+	for (i = 0; i < num6; i++) {
+#ifdef __CYGWIN__
+		dprintf(fd, "%s\r\n", str_addr((IP*) &addr6[i]));
+#else
+		dprintf(fd, "%s\n", str_addr((IP*) &addr6[i]));
+#endif
+	}
+
+	return num4 + num6;
 }
 
 // Print buckets (leaf/finger table)

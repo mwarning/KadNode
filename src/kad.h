@@ -24,7 +24,7 @@ int kad_blacklist( const IP* addr );
 int kad_lookup( const char query[], IP addr_array[], size_t addr_num );
 
 // Export good nodes
-int kad_export_nodes( IP addr_array[], size_t addr_num );
+int kad_export_nodes(int fd);
 
 // Print status information
 int kad_status( char buf[], size_t len );

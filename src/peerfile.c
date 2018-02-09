@@ -31,10 +31,8 @@ static struct peer *g_peers = NULL;
 
 void peerfile_export( void ) {
 	const char *filename;
-	IP addrs[200];
-	size_t i;
-	int num;
 	FILE *fp;
+	int num;
 
 	filename = gconf->peerfile;
 	if( filename == NULL ) {
@@ -46,7 +44,14 @@ void peerfile_export( void ) {
 		return;
 	}
 
-	num = kad_export_nodes( addrs, ARRAY_SIZE(addrs) );
+	fp = fopen( filename, "w" );
+	if( fp == NULL ) {
+		log_warning( "PEERFILE: Cannot open file '%s' for peer export: %s", filename, strerror( errno ) );
+		return;
+	}
+
+	num = kad_export_nodes(fileno(fp));
+	fclose(fp);
 
 	// No peers to export
 	if( num <= 0 ) {
@@ -54,28 +59,7 @@ void peerfile_export( void ) {
 		return;
 	}
 
-	fp = fopen( filename, "w" );
-	if( fp == NULL ) {
-		log_warning( "PEERFILE: Cannot open file '%s' for peer export: %s", filename, strerror( errno ) );
-		return;
-	}
-
-	// Write peers to file
-	for( i = 0; i < num; ++i ) {
-#ifdef __CYGWIN__
-		if( fprintf( fp, "%s\r\n", str_addr( &addrs[i] ) ) < 0 ) {
-			break;
-		}
-#else
-		if( fprintf( fp, "%s\n", str_addr( &addrs[i] ) ) < 0 ) {
-			break;
-		}
-#endif
-	}
-
-	fclose( fp );
-
-	log_info( "PEERFILE: %d peers exported: %s", i, filename );
+	log_info( "PEERFILE: %d peers exported: %s", num, filename );
 }
 
 static int peerfile_import_peer( const char addr_str[] ) {
