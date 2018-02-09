@@ -149,9 +149,11 @@ int main( int argc, char *argv[] ) {
 	char path[MAX_PATH];
 	char *p;
 
+#ifdef CMD
 	if (strstr(argv[0], "kadnode-ctl")) {
 		return cmd_client(argc, argv);
 	}
+#endif
 
 	conf_init();
 	conf_setup( argc, argv );
@@ -215,10 +217,11 @@ int main( int argc, char *argv[] ) {
 }
 #else
 int main( int argc, char *argv[] ) {
-
+#ifdef CMD
 	if (strstr(argv[0], "kadnode-ctl")) {
 		return cmd_client(argc, argv);
 	}
+#endif
 
 	conf_init();
 	conf_setup( argc, argv );
