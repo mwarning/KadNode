@@ -7,6 +7,7 @@
 #include <pwd.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <string.h>
 
 #include "main.h"
 #include "conf.h"
@@ -14,21 +15,17 @@
 #include "unix.h"
 
 
-void unix_sig_stop( int signo ) {
+static void unix_signal_handler( int signo ) {
+	// exit on second stop request
 	if( gconf->is_running == 0 ) {
 		exit( 1 );
 	}
 
 	gconf->is_running = 0;
-	log_info( "Shutting down..." );
-}
 
-void unix_sig_term( int signo ) {
-	if( gconf->is_running == 0 ) {
-		exit( 1 );
+	if (signo == SIGTERM) {
+		log_info("Shutting down...");
 	}
-
-	gconf->is_running = 0;
 }
 
 void unix_signals( void ) {
@@ -36,18 +33,18 @@ void unix_signals( void ) {
 	struct sigaction sig_term;
 
 	// STRG+C aka SIGINT => Stop the program
-	sig_stop.sa_handler = unix_sig_stop;
+	sig_stop.sa_handler = unix_signal_handler;
 	sig_stop.sa_flags = 0;
 	if( ( sigemptyset( &sig_stop.sa_mask ) == -1) || (sigaction( SIGINT, &sig_stop, NULL ) != 0) ) {
-		log_error( "UNX: Failed to set SIGINT to handle Ctrl-C" );
+		log_error( "Failed to set SIGINT handler: %s", strerror(errno) );
 		exit( 1 );
 	}
 
 	// SIGTERM => Stop the program gracefully
-	sig_term.sa_handler = unix_sig_term;
+	sig_term.sa_handler = unix_signal_handler;
 	sig_term.sa_flags = 0;
 	if( ( sigemptyset( &sig_term.sa_mask ) == -1) || (sigaction( SIGTERM, &sig_term, NULL ) != 0) ) {
-		log_error( "UNX: Failed to set SIGTERM to handle Ctrl-C" );
+		log_error( "Failed to set SIGTERM handler: %s", strerror(errno) );
 		exit( 1 );
 	}
 }
@@ -59,7 +56,7 @@ void unix_fork( void ) {
 	pid = fork();
 
 	if( pid < 0 ) {
-		log_error( "UNX: Failed to fork." );
+		log_error( "Failed to fork: %s", strerror(errno) );
 		exit( 1 );
 	} else if( pid != 0 ) {
 		// Child process
@@ -82,23 +79,23 @@ void unix_write_pidfile( int pid, const char* pidfile ) {
 	file = fopen( pidfile, "r" );
 	if( file ) {
 		fclose( file );
-		log_error( "UNX: PID file already exists: %s", pidfile );
+		log_error( "PID file already exists: %s", pidfile );
 		exit( 1 );
 	}
 
 	file = fopen( pidfile, "w" );
 	if( file == NULL ) {
-		log_error( "UNX: Failed to open PID file." );
+		log_error( "Failed to open PID file: %s", strerror(errno) );
 		exit( 1 );
 	}
 
 	if( fprintf( file, "%i\n", pid ) < 0 ) {
-		log_error( "UNX: Failed to write PID file." );
+		log_error( "Failed to write PID file: %s", strerror(errno) );
 		exit( 1 );
 	}
 
 	if( fclose( file ) < 0 ) {
-		log_error( "UNX: Failed to close PID file." );
+		log_error( "Failed to close PID file: %s", strerror(errno) );
 		exit( 1 );
 	}
 }
@@ -118,28 +115,28 @@ void unix_dropuid0( void ) {
 
 	// Process is running as root, drop privileges
 	if( (pw = getpwnam( gconf->user )) == NULL ) {
-		log_error( "UNX: Dropping uid 0 failed. Set a valid user." );
+		log_error( "Dropping uid 0 failed. Set a valid user." );
 		exit( 1 );
 	}
 
 	if( setenv( "HOME", pw->pw_dir, 1 ) != 0 ) {
-		log_error( "UNX: Setting new $HOME failed." );
+		log_error( "Setting new $HOME failed." );
 		exit( 1 );
 	}
 
 	if( setgid( pw->pw_gid ) != 0 ) {
-		log_error( "UNX: Unable to drop group privileges" );
+		log_error( "Unable to drop group privileges" );
 		exit( 1 );
 	}
 
 	if( setuid( pw->pw_uid ) != 0 ) {
-		log_error( "UNX: Unable to drop user privileges" );
+		log_error( "Unable to drop user privileges" );
 		exit( 1 );
 	}
 
 	// Test permissions
 	if( setuid( 0 ) != -1 || setgid( 0 ) != -1 ) {
-		log_error( "UNX: We still have root privileges" );
+		log_error( "We still have root privileges" );
 		exit( 1 );
 	}
 }
