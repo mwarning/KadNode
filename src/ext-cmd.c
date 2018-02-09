@@ -208,10 +208,10 @@ static void cmd_exec(FILE *fp, const char request[], int allow_debug)
 		}
 	} else {
 		// Print usage
-		fprintf(fp, g_server_usage);
+		fprintf(fp, "%s", g_server_usage);
 
 		if (allow_debug) {
-			fprintf(fp, g_server_usage_debug);
+			fprintf(fp, "%s", g_server_usage_debug);
 		}
 	}
 }
