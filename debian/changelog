@@ -1,12 +1,11 @@
 kadnode (2.1.0) UNRELEASED; urgency=medium
 
-  * use base64hex to make 32 byte keys 54 characters long
-    The maximum length of domain parts are 63 characters.
-    That is too short for base32 strings.
+  * use base64hex to make 32 byte keys 54 characters long as the
+    the official maximum length of domain parts are 63 characters
   * use unix sockets for kadnode-ctl
   * put kadnode-ctl code into kadnode and use a link instead
 
- -- mwarning <moritzwarning@web.de>
+ -- mwarning <moritzwarning@web.de>  Fri, 09 Feb 2018 20:16:41 +0100
 
 kadnode (2.0.2) unstable; urgency=medium
 
