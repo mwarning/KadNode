@@ -211,9 +211,9 @@ static void cmd_exec(int fd, const char request[], int allow_debug)
 		} else if (gconf->is_daemon == 1) {
 			r_printf(fd ,"The 'list' command is not available while KadNode runs as daemon.\n" );
 		} else if (match(request, "list blacklist %n")) {
-			kad_debug_blacklist(STDOUT_FILENO);
+			kad_debug_blacklist(fd);
 		} else if (match(request, "list constants %n")) {
-			kad_debug_constants(STDOUT_FILENO);
+			kad_debug_constants(fd);
 		} else if (match(request, "list nodes %n")) {
 			rc = kad_export_nodes(fd);
 
@@ -222,24 +222,24 @@ static void cmd_exec(int fd, const char request[], int allow_debug)
 			}
 #ifdef FWD
 		} else if (match(request, "list forwardings %n")) {
-			fwd_debug(STDOUT_FILENO);
+			fwd_debug(fd);
 #endif
 #ifdef BOB
 		} else if (match(request, "list keys %n")) {
-			bob_debug_keys(STDOUT_FILENO);
+			bob_debug_keys(fd);
 #endif
 		} else if (match(request, "list searches %n")) {
-			searches_debug(STDOUT_FILENO);
+			searches_debug(fd);
 		} else if (match(request, "list announcements %n")) {
-			announces_debug(STDOUT_FILENO);
+			announces_debug(fd);
 		} else if (match(request, "list dht_buckets %n")) {
-			kad_debug_buckets(STDOUT_FILENO);
+			kad_debug_buckets(fd);
 		} else if (match(request, "list dht_searches %n")) {
-			kad_debug_searches(STDOUT_FILENO);
+			kad_debug_searches(fd);
 		} else if (match(request, "list dht_storage %n")) {
-			kad_debug_storage(STDOUT_FILENO);
+			kad_debug_storage(fd);
 		} else {
-			dprintf( STDERR_FILENO, "Unknown command.\n");
+			dprintf(fd, "Unknown command.\n");
 		}
 		r_printf(fd ,"\nOutput send to console.\n" );
 	} else {
@@ -258,14 +258,12 @@ static void cmd_client_handler(int rc, int clientsock)
 	char request[256];
 	ssize_t size;
 
-printf("cmd_client_handler rc: %d\n", rc);
 	if (rc <= 0) {
 		return;
 	}
 
 	size = recv(clientsock, request, sizeof(request) - 1, 0);
 	if (size > 0) {
-		printf("got request: '%s'\n", request);
 		request[size] = '\0';
 		// Execute command line
 		cmd_exec(clientsock, request, 0);
@@ -281,8 +279,6 @@ static void cmd_server_handler(int rc, int serversock)
 	socklen_t addrlen;
 	int clientsock;
 	struct sockaddr_un addr;
-
-printf("cmd_server_handler rc: %d\n", rc);
 
 	if (rc <= 0) {
 		return;
