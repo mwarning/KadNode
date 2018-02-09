@@ -97,20 +97,6 @@ static void cmd_ping(int fd, const char addr_str[])
 	}
 }
 
-static void cmd_print_status(int fd)
-{
-	char buffer[512];
-	int rc;
-
-	rc = kad_status(buffer, sizeof(buffer));
-
-	if (rc > 0 && rc < sizeof(buffer)) {
-		r_printf(fd, buffer);
-	} else {
-		log_error("Command buffer too small");
-	}
-}
-
 static void cmd_blacklist(int fd, const char *addr_str)
 {
 	IP addr;
@@ -188,7 +174,7 @@ static void cmd_exec(int fd, const char request[], int allow_debug)
 		}
 	} else if (match(request, "status %n")) {
 		// Print node id and statistics
-		cmd_print_status(fd);
+		kad_status(fd);
 	} else if (match(request, "announce %n")) {
 		// Announce all values
 		count = 0;

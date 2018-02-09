@@ -300,7 +300,7 @@ int kad_count_nodes( int good ) {
 	return kad_count_bucket( buckets, good ) + kad_count_bucket( buckets6, good );
 }
 
-int kad_status( char buf[], size_t size ) {
+void kad_status(int fd) {
 	struct storage *strg = storage;
 	struct search *srch = searches;
 	struct value_t *announces = announces_get();
@@ -338,8 +338,8 @@ int kad_status( char buf[], size_t size ) {
 	int nodes4_good = kad_count_bucket( buckets, 1 );
 	int nodes6_good = kad_count_bucket( buckets6, 1 );
 
-	return snprintf(
-		buf, size,
+	dprintf(
+		fd,
 		"%s\n"
 		"DHT id: %s\n"
 		"DHT listen on: %s / %s\n"
