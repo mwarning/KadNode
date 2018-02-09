@@ -37,7 +37,7 @@ config KADNODE_ENABLE_NATPMP
 	default n
 
 config KADNODE_ENABLE_DEBUG
-	bool "Build in debug mode"
+	bool "Enable debug mode"
 	depends on PACKAGE_kadnode
 	default n
 
