@@ -44,7 +44,7 @@ static const char* g_server_usage =
 	"	announce [<query>[:<port>] [<minutes>]]\n"
 	"	ping <addr>\n";
 
-const char* g_server_usage_debug = "0"
+const char* g_server_usage_debug =
 	"	blacklist <addr>\n"
 	"	list blacklist|searches|announcements|nodes"
 #ifdef FWD
