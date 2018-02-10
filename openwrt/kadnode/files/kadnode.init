@@ -79,6 +79,11 @@ stop_instance() {
 }
 
 start_service() {
+	# wait for localhost
+	while ! ip -4 a s dev lo | grep '127.0.0.1' &> /dev/null; do
+		sleep 1
+	done
+
 	config_load 'kadnode'
 	config_foreach start_instance 'kadnode'
 }

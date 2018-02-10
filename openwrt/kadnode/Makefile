@@ -79,7 +79,7 @@ define Package/kadnode/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/build/kadnode $(1)/usr/bin/
 ifeq ($(CONFIG_KADNODE_ENABLE_CMD),y)
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/build/kadnode-ctl $(1)/usr/bin/
+	$(LN) /usr/bin/kadnode $(1)/usr/bin/kadnode-ctl
 endif
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) files/kadnode.init $(1)/etc/init.d/kadnode
