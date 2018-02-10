@@ -199,6 +199,11 @@ void dht_handler( int rc, int sock ) {
 * Kademlia needs dht_blacklisted/dht_hash/dht_random_bytes functions to be present.
 */
 
+int dht_sendto(int sockfd, const void *buf, int len, int flags, const struct sockaddr *to, int tolen)
+{
+    return sendto(sockfd, buf, len, flags, to, tolen);
+}
+
 int dht_blacklisted( const struct sockaddr *sa, int salen ) {
 	return 0;
 }
