@@ -6,6 +6,13 @@ PROG=/usr/bin/kadnode
 OPTS=""
 
 
+boot()
+{
+	# Wait for the loopback interface to be ready
+	ubus -t 30 wait_for network.interface network.loopback 2>/dev/null
+	rc_procd start_service
+}
+
 xappend() {
 	local name="$2" value="$1"
 	OPTS="$OPTS--${name//_/-} ${value//'/\\'}
@@ -79,11 +86,6 @@ stop_instance() {
 }
 
 start_service() {
-	# wait for localhost
-	while ! ip -4 a s dev lo | grep '127.0.0.1' &> /dev/null; do
-		sleep 1
-	done
-
 	config_load 'kadnode'
 	config_foreach start_instance 'kadnode'
 }
