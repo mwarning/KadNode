@@ -143,7 +143,7 @@ void dht_handler(int rc, int sock)
 		buflen = recvfrom(sock, buf, sizeof(buf) - 1, 0, (struct sockaddr*) &from, &fromlen);
 
 		if (buflen <= 0 || buflen >= sizeof(buf)) {
-			goto end;
+			return;
 		}
 
 		// The DHT code expects the message to be null-terminated.
@@ -185,16 +185,14 @@ void dht_handler(int rc, int sock)
 
 	if (rc < 0) {
 		if (errno == EINTR) {
-			goto end;
+			return;
 		} else if (rc == EINVAL || rc == EFAULT) {
 			log_error("KAD: Error using select: %s", strerror(errno));
-			goto end;
+			return;
 		} else {
 			g_dht_maintenance = time_now_sec() + 1;
 		}
 	}
-
-	end:;
 }
 
 /*
