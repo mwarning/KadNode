@@ -402,7 +402,7 @@ int cmd_client(int argc, char *argv[])
 	strcpy(addr.sun_path, path);
 
 	if (connect(sock, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
-		fprintf(stderr, "connect(): %s\n", strerror(errno));
+		fprintf(stderr, "Failed to connect to '%s': %s\n", path, strerror(errno));
 		goto error;
 	}
 
