@@ -112,8 +112,8 @@ arch-pkg:
 deb-pkg:
 	dpkg-buildpackage -us -uc
 
-osx-pkg:
-	cd macosx && ./build.sh
+mac-pkg:
+	cd macos && ./build.sh
 
 freebsd-pkg:
 	git archive master --prefix kadnode/ -o freebsd/kadnode-2.0.2.tar.gz
