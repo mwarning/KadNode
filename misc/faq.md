@@ -1,6 +1,6 @@
 ## FAQ
 * **What is KadNode?**  
-    In short, KadNode is the Transmissions DHT with interfaces and packaging.  
+    In short, KadNode does DNS based on the BitTorrent network.  
     Slightly longer; KadNode is a tool that resolves names to IP addresses using the BitTorrent DHT network.
     KadNode runs in background and intercepts and answers name request for the .p2p domain.
     It has a very low resource consumption. The main task is to just return IP addresses for identifiers, not necessarly traditional DNS.
@@ -17,13 +17,13 @@
 * **Are wildcard certificates supported?**  
     Yes, but all used domains have to be given explicitly via --announce. Wildcard support has not been tested yet.
 * **Can KadNode be used as a DNS server?**  
-    KadNode is not a DNS server, it does not forward domains and its copabilities are quite simplistic.  
+    KadNode is not a DNS server, it does not forward domains as a DNS proxy.  
     It is meant to be an interface to a real DNS-Server (bind, dnsmasq etc.)
 * **How much traffic does KadNode generate?**  
     See this small [Benchmark](https://github.com/mwarning/KadNode/wiki/traffic-consumption).
 * **Does KadNode offer authentication/verification?**  
-    Yes, KadNode has an extension (called 'auth') to create a public/secret key pair and to lookup nodes
-using the public key as you would use a domain name. The resolved IP addresses are those of nodes that have the corresponding secret key. Keep in mind that this approach is not very secure!
+    Yes, KadNode has an extension (called 'bob') to create a public/secret key pair and to lookup nodes
+using the public key as you would use a domain name. The resolved IP addresses are those of nodes that have the corresponding secret key.
 * **How are public keys distributed?**  
     This is not in the scope of KadNode. So it is your task to enter the keys into the configuration files. KadNode does not intend to solve the task of key distribution.
 * **Is the authentication/verification secure?**  
@@ -34,8 +34,6 @@ using the public key as you would use a domain name. The resolved IP addresses a
     Try to disable the multicast_snooping or multicast_querier option, this is needed for OpenWrt: echo 0 > /sys/devices/virtual/net/br-lan/bridge/multicast_snooping
 * **How does the authentication work?**  
     Please consult the [Authentication Details](https://github.com/mwarning/KadNode/wiki/Cryptography-Details).
-* **What about Namecoin and others?**  
-    Namecoin tries to imitate traditional DNS where a domain is globally unique. KadNode merely maps identifiers to IP addresses without more thought. The authentication extension for KadNode is more of an experiment for a more specific application.
 * **Lookup is slow? What is going on?**  
     KadNode may need a few seconds to resolve an identifier. If it takes considerably longer than 10 seconds, then your node might no properly bootstrapped. Let me now if you have reason to assume otherwise. There has been added a [branch](/mwarning/KadNode/commits/big_buckets) for speed enhancements.
 * **What are the compile dependencies?**  
