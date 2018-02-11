@@ -32,7 +32,8 @@ int kadnode_set( const char opt[], const char val[] ) {
 	}
 }
 
-void kadnode_loop( void ) {
+void kadnode_loop( void )
+{
 	if( gconf && gconf->is_running == 0 ) {
 		conf_check();
 
@@ -50,10 +51,11 @@ void kadnode_loop( void ) {
 	}
 }
 
-int kadnode_lookup( const char query[], struct sockaddr_storage addr_array[], size_t addr_num ) {
+int kadnode_lookup( const char query[], struct sockaddr_storage addr_array[], size_t *addr_num )
+{
 	if( gconf && gconf->is_running ) {
 		return kad_lookup( query, addr_array, addr_num );
 	} else {
-		return 1;
+		return EXIT_FAILURE;
 	}
 }

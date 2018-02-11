@@ -172,12 +172,13 @@ int bob_get_id( uint8_t id[], size_t idlen, const char query[] ) {
 	size_t querylen = strlen(query);
 	uint8_t bin[32];
 
-	if(0 == bytes_from_base32hex(bin, sizeof(bin), query, querylen)
-		|| 0 == bytes_from_base16hex(bin, sizeof(bin), query, querylen)) {
+	if(EXIT_SUCCESS == bytes_from_base32hex(bin, sizeof(bin), query, querylen)
+		|| EXIT_SUCCESS == bytes_from_base16hex(bin, sizeof(bin), query, querylen)) {
 			memcpy(id, bin, idlen);
-			return 1;
+			return EXIT_SUCCESS;
 	}
-	return 0;
+
+	return EXIT_FAILURE;
 }
 
 // Find a resource instance that is currently not in use

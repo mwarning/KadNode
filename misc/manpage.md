@@ -133,7 +133,7 @@ This is the plain use of the DHT. The hexadecimal string will be cut down or fil
     Disable the local control interface.
 
   * `--cmd-path` *path*  
-    Bind the remote control interface to a unix socket (Default: /tmp/kadnode.sock).
+    Bind the remote control interface to a unix socket (Default: /tmp/kadnode_cmd.sock).
 
   * `--dns-port` *port*  
     Bind the DNS server interface to this local port (Default: 3535).
@@ -147,8 +147,8 @@ This is the plain use of the DHT. The hexadecimal string will be cut down or fil
   * `--dns-proxy-server` *ip-address*  
     Use IP address of an external DNS server instead of /etc/resolv.conf.
 
-  * `--nss-port` *port*  
-    Bind the "Name Service Switch" to this local port (Default: 4053).
+  * `--nss-path` *path*  
+    Bind the "Name Service Switch" to a unix socket (Default: /tmp/kadnode_nss.sock).
 
   * `--tls-client-cert` *path*  
     Path to file or folder of CA root certificates.  

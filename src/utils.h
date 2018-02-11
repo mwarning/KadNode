@@ -33,31 +33,31 @@ char *bytes_to_base32hex(char dst[], size_t dstsize, const uint8_t src[], size_t
 int bytes_from_base16hex(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize);
 char *bytes_to_base16hex(char dst[], size_t dstsize, const uint8_t src[], size_t srcsize);
 
-int port_random( void );
-int port_parse( const char pstr[], int err );
-int port_set( IP *addr, uint16_t port );
+int port_random(void);
+int port_parse(const char pstr[], int err);
+int port_set(IP *addr, uint16_t port);
 
 int has_ext(const char str[], const char ext[]);
-int query_sanitize( char buf[], size_t buflen, const char query[] );
-int bytes_random( uint8_t buffer[], size_t size );
-int id_equal( const uint8_t id1[], const uint8_t id2[] );
+int query_sanitize(char buf[], size_t buflen, const char query[]);
+int bytes_random(uint8_t buffer[], size_t size);
+int id_equal(const uint8_t id1[], const uint8_t id2[]);
 
-const char *str_af( int af );
-const char *str_id( const uint8_t id[] );
-const char *str_addr( const IP *addr );
+const char *str_af(int af);
+const char *str_id(const uint8_t id[]);
+const char *str_addr(const IP *addr);
 
-int addr_is_localhost( const IP *addr );
-int addr_is_multicast( const IP *addr );
-int addr_parse( IP *addr, const char addr_str[], const char port_str[], int af );
-int addr_parse_full( IP *addr, const char full_addr_str[], const char default_port[], int af );
-int addr_port( const IP *addr );
-int addr_len( const IP *addr );
-int addr_equal( const IP *addr1, const IP *addr2 );
+int addr_is_localhost(const IP *addr);
+int addr_is_multicast(const IP *addr);
+int addr_parse(IP *addr, const char addr_str[], const char port_str[], int af);
+int addr_parse_full( IP *addr, const char full_addr_str[], const char default_port[], int af);
+int addr_port(const IP *addr);
+int addr_len(const IP *addr);
+int addr_equal(const IP *addr1, const IP *addr2);
 
-int socket_addr( int sock, IP *addr );
+int socket_addr(int sock, IP *addr);
 
-time_t time_add_secs( uint32_t seconds );
-time_t time_add_mins( uint32_t minutes );
-time_t time_add_hours( uint32_t hours );
+time_t time_add_secs(uint32_t seconds);
+time_t time_add_mins(uint32_t minutes);
+time_t time_add_hours(uint32_t hours);
 
 #endif // _UTILS_H_

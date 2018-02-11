@@ -87,7 +87,7 @@ struct gconf_t {
 #endif
 
 #ifdef NSS
-	int nss_port;
+	char *nss_path;
 #endif
 };
 

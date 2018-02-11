@@ -112,8 +112,8 @@ static const char *kadnode_usage_str =
 " --dns-proxy-server <ip-addr>		Use IP address of an external DNS server instead of resolv.conf.\n\n"
 #endif
 #ifdef NSS
-" --nss-port <port>			Bind the Network Service Switch to this local port.\n"
-"					Default: "STR(NSS_PORT)"\n\n"
+" --nss-path <path>			Bind the Network Service Switch to this unix socket path.\n"
+"					Default: "NSS_PATH"\n\n"
 #endif
 #ifdef FWD
 " --fwd-disable				Disable UPnP/NAT-PMP to forward router ports.\n\n"
@@ -141,9 +141,6 @@ void conf_init( void ) {
 		.af = AF_UNSPEC,
 #ifdef DNS
 		.dns_port = -1,
-#endif
-#ifdef NSS
-		.nss_port = -1,
 #endif
 #ifdef DEBUG
 		.verbosity = VERBOSITY_DEBUG
@@ -181,8 +178,8 @@ void conf_defaults( void ) {
 #endif
 
 #ifdef NSS
-	if( gconf->nss_port < 0 ) {
-		gconf->nss_port = NSS_PORT;
+	if( gconf->nss_path == NULL ) {
+		gconf->nss_path = strdup(NSS_PATH);
 	}
 #endif
 
@@ -243,6 +240,9 @@ void conf_free( void ) {
 #ifdef DNS
 	free( gconf->dns_proxy_server );
 #endif
+#ifdef NSS
+	free( gconf->nss_path );
+#endif
 
 	free( gconf );
 }
@@ -260,7 +260,7 @@ enum OPCODE {
 	oDnsPort,
 	oDnsProxyEnable,
 	oDnsProxyServer,
-	oNssPort,
+	oNssPath,
 	oTlsClientCert,
 	oTlsServerCert,
 	oConfig,
@@ -305,7 +305,7 @@ static struct option_t options[] = {
 	{"--dns-proxy-server", 1, oDnsProxyServer},
 #endif
 #ifdef NSS
-	{"--nss-port", 1, oNssPort},
+	{"--nss-path", 1, oNssPath},
 #endif
 #ifdef TLS
 	{"--tls-client-cert", 1, oTlsClientCert},
@@ -523,8 +523,8 @@ int conf_set( const char opt[], const char val[] ) {
 			return conf_str( opt, &gconf->dns_proxy_server, val );
 #endif
 #ifdef NSS
-		case oNssPort:
-			return conf_port( opt, &gconf->nss_port, val );
+		case oNssPath:
+			return conf_str( opt, &gconf->nss_path, val );
 #endif
 #ifdef TLS
 		case oTlsClientCert:
@@ -611,7 +611,7 @@ void conf_load( void ) {
 
 		int n = sscanf( *args, "%254[^:]:%hu", name, &port );
 		if( n == 1 || n == 2 ) {
-			rc = kad_announce( name, port, LONG_MAX );
+			rc = (EXIT_FAILURE == kad_announce( name, port, LONG_MAX ));
 		} else {
 			log_error( "Invalid announcement: %s", *args );
 			rc = 1;
@@ -634,7 +634,7 @@ void conf_load( void ) {
 		char key_file[128];
 
 		if( sscanf( *args, "%127[^,],%127[^,]", crt_file, key_file ) == 2 ) {
-			rc = tls_server_add_sni( crt_file, key_file );
+			rc = (EXIT_FAILURE == tls_server_add_sni( crt_file, key_file ));
 		} else {
 			log_error( "Invalid cert/key tuple: %s", *args );
 			rc = 1;

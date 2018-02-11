@@ -214,10 +214,10 @@ int tls_client_get_id( uint8_t id[], size_t len, const char query[] ) {
 		memset( id, 0, len );
 		memcpy( id, hash, MIN( len, sizeof(hash) ) );
 
-		return 1;
+		return EXIT_SUCCESS;
 	}
 
-	return 0;
+	return EXIT_FAILURE;
 }
 
 // Find a resource instance that is currently not in use

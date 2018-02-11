@@ -83,27 +83,27 @@ struct value_t *announces_add( const char query[], int port, time_t lifetime ) {
 	uint8_t id[SHA1_BIN_LENGTH];
 	struct value_t *cur;
 	struct value_t *new;
-	int ret = 0;
+	int ret = EXIT_FAILURE;
 	time_t now = time_now_sec();
 
 	// Get id from query
 #ifdef BOB
-	if( ret == 0 ) {
+	if( ret == EXIT_FAILURE ) {
 		ret = bob_get_id( id, sizeof(id), query );
 	}
 #endif
 
 #ifdef TLS
-	if( ret == 0 ) {
+	if( ret == EXIT_FAILURE ) {
 		ret = tls_client_get_id( id, sizeof(id), query );
 	}
 #endif
 
-	if( ret == 0 ) {
+	if( ret == EXIT_FAILURE ) {
 		ret = hex_get_id( id, sizeof(id), query );
 	}
 
-	if( ret == 0 ) {
+	if( ret == EXIT_FAILURE ) {
 		log_error( "Unrecognized announcement: %s", query );
 		return NULL;
 	}

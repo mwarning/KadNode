@@ -1,6 +1,10 @@
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/socket.h>
+#include <unistd.h>
+#include <errno.h>
+#include <sys/un.h>
 
 #include "main.h"
 #include "conf.h"
@@ -13,72 +17,95 @@
 #define MAX_ADDRS 32
 
 
-static void nss_lookup( int sock, IP *clientaddr, const char hostname[] ) {
-	socklen_t addrlen;
+static void nss_client_handler(int rc, int clientsock)
+{
+	char hostname[QUERY_MAX_SIZE];
 	IP addrs[MAX_ADDRS];
+	ssize_t size;
+	size_t num;
 
-	// Lookup id, starts search when not already started
-	int num = kad_lookup( hostname, addrs, ARRAY_SIZE(addrs) );
-	if( num > 0 ) {
+	if (rc <= 0) {
+		return;
+	}
+
+	size = recv(clientsock, hostname, sizeof(hostname) - 1, 0);
+	if (size <= 0) {
+		goto end;
+	}
+
+	hostname[size] = '\0';
+	if (!has_ext(hostname, gconf->query_tld)) {
+		goto end;
+	}
+
+	num = ARRAY_SIZE(addrs);
+	rc = kad_lookup(hostname, addrs, &num);
+	if ( EXIT_SUCCESS == rc) {
 		// Found addresses
-		log_debug( "NSS: Send %lu addresses to %s. Packet has %d bytes.",
-		   num, str_addr( clientaddr ), sizeof(IP)
-		);
+		log_debug( "NSS: Found %lu addresses.", num);
 	} else {
 		num = 0;
 	}
 
-	addrlen = addr_len( clientaddr );
-	sendto( sock, (uint8_t *) addrs, num * sizeof(IP), 0, (const struct sockaddr *) clientaddr, addrlen );
+	write(clientsock, (uint8_t *) addrs, num * sizeof(IP));
+
+end:
+	close(clientsock);
+	net_remove_handler(clientsock, &nss_client_handler);
 }
 
-// Handle a local connection
-static void nss_handler( int rc, int sock ) {
-	IP clientaddr;
-	socklen_t addrlen_ret;
-	char hostname[QUERY_MAX_SIZE];
+static void nss_server_handler(int rc, int serversock)
+{
+	socklen_t addrlen;
+	int clientsock;
+	struct sockaddr_un addr;
 
-	if( rc == 0 ) {
+	if (rc <= 0) {
 		return;
 	}
 
-	addrlen_ret = sizeof(IP);
-	rc = recvfrom( sock, hostname, sizeof(hostname), 0, (struct sockaddr *) &clientaddr, &addrlen_ret );
-
-	if( rc <= 0 || rc >= sizeof(hostname) ) {
+	addrlen = sizeof(struct sockaddr_in);
+	clientsock = accept(serversock, (struct sockaddr *) &addr, &addrlen);
+	if (clientsock < 0) {
+		log_error("accept(): %s\n", strerror(errno));
 		return;
 	}
 
-	// Add missing null terminator
-	hostname[rc] = '\0';
-
-	if( !has_ext( hostname, gconf->query_tld ) ) {
-		return;
-	}
-
-	nss_lookup( sock, &clientaddr, hostname );
+	net_add_handler(clientsock, &nss_client_handler);
 }
 
-void nss_setup( void ) {
-	int sock4;
-	int sock6;
+void nss_setup(void)
+{
+	struct sockaddr_un addr;
+	int sock;
 
-	if( gconf->nss_port < 1 ) {
+	if (gconf->nss_path == NULL || strlen(gconf->nss_path) == 0) {
 		return;
 	}
 
-	sock4 = net_bind( "NSS", "127.0.0.1", gconf->nss_port, NULL, IPPROTO_UDP );
-	sock6 = net_bind( "NSS", "::1", gconf->nss_port, NULL, IPPROTO_UDP );
-
-	if( sock4 >= 0 ) {
-		net_add_handler( sock4, &nss_handler );
+	sock = socket(AF_LOCAL, SOCK_STREAM, 0);
+	if (sock < 0) {
+		log_error("socket(): %s\n", strerror(errno));
+		return;
 	}
 
-	if( sock6 >= 0 ) {
-		net_add_handler( sock6, &nss_handler );
+	unlink(gconf->nss_path);
+	addr.sun_family = AF_LOCAL;
+	strcpy(addr.sun_path, gconf->nss_path);
+
+	if (bind(sock, (struct sockaddr *) &addr, sizeof(addr)) != 0) {
+		log_error("bind(): %s\n", strerror(errno));
+		return;
 	}
+
+	listen(sock, 5);
+
+	log_info("NSS: Bind to %s", gconf->nss_path);
+
+	net_add_handler(sock, &nss_server_handler);
 }
 
-void nss_free( void ) {
-	// Nothing to do
+void nss_free(void)
+{
+	unlink(gconf->nss_path);
 }

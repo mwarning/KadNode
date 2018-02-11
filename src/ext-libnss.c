@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <sys/un.h>
 #include <nss.h>
 
 #ifdef __FreeBSD__
@@ -15,81 +16,70 @@
 #include <sys/param.h>
 #endif
 
+#include <stdio.h>
+#include <time.h>
+
 #include "main.h"
 
 #define MAX_ADDRS 32
 
-static int g_sock = -1;
-static IP g_sockaddr = { 0 };
 
+void write_test(const char s[])
+{
+	time_t timer;
+	char buffer[26];
+	struct tm* tm_info;
 
-int _nss_kadnode_init() {
-	struct timeval tv;
-	const int opt_on = 1;
+	time(&timer);
+	tm_info = localtime(&timer);
 
-	// Setup ::1 address
-	memcpy( &((IP6*) &g_sockaddr)->sin6_addr, &in6addr_loopback, sizeof(IP6));
-	((IP6*) &g_sockaddr)->sin6_family = AF_INET6;
-	((IP6*) &g_sockaddr)->sin6_port = htons(NSS_PORT);
+	strftime(buffer, 26, "%H:%M:%S", tm_info);
 
-	// Setup UDP socket
-	if( (g_sock = socket( g_sockaddr.ss_family, SOCK_DGRAM, IPPROTO_UDP )) < 0 ) {
-		return 0;
+	FILE *file = fopen("/tmp/foo.txt", "a");
+	if(file) {
+		fprintf(file, "%s: %s\n", buffer, s);
+		fclose(file);
 	}
-
-	// Set receive timeout to 0.1 seconds
-	tv.tv_sec = 0;
-	tv.tv_usec = 100000;
-
-	if( setsockopt( g_sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(struct timeval) ) < 0 ) {
-		goto error;
-	}
-
-	if( setsockopt( g_sock, SOL_SOCKET, SO_REUSEADDR, &opt_on, sizeof(opt_on) ) < 0 ) {
-		goto error;
-	}
-
-	return 1;
-
-error:
-	close(g_sock);
-	g_sock = -1;
-
-	return 0;
 }
 
 int _nss_kadnode_addr_len( const IP *addr ) {
 	switch( addr->ss_family ) {
-		case AF_INET:
-			return sizeof(IP4);
-		case AF_INET6:
-			return sizeof(IP6);
-		default:
-			return 0;
+	case AF_INET:
+		return sizeof(IP4);
+	case AF_INET6:
+		return sizeof(IP6);
+	default:
+		return 0;
 	}
 }
 
-int _nss_kadnode_lookup( const char hostname[], int hostlen, IP addrs[] ) {
-	socklen_t addrlen;
-	IP clientaddr;
-	int size;
+int _nss_kadnode_lookup(const char hostname[], int hostlen, IP addrs[])
+{
+	struct sockaddr_un addr;
+	const char *path = NSS_PATH;
+	ssize_t size;
+	int sock;
 
-	if( g_sock < 0 ) {
-		if( !_nss_kadnode_init() ) {
-			// Socket setup failed
-			return 0;
-		}
-	}
-
-	addrlen = _nss_kadnode_addr_len( &g_sockaddr );
-	size = sendto( g_sock, hostname, hostlen, 0, (struct sockaddr *)&g_sockaddr, addrlen );
-	if( size != hostlen ) {
+	sock = socket(AF_LOCAL, SOCK_STREAM, 0);
+	if (sock < 0) {
 		return 0;
 	}
 
-	size = recvfrom( g_sock, addrs, MAX_ADDRS * sizeof(IP), 0, (struct sockaddr *)&clientaddr, &addrlen );
+	addr.sun_family = AF_LOCAL;
+	strcpy(addr.sun_path, path);
 
-	if( size > 0 ) {
+	if (!connect(sock, (struct sockaddr *) &addr, sizeof(addr)) == 0) {
+		close(sock);
+		return 0;
+	}
+
+	// Send request
+	send(sock, hostname, hostlen, 0);
+
+	size = read(sock, addrs, MAX_ADDRS * sizeof(IP));
+	close(sock);
+
+	if (size > 0) {
 		// Return number of addresses
 		return (size / sizeof(IP));
 	} else {

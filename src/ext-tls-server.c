@@ -246,19 +246,19 @@ int tls_server_add_sni( const char crt_file[], const char key_file[] ) {
 	if( (ret = mbedtls_x509_crt_parse_file( &crt, crt_file )) != 0 ) {
 		mbedtls_strerror( ret, error_buf, sizeof(error_buf) );
 		log_error( "TLS-Server: %s: %s", crt_file, error_buf );
-		return 1;
+		return EXIT_FAILURE;
 	}
 
 	if( (ret = mbedtls_pk_parse_keyfile( &key, key_file, "" /* no password */ )) != 0 ) {
 		mbedtls_strerror( ret, error_buf, sizeof(error_buf) );
 		log_error( "TLS-Server: %s: %s", key_file, error_buf );
-		return 1;
+		return EXIT_FAILURE;
 	}
 
 	// Check if common name is set
 	if( get_common_name( name, sizeof(name), &crt ) != 0) {
 		log_error( "TLS-Server: No common name set in %s", crt_file );
-		return 1;
+		return EXIT_FAILURE;
 	}
 
 	// Check for duplicate entries
@@ -266,7 +266,7 @@ int tls_server_add_sni( const char crt_file[], const char key_file[] ) {
 	while( cur ) {
 		if( strcmp( cur->name, name ) == 0 ) {
 			log_error( "TLS-Server: Duplicate entry %s", name );
-			return 1;
+			return EXIT_FAILURE;
 		}
 		cur = cur->next;
 	}
@@ -274,7 +274,7 @@ int tls_server_add_sni( const char crt_file[], const char key_file[] ) {
 	// Create new entry
 	if( (new = calloc( 1, sizeof(struct sni_entry))) == NULL ) {
 		log_error( "TLS-Server: Error calling calloc()" );
-		return 1;
+		return EXIT_FAILURE;
 	}
 
 	new->name = strdup( name );
@@ -294,7 +294,8 @@ int tls_server_add_sni( const char crt_file[], const char key_file[] ) {
 	g_sni_entries = new;
 
 	log_info( "TLS-Server: Loaded server credentials for %s (%s, %s)", name, crt_file, key_file );
-	return 0;
+
+	return EXIT_SUCCESS;
 }
 
 static void tls_announce_all_cnames( void ) {
@@ -305,7 +306,7 @@ static void tls_announce_all_cnames( void ) {
 	cur = g_sni_entries;
 	while( cur ) {
 		// Won't announce wildcard domains
-		if( query_sanitize( name, sizeof(name), cur->name ) == 0 ) {
+		if( EXIT_SUCCESS == query_sanitize( name, sizeof(name), cur->name ) ) {
 			kad_announce( name, gconf->dht_port, LONG_MAX );
 		}
 		cur = cur->next;

@@ -98,7 +98,7 @@ static void cmd_announce(FILE *fp, const char hostname[], int port, int minutes)
 		lifetime = (time_now_sec() + (minutes * 60));
 	}
 
-	if (kad_announce(hostname, port, lifetime) >= 0) {
+	if (EXIT_SUCCESS == kad_announce(hostname, port, lifetime)) {
 #ifdef FWD
 		// Add port forwarding
 		fwd_add(port, lifetime);
@@ -130,6 +130,7 @@ static void cmd_exec(FILE *fp, const char request[], int allow_debug)
 	int count;
 	int port;
 	size_t i;
+	size_t num;
 	char d; // dummy marker
 	int rc = 0;
 
@@ -137,17 +138,20 @@ static void cmd_exec(FILE *fp, const char request[], int allow_debug)
 		cmd_ping(fp, hostname);
 	} else if (sscanf(request, "lookup %255s %c", hostname, &d) == 1) {
 		// Check searches for node
-		rc = kad_lookup(hostname, addrs, ARRAY_SIZE(addrs));
+		num = ARRAY_SIZE(addrs);
+		rc = kad_lookup(hostname, addrs, &num);
 
-		if (rc > 0) {
+		if (rc == EXIT_SUCCESS) {
 			// Print results
-			for (i = 0; i < rc; ++i) {
+			for (i = 0; i < num; ++i) {
 				fprintf(fp, "%s\n", str_addr( &addrs[i] ));
 			}
-		} else if (rc < 0) {
-			fprintf(fp ,"Some error occured.\n");
+
+			if (num == 0) {
+				fprintf(fp ,"Search in progress.\n");
+			}
 		} else {
-			fprintf(fp ,"Search in progress.\n");
+			fprintf(fp ,"Some error occured.\n");
 		}
 	} else if (match(request, "status %n")) {
 		// Print node id and statistics
@@ -301,6 +305,8 @@ void cmd_setup( void)
 	}
 
 	listen(sock, 5);
+
+	log_info("CMD: Bind to %s", gconf->cmd_path);
 
 	net_add_handler(sock, &cmd_server_handler);
 

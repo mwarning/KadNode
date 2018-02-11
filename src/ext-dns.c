@@ -606,7 +606,7 @@ static void proxy_forward_response( uint8_t *buffer, ssize_t buflen, uint16_t id
 static void dns_handler( int rc, int sock ) {
 	struct Message msg;
 	IP clientaddr;
-	int addrs_num;
+	size_t addrs_num;
 	IP addrs[MAX_ADDR_RECORDS];
 	socklen_t addrlen_ret;
 	ssize_t buflen;
@@ -685,8 +685,10 @@ static void dns_handler( int rc, int sock ) {
 		);
 	} else {
 		// Start lookup for one address
-		addrs_num = kad_lookup( hostname, addrs, ARRAY_SIZE(addrs) );
-		if( addrs_num <= 0 ) {
+		addrs_num = ARRAY_SIZE(addrs);
+		rc = kad_lookup(hostname, addrs, &addrs_num);
+
+		if (EXIT_FAILURE == rc) {
 			log_debug( "DNS: Failed to resolve hostname: %s", hostname );
 			return;
 		}
@@ -695,7 +697,7 @@ static void dns_handler( int rc, int sock ) {
 			return;
 		}
 
-		log_debug( "DNS: Send back %d addresses to: %s",
+		log_debug( "DNS: Send back %lu addresses to: %s",
 			addrs_num, str_addr( &clientaddr )
 		);
 	}
