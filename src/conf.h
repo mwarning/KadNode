@@ -8,12 +8,12 @@
 
 extern const char *kadnode_version_str;
 
-void conf_init( void );
-void conf_setup( int argc, char **argv );
-void conf_load( void );
-int conf_set( const char opt[], const char val[] );
-void conf_info( void );
-void conf_free( void );
+void conf_init(void);
+void conf_setup(int argc, char **argv);
+void conf_load(void);
+int conf_set(const char opt[], const char val[]);
+void conf_info(void);
+void conf_free(void);
 
 
 struct gconf_t {
