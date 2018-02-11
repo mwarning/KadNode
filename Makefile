@@ -116,7 +116,7 @@ mac-pkg:
 	cd macos && ./build.sh
 
 freebsd-pkg:
-	git archive master --prefix kadnode/ -o freebsd/kadnode-2.0.2.tar.gz
+	git archive HEAD --prefix kadnode/ -o freebsd/kadnode-2.1.0.tar.gz
 	cd freebsd
 	make makesum
 	make package

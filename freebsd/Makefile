@@ -65,7 +65,7 @@ MAKE_ENV+=	FEATURES="${FEATURES}"
 do-install:
 	${MKDIR} ${STAGEDIR}/usr/bin
 	${INSTALL_PROGRAM} ${WRKSRC}/build/kadnode ${STAGEDIR}${PREFIX}/bin/
-	${INSTALL_PROGRAM} ${WRKSRC}/build/kadnode-ctl ${STAGEDIR}${PREFIX}/bin/
+	${LN} -sf ${STAGEDIR}${PREFIX}/bin/kadnode ${STAGEDIR}${PREFIX}/bin/kadnode-ctl
 
 	${INSTALL_LIB} ${WRKSRC}/build/libnss_kadnode.so.2 ${STAGEDIR}${PREFIX}/lib/nss_kadnode.so
 	${LN} -sf ${STAGEDIR}${PREFIX}/lib/nss_kadnode.so ${STAGEDIR}${PREFIX}/lib/nss_kadnode.so.1
