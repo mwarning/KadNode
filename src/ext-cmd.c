@@ -401,7 +401,7 @@ int cmd_client(int argc, char *argv[])
 	addr.sun_family = AF_LOCAL;
 	strcpy(addr.sun_path, path);
 
-	if (!connect(sock, (struct sockaddr *) &addr, sizeof(addr)) == 0) {
+	if (connect(sock, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
 		fprintf(stderr, "connect(): %s\n", strerror(errno));
 		goto error;
 	}
