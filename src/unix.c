@@ -24,9 +24,7 @@ static void unix_signal_handler(int signo)
 
 	gconf->is_running = 0;
 
-	if (signo == SIGTERM) {
-		log_info("Shutting down...");
-	}
+	log_info("Shutting down...");
 }
 
 void unix_signals(void)

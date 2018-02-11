@@ -88,7 +88,8 @@ void main_setup()
 }
 
 // Cleanup resources on any non crash program exit
-void main_free( void ) {
+void main_free(void)
+{
 #ifdef CMD
 	cmd_free();
 #endif
@@ -126,7 +127,8 @@ void main_free( void ) {
 	net_free();
 }
 
-int main_start( void ) {
+int main_start(void)
+{
 
 	conf_load();
 
@@ -144,7 +146,8 @@ int main_start( void ) {
 }
 
 #ifdef __CYGWIN__
-int main( int argc, char *argv[] ) {
+int main(int argc, char *argv[])
+{
 	char cmd[MAX_PATH];
 	char path[MAX_PATH];
 	char *p;
@@ -156,48 +159,48 @@ int main( int argc, char *argv[] ) {
 #endif
 
 	conf_init();
-	conf_setup( argc, argv );
+	conf_setup(argc, argv);
 
-	if( gconf->service_start ) {
+	if (gconf->service_start) {
 		gconf->use_syslog = 1;
 
 		// Get kadnode.exe binary lcoation
-		if( GetModuleFileNameA( NULL, path, sizeof(path) ) && (p = strrchr( path, '\\' )) ) {
+		if (GetModuleFileNameA(NULL, path, sizeof(path)) && (p = strrchr(path, '\\'))) {
 			*(p + 1) = '\0';
 		} else {
-			log_error( "Cannot get location of KadNode binary." );
-			exit( 1 );
+			log_error("Cannot get location of KadNode binary.");
+			exit(1);
 		}
 
 		// Set DNS server to localhost
-		sprintf( cmd, "cmd.exe /c \"%s\\dns_setup.bat\"", path );
-		windows_exec( cmd );
+		sprintf(cmd, "cmd.exe /c \"%s\\dns_setup.bat\"", path);
+		windows_exec(cmd);
 
-		int rc = windows_service_start( (void (*)()) main_start );
+		int rc = windows_service_start((void (*)()) main_start);
 
 		// Reset DNS settings to DHCP
-		sprintf( cmd, "cmd.exe /c \"%s\\dns_reset.bat\"", path );
-		windows_exec( cmd );
+		sprintf(cmd, "cmd.exe /c \"%s\\dns_reset.bat\"", path);
+		windows_exec(cmd);
 
 		return rc;
 	}
 
-	if( gconf->is_daemon ) {
+	if (gconf->is_daemon) {
 		gconf->use_syslog = 1;
 
 		// Fork before any threads are started
 		unix_fork();
 
 		// Change working directory to C:\ directory or disk equivalent
-		if( GetModuleFileNameA( NULL, path, sizeof(path) ) && (p = strchr( path, '\\' )) ) {
+		if (GetModuleFileNameA(NULL, path, sizeof(path)) && (p = strchr(path, '\\'))) {
 			*(p + 1) = 0;
-			SetCurrentDirectoryA( path );
+			SetCurrentDirectoryA(path);
 		}
 
 		// Close pipes
-		fclose( stderr );
-		fclose( stdout );
-		fclose( stdin );
+		fclose(stderr);
+		fclose(stdout);
+		fclose(stdin);
 	} else {
 		conf_info();
 	}
@@ -206,8 +209,8 @@ int main( int argc, char *argv[] ) {
 	windows_signals();
 
 	// Write pid file
-	if( gconf->pidfile ) {
-		unix_write_pidfile( GetCurrentProcessId(), gconf->pidfile );
+	if (gconf->pidfile) {
+		unix_write_pidfile(GetCurrentProcessId(), gconf->pidfile);
 	}
 
 	// Drop privileges
@@ -216,7 +219,8 @@ int main( int argc, char *argv[] ) {
 	return main_start();
 }
 #else
-int main( int argc, char *argv[] ) {
+int main(int argc, char *argv[])
+{
 #ifdef CMD
 	if (strstr(argv[0], "kadnode-ctl")) {
 		return cmd_client(argc, argv);
@@ -224,23 +228,23 @@ int main( int argc, char *argv[] ) {
 #endif
 
 	conf_init();
-	conf_setup( argc, argv );
+	conf_setup(argc, argv);
 
-	if( gconf->is_daemon ) {
+	if (gconf->is_daemon) {
 		gconf->use_syslog = 1;
 
 		// Fork before any threads are started
 		unix_fork();
 
-		if( chdir( "/" ) != 0 ) {
-			log_error( "Changing working directory to '/' failed: %s", strerror( errno ) );
-			exit( 1 );
+		if (chdir("/") != 0) {
+			log_error("Changing working directory to '/' failed: %s", strerror(errno));
+			exit(1);
 		}
 
 		// Close pipes
-		fclose( stderr );
-		fclose( stdout );
-		fclose( stdin );
+		fclose(stderr);
+		fclose(stdout);
+		fclose(stdin);
 	} else {
 		conf_info();
 	}
@@ -249,8 +253,8 @@ int main( int argc, char *argv[] ) {
 	unix_signals();
 
 	// Write pid file
-	if( gconf->pidfile ) {
-		unix_write_pidfile( getpid(), gconf->pidfile );
+	if (gconf->pidfile) {
+		unix_write_pidfile(getpid(), gconf->pidfile);
 	}
 
 	// Drop privileges
