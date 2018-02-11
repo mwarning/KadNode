@@ -48,7 +48,7 @@ int _nss_kadnode_lookup(const char hostname[], int hostlen, IP addrs[])
 	addr.sun_family = AF_LOCAL;
 	strcpy(addr.sun_path, path);
 
-	if (!connect(sock, (struct sockaddr *) &addr, sizeof(addr)) == 0) {
+	if (connect(sock, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
 		close(sock);
 		return 0;
 	}
