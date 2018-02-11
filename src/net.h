@@ -4,7 +4,7 @@
 
 
 // Callback for event loop
-typedef void net_callback( int rc, int fd );
+typedef void net_callback(int revents, int fd);
 
 // Create a socket and bind to interface
 int net_socket(
@@ -24,15 +24,15 @@ int net_bind(
 );
 
 // Add callback with file descriptor to listen for packets
-void net_add_handler( int fd, net_callback *callback );
+void net_add_handler(int fd, net_callback *callback);
 
 // Remove callback
-void net_remove_handler( int fd, net_callback *callback );
+void net_remove_handler(int fd, net_callback *callback);
 
 // Start loop for all network events
-void net_loop( void );
+void net_loop(void);
 
 // Close sockets
-void net_free( void );
+void net_free(void);
 
 #endif // _NET_H
