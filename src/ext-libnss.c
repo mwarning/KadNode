@@ -24,45 +24,25 @@
 #define MAX_ADDRS 32
 
 
-void write_test(const char s[])
-{
-	time_t timer;
-	char buffer[26];
-	struct tm* tm_info;
-
-	time(&timer);
-	tm_info = localtime(&timer);
-
-	strftime(buffer, 26, "%H:%M:%S", tm_info);
-
-	FILE *file = fopen("/tmp/foo.txt", "a");
-	if(file) {
-		fprintf(file, "%s: %s\n", buffer, s);
-		fclose(file);
-	}
-}
-
-int _nss_kadnode_addr_len( const IP *addr ) {
-	switch( addr->ss_family ) {
-	case AF_INET:
-		return sizeof(IP4);
-	case AF_INET6:
-		return sizeof(IP6);
-	default:
-		return 0;
-	}
-}
-
 int _nss_kadnode_lookup(const char hostname[], int hostlen, IP addrs[])
 {
 	struct sockaddr_un addr;
 	const char *path = NSS_PATH;
+	struct timeval tv;
 	ssize_t size;
 	int sock;
 
 	sock = socket(AF_LOCAL, SOCK_STREAM, 0);
 	if (sock < 0) {
 		return 0;
+	}
+
+	// Set receive timeout to 0.1 seconds
+	tv.tv_sec = 0;
+	tv.tv_usec = 100000;
+
+	if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(struct timeval)) < 0) {
+		return -1;
 	}
 
 	addr.sun_family = AF_LOCAL;
