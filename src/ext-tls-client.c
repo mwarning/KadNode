@@ -329,7 +329,8 @@ void tls_client_setup(void)
 	}
 
 	if (g_cacert.version <= 0) {
-		log_error("TLS-Client: No root CA certificates found.");
+		log_error("TLS-Client: No root CA certificates could be loaded.");
+		exit(1);
 		return;
 	}
 
