@@ -242,7 +242,8 @@ static void search_restart(struct search_t *search)
 	prev = NULL;
 	result = search->results;
 	while (result) {
-		if (result->state == AUTH_ERROR || result->state == AUTH_AGAIN) {
+		const int state = result->state;
+		if (state == AUTH_ERROR || state == AUTH_AGAIN) {
 			// Remove result
 			next = result->next;
 			if (prev) {
