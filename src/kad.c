@@ -33,21 +33,22 @@ static int g_dht_socket6 = -1;
 * Put an address and port into a sockaddr_storages struct.
 * Both addr and port are in network byte order.
 */
-void to_addr( IP *out_addr, const void *in_addr, size_t len, uint16_t port ) {
-	memset( out_addr, '\0', sizeof(IP) );
+void to_addr(IP *out_addr, const void *in_addr, size_t len, uint16_t port)
+{
+	memset(out_addr, '\0', sizeof(IP));
 
-	if( len == 4 ) {
+	if(len == 4) {
 		IP4 *a = (IP4 *) out_addr;
 		a->sin_family = AF_INET;
 		a->sin_port = port;
-		memcpy( &a->sin_addr.s_addr, in_addr, 4 );
+		memcpy(&a->sin_addr.s_addr, in_addr, 4);
 	}
 
-	if( len == 16 ) {
+	if(len == 16) {
 		IP6 *a = (IP6 *) out_addr;
 		a->sin6_family = AF_INET6;
 		a->sin6_port = port;
-		memcpy( &a->sin6_addr.s6_addr, in_addr, 16 );
+		memcpy(&a->sin6_addr.s6_addr, in_addr, 16);
 	}
 }
 
@@ -63,32 +64,33 @@ typedef struct {
 
 
 // This callback is called when a search result arrives or a search completes
-void dht_callback_func( void *closure, int event, const uint8_t *info_hash, const void *data, size_t data_len ) {
+void dht_callback_func(void *closure, int event, const uint8_t *info_hash, const void *data, size_t data_len)
+{
 	struct search_t *search;
 	dht_addr4_t *data4;
 	dht_addr6_t *data6;
 	IP addr;
 	size_t i;
 
-	search = searches_find_by_id( info_hash );
+	search = searches_find_by_id(info_hash);
 
-	if( search == NULL ) {
+	if(search == NULL) {
 		return;
 	}
 
-	switch( event ) {
+	switch(event) {
 		case DHT_EVENT_VALUES:
 			data4 = (dht_addr4_t *) data;
-			for( i = 0; i < (data_len / sizeof(dht_addr4_t)); ++i ) {
-				to_addr( &addr, &data4[i].addr, 4, data4[i].port );
-				searches_add_addr( search, &addr );
+			for(i = 0; i < (data_len / sizeof(dht_addr4_t)); ++i) {
+				to_addr(&addr, &data4[i].addr, 4, data4[i].port);
+				searches_add_addr(search, &addr);
 			}
 			break;
 		case DHT_EVENT_VALUES6:
 			data6 = (dht_addr6_t *) data;
-			for( i = 0; i < (data_len / sizeof(dht_addr6_t)); ++i ) {
-				to_addr( &addr, &data6[i].addr, 16, data6[i].port );
-				searches_add_addr( search, &addr );
+			for(i = 0; i < (data_len / sizeof(dht_addr6_t)); ++i) {
+				to_addr(&addr, &data6[i].addr, 16, data6[i].port);
+				searches_add_addr(search, &addr);
 			}
 			break;
 		case DHT_EVENT_SEARCH_DONE:
@@ -474,7 +476,7 @@ int kad_lookup_node(const char query[], IP *addr_return)
 	while (sr) {
 		if (sr->af == gconf->af && id_equal(sr->id, id)) {
 			for (i = 0; i < sr->numnodes; ++i) {
-				if (id_equal( sr->nodes[i].id, id)) {
+				if (id_equal(sr->nodes[i].id, id)) {
 					memcpy(addr_return, &sr->nodes[i].ss, sizeof(IP));
 					rc = 0;
 					goto done;
@@ -568,7 +570,7 @@ void kad_debug_searches(FILE *fp)
 		fprintf(fp, " DHT-Search: %s\n", str_id(s->id));
 		fprintf(fp, "  af: %s\n", (s->af == AF_INET) ? "AF_INET" : "AF_INET6");
 		fprintf(fp, "  port: %hu\n", s->port);
-		//fprintf(fp, "  done: %d\n", s->done );
+		//fprintf(fp, "  done: %d\n", s->done);
 		for (i = 0; i < s->numnodes; ++i) {
 			struct search_node *sn = &s->nodes[i];
 			fprintf(fp, "   Node: %s\n", str_id(sn->id));
@@ -594,7 +596,7 @@ void kad_debug_storage(FILE *fp)
 
 	s = storage;
 	for (j = 0; s; ++j) {
-		fprintf(fp, " id: %s\n", str_id( s->id));
+		fprintf(fp, " id: %s\n", str_id(s->id));
 		for (i = 0; i < s->numpeers; ++i) {
 			p = &s->peers[i];
 			to_addr(&addr, &p->ip, p->len, htons(p->port));

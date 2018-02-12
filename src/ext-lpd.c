@@ -46,7 +46,8 @@ struct LPD_STATE g_lpd6 = {
 	.sock_send = -1, .sock_listen = -1
 };
 
-static void handle_mcast(int rc, struct LPD_STATE* lpd) {
+static void handle_mcast(int rc, struct LPD_STATE* lpd)
+{
 	char buf[16];
 	socklen_t addrlen;
 	uint16_t port;
@@ -57,7 +58,7 @@ static void handle_mcast(int rc, struct LPD_STATE* lpd) {
 		if (kad_count_nodes(0) == 0) {
 			log_debug("LPD: Send discovery message to %s", str_addr(&lpd->mcast_addr));
 			sprintf(buf, "DHT %d", gconf->dht_port);
-			sendto(lpd->sock_send, (void const*) buf, strlen(buf), 0, (struct sockaddr const*) &lpd->mcast_addr, sizeof(IP));
+			sendto(lpd->sock_send, (void const*) buf, strlen(buf), 0, (struct sockaddr const*) &lpd->mcast_addr, addr_len(&lpd->mcast_addr));
 		}
 
 		// Cap number of received packets to 10 per minute
@@ -93,17 +94,20 @@ static void handle_mcast(int rc, struct LPD_STATE* lpd) {
 	}
 }
 
-static void handle_mcast4(int rc, int sock) {
+static void handle_mcast4(int rc, int sock)
+{
 	assert(sock == g_lpd4.sock_listen);
 	handle_mcast(rc, &g_lpd4);
 }
 
-static void handle_mcast6(int rc, int sock) {
+static void handle_mcast6(int rc, int sock)
+{
 	assert(sock == g_lpd6.sock_listen);
 	handle_mcast(rc, &g_lpd6);
 }
 
-static int create_send_socket(int af, const char ifname[]) {
+static int create_send_socket(int af, const char ifname[])
+{
 	const int scope = TTL_SAME_SUBNET;
 	const int opt_off = 0;
 	int sock;
@@ -150,7 +154,8 @@ fail:
 	return -1;
 }
 
-static int create_receive_socket(const IP *addr, const char ifname[]) {
+static int create_receive_socket(const IP *addr, const char ifname[])
+{
 	const int opt_off = 0;
 	const int af = addr->ss_family;
 	socklen_t addrlen;
@@ -201,12 +206,15 @@ fail:
 	return -1;
 }
 
-void lpd_setup(void) {
-	const char *ifname = gconf->dht_ifname;
+void lpd_setup(void)
+{
+	const char *ifname;
 
 	if (gconf->lpd_disable) {
 		return;
 	}
+
+	ifname = gconf->dht_ifname;
 
 	if (ifname && (gconf->af == AF_UNSPEC || gconf->af == AF_INET)) {
 		log_warning("LPD: ifname setting not supported for IPv4");
@@ -232,6 +240,7 @@ void lpd_setup(void) {
 	}
 }
 
-void lpd_free(void) {
+void lpd_free(void)
+{
 	// Nothing to do
 }

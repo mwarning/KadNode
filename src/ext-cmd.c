@@ -63,7 +63,7 @@ static void cmd_ping(FILE *fp, const char addr_str[])
 
 	// If the address contains no port - use the default port
 	if ((rc = addr_parse_full(&addr, addr_str, STR(DHT_PORT), gconf->af)) == 0) {
-		if(kad_ping(&addr) == 0) {
+		if (kad_ping(&addr) == 0) {
 			fprintf(fp, "Send ping to: %s\n", str_addr(&addr));
 			return;
 		}
