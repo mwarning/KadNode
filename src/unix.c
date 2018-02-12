@@ -74,7 +74,7 @@ void unix_fork(void)
 	umask(0);
 }
 
-void unix_write_pidfile(int pid, const char* pidfile)
+void unix_write_pidfile(int pid, const char pidfile[])
 {
 	FILE *file;
 
