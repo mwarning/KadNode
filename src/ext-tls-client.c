@@ -245,6 +245,7 @@ void tls_client_trigger_auth(void)
 
 	// Reject query if TLS client disabled
 	if (g_client_enable == 0) {
+		log_warning("No CA available to resolve query.");
 		return;
 	}
 
