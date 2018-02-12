@@ -75,11 +75,11 @@ static int tls_connect_init(mbedtls_ssl_context *ssl, mbedtls_net_context *fd, c
 	}
 
 	// Start connection
-	ret = connect(fd->fd, (const struct sockaddr *) addr, sizeof(IP));
+	ret = connect(fd->fd, (const struct sockaddr *) addr, addr_len(addr));
 	if (ret < 0 && errno != EINPROGRESS) {
+		log_error("TLS-Client: Connect failed: %s", strerror(errno));
 		mbedtls_net_free(fd);
 		mbedtls_net_init(fd);
-		log_error("TLS-Client: Connect failed: %s", strerror(errno));
 		return EXIT_FAILURE;
 	}
 
