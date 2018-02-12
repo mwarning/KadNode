@@ -56,8 +56,8 @@ void announces_debug(FILE *fp) {
 
 	fprintf(fp, "Announcements:\n" );
 	while (value) {
-		fprintf(fp, " id: %s\n", str_id( value->id));
-		fprintf(fp, "  query: %s\n", value->query);
+		fprintf(fp, " query: %s\n", value->query);
+		fprintf(fp, "  id: %s\n", str_id( value->id));
 		fprintf(fp, "  port: %d\n", value->port);
 		if (value->refresh < now) {
 			fprintf(fp, "  refresh: now\n");
