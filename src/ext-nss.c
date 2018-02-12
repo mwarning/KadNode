@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
-#include <error.h>
+#include <string.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 
