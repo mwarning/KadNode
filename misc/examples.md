@@ -59,9 +59,9 @@ Client configuration:
 
 Note: rootCA.key can be reused to sign several other certificates for other domains.
 
-## Use a public hexadecimal key
+## Use a raw public key
 
-A hexadecimal key is a simple way to find a nodes IP address without any certificates.
+A base64 encoded public key is a simple way to find a nodes IP address without any certificates.
 First, a key pair needs to be created:
 
 ```
@@ -93,6 +93,6 @@ kadnode-ctl lookup ob73a4ltgfio35mqh5hcj1b09gpcse9pjlk6m09m57dl45sqksdg
 
 Note: The first lookup will initiate the search. Only subsequent lookups can be expected to return a result.
 
-## Lookup using a hexadecimal string
+## Lookup using a key string
 
-KadNode can do simple lookups on the DHT, without any authentication/crypto. Any hexadecimal string that is not 32 Byte (64 characters) will be cut or padded to the native size of the DHT hash (20 Bytes) and used for lookups.
+KadNode can do simple lookups on the DHT, without any authentication/crypto. Any hex key in base16 or base32 that represents a DHT hash (20 Bytes) is used for simple DHT lookups.

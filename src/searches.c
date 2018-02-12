@@ -290,7 +290,7 @@ struct search_t* searches_start( const char query[] ) {
 #endif
 	if( EXIT_SUCCESS == hex_get_id( id, sizeof(id), query ) ) {
 		// Use no authentication
-		// For e.g. <base32hex>.p2p
+		// For e.g. <base64hex>.p2p
 		callback = NULL;
 	} else {
 		// No idea what to do
