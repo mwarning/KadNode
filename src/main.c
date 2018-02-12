@@ -125,6 +125,10 @@ void main_free(void)
 	conf_free();
 
 	net_free();
+
+	if (gconf->pidfile) {
+		unlink(gconf->pidfile);
+	}
 }
 
 int main_start(void)
