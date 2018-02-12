@@ -3,7 +3,7 @@ CC ?= gcc
 CFLAGS ?= -Os -Wall -Wwrite-strings -pedantic
 CFLAGS += -std=gnu99 -I/usr/local/include
 LFLAGS += -L/usr/local/lib -lc
-FEATURES ?= dns lpd tls bob cmd debug #nss natpmp upnp
+FEATURES ?= dns lpd tls bob cmd debug nss #natpmp upnp
 
 OBJS = build/searches.o build/kad.o build/log.o \
 	build/conf.o build/net.o build/utils.o \
@@ -116,10 +116,11 @@ mac-pkg:
 	cd macos && ./build.sh
 
 freebsd-pkg:
-	git archive HEAD --prefix kadnode/ -o freebsd/kadnode-2.1.0.tar.gz
-	cd freebsd
-	make makesum
-	make package
+	rm -rf freebsd/work
+	rm -f freebsd/kadnode-*
+	git archive HEAD --prefix kadnode/ -o freebsd/kadnode-`awk '/PORTVERSION/{print $$2}' freebsd/Makefile`.tar.gz
+	cd freebsd; make makesum
+	cd freebsd; make package
 
 manpage:
 	ronn --roff --manual=Kadnode\ Manual --organization=mwarning --date=2018-01-01 misc/manpage.md
