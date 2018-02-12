@@ -57,23 +57,21 @@ static int tls_connect_init(mbedtls_ssl_context *ssl, mbedtls_net_context *fd, c
 
 	mbedtls_ssl_set_bio(ssl, fd, mbedtls_net_send, mbedtls_net_recv, NULL);
 
-	if ((ret = mbedtls_ssl_set_hostname(ssl, query)) != 0)
-	{
+	if ((ret = mbedtls_ssl_set_hostname(ssl, query)) != 0) {
 		log_error("TLS-Client: mbedtls_ssl_set_hostname returned -0x%x", -ret);
-		return -1;
+		return EXIT_FAILURE;
 	}
 
 	fd->fd = socket(addr->ss_family, SOCK_STREAM, IPPROTO_TCP);
-	if (fd->fd < 0)
-	{
+	if (fd->fd < 0) {
 		log_error("TLS-Client: Socket creation failed: %s", strerror(errno));
-		return -1;
+		return EXIT_FAILURE;
 	}
 
 	ret = mbedtls_net_set_nonblock(fd);
 	if (ret < 0) {
 		log_error("TLS-Client: Failed to set socket non-blocking: %s", strerror(errno));
-		return -1;
+		return EXIT_FAILURE;
 	}
 
 	// Start connection
@@ -82,10 +80,10 @@ static int tls_connect_init(mbedtls_ssl_context *ssl, mbedtls_net_context *fd, c
 		mbedtls_net_free(fd);
 		mbedtls_net_init(fd);
 		log_error("TLS-Client: Connect failed: %s", strerror(errno));
-		return -1;
+		return EXIT_FAILURE;
 	}
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 // Find resource used by socket
@@ -260,7 +258,7 @@ void tls_client_trigger_auth(void)
 			&resource->query[0], &resource->addr,
 			&tls_client_trigger_auth)) != NULL) {
 
-		if (tls_connect_init(&resource->ssl, &resource->fd, &resource->query[0], &result->addr) < 0) {
+		if (EXIT_FAILURE == tls_connect_init(&resource->ssl, &resource->fd, &resource->query[0], &result->addr)) {
 			// Failed to initiate connection
 			result->state = AUTH_ERROR;
 		} else {
@@ -286,8 +284,8 @@ static int tls_conf_verify(void *data, mbedtls_x509_crt *crt, int depth, uint32_
 		mbedtls_x509_crt_verify_info(buf2, sizeof(buf2), "", *flags);
 	}
 
-	log_debug("TLS-Client: Verify requested for (Depth %d)\n%sflags             : %s", depth, buf1,
-		*flags ? buf2 : "None\n");
+	log_debug("TLS-Client: Verify requested for (Depth %d)\n%sflags             : %s",
+		depth, buf1, *flags ? buf2 : "None\n");
 
 	return 0;
 }
@@ -308,13 +306,13 @@ int tls_client_add_ca(const char path[])
 	if (((ret = mbedtls_x509_crt_parse_file(&g_cacert, path)) < 0) &&
 		((ret = mbedtls_x509_crt_parse_path(&g_cacert, path)) < 0)) {
 		mbedtls_strerror(ret, error_buf, sizeof(error_buf));
-		log_warning("TLS-Client: Failed to load the CA root certificates from %s (%s)", path, error_buf);
+		log_warning("TLS-Client: Failed to load CA root certificates from %s (%s)", path, error_buf);
 		// We do not abort when a path was not loaded
-		return 0;
+		return EXIT_SUCCESS;
 	}
 
 	log_info("TLS-Client: Loaded certificates from %s (%d skipped)", path, ret);
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 void tls_client_setup(void)

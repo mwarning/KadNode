@@ -634,7 +634,7 @@ void conf_load(void)
 	args = g_tls_client_args;
 	while (rc == 0 && *args) {
 		// Add Certificate Authority (CA) entries for the TLS client
-		rc = tls_client_add_ca(*args);
+		rc = (EXIT_FAILURE == tls_client_add_ca(*args));
 		args += 1;
 	}
 
