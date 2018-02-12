@@ -36,27 +36,29 @@ static struct search_t *g_searches[MAX_SEARCHES] = { NULL };
 static size_t g_searches_idx = 0;
 
 
-static const char *str_state( int state ) {
-	switch( state ) {
-		case AUTH_OK: return "OK";
-		case AUTH_AGAIN: return "AGAIN";
-		case AUTH_FAILED: return "FAILED";
-		case AUTH_ERROR: return "ERROR";
-		case AUTH_SKIP: return "SKIP";
-		case AUTH_PROGRESS: return "PROGRESS";
-		case AUTH_WAITING: return "WAITING";
-		default:
-			log_error( "Invalid state: %d", state );
-			exit( 1 );
+static const char *str_state(int state)
+{
+	switch(state) {
+	case AUTH_OK: return "OK";
+	case AUTH_AGAIN: return "AGAIN";
+	case AUTH_FAILED: return "FAILED";
+	case AUTH_ERROR: return "ERROR";
+	case AUTH_SKIP: return "SKIP";
+	case AUTH_PROGRESS: return "PROGRESS";
+	case AUTH_WAITING: return "WAITING";
+	default:
+		log_error("Invalid state: %d", state);
+		exit(1);
 	}
 }
 
-struct search_t *searches_find_by_id( const uint8_t id[] ) {
+struct search_t *searches_find_by_id(const uint8_t id[])
+{
 	struct search_t **searches;
 
 	searches = &g_searches[0];
-	while( *searches ) {
-		if( memcmp( (*searches)->id, id, SHA1_BIN_LENGTH ) == 0 ) {
+	while (*searches) {
+		if (memcmp((*searches)->id, id, SHA1_BIN_LENGTH) == 0) {
 			return *searches;
 		}
 		searches++;
@@ -66,14 +68,15 @@ struct search_t *searches_find_by_id( const uint8_t id[] ) {
 }
 
 
-static struct search_t *searches_find_by_query( const char query[] ) {
+static struct search_t *searches_find_by_query(const char query[])
+{
 	struct search_t **search;
 	struct search_t *searches;
 
 	search = &g_searches[0];
-	while( *search ) {
+	while (*search) {
 		searches = *search;
-		if( 0 == strcmp( query, &searches->query[0] ) ) {
+		if (0 == strcmp(query, &searches->query[0])) {
 			return searches;
 		}
 		search += 1;
@@ -83,28 +86,29 @@ static struct search_t *searches_find_by_query( const char query[] ) {
 }
 
 // Free a search_t struct
-void search_free( struct search_t *search ) {
+void search_free(struct search_t *search)
+{
 	struct result_t *cur;
 	struct result_t *next;
 
 	cur = search->results;
-	while( cur ) {
+	while (cur) {
 		next = cur->next;
-		free( cur );
+		free(cur);
 		cur = next;
 	}
 
-	free( search );
+	free(search);
 }
 
 // Get next address to authenticate
-static struct result_t *find_next_result( struct search_t *search ) {
+static struct result_t *find_next_result(struct search_t *search)
+{
 	struct result_t *result;
 
 	result = search->results;
-	while( result ) {
-		const int state = result->state;
-		if( state == AUTH_WAITING || state == AUTH_AGAIN ) {
+	while (result) {
+		if (result->state == AUTH_WAITING || result->state == AUTH_AGAIN) {
 			return result;
 		}
 		result = result->next;
@@ -114,57 +118,60 @@ static struct result_t *find_next_result( struct search_t *search ) {
 }
 
 // Get next search to authenticate
-static struct search_t *find_next_search( auth_callback *callback ) {
+static struct search_t *find_next_search(auth_callback *callback)
+{
 	struct search_t **searches;
 
 	searches = &g_searches[0];
-	while( *searches ) {
-		if( !(*searches)->done && (*searches)->callback == callback ) {
+	while (*searches) {
+		if (!(*searches)->done && (*searches)->callback == callback) {
 			return *searches;
 		}
-		searches++;
+		searches += 1;
 	}
 	return NULL;
 }
 
 // Find query/IP-address to authenticate; callback is used as a marker.
-struct result_t *searches_get_auth_target( char query[], IP *addr, auth_callback *callback ) {
+struct result_t *searches_get_auth_target(char query[], IP *addr, auth_callback *callback)
+{
 	struct search_t *search;
 	struct result_t *result;
 
 	// Get next search to authenticate
-	search = find_next_search( callback );
-	if( search == NULL ) {
+	search = find_next_search(callback);
+	if (search == NULL) {
 		return NULL;
 	}
 
 	// Get next result to authenticate
-	result = find_next_result( search );
-	if( result == NULL ) {
+	result = find_next_result(search);
+	if (result == NULL) {
 		return NULL;
 	}
 
 	// Set query and address to authenticate
-	memcpy( query, &search->query, sizeof(search->query) );
-	memcpy( addr, &result->addr, sizeof(IP) );
+	memcpy(query, &search->query, sizeof(search->query));
+	memcpy(addr, &result->addr, sizeof(IP));
 
 	return result;
 }
 
 // Set the authentication state of a result
-void searches_set_auth_state( const char query[], const IP *addr, const int state ) {
+void searches_set_auth_state(const char query[], const IP *addr, const int state)
+{
 	struct search_t *search;
 	struct result_t *result;
 
-	log_debug( "Searches: Set authentication state for %s (%s): %s", str_addr(addr), query, str_state( state ) );
+	log_debug("Searches: Set authentication state for %s (%s): %s", str_addr(addr), query, str_state(state));
 
-	search = searches_find_by_query( query );
+	search = searches_find_by_query(query);
 
-	if( search ) {
+	if (search) {
 		// Search and set authentication state of result
 		result = search->results;
-		while( result ) {
-			if( addr_equal( &result->addr, addr ) ) {
+		while (result) {
+			if (addr_equal(&result->addr, addr)) {
 				result->state = state;
 				break;
 			}
@@ -172,11 +179,11 @@ void searches_set_auth_state( const char query[], const IP *addr, const int stat
 		}
 
 		// Skip all other results if we found one that is ok
-		if( state == AUTH_OK ) {
+		if (state == AUTH_OK) {
 			search->done = 1;
 			result = search->results;
-			while( result ) {
-				if( result->state == AUTH_WAITING ) {
+			while (result) {
+				if (result->state == AUTH_WAITING) {
 					result->state = AUTH_SKIP;
 				}
 				result = result->next;
@@ -185,7 +192,8 @@ void searches_set_auth_state( const char query[], const IP *addr, const int stat
 	}
 }
 
-void searches_debug(FILE *fp) {
+void searches_debug(FILE *fp)
+{
 	struct search_t **searches;
 	struct search_t *search;
 	struct result_t *result;
@@ -199,13 +207,14 @@ void searches_debug(FILE *fp) {
 	while (*searches) {
 		search = *searches;
 		fprintf(fp, " query: '%s'\n", &search->query[0]);
-		fprintf(fp, "  id: %s\n", str_id( search->id));
+		fprintf(fp, "  id: %s\n", str_id(search->id));
 		fprintf(fp, "  done: %s\n", search->done ? "true" : "false");
+		fprintf(fp, "  callback: %s\n", search->callback ? "yes" : "no");
 		result_counter = 0;
 		result = search->results;
 		while (result) {
-			fprintf(fp, "   addr: %s\n", str_addr( &result->addr));
-			fprintf(fp, "   state: %s\n", str_state( result->state));
+			fprintf(fp, "   addr: %s\n", str_addr(&result->addr));
+			fprintf(fp, "   state: %s\n", str_state(result->state));
 			result_counter += 1;
 			result = result->next;
 		}
@@ -217,12 +226,13 @@ void searches_debug(FILE *fp) {
 	fprintf(fp, " Found %d searches.\n", search_counter);
 }
 
-static void search_restart( struct search_t *search ) {
+static void search_restart(struct search_t *search)
+{
 	struct result_t *result;
 	struct result_t *prev;
 	struct result_t *next;
 
-	log_debug( "Searches: Restart search for query: %s", search->query );
+	log_debug("Searches: Restart search for query: %s", search->query);
 
 	search->start_time = time_now_sec();
 	search->done = 0;
@@ -231,23 +241,22 @@ static void search_restart( struct search_t *search ) {
 	next = NULL;
 	prev = NULL;
 	result = search->results;
-	while( result ) {
-		const int state = result->state;
-		if( state == AUTH_ERROR || state == AUTH_AGAIN ) {
+	while (result) {
+		if (result->state == AUTH_ERROR || result->state == AUTH_AGAIN) {
 			// Remove result
 			next = result->next;
-			if( prev ) {
+			if (prev) {
 				prev->next = next;
 			} else {
 				search->results = next;
 			}
-			free( result );
+			free(result);
 			result = next;
 			continue;
-		} else if( state == AUTH_OK ) {
+		} else if (state == AUTH_OK) {
 			// Check again on another search
 			result->state = AUTH_AGAIN;
-		} else if( state == AUTH_SKIP ) {
+		} else if (state == AUTH_SKIP) {
 			// Continue check
 			result->state = AUTH_WAITING;
 		}
@@ -258,59 +267,60 @@ static void search_restart( struct search_t *search ) {
 }
 
 // Start a new search for a sanitized query
-struct search_t* searches_start( const char query[] ) {
+struct search_t* searches_start(const char query[])
+{
 	uint8_t id[SHA1_BIN_LENGTH];
 	auth_callback *callback;
 	struct search_t* search;
 	struct search_t* new;
 
 	// Find existing search
-	if( (search = searches_find_by_query( query )) != NULL ) {
+	if ((search = searches_find_by_query(query)) != NULL) {
 		// Restart search after half of search lifetime
-		if( (time_now_sec() - search->start_time) > (MAX_SEARCH_LIFETIME / 2) ) {
-			search_restart( search );
+		if ((time_now_sec() - search->start_time) > (MAX_SEARCH_LIFETIME / 2)) {
+			search_restart(search);
 		}
 
 		return search;
 	}
 
 #ifdef TLS
-	if( EXIT_SUCCESS == tls_client_get_id( id, sizeof(id), query ) ) {
+	if (EXIT_SUCCESS == tls_client_get_id(id, sizeof(id), query)) {
 		// Use TLS authentication
 		// For e.g. example.com.p2p
 		callback = &tls_client_trigger_auth;
 	} else
 #endif
 #ifdef BOB
-	if( EXIT_SUCCESS == bob_get_id( id, sizeof(id), query ) ) {
+	if (EXIT_SUCCESS == bob_get_id(id, sizeof(id), query)) {
 		// Use Bob authentication
 		// For e.g. ecdsa_<hex>.p2p
 		callback = &bob_trigger_auth;
 	} else
 #endif
-	if( EXIT_SUCCESS == hex_get_id( id, sizeof(id), query ) ) {
+	if (EXIT_SUCCESS == hex_get_id(id, sizeof(id), query)) {
 		// Use no authentication
 		// For e.g. <base64hex>.p2p
 		callback = NULL;
 	} else {
 		// No idea what to do
-		log_debug( "Searches: No idea how what method to use for %s", query );
+		log_debug("Searches: No idea how what method to use for %s", query);
 		return NULL;
 	}
 
-	new = calloc( 1, sizeof(struct search_t) );
-	memcpy( new->id, id, sizeof(id) );
+	new = calloc(1, sizeof(struct search_t));
+	memcpy(new->id, id, sizeof(id));
 	new->done = 0;
 	new->callback = callback;
-	memcpy( &new->query, query, sizeof(new->query) );
+	memcpy(&new->query, query, sizeof(new->query));
 	new->start_time = time_now_sec();
 
-	log_debug( "Searches: Create new search for query: %s", query );
+	log_debug("Searches: Create new search for query: %s", query);
 
 	// Free slot if taken
-	if( g_searches[g_searches_idx] != NULL ) {
+	if (g_searches[g_searches_idx] != NULL) {
 		// Remove and abort entire search
-		search_free( g_searches[g_searches_idx] );
+		search_free(g_searches[g_searches_idx]);
 	}
 
 	g_searches[g_searches_idx] = new;
@@ -320,7 +330,8 @@ struct search_t* searches_start( const char query[] ) {
 }
 
 // Add an address to an array if it is not already contained in there
-int searches_add_addr( struct search_t *search, const IP *addr ) {
+int searches_add_addr(struct search_t *search, const IP *addr)
+{
 	struct result_t *cur;
 	struct result_t *new;
 	int count;
@@ -328,13 +339,13 @@ int searches_add_addr( struct search_t *search, const IP *addr ) {
 	// Check if result already exists
 	count = 0;
 	cur = search->results;
-	while( cur ) {
-		if( addr_equal( &cur->addr, addr ) ) {
+	while (cur) {
+		if (addr_equal(&cur->addr, addr)) {
 			// Address already listed
 			return 0;
 		}
 
-		if( count > MAX_RESULTS_PER_SEARCH ) {
+		if (count > MAX_RESULTS_PER_SEARCH) {
 			return -1;
 		}
 
@@ -342,37 +353,38 @@ int searches_add_addr( struct search_t *search, const IP *addr ) {
 		cur = cur->next;
 	}
 
-	new = calloc( 1, sizeof(struct result_t) );
-	memcpy( &new->addr, addr, sizeof(IP) );
+	new = calloc(1, sizeof(struct result_t));
+	memcpy(&new->addr, addr, sizeof(IP));
 	new->state = search->callback ? AUTH_WAITING : AUTH_OK;
 
 	// Append new entry to list
-	if( cur ) {
+	if (cur) {
 		cur->next = new;
 	} else {
 		search->results = new;
 	}
 
-	if( search->callback ) {
+	if (search->callback) {
 		search->callback();
 	}
 
 	return 0;
 }
 
-int searches_collect_addrs( const struct search_t *search, IP addr_array[], size_t addr_num ) {
+int searches_collect_addrs(const struct search_t *search, IP addr_array[], size_t addr_num)
+{
 	const struct result_t *cur;
 	size_t i;
 
-	if( search == NULL ) {
+	if (search == NULL) {
 		return 0;
 	}
 
 	i = 0;
 	cur = search->results;
-	while( cur && i < addr_num ) {
-		if( cur->state == AUTH_OK || cur->state == AUTH_AGAIN ) {
-			memcpy( &addr_array[i], &cur->addr, sizeof(IP) );
+	while (cur && i < addr_num) {
+		if (cur->state == AUTH_OK || cur->state == AUTH_AGAIN) {
+			memcpy(&addr_array[i], &cur->addr, sizeof(IP));
 			i += 1;
 		}
 		cur = cur->next;
@@ -382,16 +394,18 @@ int searches_collect_addrs( const struct search_t *search, IP addr_array[], size
 }
 
 
-void searches_setup( void ) {
+void searches_setup(void)
+{
 	// Nothing to do
 }
 
-void searches_free( void ) {
+void searches_free(void)
+{
 	struct search_t **search;
 
 	search = &g_searches[0];
-	while( *search ) {
-		search_free( *search );
+	while (*search) {
+		search_free(*search);
 		*search = NULL;
 		search += 1;
 	}
