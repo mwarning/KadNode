@@ -176,8 +176,6 @@ static void cmd_exec(FILE *fp, const char request[], int allow_debug)
 	} else if (match(request, "list %*s %n") && allow_debug) {
 		if (sscanf(request, "blacklist %255[^: ]", hostname) == 1) {
 			cmd_blacklist(fp, hostname);
-		} else if (gconf->is_daemon == 1) {
-			fprintf(fp ,"The 'list' command is not available while KadNode runs as daemon.\n" );
 		} else if (match(request, "list blacklist %n")) {
 			kad_debug_blacklist(fp);
 		} else if (match(request, "list constants %n")) {
@@ -233,7 +231,11 @@ static void cmd_client_handler(int rc, int clientsock)
 		request[size] = '\0';
 		// Execute command line
 		FILE* fp = fdopen(clientsock, "w");
+#ifdef DEBUG
+		cmd_exec(fp, request, 1);
+#else
 		cmd_exec(fp, request, 0);
+#endif
 		fclose(fp);
 	} else {
 		close(clientsock);
