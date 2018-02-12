@@ -34,7 +34,7 @@
 // SSL structures for parallel connection handling.
 struct tls_resource {
 	mbedtls_ssl_context ssl;
-	mbedtls_net_context fd;
+	mbedtls_net_context fdc;
 	char query[QUERY_MAX_SIZE];
 	IP addr;
 };
@@ -51,35 +51,35 @@ static struct tls_resource g_tls_resources[2];
 
 
 // Start TLS connection
-static int tls_connect_init(mbedtls_ssl_context *ssl, mbedtls_net_context *fd, const char query[], const IP *addr)
+static int tls_connect_init(mbedtls_ssl_context *ssl, mbedtls_net_context *fdc, const char query[], const IP *addr)
 {
 	int ret;
 
-	mbedtls_ssl_set_bio(ssl, fd, mbedtls_net_send, mbedtls_net_recv, NULL);
+	mbedtls_ssl_set_bio(ssl, fdc, mbedtls_net_send, mbedtls_net_recv, NULL);
 
 	if ((ret = mbedtls_ssl_set_hostname(ssl, query)) != 0) {
 		log_error("TLS-Client: mbedtls_ssl_set_hostname returned -0x%x", -ret);
 		return EXIT_FAILURE;
 	}
 
-	fd->fd = socket(addr->ss_family, SOCK_STREAM, IPPROTO_TCP);
-	if (fd->fd < 0) {
+	fdc->fd = socket(addr->ss_family, SOCK_STREAM, IPPROTO_TCP);
+	if (fdc->fd < 0) {
 		log_error("TLS-Client: Socket creation failed: %s", strerror(errno));
 		return EXIT_FAILURE;
 	}
 
-	ret = mbedtls_net_set_nonblock(fd);
+	ret = mbedtls_net_set_nonblock(fdc);
 	if (ret < 0) {
 		log_error("TLS-Client: Failed to set socket non-blocking: %s", strerror(errno));
 		return EXIT_FAILURE;
 	}
 
 	// Start connection
-	ret = connect(fd->fd, (const struct sockaddr *) addr, addr_len(addr));
+	ret = connect(fdc->fd, (const struct sockaddr *) addr, addr_len(addr));
 	if (ret < 0 && errno != EINPROGRESS) {
 		log_error("TLS-Client: Connect failed: %s", strerror(errno));
-		mbedtls_net_free(fd);
-		mbedtls_net_init(fd);
+		mbedtls_net_free(fdc);
+		mbedtls_net_init(fdc);
 		return EXIT_FAILURE;
 	}
 
@@ -92,7 +92,7 @@ static struct tls_resource *tls_find_resource(int fd)
 	int i;
 
 	for (i = 0; i < ARRAY_SIZE(g_tls_resources); ++i) {
-		if (g_tls_resources[i].fd.fd == fd) {
+		if (g_tls_resources[i].fdc.fd == fd) {
 			return &g_tls_resources[i];
 		}
 	}
@@ -112,13 +112,13 @@ static void auth_end(struct tls_resource* resource, int state)
 	do ret = mbedtls_ssl_close_notify(&resource->ssl);
 	while (ret == MBEDTLS_ERR_SSL_WANT_WRITE);
 
-	net_remove_handler(resource->fd.fd, &tls_handle);
+	net_remove_handler(resource->fdc.fd, &tls_handle);
 
-	mbedtls_net_free(&resource->fd);
+	mbedtls_net_free(&resource->fdc);
 	mbedtls_ssl_session_reset(&resource->ssl);
 
 	// Mark resource as free
-	mbedtls_net_init(&resource->fd);
+	mbedtls_net_init(&resource->fdc);
 
 	// Set state of result
 	searches_set_auth_state(&resource->query[0], &resource->addr, state);
@@ -229,7 +229,7 @@ static struct tls_resource *tls_next_resource(void)
 	int i;
 
 	for (i = 0; i < ARRAY_SIZE(g_tls_resources); ++i) {
-		if (g_tls_resources[i].fd.fd < 0) {
+		if (g_tls_resources[i].fdc.fd < 0) {
 			return &g_tls_resources[i];
 		}
 	}
@@ -258,13 +258,13 @@ void tls_client_trigger_auth(void)
 			&resource->query[0], &resource->addr,
 			&tls_client_trigger_auth)) != NULL) {
 
-		if (EXIT_FAILURE == tls_connect_init(&resource->ssl, &resource->fd, &resource->query[0], &result->addr)) {
+		if (EXIT_FAILURE == tls_connect_init(&resource->ssl, &resource->fdc, &resource->query[0], &result->addr)) {
 			// Failed to initiate connection
 			result->state = AUTH_ERROR;
 		} else {
 			// Start authentication process
 			result->state = AUTH_PROGRESS;
-			net_add_handler(resource->fd.fd, &tls_handle);
+			net_add_handler(resource->fdc.fd, &tls_handle);
 		}
 	}
 }
@@ -346,7 +346,7 @@ void tls_client_setup(void)
 
 	for (i = 0; i < ARRAY_SIZE(g_tls_resources); ++i) {
 		mbedtls_ssl_init(&g_tls_resources[i].ssl);
-		mbedtls_net_init(&g_tls_resources[i].fd);
+		mbedtls_net_init(&g_tls_resources[i].fdc);
 	}
 
 	mbedtls_ssl_config_init(&g_conf);
@@ -383,7 +383,7 @@ void tls_client_free(void)
 
 	for (i = 0; i < ARRAY_SIZE(g_tls_resources); ++i) {
 		mbedtls_ssl_free(&g_tls_resources[i].ssl);
-		mbedtls_net_free(&g_tls_resources[i].fd);
+		mbedtls_net_free(&g_tls_resources[i].fdc);
 	}
 
 	mbedtls_x509_crt_free(&g_cacert);
