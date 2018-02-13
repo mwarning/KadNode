@@ -26,10 +26,10 @@ struct forwarding_t {
 	time_t refreshed; // Last time the entry was refreshed
 };
 
-void fwd_setup( void );
-void fwd_free( void );
+void fwd_setup(void);
+void fwd_free(void);
 
-struct forwarding_t *fwd_get( void );
+struct forwarding_t *fwd_get(void);
 
 // List all entries
 void fwd_debug( int fd );

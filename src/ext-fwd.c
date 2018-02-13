@@ -36,17 +36,19 @@ static struct forwarding_t *g_fwds = NULL;
 static struct forwarding_t *g_fwd_cur = NULL;
 
 
-struct forwarding_t *fwd_get( void ) {
+struct forwarding_t *fwd_get(void)
+{
 	return g_fwds;
 }
 
-int fwd_count( void ) {
+int fwd_count(void)
+{
 	struct forwarding_t *cur;
 	size_t count;
 
 	count = 0;
 	cur = g_fwds;
-	while( cur ) {
+	while(cur) {
 		count++;
 		cur = cur->next;
 	}
@@ -54,7 +56,8 @@ int fwd_count( void ) {
 	return count;
 }
 
-void fwd_debug( int fd ) {
+void fwd_debug(int fd)
+{
 	struct forwarding_t *cur;
 	char refreshed[64];
 	char lifetime[64];
@@ -64,48 +67,49 @@ void fwd_debug( int fd ) {
 	now = time_now_sec();
 	counter = 0;
 	cur = g_fwds;
-	while( cur ) {
-		if( cur->refreshed == 0 ) {
-			sprintf( refreshed, "never" );
+	while (cur) {
+		if (cur->refreshed == 0) {
+			sprintf(refreshed, "never");
 		} else {
-			sprintf( refreshed, "%ld [min]", (now - cur->refreshed) / 60 );
+			sprintf(refreshed, "%ld [min]", (now - cur->refreshed) / 60);
 		}
 
-		if( cur->lifetime == LONG_MAX ) {
-			sprintf( lifetime, "infinite" );
+		if (cur->lifetime == LONG_MAX) {
+			sprintf(lifetime, "infinite");
 		} else {
-			sprintf( lifetime, "%ld [min]", (cur->lifetime -  now) / 60 );
+			sprintf(lifetime, "%ld [min]", (cur->lifetime -  now) / 60);
 		}
 
-		dprintf( fd, " port: %hu\n", cur->port );
-		dprintf( fd, "  refreshed ago: %s\n", refreshed );
-		dprintf( fd, "  lifetime remaining: %s\n", lifetime );
+		dprintf(fd, " port: %hu\n", cur->port);
+		dprintf(fd, "  refreshed ago: %s\n", refreshed);
+		dprintf(fd, "  lifetime remaining: %s\n", lifetime);
 
 		counter++;
 		cur = cur->next;
 	}
 
-	dprintf( fd, " Found %zu forwardings.\n", counter );
+	dprintf(fd, " Found %zu forwardings.\n", counter);
 }
 
-void fwd_add( int port, time_t lifetime ) {
+void fwd_add(int port, time_t lifetime)
+{
 	struct forwarding_t *cur;
 	struct forwarding_t *new;
 
-	if( port <= 1 || port > 65535 ) {
+	if (port <= 1 || port > 65535) {
 		return;
 	}
 
 	cur = g_fwds;
-	while( cur ) {
-		if( cur->port == port ) {
+	while (cur) {
+		if (cur->port == port) {
 			cur->lifetime = lifetime;
 			return;
 		}
 		cur = cur->next;
 	}
 
-	new = (struct forwarding_t*) calloc( 1, sizeof(struct forwarding_t) );
+	new = (struct forwarding_t*) calloc(1, sizeof(struct forwarding_t));
 	new->port = port;
 	new->lifetime = lifetime;
 	new->refreshed = 0;
@@ -116,24 +120,25 @@ void fwd_add( int port, time_t lifetime ) {
 }
 
 // Remove a port from the list - internal use only
-void fwd_remove( struct forwarding_t *item ) {
+void fwd_remove(struct forwarding_t *item)
+{
 	struct forwarding_t *pre;
 	struct forwarding_t *cur;
 
-	if( g_fwd_cur == item ) {
+	if (g_fwd_cur == item) {
 		g_fwd_cur = NULL;
 	}
 
 	pre = NULL;
 	cur = g_fwds;
-	while( cur ) {
-		if( cur == item ) {
-			if( pre ) {
+	while (cur) {
+		if (cur == item) {
+			if (pre) {
 				pre->next = cur->next;
 			} else {
 				g_fwds = cur->next;
 			}
-			free( cur );
+			free(cur);
 			return;
 		}
 		pre = cur;
@@ -146,7 +151,8 @@ void fwd_remove( struct forwarding_t *item ) {
 * We do not actually check if we are in a private network.
 * This function is called in intervals.
 */
-void fwd_handle( int _rc, int _sock ) {
+void fwd_handle(int _rc, int _sock)
+{
 	struct forwarding_t *item;
 	int rc;
 	time_t lifespan;
@@ -156,8 +162,8 @@ void fwd_handle( int _rc, int _sock ) {
 	item = g_fwd_cur;
 
 	// Handle current forwarding entry or wait 60 seconds to select a new one to process
-	if( item == NULL ) {
-		if( g_fwd_retry > now ) {
+	if (item == NULL) {
+		if (g_fwd_retry > now) {
 			return;
 		} else {
 			item = g_fwds;
@@ -165,112 +171,114 @@ void fwd_handle( int _rc, int _sock ) {
 		}
 	}
 
-	while( item ) {
-		if( (item->refreshed + (30 * 60)) < now ) {
+	while (item) {
+		if ((item->refreshed + (30 * 60)) < now) {
 			break;
 		}
 		item = item->next;
 	}
 
-	if( item == NULL ) {
+	if (item == NULL) {
 		g_fwd_cur = NULL;
 		return;
 	} else {
 		g_fwd_cur = item;
 	}
 
-	if( item->lifetime < now ) {
+	if (item->lifetime < now) {
 		lifespan = 0;
 	} else {
 		lifespan = (32 * 60);
 	}
 
 #ifdef FWD_NATPMP
-	if( natpmp ) {
-		rc = natpmp_handler( natpmp, item->port, lifespan, now );
+	if (natpmp) {
+		rc = natpmp_handler(natpmp, item->port, lifespan, now);
 
-		if( rc == PF_DONE ) {
-			if( lifespan == 0 ) {
-				log_debug( "FWD: Remove NAT-PMP forwarding for port %hu.", item->port );
-				fwd_remove( item );
+		if (rc == PF_DONE) {
+			if (lifespan == 0) {
+				log_debug("FWD: Remove NAT-PMP forwarding for port %hu.", item->port);
+				fwd_remove(item);
 			} else {
-				log_debug( "FWD: Add NAT-PMP forwarding for port %hu.", item->port );
+				log_debug("FWD: Add NAT-PMP forwarding for port %hu.", item->port);
 				item->refreshed = now;
 			}
 			return;
-		} else if( rc == PF_ERROR ) {
+		} else if (rc == PF_ERROR) {
 			log_info("FWD: Disable NAT-PMP - not available.");
-			natpmp_uninit( &natpmp );
-		} else if( rc == PF_RETRY ) {
+			natpmp_uninit(&natpmp);
+		} else if (rc == PF_RETRY) {
 			// return;
 		} else {
-			log_err( "FWD: Unhandled NAT-PMP reply." );
+			log_err("FWD: Unhandled NAT-PMP reply.");
 		}
 	}
 #endif
 
 #ifdef FWD_UPNP
-	if( upnp ) {
-		rc = upnp_handler( upnp, item->port, lifespan, now );
+	if (upnp) {
+		rc = upnp_handler(upnp, item->port, lifespan, now);
 
-		if( rc == PF_DONE ) {
-			if( lifespan == 0 ) {
-				log_debug( "FWD: Remove UPnP forwarding for port %hu.", item->port );
-				fwd_remove( item );
+		if (rc == PF_DONE) {
+			if (lifespan == 0) {
+				log_debug("FWD: Remove UPnP forwarding for port %hu.", item->port);
+				fwd_remove(item);
 			} else {
-				log_debug( "FWD: Add UPnP forwarding for port %hu.", item->port );
+				log_debug("FWD: Add UPnP forwarding for port %hu.", item->port);
 				item->refreshed = now;
 			}
 			return;
-		} else if( rc == PF_ERROR ) {
+		} else if (rc == PF_ERROR) {
 			log_info("FWD: Disable UPnP - not available.");
-			upnp_uninit( &upnp );
-		} else if( rc == PF_RETRY ) {
+			upnp_uninit(&upnp);
+		} else if (rc == PF_RETRY) {
 			//return;
 		} else {
-			log_err( "FWD: Unhandled UPnP reply." );
+			log_err("FWD: Unhandled UPnP reply.");
 		}
 	}
 #endif
 }
 
-void fwd_setup( void ) {
-	if( gconf->fwd_disable == 1 ) {
+void fwd_setup(void)
+{
+	if (gconf->fwd_disable == 1) {
 		return;
 	}
 
 #ifdef FWD_NATPMP
-	log_info( "FWD: enable NAT-PMP" );
-	natpmp_init( &natpmp );
+	log_info("FWD: enable NAT-PMP");
+	natpmp_init(&natpmp);
 #endif
 #ifdef FWD_UPNP
-	log_info( "FWD: enable UPnP" );
-	upnp_init( &upnp );
+	log_info("FWD: enable UPnP");
+	upnp_init(&upnp);
 #endif
 
 	// Add a port forwarding for the DHT for the entire run time
-	fwd_add( gconf->dht_port, LONG_MAX );
+	fwd_add(gconf->dht_port, LONG_MAX);
 
 	// Cause the callback to be called in intervals
-	net_add_handler( -1, &fwd_handle );
+	net_add_handler(-1, &fwd_handle);
 }
 
-void fwd_free( void ) {
+void fwd_free(void)
+{
 	struct forwarding_t *cur;
 	struct forwarding_t *next;
 
 	cur = g_fwds;
-	while( cur ) {
+	while(cur) {
 		next = cur->next;
-		free( cur );
+		free(cur);
 		cur = next;
 	}
 	g_fwds = NULL;
 
 #ifdef FWD_NATPMP
-	natpmp_uninit( &natpmp );
+	natpmp_uninit(&natpmp);
 #endif
 #ifdef FWD_UPNP
-	upnp_uninit( &upnp );
+	upnp_uninit(&upnp);
 #endif
 }

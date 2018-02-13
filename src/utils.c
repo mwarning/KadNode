@@ -47,7 +47,8 @@ static size_t base16hex_len(size_t len)
 	return 2 * len;
 }
 
-int bytes_from_base16hex( uint8_t dst[], size_t dstsize, const char src[], size_t srcsize ) {
+int bytes_from_base16hex(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize)
+{
 	size_t i;
 	size_t xv = 0;
 
@@ -340,7 +341,7 @@ int port_parse(const char pstr[], int err)
 	int port;
 	char c;
 
-	if (sscanf(pstr, "%d%c", &port, &c ) == 1 && port >= 0 && port <= 65535) {
+	if (sscanf(pstr, "%d%c", &port, &c) == 1 && port >= 0 && port <= 65535) {
 		return port;
 	} else {
 		return err;
@@ -393,14 +394,14 @@ const char *str_id(const uint8_t id[])
 
 const char *str_af( int af ) {
 	switch( af ) {
-		case AF_INET:
-			return "IPv4";
-		case AF_INET6:
-			return "IPv6";
-		case AF_UNSPEC:
-			return "IPv4+IPv6";
-		default:
-			return "<invalid>";
+	case AF_INET:
+		return "IPv4";
+	case AF_INET6:
+		return "IPv6";
+	case AF_UNSPEC:
+		return "IPv4+IPv6";
+	default:
+		return "<invalid>";
 	}
 }
 
@@ -412,18 +413,18 @@ const char *str_addr(const IP *addr)
 	int port;
 
 	switch (addr->ss_family) {
-		case AF_INET6:
-			port = ((IP6 *)addr)->sin6_port;
-			inet_ntop(AF_INET6, &((IP6 *)addr)->sin6_addr, buf, sizeof(buf));
-			fmt = "[%s]:%d";
-			break;
-		case AF_INET:
-			port = ((IP4 *)addr)->sin_port;
-			inet_ntop(AF_INET, &((IP4 *)addr)->sin_addr, buf, sizeof(buf));
-			fmt = "%s:%d";
-			break;
-		default:
-			return "<invalid address>";
+	case AF_INET6:
+		port = ((IP6 *)addr)->sin6_port;
+		inet_ntop(AF_INET6, &((IP6 *)addr)->sin6_addr, buf, sizeof(buf));
+		fmt = "[%s]:%d";
+		break;
+	case AF_INET:
+		port = ((IP4 *)addr)->sin_port;
+		inet_ntop(AF_INET, &((IP4 *)addr)->sin_addr, buf, sizeof(buf));
+		fmt = "%s:%d";
+		break;
+	default:
+		return "<invalid address>";
 	}
 
 	sprintf(addrbuf, fmt, buf, ntohs(port));
@@ -496,7 +497,7 @@ int addr_parse(IP *addr, const char addr_str[], const char port_str[], int af)
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_family = af;
 
-	if (getaddrinfo( addr_str, port_str, &hints, &info ) != 0) {
+	if (getaddrinfo(addr_str, port_str, &hints, &info) != 0) {
 		return -2;
 	}
 
@@ -533,8 +534,8 @@ int addr_parse(IP *addr, const char addr_str[], const char port_str[], int af)
 int addr_parse_full(IP *addr, const char full_addr_str[], const char default_port[], int af)
 {
 	char addr_buf[256];
-
-	char *addr_beg, *addr_tmp;
+	char *addr_beg;
+	char *addr_tmp;
 	char *last_colon;
 	const char *addr_str = NULL;
 	const char *port_str = NULL;

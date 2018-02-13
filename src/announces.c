@@ -28,16 +28,18 @@ static time_t g_announces_announce = 0;
 static struct value_t *g_values = NULL;
 
 
-struct value_t* announces_get( void ) {
+struct value_t* announces_get(void)
+{
 	return g_values;
 }
 
-struct value_t* announces_find( const uint8_t id[] ) {
+struct value_t* announces_find(const uint8_t id[])
+{
 	struct value_t *value;
 
 	value = g_values;
-	while( value ) {
-		if( id_equal( id, value->id ) ) {
+	while (value) {
+		if (id_equal(id, value->id)) {
 			return value;
 		}
 		value = value->next;
@@ -45,7 +47,8 @@ struct value_t* announces_find( const uint8_t id[] ) {
 	return NULL;
 }
 
-void announces_debug(FILE *fp) {
+void announces_debug(FILE *fp)
+{
 	struct value_t *value;
 	time_t now;
 	int value_counter;
@@ -54,10 +57,10 @@ void announces_debug(FILE *fp) {
 	value_counter = 0;
 	value = g_values;
 
-	fprintf(fp, "Announcements:\n" );
+	fprintf(fp, "Announcements:\n");
 	while (value) {
 		fprintf(fp, " query: %s\n", value->query);
-		fprintf(fp, "  id: %s\n", str_id( value->id));
+		fprintf(fp, "  id: %s\n", str_id(value->id));
 		fprintf(fp, "  port: %d\n", value->port);
 		if (value->refresh < now) {
 			fprintf(fp, "  refresh: now\n");
@@ -66,7 +69,7 @@ void announces_debug(FILE *fp) {
 		}
 
 		if (value->lifetime == LONG_MAX) {
-			fprintf(fp, "  lifetime: entire runtime\n" );
+			fprintf(fp, "  lifetime: entire runtime\n");
 		} else {
 			fprintf(fp, "  lifetime: %ld min left\n", (value->lifetime -  now) / 60);
 		}
@@ -79,7 +82,8 @@ void announces_debug(FILE *fp) {
 }
 
 // Announce a sanitzed query
-struct value_t *announces_add( const char query[], int port, time_t lifetime ) {
+struct value_t *announces_add(const char query[], int port, time_t lifetime)
+{
 	uint8_t id[SHA1_BIN_LENGTH];
 	struct value_t *cur;
 	struct value_t *new;
@@ -88,36 +92,36 @@ struct value_t *announces_add( const char query[], int port, time_t lifetime ) {
 
 	// Get id from query
 #ifdef BOB
-	if( ret == EXIT_FAILURE ) {
-		ret = bob_get_id( id, sizeof(id), query );
+	if (ret == EXIT_FAILURE) {
+		ret = bob_get_id(id, sizeof(id), query);
 	}
 #endif
 
 #ifdef TLS
-	if( ret == EXIT_FAILURE ) {
-		ret = tls_client_get_id( id, sizeof(id), query );
+	if (ret == EXIT_FAILURE) {
+		ret = tls_client_get_id(id, sizeof(id), query);
 	}
 #endif
 
-	if( ret == EXIT_FAILURE ) {
-		ret = hex_get_id( id, sizeof(id), query );
+	if (ret == EXIT_FAILURE) {
+		ret = hex_get_id(id, sizeof(id), query);
 	}
 
-	if( ret == EXIT_FAILURE ) {
-		log_error( "Unrecognized announcement: %s", query );
+	if (ret == EXIT_FAILURE) {
+		log_error("Unrecognized announcement: %s", query);
 		return NULL;
 	}
 
-	if( port < 1 || port > 65535 || lifetime < now ) {
-		log_error( "Invalid announcement: %s (port %d)", query, port );
+	if (port < 1 || port > 65535 || lifetime < now) {
+		log_error("Invalid announcement: %s (port %d)", query, port);
 		return NULL;
 	}
 
 	// Value already exists - refresh
-	if( (cur = announces_find( id )) != NULL ) {
+	if ((cur = announces_find(id)) != NULL) {
 		cur->refresh = now - 1;
 
-		if( lifetime > now ) {
+		if (lifetime > now) {
 			cur->lifetime = lifetime;
 		}
 
@@ -128,17 +132,17 @@ struct value_t *announces_add( const char query[], int port, time_t lifetime ) {
 	}
 
 	// Prepend new entry
-	new = (struct value_t*) calloc( 1, sizeof(struct value_t) );
-	memcpy( new->id, id, SHA1_BIN_LENGTH );
-	memcpy( new->query, query, strlen(query) );
+	new = (struct value_t*) calloc(1, sizeof(struct value_t));
+	memcpy(new->id, id, SHA1_BIN_LENGTH);
+	memcpy(new->query, query, strlen(query));
 	new->port = port;
 	new->refresh = now - 1; // Send first announcement as soon as possible
 	new->lifetime = lifetime;
 
-	if( lifetime == LONG_MAX ) {
-		log_debug( "Add announcement for %s:%hu. Keep alive for entire runtime.", query, port );
+	if (lifetime == LONG_MAX) {
+		log_debug("Add announcement for %s:%hu. Keep alive for entire runtime.", query, port);
 	} else {
-		log_debug( "Add announcement for %s:%hu. Keep alive for %lu minutes.", query, port, (lifetime - now) / 60 );
+		log_debug("Add announcement for %s:%hu. Keep alive for %lu minutes.", query, port, (lifetime - now) / 60);
 	}
 
 	// Prepend to list
@@ -151,11 +155,13 @@ struct value_t *announces_add( const char query[], int port, time_t lifetime ) {
 	return new;
 }
 
-void value_free( struct value_t *value ) {
-	free( value );
+void value_free(struct value_t *value)
+{
+	free(value);
 }
 
-static void announces_expire( void ) {
+static void announces_expire(void)
+{
 	struct value_t *pre;
 	struct value_t *cur;
 	time_t now;
@@ -163,14 +169,14 @@ static void announces_expire( void ) {
 	now = time_now_sec();
 	pre = NULL;
 	cur = g_values;
-	while( cur ) {
-		if( cur->lifetime < now ) {
-			if( pre ) {
+	while (cur) {
+		if (cur->lifetime < now) {
+			if (pre) {
 				pre->next = cur->next;
 			} else {
 				g_values = cur->next;
 			}
-			value_free( cur );
+			value_free(cur);
 			return;
 		}
 		pre = cur;
@@ -178,52 +184,56 @@ static void announces_expire( void ) {
 	}
 }
 
-static void announces_announce( void ) {
+static void announces_announce(void)
+{
 	struct value_t *value;
 	time_t now;
 
 	now = time_now_sec();
 	value = g_values;
-	while( value ) {
-		if( value->refresh < now ) {
-			log_debug( "Announce %s:%hu", value->query, value->port );
-			kad_announce_once( value->id, value->port );
+	while (value) {
+		if (value->refresh < now) {
+			log_debug("Announce %s:%hu", value->query, value->port);
+			kad_announce_once(value->id, value->port);
 			value->refresh = now + ANNOUNCES_INTERVAL;
 		}
 		value = value->next;
 	}
 }
 
-static void announces_handle( int _rc, int _sock ) {
+static void announces_handle(int _rc, int _sock)
+{
 	// Expire search results
-	if( g_announces_expire <= time_now_sec() ) {
+	if (g_announces_expire <= time_now_sec()) {
 		announces_expire();
 
 		// Try again in ~1 minute
-		g_announces_expire = time_add_mins( 1 );
+		g_announces_expire = time_add_mins(1);
 	}
 
-	if( g_announces_announce <= time_now_sec() && kad_count_nodes( 0 ) != 0 ) {
+	if (g_announces_announce <= time_now_sec() && kad_count_nodes(0) != 0) {
 		announces_announce();
 
 		// Try again in ~1 minute
-		g_announces_announce = time_add_mins( 1 );
+		g_announces_announce = time_add_mins(1);
 	}
 }
 
-void announces_setup( void ) {
+void announces_setup(void)
+{
 	// Cause the callback to be called in intervals
-	net_add_handler( -1, &announces_handle );
+	net_add_handler(-1, &announces_handle);
 }
 
-void announces_free( void ) {
+void announces_free(void)
+{
 	struct value_t *cur;
 	struct value_t *next;
 
 	cur = g_values;
-	while( cur ) {
+	while (cur) {
 		next = cur->next;
-		value_free( cur );
+		value_free(cur);
 		cur = next;
 	}
 	g_values = NULL;

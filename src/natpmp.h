@@ -16,10 +16,10 @@ struct natpmp_handle_t {
 	natpmp_t natpmp;
 };
 
-void natpmp_init( struct natpmp_handle_t ** );
-void natpmp_uninit( struct natpmp_handle_t ** );
+void natpmp_init(struct natpmp_handle_t **);
+void natpmp_uninit(struct natpmp_handle_t **);
 
-int natpmp_handler( struct natpmp_handle_t *nat,
-	uint16_t port, time_t lifespan, time_t now );
+int natpmp_handler(struct natpmp_handle_t *nat,
+	uint16_t port, time_t lifespan, time_t now);
 
 #endif // _NATPMP_H_
