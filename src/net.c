@@ -108,11 +108,11 @@ void net_loop(void)
 int net_socket(const char name[], const char ifname[], const int protocol, const int af)
 {
 	const int opt_on = 1;
-	int sock;
+	int sock = -1;
 
 	// Disable IPv6 or IPv4
 	if (gconf->af != AF_UNSPEC && gconf->af != af) {
-		return -1;
+		goto fail;
 	}
 
 	if ((sock = socket(af, (protocol == IPPROTO_TCP) ? SOCK_STREAM : SOCK_DGRAM, protocol)) < 0) {
