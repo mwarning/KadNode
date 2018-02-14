@@ -87,7 +87,7 @@ int main_run(void)
 	rc |= bob_setup();
 #endif
 #ifdef DNS
-	dns_setup();
+	rc |= dns_setup();
 #endif
 #ifdef NSS
 	rc |= nss_setup();
