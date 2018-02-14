@@ -1,11 +1,12 @@
-kadnode (2.2.0) UNRELEASED; urgency=medium
+kadnode (2.2.0) unstable; urgency=medium
 
   * fix list append in result list
   * update dht to version 0.25
   * use unix socket for nss interface
-  * prevent to overwrite unix sockets
-  * use poll() unstead of select()
-  * aim for linux code style
+  * prevent deletion of unix sockets
+  * use poll() instead of select()
+  * aim for Linux code style
+  * various FreeBSD fixes
 
  -- mwarning <moritzwarning@web.de>  Sun, 11 Feb 2018 20:21:56 +0100
 
