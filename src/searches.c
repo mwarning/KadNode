@@ -331,7 +331,7 @@ struct search_t* searches_start(const char query[])
 }
 
 // Add an address to an array if it is not already contained in there
-int searches_add_addr(struct search_t *search, const IP *addr)
+void searches_add_addr(struct search_t *search, const IP *addr)
 {
 	struct result_t *cur;
 	struct result_t *new;
@@ -343,11 +343,11 @@ int searches_add_addr(struct search_t *search, const IP *addr)
 	while (cur) {
 		if (addr_equal(&cur->addr, addr)) {
 			// Address already listed
-			return 0;
+			return;
 		}
 
 		if (count > MAX_RESULTS_PER_SEARCH) {
-			return -1;
+			return;
 		}
 
 		count += 1;
@@ -368,8 +368,6 @@ int searches_add_addr(struct search_t *search, const IP *addr)
 	if (search->callback) {
 		search->callback();
 	}
-
-	return 0;
 }
 
 int searches_collect_addrs(const struct search_t *search, IP addr_array[], size_t addr_num)

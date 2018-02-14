@@ -48,7 +48,7 @@ struct search_t *searches_start(const char query[]);
 struct search_t *searches_find_by_id(const uint8_t id[]);
 
 // Add an address to a result bucket
-int searches_add_addr(struct search_t *search, const IP *addr);
+void searches_add_addr(struct search_t *search, const IP *addr);
 
 // Collect addresses
 int searches_collect_addrs(const struct search_t *search, IP addr_array[], size_t addr_num);
