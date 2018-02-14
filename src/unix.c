@@ -56,31 +56,30 @@ int unix_create_unix_socket(const char path[], int *sock_out)
 {
 	struct sockaddr_un addr;
 	struct stat st;
-	char *dir;
-	int sock;
+	char *dir = NULL;
+	int sock = -1;
 
 	if (path == NULL || strlen(path) == 0) {
-		return EXIT_FAILURE;
+		goto err;
 	}
 
 	dir = dirname(strdup(path));
 
 	if (stat(path, &st) != -1) {
 		log_error("File already exists %s - delete first", path);
-		return EXIT_FAILURE;
+		goto err;
 	}
 
 	// Directory does not exist and cannot be created
 	if (stat(dir, &st) == -1 && mkdir(dir, 0755) != 0) {
 		log_error("Cannot create directory %s %s", dir, strerror(errno));
-		return EXIT_FAILURE;
+		goto err;
 	}
 
 	sock = socket(AF_LOCAL, SOCK_STREAM, 0);
 	if (sock < 0) {
 		log_error("socket(): %s", strerror(errno));
-		unix_remove_unix_socket(path, sock);
-		return EXIT_FAILURE;
+		goto err;
 	}
 
 	addr.sun_family = AF_LOCAL;
@@ -88,8 +87,7 @@ int unix_create_unix_socket(const char path[], int *sock_out)
 
 	if (bind(sock, (struct sockaddr *) &addr, sizeof(addr)) != 0) {
 		log_error("bind() %s %s", path, strerror(errno));
-		unix_remove_unix_socket(path, sock);
-		return EXIT_FAILURE;
+		goto err;
 	}
 
 	listen(sock, 5);
@@ -97,6 +95,16 @@ int unix_create_unix_socket(const char path[], int *sock_out)
 	*sock_out = sock;
 
 	return EXIT_SUCCESS;
+err:
+	if (dir) {
+		free(dir);
+	}
+
+	if (sock >= 0) {
+		unix_remove_unix_socket(path, sock);
+	}
+
+	return EXIT_FAILURE;
 }
 
 void unix_remove_unix_socket(const char path[], int sock_in)
@@ -108,6 +116,7 @@ void unix_remove_unix_socket(const char path[], int sock_in)
 	close(sock_in);
 	unlink(path);
 	rmdir(dir);
+	free(dir);
 }
 
 void unix_fork(void)
