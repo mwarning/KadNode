@@ -79,7 +79,7 @@ static struct search_t *searches_find_by_query(const char query[])
 		if (0 == strcmp(query, &searches->query[0])) {
 			return searches;
 		}
-		search += 1;
+		search++;
 	}
 
 	return NULL;
@@ -127,7 +127,7 @@ static struct search_t *find_next_search(auth_callback *callback)
 		if (!(*searches)->done && (*searches)->callback == callback) {
 			return *searches;
 		}
-		searches += 1;
+		searches++;
 	}
 	return NULL;
 }
@@ -408,6 +408,6 @@ void searches_free(void)
 	while (*search) {
 		search_free(*search);
 		*search = NULL;
-		search += 1;
+		search++;
 	}
 }

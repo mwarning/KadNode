@@ -443,7 +443,7 @@ static int conf_load_file(const char path[])
 void array_append(const char **array, const char *element)
 {
 	while (*array) {
-		array += 1;
+		array++;
 	}
 
 	*array = strdup(element);
