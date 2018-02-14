@@ -338,6 +338,11 @@ void searches_add_addr(struct search_t *search, const IP *addr)
 	struct result_t *last;
 	int count;
 
+	if (search->done) {
+		// No need to add more addresses
+		return;
+	}
+
 	// Check if result already exists
 	// or maximum result count is reached
 	count = 0;
