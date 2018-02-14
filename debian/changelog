@@ -1,7 +1,9 @@
 kadnode (2.2.0) UNRELEASED; urgency=medium
 
+  * fix list append in result list
   * update dht to version 0.25
   * use unix socket for nss interface
+  * prevent to overwrite unix sockets
   * use poll() unstead of select()
   * aim for linux code style
 
