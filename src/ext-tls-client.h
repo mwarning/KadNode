@@ -12,7 +12,7 @@ int tls_client_get_id(uint8_t id[], size_t len, const char query[]);
 // Trigger authorisation of results; need to be called multiple times.
 void tls_client_trigger_auth(void);
 
-void tls_client_setup(void);
+int tls_client_setup(void);
 void tls_client_free(void);
 
 

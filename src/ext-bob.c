@@ -547,7 +547,8 @@ void bob_debug_keys(FILE *fp) {
 	}
 }
 
-void bob_setup( void ) {
+int bob_setup(void)
+{
 	struct bob_resource *resource;
 	struct key_t *key;
 	const char *hkey;
@@ -571,6 +572,8 @@ void bob_setup( void ) {
 		announces_add( hkey, gconf->dht_port, LONG_MAX );
 		key = key->next;
 	}
+
+	return EXIT_SUCCESS;
 }
 
 void bob_free( void ) {

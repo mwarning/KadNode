@@ -14,8 +14,8 @@
 // Default addresses and ports
 #define LPD_ADDR4 "239.192.152.143"
 #define LPD_ADDR6 "ff15::efc0:988f"
-#define CMD_PATH "/tmp/kadnode_cmd.sock"
-#define NSS_PATH "/tmp/kadnode_nss.sock"
+#define CMD_PATH "/tmp/kadnode/kadnode_cmd.sock"
+#define NSS_PATH "/tmp/kadnode/kadnode_nss.sock"
 #define LPD_PORT 6771
 #define DHT_PORT 6881
 #define DNS_PORT 3535

@@ -316,7 +316,7 @@ int tls_client_add_ca(const char path[])
 	return EXIT_SUCCESS;
 }
 
-void tls_client_setup(void)
+int tls_client_setup(void)
 {
 	const char *pers = "kadnode";
 	int ret;
@@ -324,13 +324,12 @@ void tls_client_setup(void)
 
 	// Reject query if TLS client disabled
 	if (g_client_enable == 0) {
-		return;
+		return EXIT_SUCCESS;
 	}
 
 	if (g_cacert.version <= 0) {
 		log_error("TLS-Client: No root CA certificates could be loaded.");
-		exit(1);
-		return;
+		return EXIT_FAILURE;
 	}
 
 	//mbedtls_debug_set_threshold(0);
@@ -341,8 +340,7 @@ void tls_client_setup(void)
 	if ((ret = mbedtls_ctr_drbg_seed(&g_drbg, mbedtls_entropy_func, &g_entropy,
 		(const unsigned char *) pers, strlen(pers))) != 0) {
 		log_error("TLS-Client: mbedtls_ctr_drbg_seed returned -0x%x", -ret);
-		exit(1);
-		return;
+		return EXIT_FAILURE;
 	}
 
 	for (i = 0; i < ARRAY_SIZE(g_tls_resources); ++i) {
@@ -358,7 +356,7 @@ void tls_client_setup(void)
 		MBEDTLS_SSL_TRANSPORT_STREAM,
 		MBEDTLS_SSL_PRESET_DEFAULT)) != 0) {
 		log_error("TLS-Client: mbedtls_ssl_config_defaults returned -0x%x", -ret);
-		exit(1);
+		return EXIT_FAILURE;
 	}
 
 #ifdef DEBUG
@@ -373,9 +371,11 @@ void tls_client_setup(void)
 	for (i = 0; i < ARRAY_SIZE(g_tls_resources); ++i) {
 		if ((ret = mbedtls_ssl_setup(&g_tls_resources[i].ssl, &g_conf)) != 0) {
 			log_error("TLS-Client: mbedtls_ssl_setup returned -0x%x", -ret);
-			exit(1);
+			return EXIT_SUCCESS;
 		}
 	}
+
+	return EXIT_SUCCESS;
 }
 
 void tls_client_free(void)

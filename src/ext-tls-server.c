@@ -321,14 +321,14 @@ static void tls_announce_all_cnames(void)
 	}
 }
 
-void tls_server_setup(void)
+int tls_server_setup(void)
 {
 	const char *pers = "kadnode";
 	int ret;
 
 	// Without SNI entries, there is no reason to start the TLS server
 	if (g_sni_entries == NULL) {
-		return;
+		return EXIT_SUCCESS;
 	}
 
 	// Initialize sockets
@@ -350,7 +350,7 @@ void tls_server_setup(void)
 	if ((ret = mbedtls_ctr_drbg_seed(&g_drbg, mbedtls_entropy_func, &g_entropy,
 		(const unsigned char *) pers, strlen(pers))) != 0) {
 		log_error("TLS-Server: mbedtls_ctr_drbg_seed returned -0x%x", -ret);
-		exit(1);
+		return EXIT_FAILURE;
 	}
 
 	// May return -1 if protocol not enabled/supported
@@ -363,7 +363,7 @@ void tls_server_setup(void)
 		MBEDTLS_SSL_PRESET_DEFAULT)) != 0)
 	{
 		log_error("TLS-Server: mbedtls_ssl_config_defaults returned -0x%x", -ret);
-		exit(1);
+		return EXIT_FAILURE;
 	}
 
 	mbedtls_ssl_conf_authmode(&g_conf, MBEDTLS_SSL_VERIFY_REQUIRED);
@@ -374,7 +374,7 @@ void tls_server_setup(void)
 
 	if ((ret = mbedtls_ssl_setup(&g_ssl, &g_conf)) != 0) {
 		log_error("TLS-Server: mbedtls_ssl_setup returned -0x%x", -ret);
-		exit(1);
+		return EXIT_FAILURE;
 	}
 
 	if (g_listen_fd4.fd > -1) {
@@ -386,6 +386,8 @@ void tls_server_setup(void)
 		mbedtls_net_set_nonblock(&g_listen_fd6);
 		net_add_handler(g_listen_fd6.fd, &tls_server_handler);
 	}
+
+	return EXIT_SUCCESS;
 }
 
 void tls_server_free(void)

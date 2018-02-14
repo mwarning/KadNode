@@ -11,12 +11,15 @@
 #include "conf.h"
 #include "log.h"
 #include "utils.h"
+#include "unix.h"
 #include "kad.h"
 #include "net.h"
 #include "ext-nss.h"
 
 #define MAX_ADDRS 32
 
+
+static int g_nss_sock = -1;
 
 static void nss_client_handler(int rc, int clientsock)
 {
@@ -68,45 +71,29 @@ static void nss_server_handler(int rc, int serversock)
 	addrlen = sizeof(struct sockaddr_in);
 	clientsock = accept(serversock, (struct sockaddr *) &addr, &addrlen);
 	if (clientsock < 0) {
-		log_error("accept(): %s\n", strerror(errno));
+		log_error("accept(): %s", strerror(errno));
 		return;
 	}
 
 	net_add_handler(clientsock, &nss_client_handler);
 }
 
-void nss_setup(void)
+int nss_setup(void)
 {
-	struct sockaddr_un addr;
-	int sock;
+	if (EXIT_FAILURE == unix_create_unix_socket(gconf->nss_path, &g_nss_sock)) {
+		return EXIT_FAILURE;
+	} else {
+		log_info("NSS: Bind to %s", gconf->nss_path);
 
-	if (gconf->nss_path == NULL || strlen(gconf->nss_path) == 0) {
-		return;
+		net_add_handler(g_nss_sock, &nss_server_handler);
+
+		return EXIT_SUCCESS;
 	}
-
-	sock = socket(AF_LOCAL, SOCK_STREAM, 0);
-	if (sock < 0) {
-		log_error("socket(): %s\n", strerror(errno));
-		return;
-	}
-
-	unlink(gconf->nss_path);
-	addr.sun_family = AF_LOCAL;
-	strcpy(addr.sun_path, gconf->nss_path);
-
-	if (bind(sock, (struct sockaddr *) &addr, sizeof(addr)) != 0) {
-		log_error("bind(): %s\n", strerror(errno));
-		return;
-	}
-
-	listen(sock, 5);
-
-	log_info("NSS: Bind to %s", gconf->nss_path);
-
-	net_add_handler(sock, &nss_server_handler);
 }
 
 void nss_free(void)
 {
-	unlink(gconf->nss_path);
+	if (g_nss_sock >= 0) {
+		unix_remove_unix_socket(gconf->nss_path, g_nss_sock);
+	}
 }

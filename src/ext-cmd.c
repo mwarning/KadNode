@@ -17,6 +17,7 @@
 #include "log.h"
 #include "kad.h"
 #include "net.h"
+#include "unix.h"
 #include "announces.h"
 #include "searches.h"
 #ifdef BOB
@@ -54,6 +55,8 @@ const char* g_server_usage_debug =
 #endif
 	"|constants\n"
 	"	list dht_buckets|dht_searches|dht_storage\n";
+
+static int g_cmd_sock = -1;
 
 
 static void cmd_ping(FILE *fp, const char addr_str[])
@@ -257,7 +260,7 @@ static void cmd_server_handler(int rc, int serversock)
 	addrlen = sizeof(struct sockaddr_in);
 	clientsock = accept(serversock, (struct sockaddr *) &addr, &addrlen);
 	if (clientsock < 0) {
-		log_error("accept(): %s\n", strerror(errno));
+		log_error("accept(): %s", strerror(errno));
 		return;
 	}
 
@@ -283,48 +286,29 @@ static void cmd_console_handler(int rc, int fd)
 	cmd_exec(stdout, request, 1);
 }
 
-void cmd_setup( void)
+int cmd_setup(void)
 {
-	struct sockaddr_un addr;
-	int sock;
+	if (EXIT_FAILURE == unix_create_unix_socket(gconf->cmd_path, &g_cmd_sock)) {
+		return EXIT_FAILURE;
+	} else {
+		log_info("CMD: Bind to %s", gconf->cmd_path);
 
-	if (gconf->cmd_path == NULL || strlen(gconf->cmd_path) == 0) {
-		return;
-	}
+		net_add_handler(g_cmd_sock, &cmd_server_handler);
 
-	sock = socket(AF_LOCAL, SOCK_STREAM, 0);
-	if (sock < 0) {
-		log_error("socket(): %s\n", strerror(errno));
-		return;
-	}
+		if (gconf->is_daemon == 0 && gconf->cmd_disable_stdin == 0) {
+			fprintf(stdout, "Press Enter for help.\n");
+			net_add_handler(STDIN_FILENO, &cmd_console_handler);
+		}
 
-	unlink(gconf->cmd_path);
-	addr.sun_family = AF_LOCAL;
-	strcpy(addr.sun_path, gconf->cmd_path);
-
-	if (bind(sock, (struct sockaddr *) &addr, sizeof(addr)) != 0) {
-		log_error("bind(): %s\n", strerror(errno));
-		return;
-	}
-
-	listen(sock, 5);
-
-	log_info("CMD: Bind to %s", gconf->cmd_path);
-
-	net_add_handler(sock, &cmd_server_handler);
-
-	if (gconf->is_daemon == 0 && gconf->cmd_disable_stdin == 0) {
-		// Wait for other messages to be displayed
-		sleep(1);
-
-		fprintf(stdout, "Press Enter for help.\n");
-		net_add_handler(STDIN_FILENO, &cmd_console_handler);
+		return EXIT_SUCCESS;
 	}
 }
 
 void cmd_free(void)
 {
-	unlink(gconf->cmd_path);
+	if (g_cmd_sock >= 0) {
+		unix_remove_unix_socket(gconf->cmd_path, g_cmd_sock);
+	}
 }
 
 #ifdef __CYGWIN__

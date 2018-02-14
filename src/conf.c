@@ -134,25 +134,9 @@ static const char *kadnode_usage_str =
 " -v, --version				Print program version.\n";
 
 
-void conf_init(void) {
-	gconf = (struct gconf_t*) calloc(1, sizeof(struct gconf_t));
-	*gconf = ((struct gconf_t) {
-		.dht_port = -1,
-		.af = AF_UNSPEC,
-#ifdef DNS
-		.dns_port = -1,
-#endif
-#ifdef DEBUG
-		.verbosity = VERBOSITY_DEBUG
-#else
-		.verbosity = VERBOSITY_VERBOSE
-#endif
-	});
-}
-
 // Set default if setting was not set and validate settings
-void conf_defaults(void) {
-
+void conf_defaults(void)
+{
 	if (gconf->af == 0) {
 		gconf->af = AF_UNSPEC;
 	}
@@ -388,6 +372,9 @@ static int conf_port(const char opt[], int *dst, const char src[])
 	return 0;
 }
 
+// forward declaration
+int conf_set(const char opt[], const char val[]);
+
 static int conf_load_file(const char path[])
 {
 	char line[256];
@@ -610,7 +597,7 @@ int conf_set(const char opt[], const char val[])
 }
 
 // Load some values that depend on proper settings
-void conf_load(void)
+int conf_load(void)
 {
 	const char **args;
 	int rc = 0;
@@ -660,15 +647,27 @@ void conf_load(void)
 	array_free(&g_tls_server_args[0]);
 #endif
 
-	if (rc != 0) {
-		exit(1);
-	}
+	return (rc != 0) ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-void conf_setup(int argc, char **argv)
+int conf_setup(int argc, char **argv)
 {
 	int rc;
 	int i;
+
+	gconf = (struct gconf_t*) calloc(1, sizeof(struct gconf_t));
+	*gconf = ((struct gconf_t) {
+		.dht_port = -1,
+		.af = AF_UNSPEC,
+#ifdef DNS
+		.dns_port = -1,
+#endif
+#ifdef DEBUG
+		.verbosity = VERBOSITY_DEBUG
+#else
+		.verbosity = VERBOSITY_VERBOSE
+#endif
+	});
 
 	for (i = 1; i < argc; ++i) {
 		const char *opt = argv[i];
@@ -684,10 +683,12 @@ void conf_setup(int argc, char **argv)
 		}
 
 		if (rc != 0) {
-			exit(rc);
+			return EXIT_FAILURE;
 		}
 	}
 
 	// Set defaults for unset settings
 	conf_defaults();
+
+	return EXIT_SUCCESS;
 }
