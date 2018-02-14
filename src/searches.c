@@ -335,12 +335,17 @@ void searches_add_addr(struct search_t *search, const IP *addr)
 {
 	struct result_t *cur;
 	struct result_t *new;
+	struct result_t *last;
 	int count;
 
 	// Check if result already exists
+	// or maximum result count is reached
 	count = 0;
+	last = NULL;
 	cur = search->results;
 	while (cur) {
+		last = cur;
+
 		if (addr_equal(&cur->addr, addr)) {
 			// Address already listed
 			return;
@@ -359,8 +364,8 @@ void searches_add_addr(struct search_t *search, const IP *addr)
 	new->state = search->callback ? AUTH_WAITING : AUTH_OK;
 
 	// Append new entry to list
-	if (cur) {
-		cur->next = new;
+	if (last) {
+		last->next = new;
 	} else {
 		search->results = new;
 	}
