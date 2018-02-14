@@ -348,7 +348,7 @@ int port_parse(const char pstr[], int err)
 	}
 }
 
-int port_set( IP *addr, uint16_t port )
+int port_set(IP *addr, uint16_t port)
 {
 	switch (addr->ss_family) {
 	case AF_INET:
@@ -392,8 +392,8 @@ const char *str_id(const uint8_t id[])
 	return bytes_to_base16hex(hexbuf, sizeof(hexbuf), id, SHA1_BIN_LENGTH);
 }
 
-const char *str_af( int af ) {
-	switch( af ) {
+const char *str_af(int af) {
+	switch (af) {
 	case AF_INET:
 		return "IPv4";
 	case AF_INET6:
@@ -505,7 +505,7 @@ int addr_parse(IP *addr, const char addr_str[], const char port_str[], int af)
 	while (p != NULL) {
 		if (p->ai_family == AF_INET6) {
 			memcpy(addr, p->ai_addr, sizeof(IP6));
-			freeaddrinfo( info );
+			freeaddrinfo(info);
 			return 0;
 		}
 		if (p->ai_family == AF_INET) {

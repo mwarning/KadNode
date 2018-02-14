@@ -9,14 +9,14 @@
 */
 
 // Setup callbacks
-void peerfile_setup( void );
-void peerfile_free( void );
+void peerfile_setup(void);
+void peerfile_free(void);
 
 // Write peers to peerfile
-void peerfile_export( void );
+void peerfile_export(void);
 
 // Add a static peer
-int peerfile_add_peer( const char addr_str[] );
+int peerfile_add_peer(const char addr_str[]);
 
 
 #endif // _PEERFILE_H

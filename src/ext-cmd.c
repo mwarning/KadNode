@@ -148,7 +148,7 @@ static void cmd_exec(FILE *fp, const char request[], int allow_debug)
 		if (rc == EXIT_SUCCESS) {
 			// Print results
 			for (i = 0; i < num; ++i) {
-				fprintf(fp, "%s\n", str_addr( &addrs[i] ));
+				fprintf(fp, "%s\n", str_addr(&addrs[i]));
 			}
 
 			if (num == 0) {
@@ -172,10 +172,10 @@ static void cmd_exec(FILE *fp, const char request[], int allow_debug)
 		fprintf(fp, "%d announcements started.\n", count);
 	} else if (sscanf(request, "announce %255s %c", hostname, &d) == 1) {
 		cmd_announce(fp, hostname, 0, -1);
-	} else if (sscanf( request, "announce %255[^: ] %d %c", hostname, &minutes, &d) == 2) {
+	} else if (sscanf(request, "announce %255[^: ] %d %c", hostname, &minutes, &d) == 2) {
 		cmd_announce(fp, hostname, 0, minutes);
-	} else if (sscanf( request, "announce %255[^: ]:%d %d %c", hostname, &port, &minutes, &d) == 3) {
-		cmd_announce(fp, hostname, port, minutes );
+	} else if (sscanf(request, "announce %255[^: ]:%d %d %c", hostname, &port, &minutes, &d) == 3) {
+		cmd_announce(fp, hostname, port, minutes);
 	} else if (match(request, "list %*s %n") && allow_debug) {
 		if (sscanf(request, "blacklist %255[^: ]", hostname) == 1) {
 			cmd_blacklist(fp, hostname);
@@ -187,7 +187,7 @@ static void cmd_exec(FILE *fp, const char request[], int allow_debug)
 			rc = kad_export_nodes(fp);
 
 			if (rc == 0) {
-				fprintf(fp, "No good nodes found.\n" );
+				fprintf(fp, "No good nodes found.\n");
 			}
 #ifdef FWD
 		} else if (match(request, "list forwardings %n")) {
@@ -356,7 +356,7 @@ int cmd_client(int argc, char *argv[])
 		if (strcmp(argv[0], "-h") == 0) {
 			fprintf(stdout, "%s", g_client_usage);
 			return 0;
-		} else if (strcmp( argv[0], "-p") == 0) {
+		} else if (strcmp(argv[0], "-p") == 0) {
 			if (argc >= 2) {
 				path = argv[1];
 				// Skip option and path

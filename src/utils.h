@@ -49,7 +49,7 @@ const char *str_addr(const IP *addr);
 int addr_is_localhost(const IP *addr);
 int addr_is_multicast(const IP *addr);
 int addr_parse(IP *addr, const char addr_str[], const char port_str[], int af);
-int addr_parse_full( IP *addr, const char full_addr_str[], const char default_port[], int af);
+int addr_parse_full(IP *addr, const char full_addr_str[], const char default_port[], int af);
 int addr_port(const IP *addr);
 int addr_len(const IP *addr);
 int addr_equal(const IP *addr1, const IP *addr2);

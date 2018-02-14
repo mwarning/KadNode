@@ -32,13 +32,13 @@ void fwd_free(void);
 struct forwarding_t *fwd_get(void);
 
 // List all entries
-void fwd_debug( int fd );
+void fwd_debug(int fd);
 
 // Count all entries
-int fwd_count( void );
+int fwd_count(void);
 
 // Add a port forwarding from external port to the same local port
-void fwd_add( int port, time_t host_lifetime );
+void fwd_add(int port, time_t host_lifetime);
 
 
 #endif // _EXT_FWD_H_

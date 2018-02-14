@@ -8,8 +8,8 @@
 #include "libkadnode.h"
 
 
-int kadnode_init( void ) {
-	if( gconf == NULL ) {
+int kadnode_init(void) {
+	if (gconf == NULL) {
 		// Setup gconf
 		conf_init();
 		return 0;
@@ -18,23 +18,23 @@ int kadnode_init( void ) {
 	}
 }
 
-void kadnode_stop( void ) {
-	if( gconf ) {
+void kadnode_stop(void) {
+	if (gconf) {
 		gconf->is_running = 0;
 	}
 }
 
-int kadnode_set( const char opt[], const char val[] ) {
-	if( gconf && !gconf->is_running ) {
-		return conf_set( opt, val );
+int kadnode_set(const char opt[], const char val[]) {
+	if (gconf && !gconf->is_running) {
+		return conf_set(opt, val);
 	} else {
 		return 1;
 	}
 }
 
-void kadnode_loop( void )
+void kadnode_loop(void)
 {
-	if( gconf && gconf->is_running == 0 ) {
+	if (gconf && gconf->is_running == 0) {
 		conf_check();
 
 		main_setup();
@@ -51,10 +51,10 @@ void kadnode_loop( void )
 	}
 }
 
-int kadnode_lookup( const char query[], struct sockaddr_storage addr_array[], size_t *addr_num )
+int kadnode_lookup(const char query[], struct sockaddr_storage addr_array[], size_t *addr_num)
 {
-	if( gconf && gconf->is_running ) {
-		return kad_lookup( query, addr_array, addr_num );
+	if (gconf && gconf->is_running) {
+		return kad_lookup(query, addr_array, addr_num);
 	} else {
 		return EXIT_FAILURE;
 	}

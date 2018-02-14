@@ -44,9 +44,9 @@ static void nss_client_handler(int rc, int clientsock)
 
 	num = ARRAY_SIZE(addrs);
 	rc = kad_lookup(hostname, addrs, &num);
-	if ( EXIT_SUCCESS == rc) {
+	if (EXIT_SUCCESS == rc) {
 		// Found addresses
-		log_debug( "NSS: Found %lu addresses.", num);
+		log_debug("NSS: Found %lu addresses.", num);
 	} else {
 		num = 0;
 	}
