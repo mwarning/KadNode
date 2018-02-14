@@ -118,14 +118,14 @@ void kad_lookup_own_announcements(struct search_t *search)
 	if (value) {
 		if (af == AF_UNSPEC || af == AF_INET6) {
 			to_addr(&addr, &in6addr_loopback, 16, htons(value->port)); // ::1
-			searches_add_addr(search, &addr);
 			log_debug("KAD: Address found in own announcements: %s", str_addr(&addr));
+			searches_add_addr(search, &addr);
 		}
 
 		if (af == AF_UNSPEC || af == AF_INET) {
 			to_addr(&addr, &inaddr_loopback, 4, htons(value->port)); // 127.0.0.1
-			searches_add_addr(search, &addr);
 			log_debug("KAD: Address found in own announcements: %s", str_addr(&addr));
+			searches_add_addr(search, &addr);
 		}
 	}
 }
