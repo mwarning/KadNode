@@ -396,7 +396,7 @@ int cmd_client(int argc, char *argv[])
 	}
 
 	if (EXIT_FAILURE == append_strings(buffer, sizeof(buffer), argc, argv)) {
-		fprintf(stderr, "Input to long\n");
+		fprintf(stderr, "Input too long\n");
 		return EXIT_FAILURE;
 	}
 
