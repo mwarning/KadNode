@@ -335,6 +335,33 @@ static int select_read(int sockfd, char buffer[], int bufsize, struct timeval *t
 }
 #endif
 
+static int append_strings(char buf[], size_t bufsize, int argc, char *argv[])
+{
+	int i;
+	int len;
+
+	// Check input length
+	len = 0;
+	for (i = 0; i < argc; ++i) {
+		len += 1 + strlen(argv[i]);
+		if(len >= bufsize) {
+			return EXIT_FAILURE;
+		}
+	}
+
+	// Concatenate strings
+	buf[0] = '\0';
+	for (i = 0; i < argc; ++i) {
+		if (i) {
+			strcat(buf, " ");
+		}
+		strcat(buf, argv[i]);
+	}
+	strcat(buf, "\n");
+
+	return EXIT_SUCCESS;
+}
+
 int cmd_client(int argc, char *argv[])
 {
 	char buffer[256];
@@ -343,7 +370,6 @@ int cmd_client(int argc, char *argv[])
 	struct timeval tv;
 	ssize_t size;
 	int sock;
-	size_t i;
 
 	// Default unix socket path
 	path = CMD_PATH;
@@ -369,15 +395,10 @@ int cmd_client(int argc, char *argv[])
 		}
 	}
 
-	// Construct request string from args
-	buffer[0] = '\0';
-	for (i = 0; i < argc; ++i) {
-		if (i) {
-			strcat(buffer, " ");
-		}
-		strcat(buffer, argv[i]);
+	if (EXIT_FAILURE == append_strings(buffer, sizeof(buffer), argc, argv)) {
+		fprintf(stderr, "Input to long\n");
+		return EXIT_FAILURE;
 	}
-	strcat(buffer, "\n");
 
 	sock = socket(AF_LOCAL, SOCK_STREAM, 0);
 	if (sock < 0) {
