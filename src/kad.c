@@ -275,6 +275,10 @@ int kad_setup(void)
 		net_add_handler(g_dht_socket6, &dht_handler);
 	}
 
+	if (g_dht_socket4 < 0 && g_dht_socket6 < 0) {
+		return EXIT_FAILURE;
+	}
+
 	// Init the DHT.  Also set the sockets into non-blocking mode.
 	if (dht_init(g_dht_socket4, g_dht_socket6, node_id, (uint8_t*) "KN\0\0") < 0) {
 		log_error("KAD: Failed to initialize the DHT.");

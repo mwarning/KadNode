@@ -67,7 +67,7 @@ int main_run(void)
 #endif
 
 	// Setup the Kademlia DHT
-	kad_setup();
+	rc |= kad_setup();
 
 	// Setup handler to announces
 	announces_setup();
