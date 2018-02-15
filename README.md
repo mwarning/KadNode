@@ -4,7 +4,7 @@ KadNode is a small and decentralized DNS resolver that can use existing public k
 
 KadNode can intercept .p2p domain queries on the systems level and resolve them using a decentralized network. [TLS](https://de.wikipedia.org/wiki/Transport_Layer_Security) authentication can be used to make sure the correct IP address was found, before it is passed to the browser or any other application.
 
-Supported are also domains consisting of public keys represented as hexadecimal characters. :-)
+Supported are also domains consisting of public keys represented as characters. :-)
 
 ## Features:
 
