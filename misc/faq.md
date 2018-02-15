@@ -5,7 +5,7 @@
     KadNode runs in background and intercepts and answers name request for the .p2p domain.
     It has a very low resource consumption. The main task is to just return IP addresses for identifiers, not necessarly traditional DNS.
 * **How long does it take to resolve a domain?**  
-    On the Internet, if KadNode has been running for a few minutes to fully bottstrap, then it takes around 1 - 8 seconds for a domain to initially be resolved.
+    On the Internet, if KadNode has been running for a few minutes to fully bootstrap, then it takes around 1 - 8 seconds for a domain to be initially resolved.
 * **Is the .p2p TLS mandatory?**  
     No, it is only used to intercept requests and then stripped for the entire lookup process.
 * **How does KadNode intercept DNS reqests?**  
