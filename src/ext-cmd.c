@@ -335,41 +335,15 @@ static int select_read(int sockfd, char buffer[], int bufsize, struct timeval *t
 }
 #endif
 
-static int append_strings(char buf[], size_t bufsize, int argc, char *argv[])
-{
-	int i;
-	int len;
-
-	// Check input length
-	len = 0;
-	for (i = 0; i < argc; ++i) {
-		len += 1 + strlen(argv[i]);
-		if(len >= bufsize) {
-			return EXIT_FAILURE;
-		}
-	}
-
-	// Concatenate strings
-	buf[0] = '\0';
-	for (i = 0; i < argc; ++i) {
-		if (i) {
-			strcat(buf, " ");
-		}
-		strcat(buf, argv[i]);
-	}
-	strcat(buf, "\n");
-
-	return EXIT_SUCCESS;
-}
-
 int cmd_client(int argc, char *argv[])
 {
 	char buffer[256];
 	const char *path;
 	struct sockaddr_un addr;
-	struct timeval tv;
 	ssize_t size;
+	size_t pos;
 	int sock;
+	int i;
 
 	// Default unix socket path
 	path = CMD_PATH;
@@ -395,10 +369,16 @@ int cmd_client(int argc, char *argv[])
 		}
 	}
 
-	if (EXIT_FAILURE == append_strings(buffer, sizeof(buffer), argc, argv)) {
-		fprintf(stderr, "Input too long\n");
-		return EXIT_FAILURE;
+	// Concatenate arguments
+	for (i = 0, pos = 0; i < argc; i++) {
+		pos += snprintf(buffer + pos, sizeof(buffer) - pos, "%s ", argv[i]);
+		if (pos >= sizeof(buffer)) {
+			fprintf(stderr, "Input too long\n");
+			return EXIT_FAILURE;
+		}
 	}
+	// Remove trailing whitespace
+	buffer[pos - 1] = '\0';
 
 	sock = socket(AF_LOCAL, SOCK_STREAM, 0);
 	if (sock < 0) {
@@ -414,11 +394,13 @@ int cmd_client(int argc, char *argv[])
 		goto error;
 	}
 
+#ifndef __CYGWIN__
+	struct timeval tv;
+
 	/* Set receive timeout: 200ms */
 	tv.tv_sec = 0;
 	tv.tv_usec = 200000;
 
-#ifndef __CYGWIN__
 	if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(tv)) < 0) {
 		fprintf(stderr, "setsockopt(): %s\n", strerror(errno));
 		goto error;
