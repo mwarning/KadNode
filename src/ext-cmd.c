@@ -377,8 +377,8 @@ int cmd_client(int argc, char *argv[])
 			return EXIT_FAILURE;
 		}
 	}
-	// Remove trailing whitespace
-	buffer[pos - 1] = '\0';
+	// Make sure buffer is terminated
+	buffer[pos] = '\0';
 
 	sock = socket(AF_LOCAL, SOCK_STREAM, 0);
 	if (sock < 0) {
