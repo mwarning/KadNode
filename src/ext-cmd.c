@@ -224,16 +224,19 @@ static void cmd_client_handler(int rc, int clientsock)
 {
 	char request[256];
 	ssize_t size;
+	FILE* fp;
 
 	if (rc <= 0) {
 		return;
 	}
 
 	size = recv(clientsock, request, sizeof(request) - 1, 0);
+
 	if (size > 0) {
 		request[size] = '\0';
 		// Execute command line
-		FILE* fp = fdopen(clientsock, "w");
+		fp = fdopen(clientsock, "w");
+
 #ifdef DEBUG
 		cmd_exec(fp, request, 1);
 #else
@@ -257,7 +260,7 @@ static void cmd_server_handler(int rc, int serversock)
 		return;
 	}
 
-	addrlen = sizeof(struct sockaddr_in);
+	addrlen = sizeof(addr);
 	clientsock = accept(serversock, (struct sockaddr *) &addr, &addrlen);
 	if (clientsock < 0) {
 		log_error("accept(): %s", strerror(errno));
@@ -355,7 +358,7 @@ int cmd_client(int argc, char *argv[])
 	if (argc >= 1) {
 		if (strcmp(argv[0], "-h") == 0) {
 			fprintf(stdout, "%s", g_client_usage);
-			return 0;
+			return EXIT_SUCCESS;
 		} else if (strcmp(argv[0], "-p") == 0) {
 			if (argc >= 2) {
 				path = argv[1];
@@ -364,21 +367,21 @@ int cmd_client(int argc, char *argv[])
 				argv += 2;
 			} else {
 				fprintf(stderr, "Path is missing!\n");
-				return 1;
+				return EXIT_FAILURE;
 			}
 		}
 	}
 
 	// Concatenate arguments
-	for (i = 0, pos = 0; i < argc; i++) {
+	buffer[0] = ' ';
+	buffer[1] = '\0';
+	for (i = 0, pos = 1; i < argc; i++) {
 		pos += snprintf(buffer + pos, sizeof(buffer) - pos, "%s ", argv[i]);
 		if (pos >= sizeof(buffer)) {
 			fprintf(stderr, "Input too long\n");
 			return EXIT_FAILURE;
 		}
 	}
-	// Make sure buffer is terminated
-	buffer[pos] = '\0';
 
 	sock = socket(AF_LOCAL, SOCK_STREAM, 0);
 	if (sock < 0) {
@@ -408,7 +411,7 @@ int cmd_client(int argc, char *argv[])
 #endif
 
 	// Send request
-	send(sock, buffer, strlen(buffer), 0);
+	send(sock, buffer, strlen(buffer) + 1, 0);
 
 	while (1) {
 		// Receive replies
@@ -422,6 +425,8 @@ int cmd_client(int argc, char *argv[])
 		}
 
 		buffer[size] = '\0';
+
+		// Print to console
 		printf("%s", buffer);
 	}
 
