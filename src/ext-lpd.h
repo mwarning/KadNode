@@ -12,7 +12,7 @@
 #include <string.h>
 
 
-void lpd_setup(void);
+int lpd_setup(void);
 void lpd_free(void);
 
 #endif // _LPD_H

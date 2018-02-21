@@ -80,7 +80,7 @@ int main_run(void)
 
 	// Setup extensions
 #ifdef LPD
-	lpd_setup();
+	rc |= lpd_setup();
 #endif
 
 #ifdef BOB
