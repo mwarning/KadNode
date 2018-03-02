@@ -12,21 +12,22 @@ depends=('mbedtls')
 
 backup=('etc/kadnode/kadnode.conf' 'etc/kadnode/peers.txt')
 
-#source=(https://github.com/mwarning/KadNode.git)
 #source=(https://github.com/mwarning/KadNode/archive/v${pkgver}.tar.gz)
-source=(git+file:///home/mwarning/myProjects/KadNode)
+#source=(git+file:///home/user/KadNode)
+source=(git+https://github.com/mwarning/KadNode.git)
 
 md5sums=('SKIP')
 
 install="kadnode.install"
 
 build() {
-	cd $srcdir/KadNode
+	cd ${srcdir}/KadNode
+	make clean
 	make FEATURES="tls bob cmd lpd nss"
 }
 
 package() {
-	cd $srcdir/KadNode
+	cd ${srcdir}/KadNode
 
 	install -Dm755 build/kadnode "$pkgdir"/usr/bin/kadnode
 	install -Dm755 build/kadnode-ctl "$pkgdir"/usr/bin/kadnode-ctl
