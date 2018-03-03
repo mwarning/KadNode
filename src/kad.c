@@ -100,6 +100,7 @@ void dht_callback_func(void *closure, int event, const uint8_t *info_hash, const
 	}
 }
 
+#if 0
 /*
 * Lookup in values we announce ourselves.
 * Useful for networks of only one node, also faster.
@@ -129,6 +130,7 @@ void kad_lookup_own_announcements(struct search_t *search)
 		}
 	}
 }
+#endif
 
 // Handle incoming packets and pass them to the DHT code
 void dht_handler(int rc, int sock)
@@ -448,9 +450,10 @@ int kad_lookup(const char query[], IP addr_array[], size_t *addr_num)
 
 	// Search was just started
 	if (search->start_time == time_now_sec()) {
+#if 0
 		// Search own announces
 		kad_lookup_own_announcements(search);
-
+#endif
 		// Start a new DHT search
 		dht_search(search->id, 0, AF_INET, dht_callback_func, NULL);
 		dht_search(search->id, 0, AF_INET6, dht_callback_func, NULL);
