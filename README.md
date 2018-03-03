@@ -2,7 +2,7 @@
 
 KadNode is a small and decentralized DNS resolver that can use existing public key infrastructures. It utilizes the BitTorrent P2P network and mbedtls for TLS/crypto support.
 
-KadNode can intercept .p2p domain queries on the systems level and resolve them using a decentralized network. [TLS](https://de.wikipedia.org/wiki/Transport_Layer_Security) authentication can be used to make sure the correct IP address was found, before it is passed to the browser or any other application.
+KadNode can intercept .p2p domain queries on the systems level and resolve them using a decentralized network. [TLS](https://de.wikipedia.org/wiki/Transport_Layer_Security) authentication can be used to make sure the correct IP address was found. If successful, the IP address is passed to the application making the request.
 
 Supported are also domains consisting of public keys represented as characters. :-)
 
