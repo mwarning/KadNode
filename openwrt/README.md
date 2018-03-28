@@ -1,11 +1,11 @@
 # Building and Packaging KadNode on OpenWrt
 
 To inlcude KadNode into your [OpenWrt](https://openwrt.org) image or to create an .ipk package (equivalent to Debian Linux .deb files), you have to build a firmware image.
-These steps were tested using LEDE-17.04:
+These steps were tested using OpenWrt:
 
 For building OpenWrt on Debian Linux, you need to install these packages:
 ```
-apt-get install git subversion g++ libncurses5-dev gawk zlib1g-dev build-essential
+apt install git subversion g++ libncurses5-dev gawk zlib1g-dev build-essential
 ```
 
 Now build OpenWrt:
