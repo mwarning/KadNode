@@ -495,6 +495,7 @@ int addr_parse(IP *addr, const char addr_str[], const char port_str[], int af)
 
 	memset(&hints, '\0', sizeof(struct addrinfo));
 	hints.ai_socktype = SOCK_STREAM;
+	//hints.ai_flags = AI_NUMERICHOST;
 	hints.ai_family = af;
 
 	if (getaddrinfo(addr_str, port_str, &hints, &info) != 0) {
@@ -600,9 +601,9 @@ int addr_equal(const IP *addr1, const IP *addr2)
 	if (addr1->ss_family != addr2->ss_family) {
 		return 0;
 	} else if (addr1->ss_family == AF_INET) {
-		return memcmp(&((IP4 *)addr1)->sin_addr, &((IP4 *)addr2)->sin_addr, 4) == 0;
+		return 0 == memcmp(&((IP4 *)addr1)->sin_addr, &((IP4 *)addr2)->sin_addr, 4);
 	} else if (addr1->ss_family == AF_INET6) {
-		return memcmp(&((IP6 *)addr1)->sin6_addr, &((IP6 *)addr2)->sin6_addr, 16) == 0;
+		return 0 == memcmp(&((IP6 *)addr1)->sin6_addr, &((IP6 *)addr2)->sin6_addr, 16);
 	} else {
 		return 0;
 	}
