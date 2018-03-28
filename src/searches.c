@@ -231,20 +231,44 @@ static void search_restart(struct search_t *search)
 	struct result_t *result;
 	struct result_t *prev;
 	struct result_t *next;
+	int remove;
 
 	log_debug("Searches: Restart search for query: %s", search->query);
 
 	search->start_time = time_now_sec();
 	search->done = 0;
 
-	// Remove all failed searches
+	remove = 0;
 	next = NULL;
 	prev = NULL;
+
+	// Remove all failed searches
 	result = search->results;
 	while (result) {
-		const int state = result->state;
-		if (state == AUTH_ERROR || state == AUTH_AGAIN) {
+		switch (result->state) {
+		case AUTH_ERROR:
+		case AUTH_AGAIN:
+		case AUTH_FAILED:
+			remove = 1;
 			// Remove result
+			break;
+		case AUTH_OK:
+			// Check again on another search
+			result->state = AUTH_AGAIN;
+			break;
+		case AUTH_SKIP:
+			// Continue check
+			result->state = AUTH_WAITING;
+			break;
+		case AUTH_PROGRESS:
+			// Continue progress state
+			break;
+		case AUTH_WAITING:
+			// Continue wait state
+			break;
+		}
+
+		if (remove) {
 			next = result->next;
 			if (prev) {
 				prev->next = next;
@@ -253,17 +277,11 @@ static void search_restart(struct search_t *search)
 			}
 			free(result);
 			result = next;
-			continue;
-		} else if (state == AUTH_OK) {
-			// Check again on another search
-			result->state = AUTH_AGAIN;
-		} else if (state == AUTH_SKIP) {
-			// Continue check
-			result->state = AUTH_WAITING;
+			remove = 0;
+		} else {
+			prev = result;
+			result = result->next;
 		}
-
-		prev = result;
-		result = result->next;
 	}
 }
 

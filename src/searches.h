@@ -6,7 +6,7 @@
 
 // Authentication states
 enum AUTH_STATE {
-	AUTH_OK, // Successful or not needed
+	AUTH_OK, // Authentication successful or not needed
 	AUTH_AGAIN, // Was already successful, but needs to be retested
 	AUTH_FAILED, // Verification failed
 	AUTH_ERROR, // No reply
