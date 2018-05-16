@@ -3,7 +3,7 @@ bin/kadnode-ctl
 lib/nss_kadnode.so
 lib/nss_kadnode.so.1
 man/man1/kadnode.1.gz
-/etc/rc.d/kadnode
-/etc/kadnode/kadnode.conf
-/etc/kadnode/peers.txt
-@dir /etc/kadnode
+etc/rc.d/kadnode
+@sample %%ETCDIR%%/kadnode.conf.sample
+@sample %%ETCDIR%%/peers.txt.sample
+@dir etc/kadnode

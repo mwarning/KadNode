@@ -3,19 +3,24 @@
 
 PORTNAME=	kadnode
 PORTVERSION=	2.2.0
-PORTREVISION=	1
+DISTVERSIONPREFIX=v
+PORTREVISION=	0
 CATEGORIES=	dns
-DISTDIR=	${PWD}
+
 MAINTAINER=	moritzwarning@web.de
 COMMENT=	P2P name resolution daemon
+
 LICENSE=	MIT
+LICENSE_FILE=	${WRKSRC}/LICENSE
+
 USES=		gmake
-WRKSRC=		${WRKDIR}/kadnode
-#WRKSRC=	${WRKDIR}/KadNode-${PORTVERSION}
-#MASTER_SITES=	https://github.com/mwarning/KadNode/archive/
-#DISTNAME=	v${PORTVERSION}
-CATEGORIES=	dns
+
+USE_GITHUB=	yes
+GH_ACCOUNT=	mwarning
+GH_PROJECT=	KadNode
+
 OPTIONS_DEFINE=	AUTH CMD DEBUG DNS LPD NATPMP NSS UPNP
+OPTIONS_DEFAULT= AUTH CMD LPD NSS
 AUTH_DESC=	Authorization support based on mbedtls.
 CMD_DESC=	Command line control tool kadnode-ctl.
 DEBUG_DESC=	Build with debug messages and symbols.
@@ -25,61 +30,43 @@ NATPMP_DESC=	NAT-PMP support. Enables remote port forwarding on the router.
 NSS_DESC=	Name Service Switch support to intercept host queries (/etc/nsswitch.conf).
 UPNP_DESC=	UPnP support. Enable remote port forwarding on the router.
 
-OPTIONS_DEFAULT=	AUTH CMD LPD NSS
+SUB_FILES=	kadnode kadnode.conf
 
-.include <bsd.port.options.mk>
+AUTH_LIB_DEPENDS=	libmbedtls.so:security/mbedtls
+AUTH_VARS=		FEATURES+="bob tls"
 
-.if ${PORT_OPTIONS:MAUTH}
-FEATURES+=bob tls
-DEPENDS+=	${PORTSDIR}/security/mbedtls
-.endif
+CMD_VARS=		FEATURES+="cmd"
 
-.if ${PORT_OPTIONS:MCMD}
-FEATURES+=cmd
-.endif
+DEBUG_VARS=		FEATURES+="debug"
 
-.if ${PORT_OPTIONS:MDEBUG}
-FEATURES+=debug
-.endif
+DNS_VARS=		FEATURES+="dns"
 
-.if ${PORT_OPTIONS:MDNS}
-FEATURES+=dns
-.endif
+LPD_VARS=		FEATURES+="lpd"
 
-.if ${PORT_OPTIONS:MLPD}
-FEATURES+=lpd
-.endif
+NATPMP_LIB_DEPENDS=	libnatpmp.so:net/libnatpmp
+NATPMP_VARS=		FEATURES+="natpmp"
 
-.if ${PORT_OPTIONS:MNATPMP}
-FEATURES+=natpmp
-LIB_DEPENDS+=	libnatpmp.so:${PORTSDIR}/net/libnatpmp
-.endif
+NSS_VARS=		FEATURES+="nss"
 
-.if ${PORT_OPTIONS:MNSS}
-FEATURES+=nss
-.endif
+UPNP_LIB_DEPENDS=	libminiupnpc.so:net/miniupnpc
+UPNP_VARS=		FEATURES+="upnp"
 
-.if ${PORT_OPTIONS:MUPNP}
-FEATURES+=upnp
-LIB_DEPENDS+=	libminiupnpc.so:${PORTSDIR}/net/miniupnpc
-.endif
-
-MAKE_ENV+=	FEATURES="${FEATURES}"
+MAKE_ENV+=		FEATURES="${FEATURES}"
 
 do-install:
-	${MKDIR} ${STAGEDIR}/usr/bin
+	${MKDIR} ${STAGEDIR}${PREFIX}/bin
 	${INSTALL_PROGRAM} ${WRKSRC}/build/kadnode ${STAGEDIR}${PREFIX}/bin/
-	${LN} -sf kadnode ${STAGEDIR}${PREFIX}/bin/kadnode-ctl
+	${RLN} -s kadnode ${STAGEDIR}${PREFIX}/bin/kadnode-ctl
 
 	${INSTALL_LIB} ${WRKSRC}/build/libnss_kadnode.so.2 ${STAGEDIR}${PREFIX}/lib/nss_kadnode.so
-	${LN} -sf ${STAGEDIR}${PREFIX}/lib/nss_kadnode.so ${STAGEDIR}${PREFIX}/lib/nss_kadnode.so.1
+	${RLN} -s ${STAGEDIR}${PREFIX}/lib/nss_kadnode.so ${STAGEDIR}${PREFIX}/lib/nss_kadnode.so.1
 
-	${MKDIR} ${STAGEDIR}/etc/kadnode
-	${INSTALL_DATA} ${WRKSRC}/misc/peers.txt ${STAGEDIR}/etc/kadnode/
-	${INSTALL_DATA} ${WRKSRC}/misc/kadnode.conf ${STAGEDIR}/etc/kadnode/
+	${MKDIR} ${STAGEDIR}${ETCDIR}
+	${INSTALL_DATA} ${WRKSRC}/misc/peers.txt ${STAGEDIR}${ETCDIR}/peers.txt.sample
+	${INSTALL_DATA} ${WRKDIR}/kadnode.conf ${STAGEDIR}${ETCDIR}/kadnode.conf.sample
 
-	${MKDIR} ${STAGEDIR}/etc/rc.d/
-	${INSTALL_SCRIPT} ${WRKSRC}/freebsd/files/kadnode.init ${STAGEDIR}/etc/rc.d/kadnode
+	${MKDIR} ${STAGEDIR}${PREFIX}/etc/rc.d/
+	${INSTALL_SCRIPT} ${WRKDIR}/kadnode ${STAGEDIR}${PREFIX}/etc/rc.d/kadnode
 
 	${INSTALL_MAN} ${WRKSRC}/misc/manpage ${STAGEDIR}${MANPREFIX}/man/man1/kadnode.1
 

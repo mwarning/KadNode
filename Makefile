@@ -116,9 +116,9 @@ mac-pkg:
 	cd macos && ./build.sh
 
 freebsd-pkg:
-	rm -rf freebsd/work
 	rm -f freebsd/kadnode-*
-	git archive HEAD --prefix kadnode/ -o freebsd/kadnode-`awk '/PORTVERSION/{print $$2}' freebsd/Makefile`.tar.gz
+	git archive HEAD --prefix kadnode/ -o freebsd/kadnode-`awk '/PORTVERSION/{print $$2; exit;}' freebsd/Makefile`.tar.gz
+	cd freebsd; make clean
 	cd freebsd; make makesum
 	cd freebsd; make package
 
