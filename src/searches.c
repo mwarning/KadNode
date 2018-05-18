@@ -328,7 +328,6 @@ struct search_t* searches_start(const char query[])
 
 	new = calloc(1, sizeof(struct search_t));
 	memcpy(new->id, id, sizeof(id));
-	new->done = 0;
 	new->callback = callback;
 	memcpy(&new->query, query, sizeof(new->query));
 	new->start_time = time_now_sec();
