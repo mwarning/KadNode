@@ -64,8 +64,9 @@ void fwd_debug(FILE *fp)
 	now = time_now_sec();
 	counter = 0;
 	cur = g_fwds;
+
 	while (cur) {
-		fprintf(fp, " port: %hu\n", cur->port);
+		fprintf(fp, " port: %d\n", cur->port);
 
 		if (cur->refreshed == 0) {
 			fprintf(fp, "  refreshed: never\n");

@@ -179,7 +179,7 @@ int upnp_handler(struct upnp_handle_t *handle, uint16_t port, time_t lifespan, t
 
 	// Add port forwarding
 	if (handle->state == UPNP_STATE_ADD_PORTMAPPING) {
-		if (handle->urls.controlURL && handle->data.first.servicetype) {
+		if (handle->urls.controlURL && handle->data.first.servicetype[0]) {
 			int rc_tcp = upnpAddPortMapping(handle, "TCP", port);
 			int rc_udp = upnpAddPortMapping(handle, "UDP", port);
 
