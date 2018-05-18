@@ -3,6 +3,7 @@
 #define _EXT_FWD_H_
 
 #include <sys/time.h>
+#include <stdio.h>
 
 /*
 * Every value id announcement also carries a port on which
@@ -26,13 +27,13 @@ struct forwarding_t {
 	time_t refreshed; // Last time the entry was refreshed
 };
 
-void fwd_setup(void);
+int fwd_setup(void);
 void fwd_free(void);
 
 struct forwarding_t *fwd_get(void);
 
 // List all entries
-void fwd_debug(int fd);
+void fwd_debug(FILE *fp);
 
 // Count all entries
 int fwd_count(void);

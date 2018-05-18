@@ -55,11 +55,9 @@ int fwd_count(void)
 	return count;
 }
 
-void fwd_debug(int fd)
+void fwd_debug(FILE *fp)
 {
 	struct forwarding_t *cur;
-	char refreshed[64];
-	char lifetime[64];
 	time_t now;
 	size_t counter;
 
@@ -67,27 +65,25 @@ void fwd_debug(int fd)
 	counter = 0;
 	cur = g_fwds;
 	while (cur) {
+		fprintf(fp, " port: %hu\n", cur->port);
+
 		if (cur->refreshed == 0) {
-			sprintf(refreshed, "never");
+			fprintf(fp, "  refreshed: never\n");
 		} else {
-			sprintf(refreshed, "%ld [min]", (now - cur->refreshed) / 60);
+			fprintf(fp, "  refreshed: %ld minutes ago\n", (now - cur->refreshed) / 60);
 		}
 
 		if (cur->lifetime == LONG_MAX) {
-			sprintf(lifetime, "infinite");
+			fprintf(fp, "  lifetime: infinite\n");
 		} else {
-			sprintf(lifetime, "%ld [min]", (cur->lifetime -  now) / 60);
+			fprintf(fp, "  lifetime: %ld minutes remaining\n", (cur->lifetime -  now) / 60);
 		}
-
-		dprintf(fd, " port: %hu\n", cur->port);
-		dprintf(fd, "  refreshed ago: %s\n", refreshed);
-		dprintf(fd, "  lifetime remaining: %s\n", lifetime);
 
 		counter++;
 		cur = cur->next;
 	}
 
-	dprintf(fd, " Found %zu forwardings.\n", counter);
+	fprintf(fp, " Found %zu forwardings.\n", counter);
 }
 
 void fwd_add(int port, time_t lifetime)
@@ -209,7 +205,7 @@ void fwd_handle(int _rc, int _sock)
 		} else if (rc == PF_RETRY) {
 			// return;
 		} else {
-			log_err("FWD: Unhandled NAT-PMP reply.");
+			log_error("FWD: Unhandled NAT-PMP reply.");
 		}
 	}
 #endif
@@ -233,16 +229,16 @@ void fwd_handle(int _rc, int _sock)
 		} else if (rc == PF_RETRY) {
 			//return;
 		} else {
-			log_err("FWD: Unhandled UPnP reply.");
+			log_error("FWD: Unhandled UPnP reply.");
 		}
 	}
 #endif
 }
 
-void fwd_setup(void)
+int fwd_setup(void)
 {
 	if (gconf->fwd_disable == 1) {
-		return;
+		return 0;
 	}
 
 #ifdef FWD_NATPMP
@@ -259,6 +255,8 @@ void fwd_setup(void)
 
 	// Cause the callback to be called in intervals
 	net_add_handler(-1, &fwd_handle);
+
+	return 0;
 }
 
 void fwd_free(void)
