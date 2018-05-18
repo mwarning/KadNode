@@ -1,4 +1,4 @@
-kadnode (2.2.1) UNRELEASED; urgency=medium
+kadnode (2.2.1) unstable; urgency=medium
 
   * fix buffer overflow in command client
   * handle dht and local peer discovery setup failure with exit
