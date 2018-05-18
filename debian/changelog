@@ -1,3 +1,12 @@
+kadnode (2.2.1) UNRELEASED; urgency=medium
+
+  * fix buffer overflow in command client
+  * handle dht and local peer discovery setup failure with exit
+  * do not return localhost address
+  * fix result removal when a search is restarted
+
+ -- mwarning <moritzwarning@web.de>  Sun, 16 Feb 2018 18:02:41 +0100
+
 kadnode (2.2.0) unstable; urgency=medium
 
   * fix list append in result list
