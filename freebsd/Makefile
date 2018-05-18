@@ -2,8 +2,8 @@
 # $FreeBSD$
 
 PORTNAME=	kadnode
-PORTVERSION=	2.2.0
-DISTVERSIONPREFIX=v
+DISTVERSIONPREFIX=	v
+DISTVERSION=	2.2.1
 PORTREVISION=	0
 CATEGORIES=	dns
 
@@ -14,23 +14,25 @@ LICENSE=	MIT
 LICENSE_FILE=	${WRKSRC}/LICENSE
 
 USES=		gmake
-
 USE_GITHUB=	yes
 GH_ACCOUNT=	mwarning
 GH_PROJECT=	KadNode
+USE_RC_SUBR=	kadnode
+
+MAKE_ENV=	FEATURES="${FEATURES}" LFLAGS="${LDFLAGS}"
+SUB_FILES=	kadnode.conf
 
 OPTIONS_DEFINE=	AUTH CMD DEBUG DNS LPD NATPMP NSS UPNP
-OPTIONS_DEFAULT= AUTH CMD LPD NSS
-AUTH_DESC=	Authorization support based on mbedtls.
-CMD_DESC=	Command line control tool kadnode-ctl.
-DEBUG_DESC=	Build with debug messages and symbols.
-DNS_DESC=	Include local DNS interface.
-LPD_DESC=	Local peer discovery.
-NATPMP_DESC=	NAT-PMP support. Enables remote port forwarding on the router.
-NSS_DESC=	Name Service Switch support to intercept host queries (/etc/nsswitch.conf).
-UPNP_DESC=	UPnP support. Enable remote port forwarding on the router.
+OPTIONS_DEFAULT=	AUTH CMD LPD NSS
 
-SUB_FILES=	kadnode kadnode.conf
+AUTH_DESC=	Authorization support based on mbedtls
+CMD_DESC=	Command line control tool kadnode-ctl
+DEBUG_DESC=	Build with debug messages and symbols
+DNS_DESC=	Include local DNS interface
+LPD_DESC=	Local peer discovery
+NATPMP_DESC=	NAT-PMP support (remote port forwarding on the router)
+NSS_DESC=	Name Service Switch support to intercept host queries
+UPNP_DESC=	UPnP support (remote port forwarding on the router)
 
 AUTH_LIB_DEPENDS=	libmbedtls.so:security/mbedtls
 AUTH_VARS=		FEATURES+="bob tls"
@@ -51,23 +53,14 @@ NSS_VARS=		FEATURES+="nss"
 UPNP_LIB_DEPENDS=	libminiupnpc.so:net/miniupnpc
 UPNP_VARS=		FEATURES+="upnp"
 
-MAKE_ENV+=		FEATURES="${FEATURES}"
-
 do-install:
-	${MKDIR} ${STAGEDIR}${PREFIX}/bin
 	${INSTALL_PROGRAM} ${WRKSRC}/build/kadnode ${STAGEDIR}${PREFIX}/bin/
-	${RLN} -s kadnode ${STAGEDIR}${PREFIX}/bin/kadnode-ctl
-
-	${INSTALL_LIB} ${WRKSRC}/build/libnss_kadnode.so.2 ${STAGEDIR}${PREFIX}/lib/nss_kadnode.so
-	${RLN} -s ${STAGEDIR}${PREFIX}/lib/nss_kadnode.so ${STAGEDIR}${PREFIX}/lib/nss_kadnode.so.1
-
+	${RLN} ${STAGEDIR}${PREFIX}/bin/kadnode ${STAGEDIR}${PREFIX}/bin/kadnode-ctl
+	${INSTALL_LIB} ${WRKSRC}/build/libnss_kadnode.so.2 ${STAGEDIR}${PREFIX}/lib/nss_kadnode.so.1
+	${RLN} ${STAGEDIR}${PREFIX}/lib/nss_kadnode.so.1 ${STAGEDIR}${PREFIX}/lib/nss_kadnode.so
 	${MKDIR} ${STAGEDIR}${ETCDIR}
 	${INSTALL_DATA} ${WRKSRC}/misc/peers.txt ${STAGEDIR}${ETCDIR}/peers.txt.sample
 	${INSTALL_DATA} ${WRKDIR}/kadnode.conf ${STAGEDIR}${ETCDIR}/kadnode.conf.sample
-
-	${MKDIR} ${STAGEDIR}${PREFIX}/etc/rc.d/
-	${INSTALL_SCRIPT} ${WRKDIR}/kadnode ${STAGEDIR}${PREFIX}/etc/rc.d/kadnode
-
 	${INSTALL_MAN} ${WRKSRC}/misc/manpage ${STAGEDIR}${MANPREFIX}/man/man1/kadnode.1
 
 .include <bsd.port.mk>

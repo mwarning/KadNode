@@ -10,11 +10,9 @@
 name=kadnode
 rcvar=kadnode_enable
 
-pidfile="/var/run/kadnode.pid"
-
 command="%%PREFIX%%/bin/kadnode"
-kadnode_flags="--config %%PREFIX%%/etc/kadnode/kadnode.conf --pidfile $pidfile --daemon"
-
+command_args="--config %%PREFIX%%/etc/kadnode/kadnode.conf --pidfile $pidfile --daemon"
+pidfile="/var/run/kadnode.pid"
 required_files="%%PREFIX%%/etc/kadnode/kadnode.conf"
 
 load_rc_config $name

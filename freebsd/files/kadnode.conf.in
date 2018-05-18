@@ -1,4 +1,3 @@
-
 # Load peers at startup from this file and save peers to this file at shutdown
 --peerfile %%PREFIX%%/etc/kadnode/peers.txt
 
@@ -9,7 +8,7 @@
 #
 # For domain lookup, we need to provide appropiate CA certificates.
 # Try various locations:
---tls-client-cert /usr/local/share/certs
+--tls-client-cert %%LOCALBASE%%/share/certs
 
 # As an alternative, create a secret/public key via 'kadnode --bob-create-key'
 # and load the secret keys as PEM file:
