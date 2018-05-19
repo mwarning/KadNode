@@ -106,22 +106,6 @@ strip:
 	strip build/libkadnode.so 2> /dev/null  || true
 	strip build/libnss_kadnode.so.2 2> /dev/null || true
 
-arch-pkg:
-	cd archlinux && makepkg
-
-deb-pkg:
-	dpkg-buildpackage -us -uc
-
-mac-pkg:
-	cd macos && ./build.sh
-
-freebsd-pkg:
-	rm -f freebsd/kadnode-*
-	git archive HEAD --prefix kadnode/ -o freebsd/kadnode-`awk '/PORTVERSION/{print $$2; exit;}' freebsd/Makefile`.tar.gz
-	cd freebsd; make clean
-	cd freebsd; make makesum
-	cd freebsd; make package
-
 manpage:
 	ronn --roff --manual=Kadnode\ Manual --organization=mwarning --date=2018-01-01 misc/manpage.md
 	mv misc/manpage.1 misc/manpage
