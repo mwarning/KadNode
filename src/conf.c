@@ -406,6 +406,7 @@ static int conf_load_file(const char path[])
 			argv[0] = (char*) path;
 			argv[1] = option;
 			argv[2] = value;
+
 			ret = conf_parse(ret + 1, &argv[0]);
 			if (ret != 0) {
 				fclose(file);
@@ -449,11 +450,14 @@ int conf_parse(int argc, char **argv)
 	int i;
 	int c;
 
+	optind = 1;
+
 	ret = 0;
 	while (!ret)
 	{
 		index = 0;
 		c = getopt_long(argc, argv, "46vh", options, &index);
+
 		optname = options[index].name;
 
 		switch (c)
@@ -462,9 +466,10 @@ int conf_parse(int argc, char **argv)
 			// End of options reached
 			for (i = optind; i < argc; i++) {
 				log_error("Unknown option: %s\n", argv[i]);
-				return 1;
+				ret = 1;
+				break;
 			}
-			return 0;
+			goto end;
 		case '?':
 			//log_error("Invalid option: %s", argv[curind]);
 			ret = 1;
@@ -597,6 +602,8 @@ int conf_parse(int argc, char **argv)
 			break;
 		}
 	}
+
+end:
 
 	return ret;
 }
