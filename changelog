@@ -1,3 +1,10 @@
+kadnode (2.2.2) stable; urgency=medium
+
+  * fix control command parsing
+  * fix argument parsing
+
+ -- mwarning <moritzwarning@web.de>  Fri, 18 May 2018 21:23:24 -0400
+
 kadnode (2.2.1) stable; urgency=medium
 
   * fix buffer overflow in command client
