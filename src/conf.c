@@ -445,10 +445,12 @@ int conf_parse(int argc, char **argv)
 {
 	int index;
 	const char *optname;
+	int ret;
 	int i;
 	int c;
 
-	while (1)
+	ret = 0;
+	while (!ret)
 	{
 		index = 0;
 		c = getopt_long(argc, argv, "46vh", options, &index);
@@ -465,18 +467,23 @@ int conf_parse(int argc, char **argv)
 			return 0;
 		case '?':
 			//log_error("Invalid option: %s", argv[curind]);
-			return 1;
+			ret = 1;
+			break;
 		case oAnnounce:
 			array_append(&g_announce_args[0], optarg);
-			return 0;
+			break;
 		case oQueryTld:
-			return conf_str(optname, &gconf->query_tld, optarg);
+			ret = conf_str(optname, &gconf->query_tld, optarg);
+			break;
 		case oPidFile:
-			return conf_str(optname, &gconf->pidfile, optarg);
+			ret = conf_str(optname, &gconf->pidfile, optarg);
+			break;
 		case oPeerFile:
-			return conf_str(optname, &gconf->peerfile, optarg);
+			ret = conf_str(optname, &gconf->peerfile, optarg);
+			break;
 		case oPeer:
-			return peerfile_add_peer(optarg);
+			ret = peerfile_add_peer(optarg);
+			break;
 		case oVerbosity:
 			if (strcmp(optarg, "quiet") == 0) {
 				gconf->verbosity = VERBOSITY_QUIET;
@@ -486,61 +493,68 @@ int conf_parse(int argc, char **argv)
 				gconf->verbosity = VERBOSITY_DEBUG;
 			} else {
 				log_error("Invalid argument for %s", optname);
-				return 1;
+				ret = 1;
 			}
-			return 0;
+			break;
 #ifdef CMD
 		case oCmdDisableStdin:
 			gconf->cmd_disable_stdin = 1;
-			return 0;
+			break;
 		case oCmdPath:
-			return conf_str(optname, &gconf->cmd_path, optarg);
+			ret = conf_str(optname, &gconf->cmd_path, optarg);
+			break;
 #endif
 #ifdef DNS
 		case oDnsPort:
-			return conf_port(optname, &gconf->dns_port, optarg);
+			ret = conf_port(optname, &gconf->dns_port, optarg);
+			break;
 		case oDnsProxyEnable:
 			gconf->dns_proxy_enable = 1;
-			return 0;
+			break;
 		case oDnsProxyServer:
-			return conf_str(optname, &gconf->dns_proxy_server, optarg);
+			ret = conf_str(optname, &gconf->dns_proxy_server, optarg);
+			break;
 #endif
 #ifdef NSS
 		case oNssPath:
-			return conf_str(optname, &gconf->nss_path, optarg);
+			ret = conf_str(optname, &gconf->nss_path, optarg);
+			break;
 #endif
 #ifdef TLS
 		case oTlsClientCert:
 			array_append(&g_tls_client_args[0], optarg);
-			return 0;
+			break;
 		case oTlsServerCert:
 			array_append(&g_tls_server_args[0], optarg);
-			return 0;
+			break;
 #endif
 		case oConfig:
-			return conf_str(optname, &gconf->configfile, optarg);
+			ret = conf_str(optname, &gconf->configfile, optarg);
+			break;
 		case '4':
 		case '6':
 		case oIpv4:
 		case oIpv6:
 			if (gconf->af != AF_UNSPEC) {
 				log_error("IPv4 or IPv6 mode already set: %s", optname);
-				return 1;
+				ret = 1;
+				break;
 			}
 
 			gconf->af = (c == oIpv6 || c == '6') ? AF_INET6 : AF_INET;
-			return 0;
+			break;
 		case oPort:
-			return conf_port(optname, &gconf->dht_port, optarg);
+			ret = conf_port(optname, &gconf->dht_port, optarg);
+			break;
 #ifdef LPD
 		case oLpdDisable:
 			gconf->lpd_disable = 1;
-			return 0;
+			break;
 #endif
 #ifdef FWD
 		case oFwdDisable:
 			gconf->fwd_disable = 1;
-			return 0;
+			break;
 #endif
 #ifdef __CYGWIN__
 		case oServiceInstall:
@@ -551,15 +565,17 @@ int conf_parse(int argc, char **argv)
 			exit(0);
 		case oServiceStart:
 			gconf->service_start = 1;
-			return 0;
+			break;
 #endif
 		case oIfname:
-			return conf_str(optname, &gconf->dht_ifname, optarg);
+			ret = conf_str(optname, &gconf->dht_ifname, optarg);
+			break;
 		case oUser:
-			return conf_str(optname, &gconf->user, optarg);
+			ret = conf_str(optname, &gconf->user, optarg);
+			break;
 		case oDaemon:
 			gconf->is_daemon = 1;
-			return 0;
+			break;
 		case 'h':
 		case oHelp:
 			printf("%s\n", kadnode_usage_str);
@@ -572,13 +588,17 @@ int conf_parse(int argc, char **argv)
 		case oBobCreateKey:
 			exit(bob_create_key(optarg) < 0);
 		case oBobLoadKey:
-			return bob_load_key(optarg);
+			ret = bob_load_key(optarg);
+			break;
 #endif
 		default:
 			log_error("Unhandled parameter %d", c);
-			return 1;
+			ret = 1;
+			break;
 		}
 	}
+
+	return ret;
 }
 
 // Load some values that depend on proper settings
