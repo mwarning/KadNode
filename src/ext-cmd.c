@@ -156,10 +156,10 @@ static void cmd_exec(FILE *fp, const char request[], int allow_debug)
 		} else {
 			fprintf(fp ,"Some error occured.\n");
 		}
-	} else if (match(request, "status %n")) {
+	} else if (match(request, " status %n")) {
 		// Print node id and statistics
 		kad_status(fp);
-	} else if (match(request, "announce %n")) {
+	} else if (match(request, " announce %n")) {
 		// Announce all values
 		count = 0;
 		value = announces_get();
@@ -175,36 +175,36 @@ static void cmd_exec(FILE *fp, const char request[], int allow_debug)
 		cmd_announce(fp, hostname, 0, minutes);
 	} else if (sscanf(request, "announce %255[^: ]:%d %d %c", hostname, &port, &minutes, &d) == 3) {
 		cmd_announce(fp, hostname, port, minutes);
-	} else if (match(request, "list %*s %n") && allow_debug) {
+	} else if (match(request, " list %*s %n") && allow_debug) {
 		if (sscanf(request, "blacklist %255[^: ]", hostname) == 1) {
 			cmd_blacklist(fp, hostname);
-		} else if (match(request, "list blacklist %n")) {
+		} else if (match(request, " list blacklist %n")) {
 			kad_debug_blacklist(fp);
-		} else if (match(request, "list constants %n")) {
+		} else if (match(request, " list constants %n")) {
 			kad_debug_constants(fp);
-		} else if (match(request, "list nodes %n")) {
+		} else if (match(request, " list nodes %n")) {
 			rc = kad_export_nodes(fp);
 
 			if (rc == 0) {
 				fprintf(fp, "No good nodes found.\n");
 			}
 #ifdef FWD
-		} else if (match(request, "list forwardings %n")) {
+		} else if (match(request, " list forwardings %n")) {
 			fwd_debug(fp);
 #endif
 #ifdef BOB
-		} else if (match(request, "list keys %n")) {
+		} else if (match(request, " list keys %n")) {
 			bob_debug_keys(fp);
 #endif
-		} else if (match(request, "list searches %n")) {
+		} else if (match(request, " list searches %n")) {
 			searches_debug(fp);
-		} else if (match(request, "list announcements %n")) {
+		} else if (match(request, " list announcements %n")) {
 			announces_debug(fp);
-		} else if (match(request, "list dht_buckets %n")) {
+		} else if (match(request, " list dht_buckets %n")) {
 			kad_debug_buckets(fp);
-		} else if (match(request, "list dht_searches %n")) {
+		} else if (match(request, " list dht_searches %n")) {
 			kad_debug_searches(fp);
-		} else if (match(request, "list dht_storage %n")) {
+		} else if (match(request, " list dht_storage %n")) {
 			kad_debug_storage(fp);
 		} else {
 			fprintf(fp, "Unknown command.\n");
