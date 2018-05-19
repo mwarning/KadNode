@@ -66,7 +66,7 @@ const char *kadnode_version_str = "KadNode v"MAIN_VERSION" ("
 #ifdef FWD_UPNP
 " upnp"
 #endif
-")";
+" )";
 
 static const char *kadnode_usage_str =
 "KadNode is a small decentralized DNS resolver.\n"
