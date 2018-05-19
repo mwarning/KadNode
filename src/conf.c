@@ -270,67 +270,92 @@ enum OPCODE {
 	oVersion
 };
 
-static struct option options[] = {
-	{"announce", required_argument, 0, oAnnounce},
-	{"query-tld", required_argument, 0, oQueryTld},
-	{"pidfile", required_argument, 0, oPidFile},
-	{"peerfile", required_argument, 0, oPeerFile},
-	{"peer", required_argument, 0, oPeer},
-	{"verbosity", required_argument, 0, oVerbosity},
+struct option_t {
+	const char *name;
+	uint16_t num_args;
+	uint16_t code;
+};
+
+static struct option_t g_options[] = {
+	{"--announce", 1, oAnnounce},
+	{"--query-tld", 1, oQueryTld},
+	{"--pidfile", 1, oPidFile},
+	{"--peerfile", 1, oPeerFile},
+	{"--peer", 1, oPeer},
+	{"--verbosity", 1, oVerbosity},
 #ifdef CMD
-	{"cmd-disable-stdin", no_argument, 0, oCmdDisableStdin},
-	{"cmd-port", required_argument, 0, oCmdPath},
+	{"--cmd-disable-stdin", 0, oCmdDisableStdin},
+	{"--cmd-port", 1, oCmdPath},
 #endif
 #ifdef DNS
-	{"dns-port", required_argument, 0, oDnsPort},
-	{"dns-proxy-enable", no_argument, 0, oDnsProxyEnable},
-	{"dns-proxy-server", required_argument, 0, oDnsProxyServer},
+	{"--dns-port", 1, oDnsPort},
+	{"--dns-proxy-enable", 0, oDnsProxyEnable},
+	{"--dns-proxy-server", 1, oDnsProxyServer},
 #endif
 #ifdef NSS
-	{"nss-path", required_argument, 0, oNssPath},
+	{"--nss-path", 1, oNssPath},
 #endif
 #ifdef TLS
-	{"tls-client-cert", required_argument, 0, oTlsClientCert},
-	{"tls-server-cert", required_argument, 0, oTlsServerCert},
+	{"--tls-client-cert", 1, oTlsClientCert},
+	{"--tls-server-cert", 1, oTlsServerCert},
 #endif
-	{"config", required_argument, 0, oConfig},
-	{"port", required_argument, 0, oPort},
-	{"ipv4", no_argument, 0, oIpv4},
-	{"ipv6", no_argument, 0, oIpv6},
+	{"--config", 1, oConfig},
+	{"--port", 1, oPort},
+	{"-4", 0, oIpv4},
+	{"--ipv4", 0, oIpv4},
+	{"-6", 0, oIpv6},
+	{"--ipv6", 0, oIpv6},
 #ifdef LPD
-	{"lpd-addr", required_argument, 0, oLpdAddr},
-	{"lpd-disable", no_argument, 0, oLpdDisable},
+	{"--lpd-addr", 1, oLpdAddr},
+	{"--lpd-disable", 0, oLpdDisable},
 #endif
 #ifdef FWD
-	{"fwd-disable", no_argument, 0, oFwdDisable},
+	{"--fwd-disable", 0, oFwdDisable},
 #endif
 #ifdef __CYGWIN__
-	{"service-install", no_argument, 0, oServiceInstall},
-	{"service-remove", no_argument, 0, oServiceRemove},
-	{"service-start", no_argument, 0, oServiceStart},
+	{"--service-install", 0, oServiceInstall},
+	{"--service-remove", 0, oServiceRemove},
+	{"--service-start", 0, oServiceStart},
 #endif
 #ifdef BOB
-	{"bob-create-key", required_argument, 0, oBobCreateKey},
-	{"bob-load-key", required_argument, 0, oBobLoadKey},
+	{"--bob-create-key", 1, oBobCreateKey},
+	{"--bob-load-key", 1, oBobLoadKey},
 #endif
-	{"ifname", required_argument, 0, oIfname},
-	{"user", required_argument, 0, oUser},
-	{"daemon", no_argument, 0, oDaemon},
-	{"help", no_argument, 0, oHelp},
-	{"version", no_argument, 0, oVersion},
-	{0, 0, 0, 0}
+	{"--ifname", 1, oIfname},
+	{"--user", 1, oUser},
+	{"--daemon", 0, oDaemon},
+	{"-h", 0, oHelp},
+	{"--help", 0, oHelp},
+	{"-v", 0, oVersion},
+	{"--version", 0, oVersion},
+	{NULL, 0, 0}
 };
+
+static const struct option_t *find_option(const char name[])
+{
+	struct option_t *option;
+
+	option = g_options;
+	while (option) {
+		if (0 == strcmp(name, option->name)) {
+			return option;
+		}
+		option++;
+	}
+
+	return NULL;
+}
 
 // Set a string once - error when already set
 static int conf_str(const char opt[], char *dst[], const char src[])
 {
 	if (*dst != NULL) {
 		log_error("Value was already set for %s: %s", opt, src);
-		return 1;
+		return EXIT_FAILURE;
 	}
 
 	*dst = strdup(src);
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 static int conf_port(const char opt[], int *dst, const char src[])
@@ -339,28 +364,27 @@ static int conf_port(const char opt[], int *dst, const char src[])
 
 	if (n < 0) {
 		log_error("Invalid port for %s: %s", opt, src);
-		return 1;
+		return EXIT_FAILURE;
 	}
 
 	if (*dst >= 0) {
 		log_error("Value was already set for %s: %s", opt, src);
-		return 1;
+		return EXIT_FAILURE;
 	}
 
 	*dst = n;
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 // forward declaration
-int conf_parse(int argc, char **argv);
+static int conf_set(const char opt[], const char val[]);
 
 static int conf_load_file(const char path[])
 {
-	char line[256];
 	char option[32];
-	char value[128];
+	char value[256];
+	char line[32 + 256];
 	char dummy[4];
-	char *argv[3];
 	char *last;
 	struct stat s;
 	int ret;
@@ -369,14 +393,14 @@ static int conf_load_file(const char path[])
 
 	if (stat(path, &s) == 0 && !(s.st_mode & S_IFREG)) {
 		log_error("File expected: %s", path);
-		return 1;
+		return EXIT_FAILURE;
 	}
 
 	nline = 0;
 	file = fopen(path, "r");
 	if (file == NULL) {
 		log_error("Cannot open file: %s (%s)", path, strerror(errno));
-		return 1;
+		return EXIT_FAILURE;
 	}
 
 	while (fgets(line, sizeof(line), file) != NULL) {
@@ -392,35 +416,31 @@ static int conf_load_file(const char path[])
 			continue;
 		}
 
-		ret = sscanf(line, " %31s %127s %3s", option, value, dummy);
+		ret = sscanf(line, " %31s %255s %3s", option, value, dummy);
 
 		if (ret == 1 || ret == 2) {
 			// Prevent recursive inclusion
 			if (strcmp(option, "--config ") == 0) {
 				fclose(file);
 				log_error("Option '--config' not allowed inside a configuration file, line %ld.", nline);
-				return 1;
+				return EXIT_FAILURE;
 			}
 
 			// parse --option value / --option
-			argv[0] = (char*) path;
-			argv[1] = option;
-			argv[2] = value;
-
-			ret = conf_parse(ret + 1, &argv[0]);
-			if (ret != 0) {
+			ret = conf_set(option, value);
+			if (ret == EXIT_FAILURE) {
 				fclose(file);
-				return 1;
+				return EXIT_FAILURE;
 			}
 		} else {
 			fclose(file);
 			log_error("Invalid line in config file: %s (%d)", path, nline);
-			return 1;
+			return EXIT_FAILURE;
 		}
 	}
 
 	fclose(file);
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 // Append to an array (assumes there is alway enough space ...)
@@ -442,170 +462,138 @@ static void array_free(const char **array)
 	}
 }
 
-int conf_parse(int argc, char **argv)
+static int conf_set(const char opt[], const char val[])
 {
-	int index;
-	const char *optname;
-	int ret;
-	int i;
-	int c;
+	const struct option_t *option;
 
-	optind = 1;
+	option = find_option(opt);
 
-	ret = 0;
-	while (!ret)
-	{
-		index = 0;
-		c = getopt_long(argc, argv, "46vh", options, &index);
-
-		optname = options[index].name;
-
-		switch (c)
-		{
-		case -1:
-			// End of options reached
-			for (i = optind; i < argc; i++) {
-				log_error("Unknown option: %s\n", argv[i]);
-				ret = 1;
-				break;
-			}
-			goto end;
-		case '?':
-			//log_error("Invalid option: %s", argv[curind]);
-			ret = 1;
-			break;
-		case oAnnounce:
-			array_append(&g_announce_args[0], optarg);
-			break;
-		case oQueryTld:
-			ret = conf_str(optname, &gconf->query_tld, optarg);
-			break;
-		case oPidFile:
-			ret = conf_str(optname, &gconf->pidfile, optarg);
-			break;
-		case oPeerFile:
-			ret = conf_str(optname, &gconf->peerfile, optarg);
-			break;
-		case oPeer:
-			ret = peerfile_add_peer(optarg);
-			break;
-		case oVerbosity:
-			if (strcmp(optarg, "quiet") == 0) {
-				gconf->verbosity = VERBOSITY_QUIET;
-			} else if (strcmp(optarg, "verbose") == 0) {
-				gconf->verbosity = VERBOSITY_VERBOSE;
-			} else if (strcmp(optarg, "debug") == 0) {
-				gconf->verbosity = VERBOSITY_DEBUG;
-			} else {
-				log_error("Invalid argument for %s", optname);
-				ret = 1;
-			}
-			break;
-#ifdef CMD
-		case oCmdDisableStdin:
-			gconf->cmd_disable_stdin = 1;
-			break;
-		case oCmdPath:
-			ret = conf_str(optname, &gconf->cmd_path, optarg);
-			break;
-#endif
-#ifdef DNS
-		case oDnsPort:
-			ret = conf_port(optname, &gconf->dns_port, optarg);
-			break;
-		case oDnsProxyEnable:
-			gconf->dns_proxy_enable = 1;
-			break;
-		case oDnsProxyServer:
-			ret = conf_str(optname, &gconf->dns_proxy_server, optarg);
-			break;
-#endif
-#ifdef NSS
-		case oNssPath:
-			ret = conf_str(optname, &gconf->nss_path, optarg);
-			break;
-#endif
-#ifdef TLS
-		case oTlsClientCert:
-			array_append(&g_tls_client_args[0], optarg);
-			break;
-		case oTlsServerCert:
-			array_append(&g_tls_server_args[0], optarg);
-			break;
-#endif
-		case oConfig:
-			ret = conf_str(optname, &gconf->configfile, optarg);
-			break;
-		case '4':
-		case '6':
-		case oIpv4:
-		case oIpv6:
-			if (gconf->af != AF_UNSPEC) {
-				log_error("IPv4 or IPv6 mode already set: %s", optname);
-				ret = 1;
-				break;
-			}
-
-			gconf->af = (c == oIpv6 || c == '6') ? AF_INET6 : AF_INET;
-			break;
-		case oPort:
-			ret = conf_port(optname, &gconf->dht_port, optarg);
-			break;
-#ifdef LPD
-		case oLpdDisable:
-			gconf->lpd_disable = 1;
-			break;
-#endif
-#ifdef FWD
-		case oFwdDisable:
-			gconf->fwd_disable = 1;
-			break;
-#endif
-#ifdef __CYGWIN__
-		case oServiceInstall:
-			windows_service_install();
-			exit(0);
-		case oServiceRemove:
-			windows_service_remove();
-			exit(0);
-		case oServiceStart:
-			gconf->service_start = 1;
-			break;
-#endif
-		case oIfname:
-			ret = conf_str(optname, &gconf->dht_ifname, optarg);
-			break;
-		case oUser:
-			ret = conf_str(optname, &gconf->user, optarg);
-			break;
-		case oDaemon:
-			gconf->is_daemon = 1;
-			break;
-		case 'h':
-		case oHelp:
-			printf("%s\n", kadnode_usage_str);
-			exit(0);
-		case 'v':
-		case oVersion:
-			printf("%s\n", kadnode_version_str);
-			exit(0);
-#ifdef BOB
-		case oBobCreateKey:
-			exit(bob_create_key(optarg) < 0);
-		case oBobLoadKey:
-			ret = bob_load_key(optarg);
-			break;
-#endif
-		default:
-			log_error("Unhandled parameter %d", c);
-			ret = 1;
-			break;
-		}
+	if (option == NULL) {
+		log_error("Unknown parameter: %s", opt);
+		return EXIT_FAILURE;
 	}
 
-end:
+	if (option->num_args == 1 && val == NULL) {
+		log_error("Argument expected for option: %s", opt);
+		return EXIT_FAILURE;
+	}
 
-	return ret;
+	if (option->num_args == 0 && val != NULL) {
+		log_error("No argument expected for option: %s", opt);
+		return EXIT_FAILURE;
+	}
+
+	switch (option->code)
+	{
+	case oAnnounce:
+		array_append(&g_announce_args[0], val);
+		break;
+	case oQueryTld:
+		return conf_str(opt, &gconf->query_tld, val);
+	case oPidFile:
+		return conf_str(opt, &gconf->pidfile, val);
+	case oPeerFile:
+		return conf_str(opt, &gconf->peerfile, val);
+	case oPeer:
+		return peerfile_add_peer(val);
+	case oVerbosity:
+		if (strcmp(val, "quiet") == 0) {
+			gconf->verbosity = VERBOSITY_QUIET;
+		} else if (strcmp(val, "verbose") == 0) {
+			gconf->verbosity = VERBOSITY_VERBOSE;
+		} else if (strcmp(val, "debug") == 0) {
+			gconf->verbosity = VERBOSITY_DEBUG;
+		} else {
+			log_error("Invalid argument for %s", opt);
+			return EXIT_FAILURE;
+		}
+		break;
+#ifdef CMD
+	case oCmdDisableStdin:
+		gconf->cmd_disable_stdin = 1;
+		break;
+	case oCmdPath:
+		return conf_str(opt, &gconf->cmd_path, val);
+#endif
+#ifdef DNS
+	case oDnsPort:
+		return conf_port(opt, &gconf->dns_port, val);
+	case oDnsProxyEnable:
+		gconf->dns_proxy_enable = 1;
+		break;
+	case oDnsProxyServer:
+		return conf_str(opt, &gconf->dns_proxy_server, val);
+#endif
+#ifdef NSS
+	case oNssPath:
+		return conf_str(opt, &gconf->nss_path, val);
+#endif
+#ifdef TLS
+	case oTlsClientCert:
+		array_append(&g_tls_client_args[0], val);
+		break;
+	case oTlsServerCert:
+		array_append(&g_tls_server_args[0], val);
+		break;
+#endif
+	case oConfig:
+		return conf_str(opt, &gconf->configfile, val);
+	case oIpv4:
+	case oIpv6:
+		if (gconf->af != AF_UNSPEC) {
+			log_error("IPv4 or IPv6 mode already set: %s", opt);
+			return EXIT_FAILURE;
+		}
+
+		gconf->af = (option->code == oIpv6) ? AF_INET6 : AF_INET;
+		break;
+	case oPort:
+		return conf_port(opt, &gconf->dht_port, val);
+#ifdef LPD
+	case oLpdDisable:
+		gconf->lpd_disable = 1;
+		break;
+#endif
+#ifdef FWD
+	case oFwdDisable:
+		gconf->fwd_disable = 1;
+		break;
+#endif
+#ifdef __CYGWIN__
+	case oServiceInstall:
+		windows_service_install();
+		exit(0);
+	case oServiceRemove:
+		windows_service_remove();
+		exit(0);
+	case oServiceStart:
+		gconf->service_start = 1;
+		break;
+#endif
+	case oIfname:
+		return conf_str(opt, &gconf->dht_ifname, val);
+	case oUser:
+		return conf_str(opt, &gconf->user, val);
+	case oDaemon:
+		gconf->is_daemon = 1;
+		break;
+	case oHelp:
+		printf("%s\n", kadnode_usage_str);
+		exit(0);
+	case oVersion:
+		printf("%s\n", kadnode_version_str);
+		exit(0);
+#ifdef BOB
+	case oBobCreateKey:
+		exit(bob_create_key(val) < 0);
+	case oBobLoadKey:
+		return bob_load_key(val);
+#endif
+	default:
+		return EXIT_FAILURE;
+	}
+
+	return EXIT_SUCCESS;
 }
 
 // Load some values that depend on proper settings
@@ -664,7 +652,10 @@ int conf_load(void)
 
 int conf_setup(int argc, char **argv)
 {
+	const char *opt;
+	const char *val;
 	int rc;
+	int i;
 
 	gconf = (struct gconf_t*) calloc(1, sizeof(struct gconf_t));
 	*gconf = ((struct gconf_t) {
@@ -680,14 +671,34 @@ int conf_setup(int argc, char **argv)
 #endif
 	});
 
-	rc = conf_parse(argc, argv);
+	for (i = 1; i < argc; ++i) {
+		opt = argv[i];
+		val = argv[i + 1];
 
-	if (rc == 0 && gconf->configfile) {
+		if (val && val[0] != '-') {
+			// -x abc
+			rc = conf_set(opt, val);
+			i += 1;
+		} else {
+			// -x
+			rc = conf_set(opt, NULL);
+		}
+
+		if (rc == EXIT_FAILURE) {
+			return EXIT_FAILURE;
+		}
+	}
+
+	if (gconf->configfile) {
 		rc = conf_load_file(gconf->configfile);
+
+		if (rc == EXIT_FAILURE) {
+			return EXIT_FAILURE;
+		}
 	}
 
 	// Set defaults for unset settings
 	conf_defaults();
 
-	return rc ? EXIT_FAILURE : EXIT_SUCCESS;
+	return EXIT_SUCCESS;
 }

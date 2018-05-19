@@ -140,7 +140,7 @@ int peerfile_add_peer(const char addr_str[])
 	new->next = g_peers;
 	g_peers = new;
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 static void peerfile_handle_peerfile(int _rc, int _sock)
