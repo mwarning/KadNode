@@ -336,7 +336,7 @@ static const struct option_t *find_option(const char name[])
 	struct option_t *option;
 
 	option = g_options;
-	while (option) {
+	while (option->name) {
 		if (0 == strcmp(name, option->name)) {
 			return option;
 		}
@@ -427,7 +427,7 @@ static int conf_load_file(const char path[])
 			}
 
 			// parse --option value / --option
-			ret = conf_set(option, value);
+			ret = conf_set(option, (ret == 2) ? value : NULL);
 			if (ret == EXIT_FAILURE) {
 				fclose(file);
 				return EXIT_FAILURE;
