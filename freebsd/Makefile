@@ -3,7 +3,7 @@
 
 PORTNAME=	kadnode
 DISTVERSIONPREFIX=	v
-DISTVERSION=	2.2.1
+DISTVERSION=	2.2.3
 PORTREVISION=	0
 CATEGORIES=	dns
 
@@ -19,11 +19,12 @@ GH_ACCOUNT=	mwarning
 GH_PROJECT=	KadNode
 USE_RC_SUBR=	kadnode
 
-MAKE_ENV=	FEATURES="${FEATURES}" LFLAGS="${LDFLAGS}"
+MAKE_ENV=	FEATURES="${FEATURES}"
 SUB_FILES=	kadnode.conf
 
 OPTIONS_DEFINE=	AUTH CMD DEBUG DNS LPD NATPMP NSS UPNP
 OPTIONS_DEFAULT=	AUTH CMD LPD NSS
+OPTIONS_SUB=	yes
 
 AUTH_DESC=	Authorization support based on mbedtls
 CMD_DESC=	Command line control tool kadnode-ctl
@@ -56,11 +57,18 @@ UPNP_VARS=		FEATURES+="upnp"
 do-install:
 	${INSTALL_PROGRAM} ${WRKSRC}/build/kadnode ${STAGEDIR}${PREFIX}/bin/
 	${RLN} ${STAGEDIR}${PREFIX}/bin/kadnode ${STAGEDIR}${PREFIX}/bin/kadnode-ctl
-	${INSTALL_LIB} ${WRKSRC}/build/libnss_kadnode.so.2 ${STAGEDIR}${PREFIX}/lib/nss_kadnode.so.1
-	${RLN} ${STAGEDIR}${PREFIX}/lib/nss_kadnode.so.1 ${STAGEDIR}${PREFIX}/lib/nss_kadnode.so
 	${MKDIR} ${STAGEDIR}${ETCDIR}
-	${INSTALL_DATA} ${WRKSRC}/misc/peers.txt ${STAGEDIR}${ETCDIR}/peers.txt.sample
-	${INSTALL_DATA} ${WRKDIR}/kadnode.conf ${STAGEDIR}${ETCDIR}/kadnode.conf.sample
-	${INSTALL_MAN} ${WRKSRC}/misc/manpage ${STAGEDIR}${MANPREFIX}/man/man1/kadnode.1
+	${INSTALL_DATA} ${WRKSRC}/misc/peers.txt \
+		${STAGEDIR}${ETCDIR}/peers.txt.sample
+	${INSTALL_DATA} ${WRKDIR}/kadnode.conf \
+		${STAGEDIR}${ETCDIR}/kadnode.conf.sample
+	${INSTALL_MAN} ${WRKSRC}/misc/manpage \
+		${STAGEDIR}${MANPREFIX}/man/man1/kadnode.1
+
+do-install-NSS-on:
+	${INSTALL_LIB} ${WRKSRC}/build/libnss_kadnode.so.2 \
+		${STAGEDIR}${PREFIX}/lib/nss_kadnode.so.1
+	${RLN} ${STAGEDIR}${PREFIX}/lib/nss_kadnode.so.1 \
+		${STAGEDIR}${PREFIX}/lib/nss_kadnode.so
 
 .include <bsd.port.mk>
