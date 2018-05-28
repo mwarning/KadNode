@@ -16,7 +16,7 @@ Supported are also domains consisting of public keys represented as characters. 
 * UPnP/NAT-PMP support
 * local peer discovery
 * small size, ~85KB depending on features, ~35KB compressed
-* command line interface control program
+* command line control program
 * NSS support through /etc/nsswitch.conf
 * DNS server interface and DNS proxy
   * handles A, AAAA, and SRV requests
