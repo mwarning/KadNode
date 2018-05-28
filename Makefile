@@ -1,8 +1,8 @@
 
 CC ?= gcc
 CFLAGS ?= -Os -Wall -Wwrite-strings -pedantic
-CFLAGS += -std=gnu99 -I/usr/local/include
-LDFLAGS += -L/usr/local/lib -lc
+CFLAGS += -std=gnu99 -I/usr/local/include $(CPPFLAGS)
+LDFLAGS += -L/usr/local/lib -lc $(CPPFLAGS)
 FEATURES ?= dns lpd tls bob cmd debug nss #natpmp upnp
 
 OBJS = build/searches.o build/kad.o build/log.o \
@@ -14,7 +14,6 @@ ifeq ($(OS),Windows_NT)
 else
   OBJS += build/unix.o
 endif
-
 
 .PHONY: all clean strip install kadnode libkadnode.so libkanode.a \
 	libnss-kadnode.so.2 arch-pkg deb-pkg osx-pkg manpage install uninstall
@@ -80,21 +79,21 @@ endif
 
 
 build/%.o : src/%.c src/%.h
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) $(LDFLAGS) -c -o $@ $<
 
 libnss-kadnode.so.2:
-	$(CC) $(CFLAGS) -fPIC -c -o build/ext-libnss.o src/ext-libnss.c
-	$(CC) $(CFLAGS) -fPIC -shared -Wl,-soname,libnss_kadnode.so.2 -o build/libnss_kadnode.so.2 build/ext-libnss.o
+	$(CC) $(CFLAGS) $(LDFLAGS) -fPIC -c -o build/ext-libnss.o src/ext-libnss.c
+	$(CC) $(CFLAGS) $(LDFLAGS) -fPIC -shared -Wl,-soname,libnss_kadnode.so.2 -o build/libnss_kadnode.so.2 build/ext-libnss.o
 
 libkadnode.a: build/libkadnode.o $(OBJS)
 	ar rcs build/libkadnode.a build/libkadnode.o $(OBJS)
 
 libkadnode.so: CFLAGS += -fpic
 libkadnode.so: build/libkadnode.o $(OBJS)
-	$(CC) -shared $(OBJS) build/libkadnode.o -o build/libkadnode.so
+	$(CC) $(CFLAGS) $(LDFLAGS) -shared $(OBJS) build/libkadnode.o -o build/libkadnode.so
 
 kadnode: build/main.o $(OBJS) $(EXTRA)
-	$(CC) build/main.o $(OBJS) -o build/kadnode $(LDFLAGS)
+	$(CC) $(CFLAGS) $(LDFLAGS) build/main.o $(OBJS) -o build/kadnode
 	ln -s kadnode build/kadnode-ctl 2> /dev/null || true
 
 clean:
@@ -102,8 +101,8 @@ clean:
 
 strip:
 	strip build/kadnode 2> /dev/null || true
-	strip build/libkadnode.a 2> /dev/null  || true
-	strip build/libkadnode.so 2> /dev/null  || true
+	strip build/libkadnode.a 2> /dev/null || true
+	strip build/libkadnode.so 2> /dev/null || true
 	strip build/libnss_kadnode.so.2 2> /dev/null || true
 
 manpage:
