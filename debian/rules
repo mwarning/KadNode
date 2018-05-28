@@ -1,8 +1,8 @@
 #!/usr/bin/make -f
 
-export DEB_BUILD_HARDENING=1
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 export FEATURES="tls bob lpd cmd nss"
 
 %:
-	dh $@ 
+	dh $@

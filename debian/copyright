@@ -1,8 +1,10 @@
-Name: KadNode
-Maintainer: Moritz Warning <moritzwarning@web.de>
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: KadNode
 Source: https://github.com/mwarning/kadnode
 
-Copyright: Moritz Warning <moritzwarning@web.de>
+Files: *
+Copyright: 2018 Moritz Warning
+   2018 Juliusz Chroboczek
 License: MIT
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal

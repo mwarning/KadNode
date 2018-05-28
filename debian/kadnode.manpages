@@ -1,1 +1,2 @@
-./misc/manpage
+debian/kadnode.1
+debian/kadnode-ctl.1

@@ -1,13 +1,16 @@
 Source: kadnode
 Section: net
-Priority: extra
+Priority: optional
 Maintainer: Moritz Warning <moritzwarning@web.de>
-Build-Depends: debhelper (>=9)
-Standards-Version: 3.9.4
+Build-Depends: debhelper (>=11)
+Standards-Version: 4.1.4
 Homepage: https://github.com/mwarning/kadnode
 
 Package: kadnode
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, libmbedtls10  (>=2.4.2)
-Description: A decentralized DNS system based that let everyone announce domains. X509 certificates can be used.
-
+Description: decentralized DynDNS alternative
+ KadNode is a P2P DNS resolver that intercepts system requests for the
+ p2p TLD. The decentralized BitTorrent DHT network is network is used
+ to find IP addresses. Domains can be ECC crypto key in hex notations
+ or domains that are backed by a Public Key Infrastructure (PKI).

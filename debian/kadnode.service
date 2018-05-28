@@ -1,6 +1,7 @@
 [Unit]
 Description=P2P DNS resolver
 After=network.target
+Documentation=man:kadnode(1)
 
 [Service]
 ExecStart=/usr/bin/kadnode --daemon --pidfile /var/run/kadnode.pid --config /etc/kadnode/kadnode.conf
