@@ -84,7 +84,7 @@ Any reachable node can now resolve c492192ac20144ed2a43d57e7239f5ef5f6bb418a5160
 
 ## No Authentication
 
-KadNode also allows to just lookup a hexdecimal string and to get IP addresses as return.
+KadNode also allows one to just lookup a hexdecimal string and to get IP addresses as return.
 This is the plain use of the DHT. The hexadecimal string will be cut down or filled up with zeros internally to fit the size the DHT uses (currently 20 bytes).
 
 ## OPTIONS
@@ -133,7 +133,7 @@ This is the plain use of the DHT. The hexadecimal string will be cut down or fil
     Disable the local control interface.
 
   * `--cmd-path` *path*  
-    Bind the remote control interface to a unix socket (Default: /tmp/kadnode_cmd.sock).
+    Bind the remote control interface to a unix socket (Default: /tmp/kadnode/kadnode_cmd.sock).
 
   * `--dns-port` *port*  
     Bind the DNS server interface to this local port (Default: 3535).
@@ -148,7 +148,7 @@ This is the plain use of the DHT. The hexadecimal string will be cut down or fil
     Use IP address of an external DNS server instead of /etc/resolv.conf.
 
   * `--nss-path` *path*  
-    Bind the "Name Service Switch" to a unix socket (Default: /tmp/kadnode_nss.sock).
+    Bind the "Name Service Switch" to a unix socket (Default: /tmp/kadnode/kadnode_nss.sock).
 
   * `--tls-client-cert` *path*  
     Path to file or folder of CA root certificates.  
@@ -204,7 +204,7 @@ When not started in background, KadNode accepts a variety of commands from stand
     List various internal data structures.
 
   * `blacklist` *addr*  
-    Blacklist a specifc IP address.
+    Blacklist a specific IP address.
 
 ## KadNode External Console
 

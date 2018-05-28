@@ -106,7 +106,7 @@ Now make the secret key load on KadNode startup: \fBkadnode \-\-bob\-load\-key m
 Any reachable node can now resolve c492192ac20144ed2a43d57e7239f5ef5f6bb418a51600980e55ff565cc916a4\.p2p to the IP address of the announcing host\. There is no need to share any more information beforehand\.
 .
 .SH "No Authentication"
-KadNode also allows to just lookup a hexdecimal string and to get IP addresses as return\. This is the plain use of the DHT\. The hexadecimal string will be cut down or filled up with zeros internally to fit the size the DHT uses (currently 20 bytes)\.
+KadNode also allows one to just lookup a hexdecimal string and to get IP addresses as return\. This is the plain use of the DHT\. The hexadecimal string will be cut down or filled up with zeros internally to fit the size the DHT uses (currently 20 bytes)\.
 .
 .SH "OPTIONS"
 .
@@ -204,7 +204,7 @@ Disable the local control interface\.
 \fB\-\-cmd\-path\fR \fIpath\fR
 .
 .br
-Bind the remote control interface to a unix socket (Default: /tmp/kadnode\.sock)\.
+Bind the remote control interface to a unix socket (Default: /tmp/kadnode/kadnode_cmd\.sock)\.
 .
 .IP "\(bu" 4
 \fB\-\-dns\-port\fR \fIport\fR
@@ -231,10 +231,10 @@ Enable DNS proxy mode\. Uses /etc/resolv\.conf by default\.
 Use IP address of an external DNS server instead of /etc/resolv\.conf\.
 .
 .IP "\(bu" 4
-\fB\-\-nss\-port\fR \fIport\fR
+\fB\-\-nss\-path\fR \fIpath\fR
 .
 .br
-Bind the "Name Service Switch" to this local port (Default: 4053)\.
+Bind the "Name Service Switch" to a unix socket (Default: /tmp/kadnode/kadnode_nss\.sock)\.
 .
 .IP "\(bu" 4
 \fB\-\-tls\-client\-cert\fR \fIpath\fR
@@ -353,7 +353,7 @@ List various internal data structures\.
 \fBblacklist\fR \fIaddr\fR
 .
 .br
-Blacklist a specifc IP address\.
+Blacklist a specific IP address\.
 .
 .IP "" 0
 .
