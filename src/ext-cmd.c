@@ -154,7 +154,7 @@ static void cmd_exec(FILE *fp, const char request[], int allow_debug)
 				fprintf(fp ,"Search in progress.\n");
 			}
 		} else {
-			fprintf(fp ,"Some error occured.\n");
+			fprintf(fp ,"Some error occurred.\n");
 		}
 	} else if (match(request, " status %n")) {
 		// Print node id and statistics
