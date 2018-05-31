@@ -66,7 +66,7 @@ do-install:
 		${STAGEDIR}${MANPREFIX}/man/man1/kadnode.1
 
 do-install-NSS-on:
-	${INSTALL_LIB} ${WRKSRC}/build/libnss_kadnode.so.2 \
+	${INSTALL_LIB} ${WRKSRC}/build/libnss_kadnode.so \
 		${STAGEDIR}${PREFIX}/lib/nss_kadnode.so.1
 	${RLN} ${STAGEDIR}${PREFIX}/lib/nss_kadnode.so.1 \
 		${STAGEDIR}${PREFIX}/lib/nss_kadnode.so

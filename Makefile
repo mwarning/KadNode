@@ -16,7 +16,7 @@ else
 endif
 
 .PHONY: all clean strip install kadnode libkadnode.so libkanode.a \
-	libnss-kadnode.so.2 arch-pkg deb-pkg osx-pkg manpage install uninstall
+	libnss-kadnode.so arch-pkg deb-pkg osx-pkg manpage install uninstall
 
 all: kadnode
 
@@ -49,7 +49,7 @@ endif
 ifeq ($(findstring nss,$(FEATURES)),nss)
   OBJS += build/ext-nss.o
   CFLAGS += -DNSS
-  EXTRA += libnss-kadnode.so.2
+  EXTRA += libnss-kadnode.so
 endif
 
 ifeq ($(findstring tls,$(FEATURES)),tls)
@@ -81,9 +81,9 @@ endif
 build/%.o : src/%.c src/%.h
 	$(CC) $(CFLAGS) $(LDFLAGS) -c -o $@ $<
 
-libnss-kadnode.so.2:
+libnss-kadnode.so:
 	$(CC) $(CFLAGS) $(LDFLAGS) -fPIC -c -o build/ext-libnss.o src/ext-libnss.c
-	$(CC) $(CFLAGS) $(LDFLAGS) -fPIC -shared -Wl,-soname,libnss_kadnode.so.2 -o build/libnss_kadnode.so.2 build/ext-libnss.o
+	$(CC) $(CFLAGS) $(LDFLAGS) -fPIC -shared -Wl,-soname,libnss_kadnode.so -o build/libnss_kadnode.so build/ext-libnss.o
 
 libkadnode.a: build/libkadnode.o $(OBJS)
 	ar rcs build/libkadnode.a build/libkadnode.o $(OBJS)
@@ -113,6 +113,6 @@ install:
 uninstall:
 	rm $(DESTDIR)/usr/bin/kadnode 2> /dev/null || true
 	rm $(DESTDIR)/usr/bin/kadnode-ctl 2> /dev/null || true
-	rm $(DESTDIR)/lib/libnss_kadnode.so.2 2> /dev/null || true
+	rm $(DESTDIR)/lib/libnss_kadnode.so 2> /dev/null || true
 	rm $(DESTDIR)/usr/lib/libkadnode.so 2> /dev/null || true
 	sed -i -e 's/^\(hosts:.*\)kadnode \(.*\)/\1\2/' $(DESTDIR)/etc/nsswitch.conf 2> /dev/null || true
