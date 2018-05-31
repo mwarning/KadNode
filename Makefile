@@ -99,12 +99,6 @@ kadnode: build/main.o $(OBJS) $(EXTRA)
 clean:
 	rm -rf build/*
 
-strip:
-	strip build/kadnode 2> /dev/null || true
-	strip build/libkadnode.a 2> /dev/null || true
-	strip build/libkadnode.so 2> /dev/null || true
-	strip build/libnss_kadnode.so.2 2> /dev/null || true
-
 manpage:
 	ronn --roff --manual=Kadnode\ Manual --organization=mwarning --date=2018-01-01 misc/manpage.md
 	mv misc/manpage.1 misc/manpage
