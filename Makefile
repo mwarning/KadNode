@@ -2,7 +2,7 @@
 CC ?= gcc
 CFLAGS ?= -Os -Wall -Wwrite-strings -pedantic
 CFLAGS += -std=gnu99 -I/usr/local/include $(CPPFLAGS)
-LDFLAGS += -L/usr/local/lib -lc $(CPPFLAGS)
+LDFLAGS += -L/usr/local/lib -lc
 FEATURES ?= dns lpd tls bob cmd debug nss #natpmp upnp
 
 OBJS = build/searches.o build/kad.o build/log.o \
