@@ -1,5 +1,5 @@
 kadnode (2.2.3-1) stable; urgency=medium
 
-  * fix various segfaults parsing arguments
+  * Closes: #900583 - initial package
 
  -- Moritz Warning <moritzwarning@web.de>  Sun, 20 May 2018 19:25:37 -0400

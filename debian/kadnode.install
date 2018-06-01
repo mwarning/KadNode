@@ -1,5 +1,0 @@
-build/kadnode /usr/bin/
-build/kadnode-ctl /usr/bin/
-build/libnss_kadnode.so.2 /lib/
-misc/peers.txt /etc/kadnode/
-misc/kadnode.conf /etc/kadnode/

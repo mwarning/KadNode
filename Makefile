@@ -16,7 +16,7 @@ else
 endif
 
 .PHONY: all clean strip install kadnode libkadnode.so libkanode.a \
-	libnss-kadnode.so arch-pkg deb-pkg osx-pkg manpage install uninstall
+	libnss_kadnode arch-pkg deb-pkg osx-pkg manpage install uninstall
 
 all: kadnode
 
@@ -49,7 +49,7 @@ endif
 ifeq ($(findstring nss,$(FEATURES)),nss)
   OBJS += build/ext-nss.o
   CFLAGS += -DNSS
-  EXTRA += libnss-kadnode.so
+  EXTRA += libnss_kadnode
 endif
 
 ifeq ($(findstring tls,$(FEATURES)),tls)
@@ -81,9 +81,9 @@ endif
 build/%.o : src/%.c src/%.h
 	$(CC) $(CFLAGS) $(LDFLAGS) -c -o $@ $<
 
-libnss-kadnode.so:
+libnss_kadnode:
 	$(CC) $(CFLAGS) $(LDFLAGS) -fPIC -c -o build/ext-libnss.o src/ext-libnss.c
-	$(CC) $(CFLAGS) $(LDFLAGS) -fPIC -shared -Wl,-soname,libnss_kadnode.so -o build/libnss_kadnode.so build/ext-libnss.o
+	$(CC) $(CFLAGS) $(LDFLAGS) -fPIC -shared -Wl,-soname,libnss_kadnode.so.2 -o build/libnss_kadnode-2.0.so build/ext-libnss.o
 
 libkadnode.a: build/libkadnode.o $(OBJS)
 	ar rcs build/libkadnode.a build/libkadnode.o $(OBJS)

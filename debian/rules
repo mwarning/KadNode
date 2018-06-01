@@ -4,5 +4,24 @@ export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 export FEATURES="tls bob lpd cmd nss"
 
+# https://wiki.debian.org/Multiarch/Implementation#dh.281.29_and_autotools
+DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
+
+# Top directory of the source code
+SRCTOP := $(shell if [ "$$PWD" != "" ]; then echo $$PWD; else pwd; fi)
+
+# Destination directory where files will be installed
+DESTDIR = $(SRCTOP)/debian/kadnode
+
 %:
 	dh $@
+
+override_dh_auto_install:
+	install -s build/kadnode $(DESTDIR)/usr/bin/
+	ln -s kadnode $(DESTDIR)/usr/bin/kadnode-ctl
+	mkdir $(DESTDIR)/lib/$(DEB_HOST_MULTIARCH)/
+	install -s build/libnss_kadnode-2.0.so $(DESTDIR)/lib/$(DEB_HOST_MULTIARCH)/
+	ln -s libnss_kadnode-2.0.so $(DESTDIR)/lib/$(DEB_HOST_MULTIARCH)/libnss_kadnode.so.2
+	mkdir -p $(DESTDIR)/etc/kadnode
+	cp misc/peers.txt $(DESTDIR)/etc/kadnode/
+	cp misc/kadnode.conf $(DESTDIR)/etc/kadnode/
