@@ -30,3 +30,18 @@ Install the debian package:
 ```
 dpkg -i kadnode_*.deb
 ```
+
+# lintian
+
+To check the package for errors and warnings, use lintian.
+
+Install/Configuration:
+```
+sudo apt install lintian
+echo -e "display-info=y\ndisplay-experimental=y\npedantic=y\ncolor=auto" > ~/.config/lintian/lintianrc
+```
+
+Usage:
+```
+lintian kadnode_*.deb
+```
