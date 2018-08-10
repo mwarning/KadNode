@@ -101,7 +101,8 @@ This is the plain use of the DHT. The hexadecimal string will be cut down or fil
     Change the UUID after start.
 
   * `--port` *port*  
-    Bind the DHT to this port (Default: 6881).  
+    Bind the DHT to this port.  
+    Default: `6881`
 
   * `--config` *file*  
     Provide a configuration file with one command line  
@@ -118,10 +119,12 @@ This is the plain use of the DHT. The hexadecimal string will be cut down or fil
 
   * `--query-tld` *domain*  
     Top level domain used to filter queries to be resolved by KadNode.  
-    Set to empty string to match all. (Default: ".p2p")
+    Set to empty string to match all.  
+    Default: `.p2p`
 
   * `--verbosity` *level*  
-    Verbosity level: quiet, verbose or debug (Default: verbose).
+    Verbosity level quiet, verbose or debug.  
+    Default: `verbose`
 
   * `--pidfile` *file-path*  
     Write process pid to a file.
@@ -133,13 +136,16 @@ This is the plain use of the DHT. The hexadecimal string will be cut down or fil
     Disable the local control interface.
 
   * `--cmd-path` *path*  
-    Bind the remote control interface to a unix socket (Default: /tmp/kadnode/kadnode_cmd.sock).
+    Bind the remote control interface to a unix socket.  
+    Default: `/tmp/kadnode/kadnode_cmd.sock`
 
   * `--dns-port` *port*  
-    Bind the DNS server interface to this local port (Default: 3535).
+    Bind the DNS server interface to this local port.  
+    Default: `3535`
 
   * `--dns-server` *address*  
-    IP address of an external DNS server. Enables DNS proxy mode (Default: none).
+    IP address of an external DNS server. Enables DNS proxy mode.  
+    Default: disabled
 
   * `--dns-proxy-enable`  
     Enable DNS proxy mode. Uses /etc/resolv.conf by default.
@@ -148,7 +154,8 @@ This is the plain use of the DHT. The hexadecimal string will be cut down or fil
     Use IP address of an external DNS server instead of /etc/resolv.conf.
 
   * `--nss-path` *path*  
-    Bind the "Name Service Switch" to a unix socket (Default: /tmp/kadnode/kadnode_nss.sock).
+    Bind the "Name Service Switch" to a unix socket.  
+    Default: `/tmp/kadnode/kadnode_nss.sock`
 
   * `--tls-client-cert` *path*  
     Path to file or folder of CA root certificates.  
@@ -157,7 +164,7 @@ This is the plain use of the DHT. The hexadecimal string will be cut down or fil
   * `--tls-server-cert` *path*,*path*  
     Add a comma separated server certificate file path and key file path.  
     This option may occur multiple times.  
-    Example: kadnode.crt,kadnode.key
+    Example: `kadnode.crt,kadnode.key`
 
   * `--bob-create-key` *file*  
     Write a new secp256r1 secret key in PEM format to the file.  
@@ -168,7 +175,8 @@ This is the plain use of the DHT. The hexadecimal string will be cut down or fil
     This option may occur multiple times.
 
   * `--ipv4, -4, --ipv6, -6`  
-    Enable IPv4 or IPv6 only mode for the DHT (Default: IPv4+IPv6).
+    Enable IPv4 or IPv6 only mode for the DHT.  
+    Default: IPv4+IPv6
 
   * `-h`, `--help`  
     Print the list of accepted options.
