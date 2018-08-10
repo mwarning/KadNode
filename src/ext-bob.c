@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 
 #include "mbedtls/platform.h"
 #include "mbedtls/entropy.h"
@@ -300,6 +301,9 @@ static int write_pem(const mbedtls_pk_context *key, const char path[])
 		log_error("%s %s", path,  strerror(errno));
 		return -1;
 	}
+
+	// Set u+rw persmissions
+	chmod(path, 0600);
 
 	len = strlen((char*) buf);
 	if (fwrite(buf, 1, len, file) != len) {
