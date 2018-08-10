@@ -41,7 +41,7 @@ static const char* g_server_usage =
 	"	status\n"
 	"	lookup <query>\n"
 	"	announce [<query>[:<port>] [<minutes>]]\n"
-	"	ping <addr>\n";
+	"	ping <ip-addr>\n";
 
 const char* g_server_usage_debug =
 	"	blacklist <addr>\n"
