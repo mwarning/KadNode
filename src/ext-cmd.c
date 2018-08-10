@@ -137,9 +137,9 @@ static void cmd_exec(FILE *fp, const char request[], int allow_debug)
 	char d; // dummy marker
 	int rc = 0;
 
-	if (sscanf(request, "ping %255s %c", hostname, &d) == 1) {
+	if (sscanf(request, " ping %255s %c", hostname, &d) == 1) {
 		cmd_ping(fp, hostname);
-	} else if (sscanf(request, "lookup %255s %c", hostname, &d) == 1) {
+	} else if (sscanf(request, " lookup %255s %c", hostname, &d) == 1) {
 		// Check searches for node
 		num = ARRAY_SIZE(addrs);
 		rc = kad_lookup(hostname, addrs, &num);
@@ -169,11 +169,11 @@ static void cmd_exec(FILE *fp, const char request[], int allow_debug)
 			value = value->next;
 		}
 		fprintf(fp, "%d announcements started.\n", count);
-	} else if (sscanf(request, "announce %255s %c", hostname, &d) == 1) {
+	} else if (sscanf(request, " announce %255s %c", hostname, &d) == 1) {
 		cmd_announce(fp, hostname, 0, -1);
-	} else if (sscanf(request, "announce %255[^: ] %d %c", hostname, &minutes, &d) == 2) {
+	} else if (sscanf(request, " announce %255[^: ] %d %c", hostname, &minutes, &d) == 2) {
 		cmd_announce(fp, hostname, 0, minutes);
-	} else if (sscanf(request, "announce %255[^: ]:%d %d %c", hostname, &port, &minutes, &d) == 3) {
+	} else if (sscanf(request, " announce %255[^: ]:%d %d %c", hostname, &port, &minutes, &d) == 3) {
 		cmd_announce(fp, hostname, port, minutes);
 	} else if (match(request, " list %*s %n") && allow_debug) {
 		if (sscanf(request, "blacklist %255[^: ]", hostname) == 1) {
