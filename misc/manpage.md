@@ -226,6 +226,15 @@ KadNode allows a limited set of commands to be send from any user from other con
   * `-h`  
     Print this help.
 
+## Name Service Switch (NSS)
+
+Kadnode can intercept system wide DNS lookups (e.g. from the browser) via NSS.
+For this, `/etc/nsswitch.conf` need to be configured:
+
+  * Copy libnss_kadnode.so.2 to /lib/. Other libnss_*.so files are likely to be there as well.
+  * Edit `/etc/nsswitch.conf` to include `kadnode` in the `hosts:` line before entry `dns`:
+    * `hosts: kadnode dns`
+
 ## Automatic Port Forwarding
 
 If KadNode runs on a computer in a private network, it will try to establish a port forwarding for the DHT port and ports used for announcements.
