@@ -293,7 +293,7 @@ static int write_pem(const mbedtls_pk_context *key, const char path[])
 
 	if ((file = fopen(path, "r")) != NULL) {
 		fclose(file);
-		log_error("File exists: %s", path);
+		log_error("File already exists: %s", path);
 		return -1;
 	}
 
