@@ -173,8 +173,10 @@ static void cmd_exec(FILE *fp, const char request[], int allow_debug)
 			value = value->next;
 		}
 		fprintf(fp, "%d announcements started.\n", count);
-	} else if (sscanf(request, " announce %255s %c", hostname, &d) == 1) {
+	} else if (sscanf(request, " announce %255[^: ] %c", hostname, &d) == 1) {
 		cmd_announce(fp, hostname, gconf->dht_port, -1);
+	} else if (sscanf(request, " announce %255[^: ]:%d %c", hostname, &port, &d) == 2) {
+		cmd_announce(fp, hostname, port, -1);
 	} else if (sscanf(request, " announce %255[^: ] %d %c", hostname, &minutes, &d) == 2) {
 		cmd_announce(fp, hostname, gconf->dht_port, minutes);
 	} else if (sscanf(request, " announce %255[^: ]:%d %d %c", hostname, &port, &minutes, &d) == 3) {
