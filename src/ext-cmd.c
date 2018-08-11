@@ -115,7 +115,7 @@ static void cmd_announce(FILE *fp, const char hostname[], int port, int minutes)
 		if (port < 1 || port > 65535) {
 			fprintf(fp, "Invalid port: %d\n", port);
 		} else {
-			fprintf(fp, "Invalid query: %s\n", query);
+			fprintf(fp, "Invalid query: %s\n", hostname);
 		}
 	}
 }
