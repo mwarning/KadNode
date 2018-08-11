@@ -112,7 +112,11 @@ static void cmd_announce(FILE *fp, const char hostname[], int port, int minutes)
 			fprintf(fp, "Start regular announcements for %d minutes (port %d).\n", minutes, port);
 		}
 	} else {
-		fprintf(fp ,"Invalid query or port.\n");
+		if (port < 1 || port > 65535) {
+			fprintf(fp, "Invalid port: %d\n", port);
+		} else {
+			fprintf(fp, "Invalid query: %s\n", query);
+		}
 	}
 }
 
