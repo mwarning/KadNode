@@ -170,9 +170,9 @@ static void cmd_exec(FILE *fp, const char request[], int allow_debug)
 		}
 		fprintf(fp, "%d announcements started.\n", count);
 	} else if (sscanf(request, " announce %255s %c", hostname, &d) == 1) {
-		cmd_announce(fp, hostname, 0, -1);
+		cmd_announce(fp, hostname, gconf->dht_port, -1);
 	} else if (sscanf(request, " announce %255[^: ] %d %c", hostname, &minutes, &d) == 2) {
-		cmd_announce(fp, hostname, 0, minutes);
+		cmd_announce(fp, hostname, gconf->dht_port, minutes);
 	} else if (sscanf(request, " announce %255[^: ]:%d %d %c", hostname, &port, &minutes, &d) == 3) {
 		cmd_announce(fp, hostname, port, minutes);
 	} else if (match(request, " list %*s %n") && allow_debug) {
