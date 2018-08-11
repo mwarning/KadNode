@@ -107,12 +107,17 @@ struct value_t *announces_add(const char query[], int port, time_t lifetime)
 	}
 
 	if (ret == EXIT_FAILURE) {
-		log_error("Unrecognized announcement: %s", query);
+		log_debug("No idea how what method to use for announcement: %s", query);
 		return NULL;
 	}
 
-	if (port < 1 || port > 65535 || lifetime < now) {
-		log_error("Invalid announcement: %s (port %d)", query, port);
+	if (port < 1 || port > 65535) {
+		log_error("Invalid port for announcement: %s (port %d)", query, port);
+		return NULL;
+	}
+
+	if (lifetime < now) {
+		// Invalid lifetime, should not happen.
 		return NULL;
 	}
 

@@ -107,12 +107,12 @@ static void cmd_announce(FILE *fp, const char hostname[], int port, int minutes)
 		fwd_add(port, lifetime);
 #endif
 		if (minutes < 0) {
-			fprintf(fp ,"Start regular announcements for the entire run time (port %d).\n", port);
+			fprintf(fp, "Start regular announcements for the entire run time (port %d).\n", port);
 		} else {
-			fprintf(fp ,"Start regular announcements for %d minutes (port %d).\n", minutes, port);
+			fprintf(fp, "Start regular announcements for %d minutes (port %d).\n", minutes, port);
 		}
 	} else {
-		fprintf(fp ,"Invalid port or query too long.\n");
+		fprintf(fp ,"Invalid query or port.\n");
 	}
 }
 
