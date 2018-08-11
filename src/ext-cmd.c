@@ -173,7 +173,7 @@ static void cmd_exec(FILE *fp, const char request[], int allow_debug)
 			count += 1;
 			value = value->next;
 		}
-		fprintf(fp, "%d announcements started.\n", count);
+		fprintf(fp, "Started %d announcements.\n", count);
 	} else if (sscanf(request, " announce %255[^: \n\t] %c", hostname, &d) == 1) {
 		cmd_announce(fp, hostname, gconf->dht_port, -1);
 	} else if (sscanf(request, " announce %255[^: \n\t]:%d %c", hostname, &port, &d) == 2) {
