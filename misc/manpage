@@ -138,7 +138,10 @@ Change the UUID after start\.
 \fB\-\-port\fR \fIport\fR
 .
 .br
-Bind the DHT to this port (Default: 6881)\.
+Bind the DHT to this port\.
+.
+.br
+Default: \fB6881\fR
 .
 .IP "\(bu" 4
 \fB\-\-config\fR \fIfile\fR
@@ -174,13 +177,19 @@ Run in background\.
 Top level domain used to filter queries to be resolved by KadNode\.
 .
 .br
-Set to empty string to match all\. (Default: "\.p2p")
+Set to empty string to match all\.
+.
+.br
+Default: \fB\.p2p\fR
 .
 .IP "\(bu" 4
 \fB\-\-verbosity\fR \fIlevel\fR
 .
 .br
-Verbosity level: quiet, verbose or debug (Default: verbose)\.
+Verbosity level quiet, verbose or debug\.
+.
+.br
+Default: \fBverbose\fR
 .
 .IP "\(bu" 4
 \fB\-\-pidfile\fR \fIfile\-path\fR
@@ -204,19 +213,28 @@ Disable the local control interface\.
 \fB\-\-cmd\-path\fR \fIpath\fR
 .
 .br
-Bind the remote control interface to a unix socket (Default: /tmp/kadnode/kadnode_cmd\.sock)\.
+Bind the remote control interface to a unix socket\.
+.
+.br
+Default: \fB/tmp/kadnode/kadnode_cmd\.sock\fR
 .
 .IP "\(bu" 4
 \fB\-\-dns\-port\fR \fIport\fR
 .
 .br
-Bind the DNS server interface to this local port (Default: 3535)\.
+Bind the DNS server interface to this local port\.
+.
+.br
+Default: \fB3535\fR
 .
 .IP "\(bu" 4
 \fB\-\-dns\-server\fR \fIaddress\fR
 .
 .br
-IP address of an external DNS server\. Enables DNS proxy mode (Default: none)\.
+IP address of an external DNS server\. Enables DNS proxy mode\.
+.
+.br
+Default: disabled
 .
 .IP "\(bu" 4
 \fB\-\-dns\-proxy\-enable\fR
@@ -234,7 +252,10 @@ Use IP address of an external DNS server instead of /etc/resolv\.conf\.
 \fB\-\-nss\-path\fR \fIpath\fR
 .
 .br
-Bind the "Name Service Switch" to a unix socket (Default: /tmp/kadnode/kadnode_nss\.sock)\.
+Bind the "Name Service Switch" to a unix socket\.
+.
+.br
+Default: \fB/tmp/kadnode/kadnode_nss\.sock\fR
 .
 .IP "\(bu" 4
 \fB\-\-tls\-client\-cert\fR \fIpath\fR
@@ -255,7 +276,7 @@ Add a comma separated server certificate file path and key file path\.
 This option may occur multiple times\.
 .
 .br
-Example: kadnode\.crt,kadnode\.key
+Example: \fBkadnode\.crt,kadnode\.key\fR
 .
 .IP "\(bu" 4
 \fB\-\-bob\-create\-key\fR \fIfile\fR
@@ -279,7 +300,10 @@ This option may occur multiple times\.
 \fB\-\-ipv4, \-4, \-\-ipv6, \-6\fR
 .
 .br
-Enable IPv4 or IPv6 only mode for the DHT (Default: IPv4+IPv6)\.
+Enable IPv4 or IPv6 only mode for the DHT\.
+.
+.br
+Default: IPv4+IPv6
 .
 .IP "\(bu" 4
 \fB\-h\fR, \fB\-\-help\fR
@@ -374,6 +398,22 @@ Unix socket used to connect to the command shell of a local KadNode instance (De
 .
 .br
 Print this help\.
+.
+.IP "" 0
+.
+.SH "Name Service Switch (NSS)"
+Kadnode can intercept system wide DNS lookups via NSS\. This is need to be able to use kadnode links in the web browser or for command line tools like ssh\. For this, \fB/etc/nsswitch\.conf\fR need to be configured:
+.
+.IP "\(bu" 4
+Copy libnss_kadnode\.so\.2 to /lib/\. Other libnss_*\.so files are likely to be there as well\.
+.
+.IP "\(bu" 4
+.
+.IP "\(bu" 4
+\fBhosts: kadnode dns\fR
+.
+.IP "" 0
+
 .
 .IP "" 0
 .
