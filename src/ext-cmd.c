@@ -141,9 +141,9 @@ static void cmd_exec(FILE *fp, const char request[], int allow_debug)
 	char d; // dummy marker
 	int rc = 0;
 
-	if (sscanf(request, " ping %255s %c", hostname, &d) == 1) {
+	if (sscanf(request, " ping %255[^ \n\t] %c", hostname, &d) == 1) {
 		cmd_ping(fp, hostname);
-	} else if (sscanf(request, " lookup %255s %c", hostname, &d) == 1) {
+	} else if (sscanf(request, " lookup %255[^: \n\t] %c", hostname, &d) == 1) {
 		// Check searches for node
 		num = ARRAY_SIZE(addrs);
 		rc = kad_lookup(hostname, addrs, &num);
@@ -169,20 +169,21 @@ static void cmd_exec(FILE *fp, const char request[], int allow_debug)
 		value = announces_get();
 		while (value) {
 			kad_announce_once(value->id, value->port);
+			fprintf(fp, " announce %s:%d\n", &value->query[0], value->port);
 			count += 1;
 			value = value->next;
 		}
 		fprintf(fp, "%d announcements started.\n", count);
-	} else if (sscanf(request, " announce %255[^: ] %c", hostname, &d) == 1) {
+	} else if (sscanf(request, " announce %255[^: \n\t] %c", hostname, &d) == 1) {
 		cmd_announce(fp, hostname, gconf->dht_port, -1);
-	} else if (sscanf(request, " announce %255[^: ]:%d %c", hostname, &port, &d) == 2) {
+	} else if (sscanf(request, " announce %255[^: \n\t]:%d %c", hostname, &port, &d) == 2) {
 		cmd_announce(fp, hostname, port, -1);
-	} else if (sscanf(request, " announce %255[^: ] %d %c", hostname, &minutes, &d) == 2) {
+	} else if (sscanf(request, " announce %255[^: \n\t] %d %c", hostname, &minutes, &d) == 2) {
 		cmd_announce(fp, hostname, gconf->dht_port, minutes);
-	} else if (sscanf(request, " announce %255[^: ]:%d %d %c", hostname, &port, &minutes, &d) == 3) {
+	} else if (sscanf(request, " announce %255[^: \n\t]:%d %d %c", hostname, &port, &minutes, &d) == 3) {
 		cmd_announce(fp, hostname, port, minutes);
 	} else if (match(request, " list %*s %n") && allow_debug) {
-		if (sscanf(request, "blacklist %255[^: ]", hostname) == 1) {
+		if (sscanf(request, "blacklist %255[^: \n\t]", hostname) == 1) {
 			cmd_blacklist(fp, hostname);
 		} else if (match(request, " list blacklist %n")) {
 			kad_debug_blacklist(fp);
