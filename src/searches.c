@@ -220,7 +220,7 @@ void searches_debug(FILE *fp)
 		fprintf(fp, " query: '%s'\n", &search->query[0]);
 		fprintf(fp, "  id: %s\n", str_id(search->id));
 		fprintf(fp, "  done: %s\n", search->done ? "true" : "false");
-		fprintf(fp, "  callback: %s\n", str_callback(search->callback));
+		fprintf(fp, "  auth: %s\n", str_callback(search->callback));
 		result_counter = 0;
 		result = search->results;
 		while (result) {
