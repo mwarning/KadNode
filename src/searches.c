@@ -225,7 +225,7 @@ void searches_debug(FILE *fp)
 		result = search->results;
 		while (result) {
 			fprintf(fp, "   addr: %s\n", str_addr(&result->addr));
-			fprintf(fp, "   state: %s\n", str_state(result->state));
+			fprintf(fp, "    state: %s\n", str_state(result->state));
 			result_counter += 1;
 			result = result->next;
 		}
