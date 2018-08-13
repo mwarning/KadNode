@@ -101,6 +101,10 @@ static void cmd_announce(FILE *fp, const char hostname[], int port, int minutes)
 		lifetime = (time_now_sec() + (minutes * 60));
 	}
 
+	if (port < 1 || port > 65535) {
+		port = gconf->dht_port;
+	}
+
 	if (EXIT_SUCCESS == kad_announce(hostname, port, lifetime)) {
 #ifdef FWD
 		// Add port forwarding
@@ -112,11 +116,7 @@ static void cmd_announce(FILE *fp, const char hostname[], int port, int minutes)
 			fprintf(fp, "Start regular announcements for %d minutes (port %d).\n", minutes, port);
 		}
 	} else {
-		if (port < 1 || port > 65535) {
-			fprintf(fp, "Invalid port: %d\n", port);
-		} else {
-			fprintf(fp, "Invalid query: %s\n", hostname);
-		}
+		fprintf(fp, "Invalid query: %s (no domain, hex key or hex hash)\n", hostname);
 	}
 }
 
@@ -179,7 +179,7 @@ static void cmd_exec(FILE *fp, const char request[], int allow_debug)
 	} else if (sscanf(request, " announce %255[^: \n\t]:%d %c", hostname, &port, &d) == 2) {
 		cmd_announce(fp, hostname, port, -1);
 	} else if (sscanf(request, " announce %255[^: \n\t] %d %c", hostname, &minutes, &d) == 2) {
-		cmd_announce(fp, hostname, gconf->dht_port, minutes);
+		cmd_announce(fp, hostname, -1, minutes);
 	} else if (sscanf(request, " announce %255[^: \n\t]:%d %d %c", hostname, &port, &minutes, &d) == 3) {
 		cmd_announce(fp, hostname, port, minutes);
 	} else if (match(request, " list %*s %n") && allow_debug) {
