@@ -191,6 +191,18 @@ void searches_set_auth_state(const char query[], const IP *addr, const int state
 	}
 }
 
+static const char* str_callback(auth_callback *cb) {
+	if (cb == &tls_client_trigger_auth) {
+		return "tls";
+	}
+
+	if (cb == &bob_trigger_auth) {
+		return "bob";
+	}
+
+	return cb ? "???" : "none";
+}
+
 void searches_debug(FILE *fp)
 {
 	struct search_t **searches;
@@ -208,7 +220,7 @@ void searches_debug(FILE *fp)
 		fprintf(fp, " query: '%s'\n", &search->query[0]);
 		fprintf(fp, "  id: %s\n", str_id(search->id));
 		fprintf(fp, "  done: %s\n", search->done ? "true" : "false");
-		fprintf(fp, "  callback: %s\n", search->callback ? "yes" : "no");
+		fprintf(fp, "  callback: %s\n", str_callback(search->callback));
 		result_counter = 0;
 		result = search->results;
 		while (result) {
