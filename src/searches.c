@@ -312,13 +312,13 @@ struct search_t* searches_start(const char query[])
 #ifdef BOB
 	if (EXIT_SUCCESS == bob_get_id(id, sizeof(id), query)) {
 		// Use Bob authentication
-		// For e.g. ecdsa_<hex>.p2p
+		// For e.g. <32BytePublicKey>.p2p
 		callback = &bob_trigger_auth;
 	} else
 #endif
 	if (EXIT_SUCCESS == hex_get_id(id, sizeof(id), query)) {
 		// Use no authentication
-		// For e.g. <base64hex>.p2p
+		// For e.g. <20ByteHashKey>.p2p
 		callback = NULL;
 	} else {
 		// No idea what to do
