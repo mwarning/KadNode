@@ -26,7 +26,7 @@ static void nss_client_handler(int rc, int clientsock)
 	char hostname[QUERY_MAX_SIZE];
 	IP addrs[MAX_ADDRS];
 	ssize_t size;
-	size_t num;
+	int num;
 
 	if (rc <= 0) {
 		return;
@@ -44,11 +44,8 @@ static void nss_client_handler(int rc, int clientsock)
 
 	num = ARRAY_SIZE(addrs);
 	rc = kad_lookup(hostname, addrs, &num);
-	if (EXIT_SUCCESS == rc) {
-		// Found addresses
-		log_debug("NSS: Found %lu addresses.", num);
-	} else {
-		num = 0;
+	if (num <= 0 || rc == EXIT_FAILURE) {
+		goto end;
 	}
 
 	write(clientsock, (uint8_t *) addrs, num * sizeof(IP));
