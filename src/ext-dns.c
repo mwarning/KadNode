@@ -624,7 +624,7 @@ static void dns_handler(int rc, int sock)
 {
 	struct Message msg;
 	IP clientaddr;
-	int addrs_num;
+	size_t addrs_num;
 	IP addrs[MAX_ADDR_RECORDS];
 	socklen_t addrlen_ret;
 	ssize_t buflen;
@@ -711,16 +711,11 @@ static void dns_handler(int rc, int sock)
 			return;
 		}
 
-		if (addrs_num <= 0) {
-			// No results available yet
-			return;
-		}
-
 		if (dns_setup_msg(&msg, &addrs[0], addrs_num, NULL) < 0) {
 			return;
 		}
 
-		log_debug("DNS: Send back %d addresses to: %s",
+		log_debug("DNS: Send back %lu addresses to: %s",
 			addrs_num, str_addr(&clientaddr)
 		);
 	}

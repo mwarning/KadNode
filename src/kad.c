@@ -397,6 +397,7 @@ int kad_ping(const IP* addr)
 */
 int kad_announce_once(const uint8_t id[], int port)
 {
+
 	if (port < 1 || port > 65535) {
 		log_debug("KAD: Invalid port for announcement: %d", port);
 		return EXIT_FAILURE;
@@ -425,7 +426,7 @@ int kad_announce(const char query[], int port, time_t lifetime)
 }
 
 // Lookup known nodes that are nearest to the given id
-int kad_lookup(const char query[], IP addr_array[], int *addr_num)
+int kad_lookup(const char query[], IP addr_array[], size_t *addr_num)
 {
 	char hostname[QUERY_MAX_SIZE];
 	struct search_t *search;
@@ -456,14 +457,10 @@ int kad_lookup(const char query[], IP addr_array[], int *addr_num)
 		// Start a new DHT search
 		dht_search(search->id, 0, AF_INET, dht_callback_func, NULL);
 		dht_search(search->id, 0, AF_INET6, dht_callback_func, NULL);
-
-		// Search just started or restarted
-		*addr_num = -1;
-	} else {
-		// Collect addresses to be returned
-		*addr_num = searches_collect_addrs(search, addr_array, *addr_num);
 	}
 
+	// Collect addresses to be returned
+	*addr_num = searches_collect_addrs(search, addr_array, *addr_num);
 	return EXIT_SUCCESS;
 }
 
@@ -507,6 +504,7 @@ int kad_lookup_node(const char query[], IP *addr_return)
 
 int kad_blacklist(const IP* addr)
 {
+
 	blacklist_node(NULL, (struct sockaddr *) addr, sizeof(IP));
 
 	return EXIT_SUCCESS;

@@ -137,7 +137,7 @@ static void cmd_exec(FILE *fp, const char request[], int allow_debug)
 	int count;
 	int port;
 	size_t i;
-	int addrs_num;
+	size_t num;
 	char d; // dummy marker
 	int rc = 0;
 
@@ -145,22 +145,20 @@ static void cmd_exec(FILE *fp, const char request[], int allow_debug)
 		cmd_ping(fp, hostname);
 	} else if (sscanf(request, " lookup %255[^: \n\t] %c", hostname, &d) == 1) {
 		// Check searches for node
-		addrs_num = ARRAY_SIZE(addrs);
-		rc = kad_lookup(hostname, addrs, &addrs_num);
+		num = ARRAY_SIZE(addrs);
+		rc = kad_lookup(hostname, addrs, &num);
 
 		if (rc == EXIT_SUCCESS) {
-			if (addrs_num == -1) {
-				fprintf(fp, "Search started.\n");
-			} else if (addrs_num == 0) {
-				fprintf(fp, "Search in progress.\n");
-			} else {
-				// Print results
-				for (i = 0; i < addrs_num; ++i) {
-					fprintf(fp, "%s\n", str_addr(&addrs[i]));
-				}
+			// Print results
+			for (i = 0; i < num; ++i) {
+				fprintf(fp, "%s\n", str_addr(&addrs[i]));
+			}
+
+			if (num == 0) {
+				fprintf(fp ,"Search in progress.\n");
 			}
 		} else {
-			fprintf(fp, "Some error occurred.\n");
+			fprintf(fp ,"Some error occurred.\n");
 		}
 	} else if (match(request, " status %n")) {
 		// Print node id and statistics

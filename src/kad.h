@@ -21,8 +21,7 @@ int kad_blacklist(const IP* addr);
 * Lookup the addresses of the nodes who have announced value id.
 * The first call will start the search.
 */
-
-int kad_lookup(const char query[], IP addr_array[], int *addr_num);
+int kad_lookup(const char query[], IP addr_array[], size_t *addr_num);
 
 // Export good nodes
 int kad_export_nodes(FILE *fp);
