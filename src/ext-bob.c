@@ -345,14 +345,14 @@ int bob_create_key(const char path[])
 	if ((ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
 			(const unsigned char *) pers, strlen(pers))) != 0) {
 		printf("mbedtls_ctr_drbg_seed returned %d\n", ret);
-		return -1;
+		return EXIT_FAILURE;
 	}
 
 	printf("Generating %s key pair...\n", ECPARAMS_NAME);
 
 	if ((ret = mbedtls_pk_setup(&ctx, mbedtls_pk_info_from_type(MBEDTLS_PK_ECKEY))) != 0) {
 		printf("mbedtls_pk_setup returned -0x%04x\n", -ret);
-		return -1;
+		return EXIT_FAILURE;
 	}
 
 	// Generate key where Y is even (called positive in a prime group)
@@ -361,18 +361,18 @@ int bob_create_key(const char path[])
 		if ((ret = mbedtls_ecp_gen_key(ECPARAMS, mbedtls_pk_ec(ctx),
 			mbedtls_ctr_drbg_random, &ctr_drbg)) != 0) {
 			printf("mbedtls_ecp_gen_key returned -0x%04x\n", -ret);
-			return -1;
+			return EXIT_FAILURE;
 		}
 	} while (mbedtls_mpi_get_bit(&mbedtls_pk_ec(ctx)->Q.Y, 0) != 0);
 
 	if (write_pem(&ctx, path) != 0) {
-		return -1;
+		return EXIT_FAILURE;
 	}
 
 	printf("Public key: %s.p2p\n", get_pkey_base32hex(&ctx));
 	printf("Wrote secret key to %s\n", path);
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 // Add secret key
@@ -388,7 +388,7 @@ int bob_load_key(const char path[])
 		mbedtls_pk_free(&ctx);
 		mbedtls_strerror(ret, msg, sizeof(msg));
 		log_error("Error loading %s: %s", path, msg);
-		return -1;
+		return EXIT_FAILURE;
 	}
 
 	if (mbedtls_pk_ec(ctx)->grp.id != ECPARAMS) {
@@ -396,7 +396,7 @@ int bob_load_key(const char path[])
 			mbedtls_ecp_curve_info_from_grp_id(mbedtls_pk_ec(ctx)->grp.id)->name,
 			ECPARAMS_NAME
 		);
-		return -1;
+		return EXIT_FAILURE;
 	}
 
 	struct key_t *entry = (struct key_t*) calloc(1, sizeof(struct key_t));
@@ -411,7 +411,7 @@ int bob_load_key(const char path[])
 
 	log_info("Loaded %s (Public key: %s)", path, get_pkey_base32hex(&ctx));
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 // Send challenges

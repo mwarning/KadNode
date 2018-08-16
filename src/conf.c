@@ -585,7 +585,7 @@ static int conf_set(const char opt[], const char val[])
 		exit(0);
 #ifdef BOB
 	case oBobCreateKey:
-		exit(bob_create_key(val) < 0);
+		exit(bob_create_key(val));
 	case oBobLoadKey:
 		return bob_load_key(val);
 #endif
