@@ -1,3 +1,9 @@
+kadnode (2.2.4-1) UNRELEASED; urgency=medium
+
+  * fix parsing kadnode-ctl arguments
+
+ -- Moritz Warning <moritzwarning@web.de>  Fri, 10 Aug 2018 15:18:16 -0400
+
 kadnode (2.2.3-1) stable; urgency=medium
 
   * Closes: #900583 - initial package
