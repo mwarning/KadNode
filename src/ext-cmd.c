@@ -141,9 +141,9 @@ static void cmd_exec(FILE *fp, const char request[], int allow_debug)
 	char d; // dummy marker
 	int rc = 0;
 
-	if (sscanf(request, " ping %255[^ \n\t] %c", hostname, &d) == 1) {
+	if (sscanf(request, " ping%*[ ]%255[^ \n\t] %c", hostname, &d) == 1) {
 		cmd_ping(fp, hostname);
-	} else if (sscanf(request, " lookup %255[^: \n\t] %c", hostname, &d) == 1) {
+	} else if (sscanf(request, " lookup%*[ ]%255[^: \n\t] %c", hostname, &d) == 1) {
 		// Lookup hostname
 		search = kad_lookup(hostname);
 
@@ -180,44 +180,44 @@ static void cmd_exec(FILE *fp, const char request[], int allow_debug)
 			value = value->next;
 		}
 		fprintf(fp, "Started %d announcements.\n", count);
-	} else if (sscanf(request, " announce %255[^: \n\t] %c", hostname, &d) == 1) {
+	} else if (sscanf(request, " announce%*[ ]%255[^: \n\t] %c", hostname, &d) == 1) {
 		cmd_announce(fp, hostname, gconf->dht_port, -1);
-	} else if (sscanf(request, " announce %255[^: \n\t]:%d %c", hostname, &port, &d) == 2) {
+	} else if (sscanf(request, " announce%*[ ]%255[^: \n\t]:%d %c", hostname, &port, &d) == 2) {
 		cmd_announce(fp, hostname, port, -1);
-	} else if (sscanf(request, " announce %255[^: \n\t] %d %c", hostname, &minutes, &d) == 2) {
+	} else if (sscanf(request, " announce%*[ ]%255[^: \n\t] %d %c", hostname, &minutes, &d) == 2) {
 		cmd_announce(fp, hostname, -1, minutes);
-	} else if (sscanf(request, " announce %255[^: \n\t]:%d %d %c", hostname, &port, &minutes, &d) == 3) {
+	} else if (sscanf(request, " announce%*[ ]%255[^: \n\t]:%d %d %c", hostname, &port, &minutes, &d) == 3) {
 		cmd_announce(fp, hostname, port, minutes);
-	} else if (match(request, " list %*s %n") && allow_debug) {
-		if (sscanf(request, "blacklist %255[^: \n\t]", hostname) == 1) {
+	} else if (match(request, " list%*[ ]%*s %n") && allow_debug) {
+		if (sscanf(request, "blacklist%*[ ]%255[^: \n\t]", hostname) == 1) {
 			cmd_blacklist(fp, hostname);
-		} else if (match(request, " list blacklist %n")) {
+		} else if (match(request, " list%*[ ]blacklist %n")) {
 			kad_debug_blacklist(fp);
-		} else if (match(request, " list constants %n")) {
+		} else if (match(request, " list%*[ ]constants %n")) {
 			kad_debug_constants(fp);
-		} else if (match(request, " list nodes %n")) {
+		} else if (match(request, " list%*[ ]nodes %n")) {
 			rc = kad_export_nodes(fp);
 
 			if (rc == 0) {
 				fprintf(fp, "No good nodes found.\n");
 			}
 #ifdef FWD
-		} else if (match(request, " list forwardings %n")) {
+		} else if (match(request, " list%*[ ]forwardings %n")) {
 			fwd_debug(fp);
 #endif
 #ifdef BOB
-		} else if (match(request, " list keys %n")) {
+		} else if (match(request, " list%*[ ]keys %n")) {
 			bob_debug_keys(fp);
 #endif
-		} else if (match(request, " list searches %n")) {
+		} else if (match(request, " list%*[ ]searches %n")) {
 			searches_debug(fp);
-		} else if (match(request, " list announcements %n")) {
+		} else if (match(request, " list%*[ ]announcements %n")) {
 			announces_debug(fp);
-		} else if (match(request, " list dht_buckets %n")) {
+		} else if (match(request, " list%*[ ]dht_buckets %n")) {
 			kad_debug_buckets(fp);
-		} else if (match(request, " list dht_searches %n")) {
+		} else if (match(request, " list%*[ ]dht_searches %n")) {
 			kad_debug_searches(fp);
-		} else if (match(request, " list dht_storage %n")) {
+		} else if (match(request, " list%*[ ]dht_storage %n")) {
 			kad_debug_storage(fp);
 		} else {
 			fprintf(fp, "Unknown command.\n");

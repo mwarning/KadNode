@@ -416,7 +416,7 @@ static int conf_load_file(const char path[])
 			continue;
 		}
 
-		ret = sscanf(line, " %31s %255s %3s", option, value, dummy);
+		ret = sscanf(line, " %31s%*[ ]%255s %3s", option, value, dummy);
 
 		if (ret == 1 || ret == 2) {
 			// Prevent recursive inclusion
