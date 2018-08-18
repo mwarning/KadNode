@@ -221,6 +221,7 @@ void searches_debug(FILE *fp)
 		fprintf(fp, "  id: %s\n", str_id(search->id));
 		fprintf(fp, "  done: %s\n", search->done ? "true" : "false");
 		fprintf(fp, "  auth: %s\n", str_callback(search->callback));
+		fprintf(fp, "  started: %ldm ago\n", (time_now_sec() - search->start_time) / 60);
 		result_counter = 0;
 		result = search->results;
 		while (result) {
@@ -234,6 +235,7 @@ void searches_debug(FILE *fp)
 		search_counter += 1;
 		searches++;
 	}
+
 	fprintf(fp, " Found %d searches.\n", search_counter);
 }
 
