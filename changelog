@@ -2,6 +2,7 @@ kadnode (2.2.4) stable; urgency=medium
 
   * fix parsing kadnode-ctl arguments
   * --bob-load-key creates key file with u+rw permissions only
+  * internal refactoring
 
  -- mwarning <moritzwarning@web.de>  Sun, 20 May 2018 19:25:37 -0400
 
