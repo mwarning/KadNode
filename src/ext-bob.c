@@ -430,6 +430,7 @@ void bob_send_challenges(int sock)
 		if (resource->challenges_send < MAX_AUTH_CHALLENGE_SEND) {
 			bob_send_challenge(sock, resource);
 		} else {
+			log_debug("BOB: Number of challenges exhausted for query: %s\n", resource->query);
 			bob_auth_end(resource, AUTH_ERROR);
 		}
 	}
@@ -460,6 +461,7 @@ void bob_verify_challenge(int sock, uint8_t buf[], size_t buflen, IP *addr)
 		ret = mbedtls_ecdsa_read_signature(mbedtls_pk_ec(resource->ctx_verify),
 			resource->challenge, CHALLENGE_BIN_LENGTH, buf + 3, buflen - 3);
 
+		log_debug("BOB: Received response from %s does not verify: %s\n", str_addr(addr), resource->query);
 		bob_auth_end(resource, ret ? AUTH_FAILED : AUTH_OK);
 	} else {
 		log_warning("BOB: No session found for address %s", str_addr(addr));
