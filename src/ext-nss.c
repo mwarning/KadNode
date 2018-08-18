@@ -14,46 +14,86 @@
 #include "unix.h"
 #include "kad.h"
 #include "net.h"
+#include "ext-libnss.h"
 #include "ext-nss.h"
-
-#define MAX_ADDRS 32
 
 
 static int g_nss_sock = -1;
 
 static void nss_client_handler(int rc, int clientsock)
 {
-	char hostname[QUERY_MAX_SIZE];
-	IP addrs[MAX_ADDRS];
-	ssize_t size;
-	size_t num;
+	const struct search_t *search;
+	const struct result_t *result;
+	struct kadnode_nss_request req = {0};
+	struct kadnode_nss_response res = {0};
+	int count;
+	int af;
 
 	if (rc <= 0) {
 		return;
 	}
 
-	size = recv(clientsock, hostname, sizeof(hostname) - 1, 0);
-	if (size <= 0) {
-		goto end;
+	rc = recv(clientsock, &req, sizeof(req), 0);
+	if (rc != sizeof(req)) {
+		goto abort;
 	}
 
-	hostname[size] = '\0';
-	if (!has_ext(hostname, gconf->query_tld)) {
-		goto end;
+	// Make sure name is null terminated
+	req.name[QUERY_MAX_SIZE - 1] = '\0';
+
+	// Check name extensions (*.p2p)
+	if (!has_ext(&req.name[0], gconf->query_tld)) {
+		goto finish;
 	}
 
-	num = ARRAY_SIZE(addrs);
-	rc = kad_lookup(hostname, addrs, &num);
-	if (EXIT_SUCCESS == rc) {
-		// Found addresses
-		log_debug("NSS: Found %lu addresses.", num);
-	} else {
-		num = 0;
+printf("nss lookup: %s\n", &req.name[0]);
+
+	search = kad_lookup(&req.name[0]);
+
+
+	if (search == NULL) {
+		printf("no search found\n");
+		goto finish;
 	}
 
-	write(clientsock, (uint8_t *) addrs, num * sizeof(IP));
+printf("found search; request.af: %s\n", str_af(req.af));
 
-end:
+	af = req.af;
+	count = 0;
+
+	// Collect either IPv4 or IPv6 addresses
+	for (result = search->results; result; result = result->next) {
+		if (is_valid_result(result) && count < MAX_ENTRIES) {
+			if (af == AF_UNSPEC) {
+				af = result->addr.ss_family;
+			}
+
+			if (af != result->addr.ss_family) {
+				continue;
+			}
+
+			if (af == AF_INET6) {
+				memcpy(&res.data.ipv6[count], &((IP6 *)&result->addr)->sin6_addr, sizeof(struct in6_addr));
+				count += 1;
+			}
+
+			if (af == AF_INET) {
+				memcpy(&res.data.ipv4[count], &((IP4 *)&result->addr)->sin_addr, sizeof(struct in_addr));
+				count += 1;
+			}
+		}
+	}
+
+	res.af = af;
+	res.count = count;
+
+printf("found results; response.af: %s, count: %d\n", str_af(res.af), count);
+
+
+finish:
+	write(clientsock, &res, sizeof(res));
+
+abort:
 	close(clientsock);
 	net_remove_handler(clientsock, &nss_client_handler);
 }

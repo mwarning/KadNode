@@ -1,36 +1,43 @@
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-#include <netdb.h>
+/* part of this code originate from gnunet-gns */
+
 #include <unistd.h>
+#include <errno.h>
+#include <string.h>
+#include <assert.h>
+#include <netdb.h>
 #include <sys/socket.h>
-#include <arpa/inet.h>
 #include <sys/un.h>
 #include <nss.h>
-
+#include <stdio.h>
+#include <stdlib.h>
+#include <arpa/inet.h>
 #ifdef __FreeBSD__
 #include <nsswitch.h>
 #include <stdarg.h>
 #include <sys/param.h>
 #endif
 
-#include <stdio.h>
-#include <time.h>
+#include <stdarg.h>
 
 #include "main.h"
+#include "ext-libnss.h"
 
-#define MAX_ADDRS 32
+
+/** macro to align idx to 32bit boundary */
+#define ALIGN(idx) do { \
+	if (idx % sizeof(void*)) \
+		idx += (sizeof(void*) - idx % sizeof(void*)); /* Align on 32 bit boundary */ \
+} while(0)
 
 
-int _nss_kadnode_lookup(const char hostname[], int hostlen, IP addrs[])
+static int _nss_kadnode_lookup(struct kadnode_nss_response *res, const struct kadnode_nss_request *req)
 {
 	struct sockaddr_un addr;
 	const char *path = NSS_PATH;
 	struct timeval tv;
-	ssize_t size;
 	int sock;
+	int rc;
 
 	sock = socket(AF_LOCAL, SOCK_STREAM, 0);
 	if (sock < 0) {
@@ -54,188 +61,184 @@ int _nss_kadnode_lookup(const char hostname[], int hostlen, IP addrs[])
 	}
 
 	// Send request
-	send(sock, hostname, hostlen, 0);
+	send(sock, req, sizeof(*req), 0);
 
-	size = read(sock, addrs, MAX_ADDRS * sizeof(IP));
+	// Receive request
+	rc = read(sock, res, sizeof(*res));
 	close(sock);
 
-	if (size > 0) {
-		// Return number of addresses
-		return (size / sizeof(IP));
-	} else {
-		return -1;
-	}
+	return (rc == sizeof(struct kadnode_nss_response)) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
-enum nss_status _nss_kadnode_hostent(
-		const char *hostname, int af, struct hostent *result,
-		char *buf, size_t buflen, int *errnop,
-		int *h_errnop, int32_t *ttlp, char **canonp) {
-
-	IP addrs[MAX_ADDRS];
-	char *p_addr;
-	char *p_name;
-	char *p_aliases;
-	char *p_addr_list;
-	char *p_idx;
-	int addrlen;
-	int hostlen;
-	int addrsnum;
+/**
+ * The gethostbyname hook executed by nsswitch
+ *
+ * @param name the name to resolve
+ * @param af the address family to resolve
+ * @param result the result hostent
+ * @param buffer the result buffer
+ * @param buflen length of the buffer
+ * @param errnop idk
+ * @param h_errnop idk
+ * @return a nss_status code
+ */
+enum nss_status
+_nss_kadnode_gethostbyname2_r(const char *name,
+								int af,
+								struct hostent *result,
+								char *buffer,
+								size_t buflen,
+								int *errnop,
+								int *h_errnop)
+{
+	struct kadnode_nss_request req;
+	struct kadnode_nss_response res;
+	enum nss_status status = NSS_STATUS_UNAVAIL;
 	int i;
+	int rc;
+	size_t addrlen;
+	size_t idx;
+	size_t astart;
 
-	hostlen = strlen(hostname);
-
-	if (af != AF_INET6 && af != AF_INET) {
-		*errnop = EAFNOSUPPORT;
-		*h_errnop = NO_DATA;
-		return NSS_STATUS_UNAVAIL;
-	}
-
-	memset(addrs, '\0', sizeof(addrs));
-	addrsnum = _nss_kadnode_lookup(hostname, hostlen, addrs);
-	if (addrsnum < 0) {
-		*errnop = ENOENT;
-		*h_errnop = HOST_NOT_FOUND;
-		return NSS_STATUS_UNAVAIL;
-	} else if (addrsnum == 0) {
-		*errnop = ENOENT;
-		*h_errnop = HOST_NOT_FOUND;
-		return NSS_STATUS_NOTFOUND;
-	}
-
-	// Check upper bound
-	if (buflen < ((hostlen + 1) + sizeof(char*) + (addrsnum * sizeof(struct in6_addr)) + (addrsnum + 1) * sizeof(char*))) {
-		*errnop = ENOMEM;
+	if ((af != AF_INET) && (af != AF_INET6) && (af != AF_UNSPEC))
+	{
+		*errnop = EINVAL;
 		*h_errnop = NO_RECOVERY;
-		return NSS_STATUS_TRYAGAIN;
-	} else if (addrs[0].ss_family == AF_INET6) {
-		af = AF_INET6;
-		addrlen = sizeof(struct in6_addr);
-	} else {
-		af = AF_INET;
-		addrlen = sizeof(struct in_addr);
+
+		goto finish;
 	}
 
-	memset(buf, '\0', buflen);
-
-	// Hostname
-	p_name = buf;
-	memcpy(p_name, hostname, hostlen);
-	p_idx = p_name + hostlen + 1;
-
-	// Alias
-	p_aliases = p_idx;
-	*(char**) p_aliases = NULL;
-	p_idx += sizeof(char*);
-
-	// Address data
-	p_addr = p_idx;
-	for (i = 0; i < addrsnum; i++) {
-		if (af == AF_INET6) {
-			memcpy(p_addr, &((IP6 *)&addrs[i])->sin6_addr, addrlen);
-		} else {
-			memcpy(p_addr, &((IP4 *)&addrs[i])->sin_addr, addrlen);
-		}
+	if (buflen < (sizeof(char*) + strlen(name) + 1))	{
+		*errnop = ERANGE;
+		*h_errnop = NO_RECOVERY;
+		status = NSS_STATUS_TRYAGAIN;
+		goto finish;
 	}
-	p_idx += addrsnum * addrlen;
 
-	// Address pointer
-	p_addr_list = p_idx;
-	p_idx = p_addr;
-	for (i = 0; i < addrsnum; i++) {
-		((char**) p_addr_list)[i] = p_idx;
-		p_idx += addrlen;
+	req.af = af;
+	strncpy(&req.name[0], name, QUERY_MAX_SIZE);
+
+	rc = _nss_kadnode_lookup(&res, &req);
+
+	if (rc == EXIT_FAILURE) {
+		*errnop = ESHUTDOWN;
+		*h_errnop = NO_RECOVERY;
+		status = NSS_STATUS_TRYAGAIN;
+		goto finish;
 	}
-	((char**) p_addr_list)[addrsnum] = NULL;
 
-	result->h_name = p_name;
-	result->h_aliases = (char**) p_aliases;
+	/* Validate reply */
+	if ((res.count < 0) || ((res.af != AF_INET) && (res.af != AF_INET6))) {
+		*errnop = ETIMEDOUT;
+		*h_errnop = HOST_NOT_FOUND;
+		status = NSS_STATUS_NOTFOUND;
+		goto finish;
+	}
+
+	/* Alias names */
+	*((char**) buffer) = NULL;
+	result->h_aliases = (char**) buffer;
+	idx = sizeof(char*);
+
+	/* Official name */
+	strcpy (buffer + idx, name);
+	result->h_name = buffer + idx;
+	idx += strlen(name) + 1;
+
+	ALIGN(idx);
+
+	addrlen = (res.af == AF_INET) ? sizeof(struct in_addr) : sizeof(struct in6_addr);
+
 	result->h_addrtype = af;
 	result->h_length = addrlen;
-	result->h_addr_list = (char**) p_addr_list;
 
-	if (ttlp != NULL) {
-		*ttlp = 0;
+	/* Check if there's enough space for the addresses */
+	if (buflen < (idx + (res.count * addrlen) + sizeof(char*) * (res.count + 1)))
+	{
+		*errnop = ERANGE;
+		*h_errnop = NO_RECOVERY;
+		status = NSS_STATUS_TRYAGAIN;
+		goto finish;
 	}
 
-	if (canonp != NULL) {
-		*canonp = p_name;
+	/* Addresses */
+	astart = idx;
+
+	if (res.count) {
+		memcpy(buffer + astart, &res.data, res.count * addrlen);
 	}
 
-	return NSS_STATUS_SUCCESS;
+	/* addrlen is a multiple of 32bits, so idx is still aligned correctly */
+	idx += res.count * addrlen;
+
+	/* Address array addrlen is always a multiple of 32bits */
+	for (i = 0; i < res.count; i++) {
+		((char**) (buffer + idx))[i] = buffer + astart + addrlen * i;
+	}
+
+	((char**) (buffer + idx))[i] = NULL;
+	result->h_addr_list = (char**) (buffer + idx);
+
+	status = NSS_STATUS_SUCCESS;
+
+finish:
+	return status;
 }
 
-enum nss_status _nss_kadnode_gethostbyname_r(
-		const char *hostname, struct hostent *result,
-		char *buf, size_t buflen, int *errnop, int *h_errnop) {
-
-	return _nss_kadnode_hostent(hostname, AF_INET6, result,
-		buf, buflen, errnop, h_errnop, NULL, NULL);
+/**
+ * The gethostbyname hook executed by nsswitch
+ *
+ * @param name the name to resolve
+ * @param result the result hostent
+ * @param buffer the result buffer
+ * @param buflen length of the buffer
+ * @param errnop[out] the low-level error code to return to the application
+ * @param h_errnop idk
+ * @return a nss_status code
+ */
+enum nss_status
+_nss_kadnode_gethostbyname_r(const char *name,
+							struct hostent *result,
+							char *buffer,
+							size_t buflen,
+							int *errnop,
+							int *h_errnop)
+{
+	return _nss_kadnode_gethostbyname2_r(name,
+										AF_UNSPEC,
+										result,
+										buffer,
+										buflen,
+										errnop,
+										h_errnop);
 }
 
-enum nss_status _nss_kadnode_gethostbyname2_r(
-		const char *hostname, int af, struct hostent *result,
-		char *buf, size_t buflen, int *errnop, int *h_errnop) {
-
-	return _nss_kadnode_hostent(hostname, af, result,
-		buf, buflen, errnop, h_errnop, NULL, NULL);
-}
-
-enum nss_status _nss_kadnode_gethostbyname3_r(
-		const char *hostname, int af, struct hostent *result,
-		char *buf, size_t buflen, int *errnop,  int *h_errnop,
-		int32_t *ttlp, char **canonp) {
-
-	return _nss_kadnode_hostent(hostname, af, result,
-		buf, buflen, errnop, h_errnop, ttlp, canonp);
-}
-
-enum nss_status _nss_kadnode_gethostbyaddr_r(
-	const void* addr, int len, int af,
-	struct hostent *result, char *buf, size_t buflen,
-	int *errnop, int *h_errnop) {
-
+/**
+ * The gethostbyaddr hook executed by nsswitch
+ * We can't do this so we always return NSS_STATUS_UNAVAIL
+ *
+ * @param addr the address to resolve
+ * @param len the length of the address
+ * @param af the address family of the address
+ * @param result the result hostent
+ * @param buffer the result buffer
+ * @param buflen length of the buffer
+ * @param errnop[out] the low-level error code to return to the application
+ * @param h_errnop idk
+ * @return NSS_STATUS_UNAVAIL
+ */
+enum nss_status
+_nss_kadnode_gethostbyaddr_r (const void* addr,
+								int len,
+								int af,
+								struct hostent *result,
+								char *buffer,
+								size_t buflen,
+								int *errnop,
+								int *h_errnop)
+{
 	*errnop = EINVAL;
 	*h_errnop = NO_RECOVERY;
-
+	//NOTE we allow to leak this into DNS so no NOTFOUND
 	return NSS_STATUS_UNAVAIL;
 }
-
-#ifdef __FreeBSD__
-static NSS_METHOD_PROTOTYPE(__nss_compat_gethostbyname2_r);
-
-static ns_mtab methods[] = {
-	{ NSDB_HOSTS, "gethostbyname_r", __nss_compat_gethostbyname2_r, NULL },
-	{ NSDB_HOSTS, "gethostbyname2_r", __nss_compat_gethostbyname2_r, NULL },
-};
-
-ns_mtab *nss_module_register(const char *source, unsigned int *mtabsize, nss_module_unregister_fn *unreg) {
-	*mtabsize = sizeof(methods) / sizeof(methods[0]);
-	*unreg = NULL;
-	return methods;
-}
-
-int __nss_compat_gethostbyname2_r(void *retval, void *mdata, va_list ap) {
-	int s;
-	const char *name;
-	int af;
-	struct hostent *hptr;
-	char *buffer;
-	size_t buflen;
-	int *errnop;
-	int *h_errnop;
-
-	name = va_arg(ap, const char*);
-	af = va_arg(ap, int);
-	hptr = va_arg(ap, struct hostent*);
-	buffer = va_arg(ap, char*);
-	buflen = va_arg(ap, size_t);
-	errnop = va_arg(ap, int*);
-	h_errnop = va_arg(ap, int*);
-
-	s = _nss_kadnode_gethostbyname2_r(name, af, hptr, buffer, buflen, errnop, h_errnop);
-	*(struct hostent**) retval = (s == NS_SUCCESS) ? hptr : NULL;
-
-	return __nss_compat_result(s, *errnop);
-}
-#endif
