@@ -53,13 +53,18 @@ int main_run(void)
 	int rc = 0;
 
 	if (EXIT_SUCCESS != 0) {
-		// Problematic definition
-		return 1;
+		fprintf(stderr, "Problematic EXIT_SUCCESS definition\n");
+		return EXIT_FAILURE;
 	}
 
 	/* Run setup */
 
 	rc |= conf_load();
+
+	// Early exit
+	if (rc == EXIT_FAILURE) {
+		return EXIT_FAILURE;
+	}
 
 	// Setup port-forwarding
 #ifdef FWD
