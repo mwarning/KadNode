@@ -91,17 +91,20 @@ struct value_t *announces_add(const char query[], int port, time_t lifetime)
 
 	// Get id from query
 #ifdef BOB
+	// base32 or base64
 	if (ret == EXIT_FAILURE) {
 		ret = bob_get_id(id, sizeof(id), query);
 	}
 #endif
 
 #ifdef TLS
+	// contains dot (.p2p is already removed here) => sha256 hash
 	if (ret == EXIT_FAILURE) {
 		ret = tls_client_get_id(id, sizeof(id), query);
 	}
 #endif
 
+	// base32 or base64
 	if (ret == EXIT_FAILURE) {
 		ret = hex_get_id(id, sizeof(id), query);
 	}
