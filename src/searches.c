@@ -408,28 +408,10 @@ void searches_add_addr(struct search_t *search, const IP *addr)
 	}
 }
 
-int searches_collect_addrs(const struct search_t *search, IP addr_array[], size_t addr_num)
-{
-	const struct result_t *cur;
-	size_t i;
-
-	if (search == NULL) {
-		return 0;
-	}
-
-	i = 0;
-	cur = search->results;
-	while (cur && i < addr_num) {
-		if (cur->state == AUTH_OK || cur->state == AUTH_AGAIN) {
-			memcpy(&addr_array[i], &cur->addr, sizeof(IP));
-			i += 1;
-		}
-		cur = cur->next;
-	}
-
-	return i;
+int is_valid_result(const struct result_t *result) {
+	const int state = result->state;
+	return state == AUTH_OK || state == AUTH_AGAIN;
 }
-
 
 void searches_setup(void)
 {

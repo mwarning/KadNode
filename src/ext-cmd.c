@@ -130,35 +130,41 @@ static int match(const char request[], const char fmt[])
 
 static void cmd_exec(FILE *fp, const char request[], int allow_debug)
 {
-	struct value_t *value;
+	const struct search_t *search;
+	const struct result_t *result;
+	const struct value_t *value;
 	int minutes;
-	IP addrs[16];
+	int found;
 	char hostname[256];
 	int count;
 	int port;
-	size_t i;
-	size_t num;
 	char d; // dummy marker
 	int rc = 0;
 
 	if (sscanf(request, " ping %255[^ \n\t] %c", hostname, &d) == 1) {
 		cmd_ping(fp, hostname);
 	} else if (sscanf(request, " lookup %255[^: \n\t] %c", hostname, &d) == 1) {
-		// Check searches for node
-		num = ARRAY_SIZE(addrs);
-		rc = kad_lookup(hostname, addrs, &num);
+		// Lookup hostname
+		search = kad_lookup(hostname);
 
-		if (rc == EXIT_SUCCESS) {
-			// Print results
-			for (i = 0; i < num; ++i) {
-				fprintf(fp, "%s\n", str_addr(&addrs[i]));
+		if (search) {
+			found = 0;
+			for (result = search->results; result; result = result->next) {
+				if (is_valid_result(result)) {
+					fprintf(fp, "%s\n", str_addr(&result->addr));
+					found = 1;
+				}
 			}
 
-			if (num == 0) {
-				fprintf(fp ,"Search in progress.\n");
+			if (!found) {
+				if (search->start_time == time_now_sec()) {
+					fprintf(fp, "Search started.\n");
+				} else {
+					fprintf(fp, "Search in progress.\n");
+				}
 			}
 		} else {
-			fprintf(fp ,"Some error occurred.\n");
+			fprintf(fp, "Some error occurred.\n");
 		}
 	} else if (match(request, " status %n")) {
 		// Print node id and statistics

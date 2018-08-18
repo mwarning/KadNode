@@ -482,10 +482,11 @@ static void setPointerRecord(struct ResourceRecord *rr, const char name[], const
 	rr->rd_data.ptr_record.name = domain;
 }
 
-static int dns_setup_msg(struct Message *msg, IP addrs[], int addrs_num, const char* hostname)
+static int dns_setup_msg(struct Message *msg, const struct result_t *results, const char *hostname)
 {
+	const struct result_t *result;
 	const char *qName;
-	int i, c;
+	int port, i, c;
 
 	// Header: leave most values intact for response
 	msg->qr = 1; // This is a response
@@ -501,29 +502,35 @@ static int dns_setup_msg(struct Message *msg, IP addrs[], int addrs_num, const c
 	c = 0;
 	qName = msg->question.qName;
 	if (msg->question.qType == SRV_Resource_RecordType) {
-		for (i = 0; i < addrs_num; i++, c++) {
-			int port = addr_port(&addrs[i]);
-			setServiceRecord(&msg->answers[c], qName, g_names[i], port);
-			msg->anCount++;
+		for (result = results, i = 0; result && c <= MAX_ADDR_RECORDS; result = result->next) {
+			if (is_valid_result(result)) {
+				port = addr_port(&result->addr);
+				setServiceRecord(&msg->answers[c++], qName, g_names[i++], port);
+				msg->anCount++;
+			}
 		}
 
-		for (i = 0; i < addrs_num; i++, c++) {
-			setAddressRecord(&msg->answers[c], g_names[i], &addrs[i]);
-			msg->anCount++;
+		for (result = results, i = 0; result && c < MAX_ADDR_RECORDS; result = result->next) {
+			if (is_valid_result(result)) {
+				setAddressRecord(&msg->answers[c++], g_names[i++], &result->addr);
+				msg->anCount++;
+			}
 		}
 	} else if (msg->question.qType == PTR_Resource_RecordType) {
-		setPointerRecord(&msg->answers[c], qName, hostname);
+		setPointerRecord(&msg->answers[c++], qName, hostname);
 		msg->anCount++;
-		c++;
+		i = 1;
 	} else {
 		// Assume AAAA or A Record Type
-		for (i = 0; i < addrs_num; i++, c++) {
-			setAddressRecord(&msg->answers[c], qName, &addrs[i]);
-			msg->anCount++;
+		for (result = results, i = 0; result && c <= MAX_ADDR_RECORDS; result = result->next) {
+			if (is_valid_result(result)) {
+				setAddressRecord(&msg->answers[c++], g_names[i++], &result->addr);
+				msg->anCount++;
+			}
 		}
 	}
 
-	return (c == 0) ? -1 : 1;
+	return i;
 }
 
 #ifdef DEBUG
@@ -624,8 +631,7 @@ static void dns_handler(int rc, int sock)
 {
 	struct Message msg;
 	IP clientaddr;
-	size_t addrs_num;
-	IP addrs[MAX_ADDR_RECORDS];
+	const struct search_t *search;
 	socklen_t addrlen_ret;
 	ssize_t buflen;
 	uint8_t buffer[1472];
@@ -694,7 +700,7 @@ static void dns_handler(int rc, int sock)
 			return;
 		}
 
-		if (dns_setup_msg(&msg, NULL, 0, domain) < 0) {
+		if (dns_setup_msg(&msg, NULL, domain) < 1) {
 			return;
 		}
 
@@ -703,21 +709,18 @@ static void dns_handler(int rc, int sock)
 		);
 	} else {
 		// Start lookup for one address
-		addrs_num = ARRAY_SIZE(addrs);
-		rc = kad_lookup(hostname, addrs, &addrs_num);
+		search = kad_lookup(hostname);
 
-		if (EXIT_FAILURE == rc) {
-			log_debug("DNS: Failed to resolve hostname: %s", hostname);
+		if (search == NULL) {
+			log_debug("DNS: Failed to start query: %s", hostname);
 			return;
 		}
 
-		if (dns_setup_msg(&msg, &addrs[0], addrs_num, NULL) < 0) {
+		if (dns_setup_msg(&msg, search->results, NULL) < 1) {
 			return;
 		}
 
-		log_debug("DNS: Send back %lu addresses to: %s",
-			addrs_num, str_addr(&clientaddr)
-		);
+		log_debug("DNS: Send back addresses to: %s", str_addr(&clientaddr));
 	}
 
 	// Encode message

@@ -2,6 +2,8 @@
 #ifndef _KAD_H_
 #define _KAD_H_
 
+#include "searches.h"
+
 /*
 * Interface to interact with the DHT implementation.
 * Negative return values indicate an error, success otherwise.
@@ -21,7 +23,7 @@ int kad_blacklist(const IP* addr);
 * Lookup the addresses of the nodes who have announced value id.
 * The first call will start the search.
 */
-int kad_lookup(const char query[], IP addr_array[], size_t *addr_num);
+const struct search_t *kad_lookup(const char query[]);
 
 // Export good nodes
 int kad_export_nodes(FILE *fp);

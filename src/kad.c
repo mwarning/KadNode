@@ -426,7 +426,7 @@ int kad_announce(const char query[], int port, time_t lifetime)
 }
 
 // Lookup known nodes that are nearest to the given id
-int kad_lookup(const char query[], IP addr_array[], size_t *addr_num)
+const struct search_t *kad_lookup(const char query[])
 {
 	char hostname[QUERY_MAX_SIZE];
 	struct search_t *search;
@@ -434,7 +434,7 @@ int kad_lookup(const char query[], IP addr_array[], size_t *addr_num)
 	// Remove .p2p suffix and convert to lowercase
 	if (EXIT_FAILURE == query_sanitize(hostname, sizeof(hostname), query)) {
 		log_debug("KAD: query_sanitize error");
-		return EXIT_FAILURE;
+		return NULL;
 	}
 
 	log_debug("KAD: Lookup identifier: %s", hostname);
@@ -445,23 +445,23 @@ int kad_lookup(const char query[], IP addr_array[], size_t *addr_num)
 	if (search == NULL) {
 		// Failed to create a new search
 		log_debug("KAD: searches_start error");
-		return EXIT_FAILURE;
+		return NULL;
 	}
 
-	// Search was just started
+	// Start DHT search if search was just started/restarted
 	if (search->start_time == time_now_sec()) {
 #if 0
 		// Search own announces
 		kad_lookup_own_announcements(search);
 #endif
+		log_debug("KAD: Start DHT search");
+
 		// Start a new DHT search
 		dht_search(search->id, 0, AF_INET, dht_callback_func, NULL);
 		dht_search(search->id, 0, AF_INET6, dht_callback_func, NULL);
 	}
 
-	// Collect addresses to be returned
-	*addr_num = searches_collect_addrs(search, addr_array, *addr_num);
-	return EXIT_SUCCESS;
+	return search;
 }
 
 #if 0
