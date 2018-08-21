@@ -93,7 +93,7 @@ libkadnode.so: build/libkadnode.o $(OBJS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -shared $(OBJS) build/libkadnode.o -o build/libkadnode.so
 
 kadnode: build/main.o $(OBJS) $(EXTRA)
-	$(CC) $(CFLAGS) $(LDFLAGS) build/main.o $(OBJS) -o build/kadnode
+	$(CC) $(CFLAGS) build/main.o $(OBJS) $(LDFLAGS) -o build/kadnode
 	ln -s kadnode build/kadnode-ctl 2> /dev/null || true
 
 clean:
