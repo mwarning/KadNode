@@ -24,12 +24,13 @@
 #include "ext-libnss.h"
 
 
+#ifndef ALIGN
 /** macro to align idx to 32bit boundary */
 #define ALIGN(idx) do { \
 	if (idx % sizeof(void*)) \
 		idx += (sizeof(void*) - idx % sizeof(void*)); /* Align on 32 bit boundary */ \
 } while(0)
-
+#endif
 
 static int _nss_kadnode_lookup(struct kadnode_nss_response *res, const struct kadnode_nss_request *req)
 {
