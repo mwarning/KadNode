@@ -79,10 +79,10 @@ endif
 
 
 build/%.o : src/%.c src/%.h
-	$(CC) $(CFLAGS) $(LDFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 libnss_kadnode:
-	$(CC) $(CFLAGS) $(LDFLAGS) -fPIC -c -o build/ext-libnss.o src/ext-libnss.c
+	$(CC) $(CFLAGS) -fPIC -c -o build/ext-libnss.o src/ext-libnss.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -fPIC -shared -Wl,-soname,libnss_kadnode.so.2 -o build/libnss_kadnode-2.0.so build/ext-libnss.o
 
 libkadnode.a: build/libkadnode.o $(OBJS)
@@ -93,7 +93,7 @@ libkadnode.so: build/libkadnode.o $(OBJS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -shared $(OBJS) build/libkadnode.o -o build/libkadnode.so
 
 kadnode: build/main.o $(OBJS) $(EXTRA)
-	$(CC) $(CFLAGS) $(LDFLAGS) build/main.o $(OBJS) -o build/kadnode
+	$(CC) $(CFLAGS) build/main.o $(OBJS) $(LDFLAGS) -o build/kadnode
 	ln -s kadnode build/kadnode-ctl 2> /dev/null || true
 
 clean:
