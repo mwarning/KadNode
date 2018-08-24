@@ -10,7 +10,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <libgen.h>
+#include <libgen.h> /* dirname() */
 
 #include "main.h"
 #include "conf.h"
@@ -52,12 +52,30 @@ void unix_signals(void)
 	}
 }
 
+static int socket_exists_and_used(const char path[])
+{
+	struct sockaddr_un addr;
+	int sock;
+	int rc;
+
+	sock = socket(AF_LOCAL, SOCK_STREAM, 0);
+
+	addr.sun_family = AF_LOCAL;
+	strcpy(addr.sun_path, path);
+
+	rc = connect(sock, (struct sockaddr *) &addr, sizeof(addr));
+	close(sock);
+
+	return (rc == 0);
+}
+
 int unix_create_unix_socket(const char path[], int *sock_out)
 {
 	struct sockaddr_un addr;
 	struct stat st;
 	char *dir = NULL;
 	int sock = -1;
+	int rc;
 
 	if (path == NULL || strlen(path) == 0) {
 		goto err;
@@ -65,9 +83,14 @@ int unix_create_unix_socket(const char path[], int *sock_out)
 
 	dir = dirname(strdup(path));
 
-	if (stat(path, &st) != -1) {
-		log_error("File already exists %s - delete first", path);
+	if (socket_exists_and_used(path)) {
+		log_error("Socket already in use: %s", path);
 		goto err;
+	}
+
+	rc = unlink(path);
+	if (rc == 0) {
+		log_warning("Removed stale file: %s", path);
 	}
 
 	// Directory does not exist and cannot be created
