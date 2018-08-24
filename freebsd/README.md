@@ -15,11 +15,27 @@ Make sure /usr/ports is populated:
 portsnap fetch extract
 ```
 
+Create a source tarball of the current repository:
+
+```
+git archive HEAD --prefix kadnode-head/ -o freebsd/kadnode-head.tar.gz
+```
+
+Edit `freebsd/Makefile` to build package locally:
+```
+# Comment out:
+#USE_GITHUB=   yes
+
+# Add:
+DISTDIR=       ${PWD}
+DISTNAME= kadnode-head
+```
+
 To create a [FreeBSD](https://www.freebsd.org) package (.txz file) execute:
 
 ```
+
 cd freebsd
-git archive HEAD --prefix kadnode/ -o kadnode-2.2.1.tar.gz
 make clean
 make makesum
 make package
