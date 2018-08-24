@@ -136,6 +136,13 @@ _nss_kadnode_gethostbyname2_r(const char *name,
 		goto finish;
 	}
 
+	if (res.count == 0) {
+		*errnop = ETIMEDOUT;
+		*h_errnop = HOST_NOT_FOUND;
+		status = NSS_STATUS_NOTFOUND;
+		goto finish;
+	}
+
 	/* Alias names */
 	*((char**) buffer) = NULL;
 	result->h_aliases = (char**) buffer;
