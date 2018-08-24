@@ -46,17 +46,12 @@ static void nss_client_handler(int rc, int clientsock)
 		goto finish;
 	}
 
-printf("nss lookup: %s\n", &req.name[0]);
-
 	search = kad_lookup(&req.name[0]);
 
 
 	if (search == NULL) {
-		printf("no search found\n");
 		goto finish;
 	}
-
-printf("found search; request.af: %s\n", str_af(req.af));
 
 	af = req.af;
 	count = 0;
@@ -86,9 +81,6 @@ printf("found search; request.af: %s\n", str_af(req.af));
 
 	res.af = af;
 	res.count = count;
-
-printf("found results; response.af: %s, count: %d\n", str_af(res.af), count);
-
 
 finish:
 	write(clientsock, &res, sizeof(res));
