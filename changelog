@@ -1,3 +1,11 @@
+kadnode (2.2.5) stable; urgency=medium
+
+  * replace stale unix socket files on startup
+  * add freebsd nss code again, was removed by accident
+  * remove linker flags from compile calls
+
+ -- mwarning <moritzwarning@web.de>  Fri, Aug 24 2018 03:27:44 +0100
+
 kadnode (2.2.4) stable; urgency=medium
 
   * fix parsing kadnode-ctl arguments
