@@ -188,6 +188,7 @@ const char *verbosity_str(int verbosity)
 
 void conf_info(void)
 {
+	log_info("Starting %s", kadnode_version_str);
 	log_info("Net Mode: %s", str_af(gconf->af));
 	log_info("Run Mode: %s", gconf->is_daemon ? "daemon" : "foreground");
 
@@ -669,8 +670,6 @@ int conf_setup(int argc, char **argv)
 		.verbosity = VERBOSITY_VERBOSE
 #endif
 	});
-
-	log_info("Starting %s", kadnode_version_str);
 
 	for (i = 1; i < argc; ++i) {
 		opt = argv[i];
