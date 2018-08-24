@@ -1,13 +1,7 @@
-kadnode (2.2.4-1) UNRELEASED; urgency=medium
+kadnode (2.2.5-1) stable; urgency=medium
 
-  * fix parsing kadnode-ctl arguments
-  * --bob-load-key creates key file with u+rw permissions only
-  * internal refactoring
+  * replace stale unix socket files on startup
+  * add freebsd nss code again, was removed by accident
+  * remove linker flags from compile calls
 
- -- Moritz Warning <moritzwarning@web.de>  Fri, 10 Aug 2018 15:18:16 -0400
-
-kadnode (2.2.3-1) stable; urgency=medium
-
-  * Closes: #900583 - initial package
-
- -- Moritz Warning <moritzwarning@web.de>  Sun, 20 May 2018 19:25:37 -0400
+ -- Moritz Warning <moritzwarning@web.de>  Fri, Aug 24 2018 03:27:44 +0100
