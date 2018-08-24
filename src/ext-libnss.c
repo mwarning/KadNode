@@ -243,3 +243,42 @@ _nss_kadnode_gethostbyaddr_r (const void* addr,
 	//NOTE we allow to leak this into DNS so no NOTFOUND
 	return NSS_STATUS_UNAVAIL;
 }
+
+#ifdef __FreeBSD__
+static NSS_METHOD_PROTOTYPE(__nss_compat_gethostbyname2_r);
+
+static ns_mtab methods[] = {
+	{ NSDB_HOSTS, "gethostbyname_r", __nss_compat_gethostbyname2_r, NULL },
+	{ NSDB_HOSTS, "gethostbyname2_r", __nss_compat_gethostbyname2_r, NULL },
+};
+
+ns_mtab *nss_module_register(const char *source, unsigned int *mtabsize, nss_module_unregister_fn *unreg) {
+	*mtabsize = sizeof(methods) / sizeof(methods[0]);
+	*unreg = NULL;
+	return methods;
+}
+
+int __nss_compat_gethostbyname2_r(void *retval, void *mdata, va_list ap) {
+	int s;
+	const char *name;
+	int af;
+	struct hostent *hptr;
+	char *buffer;
+	size_t buflen;
+	int *errnop;
+	int *h_errnop;
+
+	name = va_arg(ap, const char*);
+	af = va_arg(ap, int);
+	hptr = va_arg(ap, struct hostent*);
+	buffer = va_arg(ap, char*);
+	buflen = va_arg(ap, size_t);
+	errnop = va_arg(ap, int*);
+	h_errnop = va_arg(ap, int*);
+
+	s = _nss_kadnode_gethostbyname2_r(name, af, hptr, buffer, buflen, errnop, h_errnop);
+	*(struct hostent**) retval = (s == NS_SUCCESS) ? hptr : NULL;
+
+	return __nss_compat_result(s, *errnop);
+}
+#endif
