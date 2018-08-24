@@ -344,14 +344,14 @@ int bob_create_key(const char path[])
 	//TODO: see gen_key.c example for better seed method
 	if ((ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
 			(const unsigned char *) pers, strlen(pers))) != 0) {
-		printf("mbedtls_ctr_drbg_seed returned %d\n", ret);
+		fprintf(stderr, "mbedtls_ctr_drbg_seed returned %d\n", ret);
 		return EXIT_FAILURE;
 	}
 
 	printf("Generating %s key pair...\n", ECPARAMS_NAME);
 
 	if ((ret = mbedtls_pk_setup(&ctx, mbedtls_pk_info_from_type(MBEDTLS_PK_ECKEY))) != 0) {
-		printf("mbedtls_pk_setup returned -0x%04x\n", -ret);
+		fprintf(stderr, "mbedtls_pk_setup returned -0x%04x\n", -ret);
 		return EXIT_FAILURE;
 	}
 
@@ -360,7 +360,7 @@ int bob_create_key(const char path[])
 	do {
 		if ((ret = mbedtls_ecp_gen_key(ECPARAMS, mbedtls_pk_ec(ctx),
 			mbedtls_ctr_drbg_random, &ctr_drbg)) != 0) {
-			printf("mbedtls_ecp_gen_key returned -0x%04x\n", -ret);
+			fprintf(stderr, "mbedtls_ecp_gen_key returned -0x%04x\n", -ret);
 			return EXIT_FAILURE;
 		}
 	} while (mbedtls_mpi_get_bit(&mbedtls_pk_ec(ctx)->Q.Y, 0) != 0);
