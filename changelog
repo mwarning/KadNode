@@ -3,6 +3,7 @@ kadnode (2.2.5) stable; urgency=medium
   * replace stale unix socket files on startup
   * add freebsd nss code again, was removed by accident
   * remove linker flags from compile calls
+  * fix freebsd nss module crash when no address was found
 
  -- mwarning <moritzwarning@web.de>  Fri, Aug 24 2018 03:27:44 +0100
 
