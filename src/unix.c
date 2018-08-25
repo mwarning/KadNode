@@ -113,6 +113,9 @@ int unix_create_unix_socket(const char path[], int *sock_out)
 		goto err;
 	}
 
+	// Try to set ugo+rwx
+	chmod(path, 0777);
+
 	listen(sock, 5);
 
 	*sock_out = sock;
