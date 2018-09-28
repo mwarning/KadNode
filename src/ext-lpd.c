@@ -85,7 +85,13 @@ static void handle_mcast(int rc, struct LPD_STATE* lpd)
 		lpd->packet_limit -= 1;
 	}
 
-	buf[rc] = '\0';
+	// Potential buffer overflow ?
+	if (rc < 16) {
+		buf[rc] = '\0';
+	} else {
+		log_warning("LPD: Message length exceeds buffer length: %s", strerror(errno));
+		return;
+	}
 
 	if (sscanf(buf, "DHT %hu", &port) == 1) {
 		port_set(&addr, port);
