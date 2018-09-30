@@ -2,7 +2,7 @@ Source: kadnode
 Section: net
 Priority: optional
 Maintainer: Moritz Warning <moritzwarning@web.de>
-Build-Depends: debhelper (>=11)
+Build-Depends: debhelper (>=10)
 Standards-Version: 4.1.4
 Homepage: https://github.com/mwarning/kadnode
 
