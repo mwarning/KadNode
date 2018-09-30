@@ -121,6 +121,7 @@ struct value_t *announces_add(const char query[], int port, time_t lifetime)
 
 	if (lifetime < now) {
 		// Invalid lifetime, should not happen.
+		log_error("Announcement can't be in the past");
 		return NULL;
 	}
 
