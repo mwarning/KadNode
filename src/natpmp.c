@@ -106,7 +106,7 @@ int natpmp_handler(struct natpmp_handle_t *handle, uint16_t port, time_t lifespa
 		int rc = readnatpmpresponseorretry(&handle->natpmp, &response);
 		
 		if (rc >= 0) {
-			char str[INET_ADDRSTRLEN+1];
+			char str[INET_ADDRSTRLEN];
 			inet_ntop(AF_INET, &response.pnu.publicaddress.addr, str, sizeof (str));
 			log_info("NAT-PMP: Found public address \"%s\".", str);
 			handle->state = NATPMP_STATE_REQUEST_PORTMAPPING;
