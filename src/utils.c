@@ -407,8 +407,8 @@ const char *str_af(int af) {
 
 const char *str_addr(const IP *addr)
 {
-	static char addrbuf[FULL_ADDSTRLEN + 1];
-	char buf[INET6_ADDRSTRLEN + 1];
+	static char addrbuf[FULL_ADDSTRLEN];
+	char buf[INET6_ADDRSTRLEN];
 	const char *fmt;
 	int port;
 
