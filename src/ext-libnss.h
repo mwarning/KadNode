@@ -2,8 +2,16 @@
 #ifndef _EXT_LIBNSS_H_
 #define _EXT_LIBNSS_H_
 
-#include <nss.h> // for enum nss_status
+//#include <nss.h> // for enum nss_status
 #include <netdb.h> // for struct hostent
+
+enum nss_status {
+	NSS_STATUS_TRYAGAIN = -2,
+	NSS_STATUS_UNAVAIL,
+	NSS_STATUS_NOTFOUND,
+	NSS_STATUS_SUCCESS,
+	NSS_STATUS_RETURN
+};
 
 #define MAX_ENTRIES 16
 

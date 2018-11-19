@@ -8,7 +8,7 @@
 #include <netdb.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <nss.h>
+#include <sys/time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <arpa/inet.h>
