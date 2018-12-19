@@ -1,3 +1,7 @@
+kadnode (2.2.6) stable; urgency=medium
+
+ * update dht library to 0.26
+
 kadnode (2.2.5) stable; urgency=medium
 
   * replace stale unix socket files on startup
