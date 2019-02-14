@@ -64,7 +64,8 @@ enum {
 	MX_Resource_RecordType = 15,
 	TXT_Resource_RecordType = 16,
 	AAAA_Resource_RecordType = 28,
-	SRV_Resource_RecordType = 33
+	SRV_Resource_RecordType = 33,
+	ANY_Resource_RecordType = 255
 };
 
 // Operation Code
@@ -336,19 +337,13 @@ static int dns_decode_msg(struct Message *msg, const uint8_t *buffer)
 		int qType = get16bits(&buffer);
 		int qClass = get16bits(&buffer);
 
-		if (qType == A_Resource_RecordType
-			|| qType == AAAA_Resource_RecordType
-			|| qType == SRV_Resource_RecordType
-			|| qType == PTR_Resource_RecordType
-		) {
-			msg->question.qName = msg->qName_buffer;
-			msg->question.qType = qType;
-			msg->question.qClass = qClass;
-			return 1;
-		}
+		msg->question.qName = msg->qName_buffer;
+		msg->question.qType = qType;
+		msg->question.qClass = qClass;
+		return 1;
 	}
 
-	log_warning("DNS: No question for A, AAAA, SRV or PTR resource found in query.");
+	log_warning("DNS: No msg.");
 
 	return -1;
 }
@@ -499,6 +494,9 @@ static int dns_setup_msg(struct Message *msg, const struct result_t *results, co
 	msg->nsCount = 0;
 	msg->arCount = 0;
 
+	if (!results) {
+		return 1;
+	}
 	c = 0;
 	qName = msg->question.qName;
 	if (msg->question.qType == SRV_Resource_RecordType) {
@@ -512,11 +510,12 @@ static int dns_setup_msg(struct Message *msg, const struct result_t *results, co
 
 		for (result = results, i = 0; result && c < MAX_ADDR_RECORDS; result = result->next) {
 			if (is_valid_result(result)) {
-				setAddressRecord(&msg->answers[c++], g_names[i++], &result->addr);
+				setAddressRecord(&msg->answers[c++], qName, &result->addr);
 				msg->anCount++;
+				i++;
 			}
 		}
-	} else if (msg->question.qType == PTR_Resource_RecordType) {
+	} else if (msg->question.qType == PTR_Resource_RecordType && hostname != NULL) {
 		setPointerRecord(&msg->answers[c++], qName, hostname);
 		msg->anCount++;
 		i = 1;
@@ -524,8 +523,9 @@ static int dns_setup_msg(struct Message *msg, const struct result_t *results, co
 		// Assume AAAA or A Record Type
 		for (result = results, i = 0; result && c <= MAX_ADDR_RECORDS; result = result->next) {
 			if (is_valid_result(result)) {
-				setAddressRecord(&msg->answers[c++], g_names[i++], &result->addr);
+				setAddressRecord(&msg->answers[c++], qName, &result->addr);
 				msg->anCount++;
+				i++;
 			}
 		}
 	}
@@ -546,6 +546,18 @@ static const char* qtype_str(int qType)
 		return "SRV";
 	case PTR_Resource_RecordType:
 		return "PTR";
+	case NS_Resource_RecordType:
+		return "NS";
+	case CNAME_Resource_RecordType:
+		return "CNAME";
+	case SOA_Resource_RecordType:
+		return "SOA";
+	case MX_Resource_RecordType:
+		return "MX";
+	case TXT_Resource_RecordType:
+		return "TXT";
+	case ANY_Resource_RecordType:
+		return "ANY";
 	default:
 		return "???";
 	}
@@ -637,7 +649,6 @@ static void dns_handler(int rc, int sock)
 	uint8_t buffer[1472];
 	const char *hostname;
 	const char *domain;
-	const int af = gconf->af;
 
 	if (rc == 0) {
 		return;
@@ -676,18 +687,6 @@ static void dns_handler(int rc, int sock)
 		return;
 	}
 
-	if (af != AF_UNSPEC) {
-		if (msg.question.qType == A_Resource_RecordType && af != AF_INET) {
-			log_debug("DNS: Received request for IPv4 record (A), but DHT uses IPv6 only.");
-			return;
-		}
-
-		if (msg.question.qType == AAAA_Resource_RecordType && af != AF_INET6) {
-			log_debug("DNS: Received request for IPv6 record (AAAA), but DHT uses IPv4 only.");
-			return;
-		}
-	}
-
 	log_debug("DNS: Received %s query from %s for: %s",
 		qtype_str(msg.question.qType),
 		str_addr(&clientaddr),
@@ -697,30 +696,39 @@ static void dns_handler(int rc, int sock)
 	if (msg.question.qType == PTR_Resource_RecordType) {
 		if ((domain = dns_lookup_ptr(hostname)) == NULL) {
 			log_debug("DNS: No domain found for PTR question.");
-			return;
-		}
-
-		if (dns_setup_msg(&msg, NULL, domain) < 1) {
-			return;
+			dns_setup_msg(&msg, NULL, NULL);
+		} else {
+			if (dns_setup_msg(&msg, NULL, domain) < 1) {
+				log_debug("DNS: Failed to setup msg");
+				dns_setup_msg(&msg, NULL, NULL);
+			}
 		}
 
 		log_debug("DNS: Send back hostname '%s' to: %s",
 			domain, str_addr(&clientaddr)
 		);
-	} else {
+	} else if (msg.question.qType == A_Resource_RecordType
+		|| msg.question.qType == AAAA_Resource_RecordType
+		|| msg.question.qType == ANY_Resource_RecordType
+	) {
+
 		// Start lookup for one address
 		search = kad_lookup(hostname);
 
 		if (search == NULL) {
-			log_debug("DNS: Failed to start query: %s", hostname);
-			return;
-		}
-
-		if (dns_setup_msg(&msg, search->results, NULL) < 1) {
-			return;
+			log_debug("DNS: Failed to start query");
+			dns_setup_msg(&msg, NULL, NULL);
+		} else {
+			if (dns_setup_msg(&msg, search->results, NULL) < 1) {
+				log_debug("DNS: Failed to setup msg");
+				dns_setup_msg(&msg, NULL, NULL);
+			}
 		}
 
 		log_debug("DNS: Send back addresses to: %s", str_addr(&clientaddr));
+	} else {
+		log_warning("DNS: No question for A, AAAA, SRV, PTR or ANY resource found in query.");
+		dns_setup_msg(&msg, NULL, NULL);
 	}
 
 	// Encode message
