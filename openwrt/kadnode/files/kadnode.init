@@ -93,13 +93,12 @@ stop_instance() {
 	rm -f $CONFIG_FILE
 }
 
-add_interface_trigger()
-{
-	local interface
+add_interface_trigger() {
+	local ifname
 
 	config_get ifname "$1" ifname
 
-	[ -n "$interface" ] && procd_add_interface_trigger "interface.*" "$ifname" /etc/init.d/kadnode restart
+	[ -n "$ifname" ] && procd_add_interface_trigger "interface.*" "$ifname" /etc/init.d/kadnode restart
 }
 
 service_triggers()
