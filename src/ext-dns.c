@@ -64,8 +64,7 @@ enum {
 	MX_Resource_RecordType = 15,
 	TXT_Resource_RecordType = 16,
 	AAAA_Resource_RecordType = 28,
-	SRV_Resource_RecordType = 33,
-	ANY_Resource_RecordType = 255
+	SRV_Resource_RecordType = 33
 };
 
 // Operation Code
@@ -556,8 +555,6 @@ static const char* qtype_str(int qType)
 		return "MX";
 	case TXT_Resource_RecordType:
 		return "TXT";
-	case ANY_Resource_RecordType:
-		return "ANY";
 	default:
 		return "???";
 	}
@@ -709,7 +706,6 @@ static void dns_handler(int rc, int sock)
 		);
 	} else if (msg.question.qType == A_Resource_RecordType
 		|| msg.question.qType == AAAA_Resource_RecordType
-		|| msg.question.qType == ANY_Resource_RecordType
 	) {
 
 		// Start lookup for one address
@@ -727,7 +723,7 @@ static void dns_handler(int rc, int sock)
 
 		log_debug("DNS: Send back addresses to: %s", str_addr(&clientaddr));
 	} else {
-		log_warning("DNS: No question for A, AAAA, SRV, PTR or ANY resource found in query.");
+		log_warning("DNS: No question for A, AAAA, SRV or PTR resource found in query.");
 		dns_setup_msg(&msg, NULL, NULL);
 	}
 
