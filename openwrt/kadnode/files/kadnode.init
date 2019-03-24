@@ -6,8 +6,7 @@ PROG=/usr/bin/kadnode
 OPTS=""
 
 
-boot()
-{
+boot() {
 	# Wait for the loopback interface to be ready
 	ubus -t 30 wait_for network.interface network.loopback 2>/dev/null
 	rc_procd start_service
@@ -101,8 +100,7 @@ add_interface_trigger() {
 	[ -n "$ifname" ] && procd_add_interface_trigger "interface.*" "$ifname" /etc/init.d/kadnode restart
 }
 
-service_triggers()
-{
+service_triggers() {
 	procd_add_reload_trigger "kadnode"
 
 	config_load kadnode
