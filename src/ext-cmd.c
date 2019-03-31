@@ -409,7 +409,7 @@ int cmd_client(int argc, char *argv[])
 		goto error;
 	}
 
-#ifndef __CYGWIN__
+#ifdef __CYGWIN__
 	struct timeval tv;
 
 	/* Set receive timeout: 200ms */
