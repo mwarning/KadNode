@@ -69,7 +69,7 @@ int windows_service_start(void (*func)())
 	svc_main_func = func;
 	
 	if (!StartServiceCtrlDispatcher(services)) {
-		log_warn("WIN: Can not start service: Error %d", GetLastError());
+		log_warning("WIN: Can not start service: Error %d", GetLastError());
 		return 1;
 	} else {
 		return 0;
@@ -141,7 +141,7 @@ static BOOL WINAPI windows_console_handler(int event)
 void windows_signals(void)
 {
 	if (!SetConsoleCtrlHandler((PHANDLER_ROUTINE) windows_console_handler, TRUE)) {
-		log_warn("WIN: Cannot set console handler. Error: %d", GetLastError());
+		log_warning("WIN: Cannot set console handler. Error: %d", GetLastError());
 	}
 }
 
@@ -166,7 +166,7 @@ int windows_exec(const char* cmd)
 		&si, // Pointer to STARTUPINFO structure
 		&pi) // Pointer to PROCESS_INFORMATION structure
 	) {
-		log_warn("CreateProcess failed: Error %d", GetLastError());
+		log_warning("CreateProcess failed: Error %d", GetLastError());
 		return 1;
 	}
 

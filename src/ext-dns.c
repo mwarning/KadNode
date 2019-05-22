@@ -509,7 +509,7 @@ static int dns_setup_msg(struct Message *msg, const struct result_t *results, co
 
 		for (result = results, i = 0; result && c < MAX_ADDR_RECORDS; result = result->next) {
 			if (is_valid_result(result)) {
-				setAddressRecord(&msg->answers[c++], qName, &result->addr);
+				setAddressRecord(&msg->answers[c++], g_names[i++], &result->addr);
 				msg->anCount++;
 				i++;
 			}
