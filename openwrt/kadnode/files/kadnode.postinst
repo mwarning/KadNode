@@ -1,6 +1,8 @@
 #!/bin/sh
 
-uci add_list dhcp.@dnsmasq[0].server='/p2p/::1#3535'
-uci commit dhcp
+grep -q '/p2p/::1#3535' /etc/config/dhcp || {
+	uci add_list dhcp.@dnsmasq[0].server='/p2p/::1#3535'
+	uci commit dhcp
+}
 
 exit 0
