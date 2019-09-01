@@ -514,6 +514,7 @@ int addr_parse(IP *addr, const char addr_str[], const char port_str[], int af)
 			freeaddrinfo(info);
 			return 0;
 		}
+		p = p->ai_next;
 	}
 
 	freeaddrinfo(info);
