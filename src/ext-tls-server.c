@@ -64,7 +64,7 @@ static void end_client_connection(mbedtls_net_context *client_fd, int result)
 {
 	int ret;
 
-	net_remove_handler(client_fd->fd, tls_client_handler);
+	net_remove_handler(client_fd->fd, &tls_client_handler);
 
 	// Done and close connection
 	do ret = mbedtls_ssl_close_notify(&g_ssl);
@@ -174,7 +174,7 @@ static void tls_server_handler(int rc, int sock)
 	mbedtls_ssl_set_bio(&g_ssl, client_fd, mbedtls_net_send, mbedtls_net_recv, NULL);
 
 	// New incoming handler connection
-	net_add_handler(client_fd->fd, tls_client_handler);
+	net_add_handler(client_fd->fd, &tls_client_handler);
 }
 
 // Get the CN field of an certificate
