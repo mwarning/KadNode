@@ -21,7 +21,7 @@ There are three ways to archieve this:
 kadnode --peer bttracker.debian.org --peer 192.168.1.1
 ```
 
-2. Ping a node using the KadNode console if present:
+2. Ping a peer using the KadNode console if present:
 ```
 kadnode-ctl ping bttracker.debian.org
 ```
@@ -29,7 +29,7 @@ kadnode-ctl ping bttracker.debian.org
 3. Use the local peer discovery feature. Just start KadNode and it will try to discover other KadNode nodes in the local network.
 
 
-Also provide a --peerfile argument to let KadNode backup its peerlist on shutdown and every 24h.
+Also provide a --peerfile argument to let KadNode load its peerlist on startup and store on every 24h and shutdown.
 This ensures successful bootstrapping on next startup.
 
 
