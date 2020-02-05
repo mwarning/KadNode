@@ -205,6 +205,7 @@ static void tls_handle(int rc, int fd)
 int tls_client_get_id(uint8_t id[], size_t len, const char query[])
 {
 	uint8_t hash[32];
+	int ret = 0;
 
 	// Match dot in query, e.g. 'example.com'
 	if (strchr(query, '.')) {
@@ -212,8 +213,8 @@ int tls_client_get_id(uint8_t id[], size_t len, const char query[])
 		mbedtls_sha256_init(&ctx);
 
 #if (MBEDTLS_VERSION_MAJOR >= 0x02070000)
-		mbedtls_sha256_update_ret(&ctx, (uint8_t*) &query[0], strlen(query));
-		mbedtls_sha256_finish_ret(&ctx, hash);
+		ret |= mbedtls_sha256_update_ret(&ctx, (uint8_t*) &query[0], strlen(query));
+		ret |= mbedtls_sha256_finish_ret(&ctx, hash);
 #else
 		mbedtls_sha256_update(&ctx, (uint8_t*) &query[0], strlen(query));
 		mbedtls_sha256_finish(&ctx, hash);
@@ -222,7 +223,7 @@ int tls_client_get_id(uint8_t id[], size_t len, const char query[])
 		memset(id, 0, len);
 		memcpy(id, hash, MIN(len, sizeof(hash)));
 
-		return EXIT_SUCCESS;
+		return (ret == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 	}
 
 	return EXIT_FAILURE;
