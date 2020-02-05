@@ -19,6 +19,7 @@
 #include "mbedtls/error.h"
 #include "mbedtls/debug.h"
 #include "mbedtls/sha256.h"
+#include "mbedtls/version.h"
 
 #include "main.h"
 #include "conf.h"
@@ -212,7 +213,7 @@ int tls_client_get_id(uint8_t id[], size_t len, const char query[])
 		mbedtls_sha256_context ctx;
 		mbedtls_sha256_init(&ctx);
 
-#if (MBEDTLS_VERSION_MAJOR >= 0x02070000)
+#if (MBEDTLS_VERSION_MAJOR >= 2 && MBEDTLS_VERSION_MINOR >= 7)
 		ret |= mbedtls_sha256_update_ret(&ctx, (uint8_t*) &query[0], strlen(query));
 		ret |= mbedtls_sha256_finish_ret(&ctx, hash);
 #else
