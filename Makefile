@@ -1,5 +1,4 @@
 
-CC ?= gcc
 CFLAGS ?= -Os -Wall -Wwrite-strings -pedantic
 CFLAGS += -std=gnu99 -I/usr/local/include $(CPPFLAGS)
 LDFLAGS += -L/usr/local/lib -lc
