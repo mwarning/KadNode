@@ -51,6 +51,8 @@ void peerfile_export(void)
 		return;
 	}
 
+	log_info("PEERFILE: Export peers to %s", filename);
+
 	num = kad_export_nodes(fp);
 	fclose(fp);
 
@@ -99,6 +101,8 @@ static void peerfile_import(void)
 		log_warning("PEERFILE: Cannot open file '%s' for peer import: %s", filename, strerror(errno));
 		return;
 	}
+
+	log_info("PEERFILE: Import peers from %s", filename);
 
 	num = 0;
 	while (fgets(linebuf, sizeof(linebuf), fp) != NULL && gconf->is_running) {
