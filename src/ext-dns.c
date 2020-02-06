@@ -198,7 +198,7 @@ static void put16bits(uint8_t** buffer, uint16_t value)
 
 static void put32bits(uint8_t** buffer, uint32_t value)
 {
-	value = htons(value);
+	value = htonl(value);
 	memcpy(*buffer, &value, 4);
 	*buffer += 4;
 }
