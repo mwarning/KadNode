@@ -18,6 +18,8 @@ Client configuration:
 ./build/kadnode --tls-client-cert /usr/share/ca-certificates/mozilla/
 ```
 
+Now you should be able to do `ping mydomain.com.p2p`. The `.p2p` extension causes it do be resolved via KadNode. Since the default BitTorrent network is huge, it may take a few tries / a few seconds to resolve.
+
 ## Use existing HTTPS server for authentication
 
 Instead of KadNode, a HTTPS server (e.g. apache, nginx) on the same host can provide the authentication. In this case KadNode only does the announcements:
