@@ -136,7 +136,6 @@ static void cmd_exec(FILE *fp, const char request[], int allow_debug)
 	int count;
 	int port;
 	char d; // dummy marker
-	int rc = 0;
 
 	if (sscanf(request, " ping%*[ ]%255[^ \n\t] %c", hostname, &d) == 1) {
 		if (gconf->af == AF_UNSPEC) {
@@ -202,9 +201,7 @@ static void cmd_exec(FILE *fp, const char request[], int allow_debug)
 		} else if (match(request, " list%*[ ]constants %n")) {
 			kad_debug_constants(fp);
 		} else if (match(request, " list%*[ ]nodes %n")) {
-			rc = kad_export_nodes(fp);
-
-			if (rc == 0) {
+			if (kad_export_nodes(fp) == 0) {
 				fprintf(fp, "No good nodes found.\n");
 			}
 #ifdef FWD
