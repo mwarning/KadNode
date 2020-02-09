@@ -30,9 +30,9 @@
 
 static const char *g_client_usage =
 MAIN_SRVNAME" Control Program - Send commands to a KadNode instance.\n\n"
-"Usage: kadnode-ctl [OPTIONS]* [COMMANDS]*\n"
+"Usage: kadnode-ctl [OPTIONS] [COMMANDS]\n"
 "\n"
-" -p <port>	Connect to this unix socket (Default: "CMD_PATH")\n"
+" -p <file>	Connect to this unix socket (Default: "CMD_PATH")\n"
 " -h		Print this help.\n"
 "\n";
 
@@ -41,7 +41,7 @@ static const char* g_server_usage =
 	"	status\n"
 	"	lookup <query>\n"
 	"	announce [<query>[:<port>] [<minutes>]]\n"
-	"	ping <ip-addr>\n";
+	"	ping <addr>\n";
 
 const char* g_server_usage_debug =
 	"	blacklist <addr>\n"

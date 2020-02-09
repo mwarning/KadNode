@@ -71,7 +71,7 @@ const char *kadnode_version_str = "KadNode v"MAIN_VERSION" ("
 static const char *kadnode_usage_str =
 "KadNode is a small decentralized DNS resolver.\n"
 "\n"
-"Usage: kadnode [OPTIONS]*\n"
+"Usage: kadnode [OPTIONS]\n"
 "\n"
 " --announce <name>:<port>		Announce a name and port.\n\n"
 " --peerfile <file>			Import/Export peers from and to a file.\n\n"
