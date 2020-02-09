@@ -1,28 +1,31 @@
 # KadNode
 
-KadNode finds the IP address of other instances on the Internet or local network based on names. It is used like DNS, but is based on the decentralized BitTorrent network.
+KadNode finds the IP address of other instances on the Internet or local network. It is used like DNS, but is based on the decentralized BitTorrent network.
 
-KadNode intercepts .p2p domain queries on the systems level and resolve them using a decentralized [DHT](https://de.wikipedia.org/wiki/DHT) network. [TLS](https://de.wikipedia.org/wiki/Transport_Layer_Security) authentication can be used to make sure the correct IP address was found. If successful, the IP address is passed to the application making the request.
+KadNode intercepts .p2p domain queries on the systems level and resolves them using a decentralized [DHT](https://de.wikipedia.org/wiki/DHT) network. [TLS](https://de.wikipedia.org/wiki/Transport_Layer_Security) authentication can be used to make sure the correct IP address was found. If successful, the IP address is passed to the application making the request.
 
 Supported are also domains consisting of public keys represented as characters. :-)
 
 ## Features:
 
+* Support for two kinds of domains:
+  1. public key domains as `<public-hex-key>.p2p`
+     * No need to exchange any further keys/certificates
+     * Uses secp256r1 [ECC](https://en.wikipedia.org/wiki/Elliptic-curve_cryptography) key pairs
+  2. named domains like `yourdomain.com.p2p`
+     * Needs pre-shared certifcates (self signed or e.g. "Let's Encrypt")
+     * Uses TLS session for authentication
 * IPv4/IPv6 support
-* Support for TLS authentication
-  * Use CA browser chain and e.g. "Let's Encrypt" certificates for yourdomain.com(.p2p)
-* Support for [ECC](https://en.wikipedia.org/wiki/Elliptic-curve_cryptography) public key links as \<public-hex-key\>.p2p
-  * No need to exchange any keys between clients and servers
 * UPnP/NAT-PMP support
-* local peer discovery
-* small size, ~85KB depending on features, ~35KB compressed
-* command line control program
+* Local peer discovery
+* Small size / ~100KB depending on features / ~50KB compressed
+* Command line control program
 * NSS support through /etc/nsswitch.conf
 * DNS server interface and DNS proxy
-  * handles A, AAAA, and SRV requests
-* packages for ArchLinux/Debian/FreeBSD/MacOSX/OpenWrt/Windows
-* peer file import/export on startup/shutdown and every 24h
-* uses sha256 hash method
+  * Handles A, AAAA, and SRV requests
+* Packages for ArchLinux/Debian/FreeBSD/MacOSX/OpenWrt/Windows
+* Peer file import/export on startup/shutdown and every 24h
+* Uses sha256 hash method
 
 ## Documentation
 
