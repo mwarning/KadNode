@@ -61,19 +61,15 @@ static int g_cmd_sock = -1;
 static void cmd_ping(FILE *fp, const char addr_str[])
 {
 	IP addr;
-	int rc;
 
-	// If the address contains no port - use the default port
-	if ((rc = addr_parse_full(&addr, addr_str, STR(DHT_PORT), gconf->af)) == 0) {
+	if (addr_parse(&addr, addr_str, STR(DHT_PORT), gconf->af) == EXIT_SUCCESS) {
 		if (kad_ping(&addr) == 0) {
 			fprintf(fp, "Send ping to: %s\n", str_addr(&addr));
-			return;
+		} else {
+			fprintf(fp, "Failed to send ping.\n");
 		}
-		fprintf(fp, "Failed to send ping.\n");
-	} else if (rc == -1) {
-		fprintf(fp, "Failed to parse address.\n");
 	} else {
-		fprintf(fp, "Failed to resolve address.\n");
+		fprintf(fp, "Failed to parse/resolve address.\n");
 	}
 }
 

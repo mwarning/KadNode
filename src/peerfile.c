@@ -67,21 +67,42 @@ void peerfile_export(void)
 
 static int peerfile_import_peer(const char addr_str[])
 {
-	IP addr;
-	int rc;
+	const char *port_str = STR(DHT_PORT);
+	int parsed = 0;
+	int pinged = 0;
+	IP addr = {0};
+	int af = gconf->af;
 
-	if ((rc = addr_parse_full(&addr, addr_str, STR(DHT_PORT), gconf->af)) == 0) {
-		if (kad_ping(&addr) == 0) {
-			return 1;
-		} else {
-			log_warning("PEERFILE: Cannot ping address '%s': %s", addr_str, strerror(errno));
-			return 0;
+	if (af == AF_UNSPEC || af == AF_INET6) {
+		if (addr_parse(&addr, addr_str, port_str, AF_INET6) == EXIT_SUCCESS) {
+			parsed = 1;
+			if (kad_ping(&addr) == 0) {
+				pinged = 1;
+			}
 		}
-	} else {
-		log_warning("PEERFILE: Cannot resolve address '%s': %s", addr_str, gai_strerror(rc));
 	}
 
-	return 0;
+	if (af == AF_UNSPEC || af == AF_INET) {
+		if (addr_parse(&addr, addr_str, port_str, AF_INET) == EXIT_SUCCESS) {
+			parsed = 1;
+			if (kad_ping(&addr) == 0) {
+				pinged = 1;
+			}
+		}
+	}
+
+	if (parsed) {
+		log_warning("PEERFILE: Cannot parse/resolve address '%s': %s", addr_str, strerror(errno));
+		return 0;
+	}
+
+	if (pinged) {
+		log_warning("PEERFILE: Cannot ping address '%s': %s", addr_str, strerror(errno));
+		return 0;
+	}
+
+	// one node pinged
+	return 1;
 }
 
 static void peerfile_import(void)
@@ -130,7 +151,7 @@ static void peerfile_import_static(const struct peer *peers)
 		peers = peers->next;
 	}
 
-	if (num) {
+	if (num > 0) {
 		log_info("PEERFILE: Imported %d static peers.", num);
 	}
 }
@@ -149,7 +170,7 @@ int peerfile_add_peer(const char addr_str[])
 
 static void peerfile_handle_peerfile(int _rc, int _sock)
 {
-
+	// We know no peers
 	if (peerfile_import_time <= time_now_sec() && kad_count_nodes(0) == 0) {
 		// Ping peers from peerfile, if present
 		peerfile_import();
@@ -161,6 +182,7 @@ static void peerfile_handle_peerfile(int _rc, int _sock)
 		peerfile_import_time = time_add_mins(5);
 	}
 
+	// We know good peers
 	if (peerfile_export_time <= time_now_sec() && kad_count_nodes(1) != 0) {
 		// Export peers
 		peerfile_export();

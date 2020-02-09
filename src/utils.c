@@ -483,43 +483,41 @@ int addr_len(const IP *addr)
 	}
 }
 
-/*
-* Parse/Resolve an IP address.
-* The port must be specified separately.
-*/
-int addr_parse(IP *addr, const char addr_str[], const char port_str[], int af)
+static int addr_parse_internal(IP *ret, const char addr_str[], const char port_str[], int af)
 {
-	struct addrinfo hints;
-	struct addrinfo *info = NULL;
-	struct addrinfo *p = NULL;
+    struct addrinfo hints;
+    struct addrinfo *info = NULL;
+    struct addrinfo *p = NULL;
+    int rc = EXIT_FAILURE;
 
-	memset(&hints, '\0', sizeof(struct addrinfo));
-	hints.ai_socktype = SOCK_STREAM;
-	//hints.ai_flags = AI_NUMERICHOST;
-	hints.ai_family = af;
+    memset(&hints, '\0', sizeof(struct addrinfo));
+    hints.ai_socktype = SOCK_STREAM;
+    //hints.ai_flags = AI_NUMERICHOST;
+    hints.ai_family = af;
 
-	if (getaddrinfo(addr_str, port_str, &hints, &info) != 0) {
-		return -2;
-	}
+    if (getaddrinfo(addr_str, port_str, &hints, &info) != 0) {
+        return EXIT_FAILURE;
+    }
 
-	p = info;
-	while (p != NULL) {
-		if (p->ai_family == AF_INET6) {
-			memcpy(addr, p->ai_addr, sizeof(IP6));
-			freeaddrinfo(info);
-			return 0;
-		}
-		if (p->ai_family == AF_INET) {
-			memcpy(addr, p->ai_addr, sizeof(IP4));
-			freeaddrinfo(info);
-			return 0;
-		}
-		p = p->ai_next;
-	}
+    p = info;
+    while (p != NULL) {
+        if ((af == AF_UNSPEC || af == AF_INET6) && p->ai_family == AF_INET6) {
+            memcpy(ret, p->ai_addr, sizeof(IP6));
+            rc = EXIT_SUCCESS;
+            break;
+        }
 
-	freeaddrinfo(info);
+        if ((af == AF_UNSPEC || af == AF_INET) && p->ai_family == AF_INET) {
+            memcpy(ret, p->ai_addr, sizeof(IP4));
+            rc = EXIT_SUCCESS;
+            break;
+        }
+        p = p->ai_next;
+    }
 
-	return -3;
+    freeaddrinfo(info);
+
+    return rc;
 }
 
 /*
@@ -533,7 +531,7 @@ int addr_parse(IP *addr, const char addr_str[], const char port_str[], int af)
 * "[<address>]"
 * "[<address>]:<port>"
 */
-int addr_parse_full(IP *addr, const char full_addr_str[], const char default_port[], int af)
+int addr_parse(IP *addr_ret, const char full_addr_str[], const char default_port[], int af)
 {
 	char addr_buf[256];
 	char *addr_beg;
@@ -562,7 +560,7 @@ int addr_parse_full(IP *addr, const char full_addr_str[], const char default_por
 
 		if (addr_tmp == NULL) {
 			// broken format
-			return -1;
+			return EXIT_FAILURE;
 		}
 
 		*addr_tmp = '\0';
@@ -574,7 +572,7 @@ int addr_parse_full(IP *addr, const char full_addr_str[], const char default_por
 			port_str = addr_tmp + 2;
 		} else {
 			// port expected
-			return -1;
+			return EXIT_FAILURE;
 		}
 	} else if (last_colon && last_colon == strchr(addr_buf, ':')) {
 		// <non-ipv6-addr>:<port>
@@ -593,7 +591,7 @@ int addr_parse_full(IP *addr, const char full_addr_str[], const char default_por
 		port_str = default_port;
 	}
 
-	return addr_parse(addr, addr_str, port_str, af);
+	return addr_parse_internal(addr_ret, addr_str, port_str, af);
 }
 
 // Compare two ip addresses, ignore port

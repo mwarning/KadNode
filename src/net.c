@@ -162,7 +162,7 @@ int net_bind(
 	IP sockaddr;
 	int sock = -1;
 
-	if (addr_parse(&sockaddr, addr, "0", AF_UNSPEC) != 0) {
+	if (addr_parse(&sockaddr, addr, "0", AF_UNSPEC) != EXIT_SUCCESS) {
 		log_error("%s: Failed to parse IP address '%s'",
 			name, addr
 		);
