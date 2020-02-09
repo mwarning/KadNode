@@ -18,7 +18,7 @@
 #include "unix.h"
 
 
-static void unix_signal_handler(int signo)
+static void shutdown_handler(int signo)
 {
 	// exit on second stop request
 	if (gconf->is_running == 0) {
@@ -36,7 +36,7 @@ void unix_signals(void)
 	struct sigaction sig_term;
 
 	// STRG+C aka SIGINT => Stop the program
-	sig_stop.sa_handler = unix_signal_handler;
+	sig_stop.sa_handler = shutdown_handler;
 	sig_stop.sa_flags = 0;
 	if ((sigemptyset(&sig_stop.sa_mask) == -1) || (sigaction(SIGINT, &sig_stop, NULL) != 0)) {
 		log_error("Failed to set SIGINT handler: %s", strerror(errno));
@@ -44,7 +44,7 @@ void unix_signals(void)
 	}
 
 	// SIGTERM => Stop the program gracefully
-	sig_term.sa_handler = unix_signal_handler;
+	sig_term.sa_handler = shutdown_handler;
 	sig_term.sa_flags = 0;
 	if ((sigemptyset(&sig_term.sa_mask) == -1) || (sigaction(SIGTERM, &sig_term, NULL) != 0)) {
 		log_error("Failed to set SIGTERM handler: %s", strerror(errno));
@@ -55,7 +55,7 @@ void unix_signals(void)
 	signal(SIGPIPE, SIG_IGN);
 }
 
-static int socket_exists_and_used(const char path[])
+static int is_unix_socket_valid(const char path[])
 {
 	struct sockaddr_un addr;
 	int sock;
@@ -86,7 +86,7 @@ int unix_create_unix_socket(const char path[], int *sock_out)
 
 	dir = dirname(strdup(path));
 
-	if (socket_exists_and_used(path)) {
+	if (is_unix_socket_valid(path)) {
 		log_error("Socket already in use: %s", path);
 		goto err;
 	}

@@ -47,7 +47,7 @@ int fwd_count(void)
 
 	count = 0;
 	cur = g_fwds;
-	while(cur) {
+	while (cur) {
 		count++;
 		cur = cur->next;
 	}
@@ -266,7 +266,7 @@ void fwd_free(void)
 	struct forwarding_t *next;
 
 	cur = g_fwds;
-	while(cur) {
+	while (cur) {
 		next = cur->next;
 		free(cur);
 		cur = next;

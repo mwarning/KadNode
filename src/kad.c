@@ -37,14 +37,14 @@ void to_addr(IP *out_addr, const void *in_addr, size_t len, uint16_t port)
 {
 	memset(out_addr, '\0', sizeof(IP));
 
-	if(len == 4) {
+	if (len == 4) {
 		IP4 *a = (IP4 *) out_addr;
 		a->sin_family = AF_INET;
 		a->sin_port = port;
 		memcpy(&a->sin_addr.s_addr, in_addr, 4);
 	}
 
-	if(len == 16) {
+	if (len == 16) {
 		IP6 *a = (IP6 *) out_addr;
 		a->sin6_family = AF_INET6;
 		a->sin6_port = port;
@@ -74,11 +74,11 @@ void dht_callback_func(void *closure, int event, const uint8_t *info_hash, const
 
 	search = searches_find_by_id(info_hash);
 
-	if(search == NULL) {
+	if (search == NULL) {
 		return;
 	}
 
-	switch(event) {
+	switch (event) {
 		case DHT_EVENT_VALUES:
 			data4 = (dht_addr4_t *) data;
 			for(i = 0; i < (data_len / sizeof(dht_addr4_t)); ++i) {

@@ -48,7 +48,6 @@ static void nss_client_handler(int rc, int clientsock)
 
 	search = kad_lookup(&req.name[0]);
 
-
 	if (search == NULL) {
 		goto finish;
 	}
@@ -112,15 +111,13 @@ static void nss_server_handler(int rc, int serversock)
 
 int nss_setup(void)
 {
-	if (EXIT_FAILURE == unix_create_unix_socket(gconf->nss_path, &g_nss_sock)) {
-		return EXIT_FAILURE;
-	} else {
+	if (unix_create_unix_socket(gconf->nss_path, &g_nss_sock) == EXIT_SUCCESS) {
 		log_info("NSS: Bind to %s", gconf->nss_path);
-
 		net_add_handler(g_nss_sock, &nss_server_handler);
-
 		return EXIT_SUCCESS;
 	}
+
+	return EXIT_FAILURE;
 }
 
 void nss_free(void)

@@ -158,7 +158,7 @@ static void tls_handle(int rc, int fd)
 	}
 
 	do ret = mbedtls_ssl_handshake(ssl);
-	while(ret == MBEDTLS_ERR_SSL_WANT_WRITE);
+	while (ret == MBEDTLS_ERR_SSL_WANT_WRITE);
 
 	if (ret == MBEDTLS_ERR_SSL_WANT_READ) {
 		// TLS handshake in progress
