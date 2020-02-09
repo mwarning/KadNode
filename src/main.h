@@ -20,7 +20,7 @@
 #define DHT_PORT 6881
 #define DNS_PORT 3535
 
-#define QUERY_TLD_DEFAULT ".p2p"
+#define QUERY_TLD_DEFAULT "p2p"
 #define QUERY_MAX_SIZE 256
 
 typedef struct sockaddr_storage IP;

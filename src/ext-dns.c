@@ -667,7 +667,7 @@ static void dns_handler(int rc, int sock)
 	hostname = msg.question.qName;
 
 	// Check if hostname ends with .p2p
-	if (!has_ext(hostname, gconf->query_tld)) {
+	if (!has_tld(hostname, gconf->query_tld)) {
 		// Act as an DNS proxy
 		if (gconf->dns_proxy_enable) {
 			// Update proxy server address if no fixed DNS server is given

@@ -119,8 +119,7 @@ This is the plain use of the DHT. The hexadecimal string will be cut down or fil
 
   * `--query-tld` *domain*  
     Top level domain used to filter queries to be resolved by KadNode.  
-    Set to empty string to match all.  
-    Default: `.p2p`
+    Default: `p2p`
 
   * `--verbosity` *level*  
     Verbosity level quiet, verbose or debug.  

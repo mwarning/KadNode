@@ -280,10 +280,10 @@ char *bytes_to_base32hex(char dst[], size_t dstsize, const uint8_t *src, size_t 
 
 // Check if a string has and extension.
 // ext is epected to start with a dot.
-int has_ext(const char str[], const char ext[])
+int has_tld(const char str[], const char ext[])
 {
 	const char *dot = strrchr(str, '.');
-	return dot && (strcmp(dot, ext) == 0);
+	return dot && (strcmp(dot + 1, ext) == 0);
 }
 
 /*
@@ -315,8 +315,8 @@ int query_sanitize(char buf[], size_t buflen, const char query[])
 
 	// Remove .p2p suffix
 	tld = gconf->query_tld;
-	if (has_ext(buf, tld)) {
-		len -= strlen(tld);
+	if (has_tld(buf, tld)) {
+		len -= 1 + strlen(tld);
 		buf[len] = '\0';
 	}
 

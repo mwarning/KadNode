@@ -37,7 +37,7 @@ int port_random(void);
 int port_parse(const char pstr[], int err);
 int port_set(IP *addr, uint16_t port);
 
-int has_ext(const char str[], const char ext[]);
+int has_tld(const char str[], const char tld[]);
 int query_sanitize(char buf[], size_t buflen, const char query[]);
 int bytes_random(uint8_t buffer[], size_t size);
 int id_equal(const uint8_t id1[], const uint8_t id2[]);

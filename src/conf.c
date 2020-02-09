@@ -489,6 +489,10 @@ static int conf_set(const char opt[], const char val[])
 		array_append(&g_announce_args[0], val);
 		break;
 	case oQueryTld:
+		// ignore old dot prefix
+		if (val[0] == '.') {
+			val++;
+		}
 		return conf_str(opt, &gconf->query_tld, val);
 	case oPidFile:
 		return conf_str(opt, &gconf->pidfile, val);

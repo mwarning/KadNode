@@ -42,7 +42,7 @@ static void nss_client_handler(int rc, int clientsock)
 	req.name[QUERY_MAX_SIZE - 1] = '\0';
 
 	// Check name extensions (*.p2p)
-	if (!has_ext(&req.name[0], gconf->query_tld)) {
+	if (!has_tld(&req.name[0], gconf->query_tld)) {
 		goto finish;
 	}
 

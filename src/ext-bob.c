@@ -369,7 +369,7 @@ int bob_create_key(const char path[])
 		return EXIT_FAILURE;
 	}
 
-	printf("Public key: %s.p2p\n", get_pkey_base32hex(&ctx));
+	printf("Public key: %s.%s\n", get_pkey_base32hex(&ctx), gconf->query_tld);
 	printf("Wrote secret key to %s\n", path);
 
 	return EXIT_SUCCESS;
