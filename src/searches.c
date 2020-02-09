@@ -30,7 +30,7 @@
 #define MAX_SEARCHES 64
 
 
-// A ring buffer for of all searches
+// A ring buffer for all searches
 static struct search_t *g_searches[MAX_SEARCHES] = { NULL };
 static size_t g_searches_idx = 0;
 
@@ -65,7 +65,6 @@ struct search_t *searches_find_by_id(const uint8_t id[])
 
 	return NULL;
 }
-
 
 static struct search_t *searches_find_by_query(const char query[])
 {
@@ -360,7 +359,7 @@ struct search_t* searches_start(const char query[])
 	return new;
 }
 
-// Add an address to an array if it is not already contained in there
+// Add a resolved address to the search (and continue with verification if needed)
 void searches_add_addr(struct search_t *search, const IP *addr)
 {
 	struct result_t *cur;
