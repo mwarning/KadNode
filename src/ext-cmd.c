@@ -58,19 +58,20 @@ const char* g_server_usage_debug =
 static int g_cmd_sock = -1;
 
 
-static void cmd_ping(FILE *fp, const char addr_str[])
+static int cmd_ping(FILE *fp, const char addr_str[], int af)
 {
 	IP addr;
 
-	if (addr_parse(&addr, addr_str, STR(DHT_PORT), gconf->af) == EXIT_SUCCESS) {
+	if (addr_parse(&addr, addr_str, STR(DHT_PORT), af) == EXIT_SUCCESS) {
 		if (kad_ping(&addr) == 0) {
 			fprintf(fp, "Send ping to: %s\n", str_addr(&addr));
+			return 1;
 		} else {
 			fprintf(fp, "Failed to send ping.\n");
 		}
-	} else {
-		fprintf(fp, "Failed to parse/resolve address.\n");
 	}
+
+	return 0;
 }
 
 static void cmd_blacklist(FILE *fp, const char *addr_str)
@@ -138,7 +139,16 @@ static void cmd_exec(FILE *fp, const char request[], int allow_debug)
 	int rc = 0;
 
 	if (sscanf(request, " ping%*[ ]%255[^ \n\t] %c", hostname, &d) == 1) {
-		cmd_ping(fp, hostname);
+		if (gconf->af == AF_UNSPEC) {
+			count = cmd_ping(fp, hostname, AF_INET);
+			count += cmd_ping(fp, hostname, AF_INET6);
+		} else {
+			count = cmd_ping(fp, hostname, gconf->af);
+		}
+
+		if (count == 0) {
+			fprintf(fp, "Failed to parse/resolve address.\n");
+		}
 	} else if (sscanf(request, " lookup%*[ ]%255[^: \n\t] %c", hostname, &d) == 1) {
 		// Lookup hostname
 		search = kad_lookup(hostname);
