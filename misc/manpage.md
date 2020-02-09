@@ -29,7 +29,7 @@ kadnode-ctl ping bttracker.debian.org
 3. Use the local peer discovery feature. Just start KadNode and it will try to discover other KadNode nodes in the local network.
 
 
-Also provide a --peerfile argument to let KadNode load its peerlist on startup and store on every 24h and shutdown.
+Also provide a `--peerfile` argument to let KadNode load its peerlist on startup and store on every 24h and shutdown.
 This ensures successful bootstrapping on next startup.
 
 
@@ -62,7 +62,7 @@ kadnode --tls-client-cert /usr/share/ca-certificates/mozilla
 
 Own certificates authorities can be created and used, of course.
 
-Note: --announce is optional in many cases as domains from certificate and key files are announced automatically.
+Note: `--announce` is optional in many cases as domains from certificate and key files are announced automatically.
 
 ### Via BOB
 
@@ -80,11 +80,11 @@ Now make the secret key load on KadNode startup:
 kadnode --bob-load-key mysecretkey.pem
 ```
 
-Any reachable node can now resolve c492192ac20144ed2a43d57e7239f5ef5f6bb418a51600980e55ff565cc916a4.p2p to the IP address of the announcing host. There is no need to share any more information beforehand.
+Any reachable node can now resolve c492192ac20144ed2a43d57e7239f5ef5f6bb418a51600980e55ff565cc916a4.p2p to the IP address of the announcing host. There is no need to share any additional information beforehand.
 
 ## No Authentication
 
-KadNode also allows one to just lookup a hexdecimal string and to get IP addresses as return.
+KadNode also allows to just lookup a hexdecimal string and to get IP addresses as return.
 This is the plain use of the DHT. The hexadecimal string will be cut down or filled up with zeros internally to fit the size the DHT uses (currently 20 bytes).
 
 ## OPTIONS

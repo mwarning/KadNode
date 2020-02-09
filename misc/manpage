@@ -22,7 +22,7 @@ KadNode needs to know at least one active peer to join / bootstrap into the swar
 Provide one or more peers to the command line arguments\. These could be public BitTorrent trackers, or other KadNode instances: \fBkadnode \-\-peer bttracker\.debian\.org \-\-peer 192\.168\.1\.1\fR
 .
 .IP "2." 4
-Ping a node using the KadNode console if present: \fBkadnode\-ctl ping bttracker\.debian\.org\fR
+Ping a peer using the KadNode console if present: \fBkadnode\-ctl ping bttracker\.debian\.org\fR
 .
 .IP "3." 4
 Use the local peer discovery feature\. Just start KadNode and it will try to discover other KadNode nodes in the local network\.
@@ -30,7 +30,7 @@ Use the local peer discovery feature\. Just start KadNode and it will try to dis
 .IP "" 0
 .
 .P
-Also provide a \-\-peerfile argument to let KadNode backup its peerlist on shutdown and every 24h\. This ensures successful bootstrapping on next startup\.
+Also provide a \fB\-\-peerfile\fR argument to let KadNode load its peerlist on startup and store on every 24h and shutdown\. This ensures successful bootstrapping on next startup\.
 .
 .SH "AUTHENTICATION"
 KadNode provides two authentication schemes\. One works via x509 certificates and TLS\. The other one uses raw secret/public keys and is hence called bob\.
@@ -81,7 +81,7 @@ kadnode \-\-tls\-client\-cert /usr/share/ca\-certificates/mozilla
 Own certificates authorities can be created and used, of course\.
 .
 .P
-Note: \-\-announce is optional in many cases as domains from certificate and key files are announced automatically\.
+Note: \fB\-\-announce\fR is optional in many cases as domains from certificate and key files are announced automatically\.
 .
 .SS "Via BOB"
 First create an elliptic curve secret key file:
@@ -103,10 +103,10 @@ Wrote secret key to mysecretkey\.pem
 Now make the secret key load on KadNode startup: \fBkadnode \-\-bob\-load\-key mysecretkey\.pem\fR
 .
 .P
-Any reachable node can now resolve c492192ac20144ed2a43d57e7239f5ef5f6bb418a51600980e55ff565cc916a4\.p2p to the IP address of the announcing host\. There is no need to share any more information beforehand\.
+Any reachable node can now resolve c492192ac20144ed2a43d57e7239f5ef5f6bb418a51600980e55ff565cc916a4\.p2p to the IP address of the announcing host\. There is no need to share any additional information beforehand\.
 .
 .SH "No Authentication"
-KadNode also allows one to just lookup a hexdecimal string and to get IP addresses as return\. This is the plain use of the DHT\. The hexadecimal string will be cut down or filled up with zeros internally to fit the size the DHT uses (currently 20 bytes)\.
+KadNode also allows to just lookup a hexdecimal string and to get IP addresses as return\. This is the plain use of the DHT\. The hexadecimal string will be cut down or filled up with zeros internally to fit the size the DHT uses (currently 20 bytes)\.
 .
 .SH "OPTIONS"
 .
@@ -177,10 +177,7 @@ Run in background\.
 Top level domain used to filter queries to be resolved by KadNode\.
 .
 .br
-Set to empty string to match all\.
-.
-.br
-Default: \fB\.p2p\fR
+Default: \fBp2p\fR
 .
 .IP "\(bu" 4
 \fB\-\-verbosity\fR \fIlevel\fR
