@@ -50,6 +50,9 @@ void unix_signals(void)
 		log_error("Failed to set SIGTERM handler: %s", strerror(errno));
 		exit(1);
 	}
+
+	// ignore SIGPIPE
+	signal(SIGPIPE, SIG_IGN);
 }
 
 static int socket_exists_and_used(const char path[])
