@@ -53,6 +53,10 @@ static int _nss_kadnode_lookup(struct kadnode_nss_response *res, const struct ka
 		return -1;
 	}
 
+	if (setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, (char *)&tv, sizeof(struct timeval)) < 0) {
+		return -1;
+	}
+
 	addr.sun_family = AF_LOCAL;
 	strcpy(addr.sun_path, path);
 
