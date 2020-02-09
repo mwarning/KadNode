@@ -341,7 +341,7 @@ int port_parse(const char pstr[], int err)
 	int port;
 	char c;
 
-	if (sscanf(pstr, "%d%c", &port, &c) == 1 && port >= 0 && port <= 65535) {
+	if (pstr && sscanf(pstr, "%d%c", &port, &c) == 1 && port >= 0 && port <= 65535) {
 		return port;
 	} else {
 		return err;
