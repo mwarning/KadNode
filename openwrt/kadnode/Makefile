@@ -76,10 +76,6 @@ MAKE_FLAGS += FEATURES="$(FEATURES)"
 TARGET_CFLAGS += -ffunction-sections -fdata-sections
 TARGET_LDFLAGS += -Wl,--gc-sections
 
-define Package/kadnode/conffiles
-/etc/config/kadnode
-endef
-
 define Package/kadnode/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/build/kadnode $(1)/usr/bin/
