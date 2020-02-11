@@ -1,7 +1,7 @@
 # Maintainer: Moritz Warning <moritzwarning@web.de>
 
 pkgname=kadnode
-pkgver=2.2.5
+pkgver=2.3.0
 pkgrel=1
 
 pkgdesc='A P2P based DNS resolver'
