@@ -4,8 +4,6 @@ KadNode finds the IP address of other instances on the Internet or local network
 
 KadNode intercepts .p2p domain queries on the systems level and resolves them using a decentralized [DHT](https://de.wikipedia.org/wiki/DHT) network. [TLS](https://de.wikipedia.org/wiki/Transport_Layer_Security) authentication can be used to make sure the correct IP address was found. If successful, the IP address is passed to the application making the request.
 
-Supported are also domains consisting of public keys represented as characters. :-)
-
 ## Features:
 
 * Support for two kinds of domains:
