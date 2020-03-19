@@ -52,3 +52,18 @@ Start kadnode:
 ```
 service kadnode start
 ```
+
+## Update FreeBSD Ports
+
+Checkout the Ports repository:
+
+```
+svn checkout https://svn.FreeBSD.org/ports/head ports
+```
+
+Apply changes to `ports/dns/kadnode` and create a patch to submit:
+
+```
+cd ports/dns/kadnode
+svn diff > ../`make -VPKGNAME`.diff
+```
