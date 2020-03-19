@@ -11,8 +11,8 @@ KadNode intercepts .p2p domain queries on the systems level and resolves them us
      * No need to exchange any further keys/certificates
      * Uses secp256r1 [ECC](https://en.wikipedia.org/wiki/Elliptic-curve_cryptography) key pairs
   2. named domains like `yourdomain.com.p2p`
-     * Needs pre-shared certifcates (self signed or e.g. "Let's Encrypt")
-     * Uses TLS session for authentication
+     * Needs pre-shared certifcates (self signed root certificates or e.g. "Let's Encrypt")
+     * Uses TLS session handshake for authentication
 * IPv4/IPv6 support
 * UPnP/NAT-PMP support
 * Local peer discovery
