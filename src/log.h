@@ -17,20 +17,20 @@ enum {
 
 #define log_info(...)                          \
   do {                                         \
-    if (gconf->verbosity >= VERBOSITY_VERBOSE) \
+    if (gconf->verbosity != VERBOSITY_QUIET)   \
       log_print(LOG_INFO, __VA_ARGS__);        \
   } while (0)
 
 #define log_warning(...)                       \
   do {                                         \
-    if (gconf->verbosity >= VERBOSITY_QUIET)   \
+    if (gconf->verbosity != VERBOSITY_QUIET)   \
       log_print(LOG_WARNING, __VA_ARGS__);     \
   } while (0)
 
 #ifdef DEBUG
   #define log_debug(...)                       \
     do {                                       \
-      if (gconf->verbosity >= VERBOSITY_DEBUG) \
+      if (gconf->verbosity == VERBOSITY_DEBUG) \
         log_print(LOG_DEBUG, __VA_ARGS__);     \
     } while (0)
 #else
