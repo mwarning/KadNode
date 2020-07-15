@@ -21,8 +21,10 @@
 #include "net.h"
 
 
-static struct pollfd g_fds[16] = { { .fd = -1, .events = POLLIN, .revents = 0 } };
+static struct pollfd g_fds[16] = { 0 };
 static net_callback* g_cbs[16] = { NULL };
+static int g_count = 0;
+static int g_entry_removed = 0;
 
 
 // Set a socket non-blocking
@@ -33,24 +35,25 @@ int net_set_nonblocking(int fd)
 
 void net_add_handler(int fd, net_callback *cb)
 {
-	int i;
-
 	if (cb == NULL) {
 		log_error("Invalid arguments.");
 		exit(1);
 	}
 
-	for (i = 0; i < ARRAY_SIZE(g_cbs); i++) {
-		if (g_cbs[i] == NULL) {
-			g_cbs[i] = cb;
-			g_fds[i].fd = fd;
-			g_fds[i].events = POLLIN;
-			return;
-		}
+	if (g_count == ARRAY_SIZE(g_cbs)) {
+		log_error("No more space for handlers.");
+		exit(1);
 	}
 
-	log_error("No more space for handlers.");
-	exit(1);
+	if (fd >= 0) {
+		net_set_nonblocking(fd);
+	}
+
+	g_cbs[g_count] = cb;
+	g_fds[g_count].fd = fd;
+	g_fds[g_count].events = POLLIN;
+
+	g_count += 1;
 }
 
 void net_remove_handler(int fd, net_callback *cb)
@@ -62,10 +65,11 @@ void net_remove_handler(int fd, net_callback *cb)
 		exit(1);
 	}
 
-	for (i = 0; i < ARRAY_SIZE(g_cbs); i++) {
+	for (i = 0; i < g_count; i++) {
 		if (g_cbs[i] == cb && g_fds[i].fd == fd) {
+			// mark for removal in compress_entries()
 			g_cbs[i] = NULL;
-			g_fds[i].fd = -1;
+			g_entry_removed = 1;
 			return;
 		}
 	}
@@ -74,15 +78,30 @@ void net_remove_handler(int fd, net_callback *cb)
 	exit(1);
 }
 
+static void compress_entries()
+{
+	int i;
+
+	for (i = 0; i < g_count; i += 1) {
+		while (g_cbs[i] == NULL && i < g_count) {
+			g_count -= 1;
+			g_cbs[i] = g_cbs[g_count];
+			g_fds[i].fd = g_fds[g_count].fd;
+			g_fds[i].events = g_fds[g_count].events;
+		}
+	}
+}
+
 void net_loop(void)
 {
 	time_t n;
+	int revents;
 	int all;
 	int rc;
 	int i;
 
 	while (gconf->is_running) {
-		rc = poll(g_fds, ARRAY_SIZE(g_fds), 1000);
+		rc = poll(g_fds, g_count, 1000);
 
 		if (rc < 0) {
 			//log_error("poll(): %s", strerror(errno));
@@ -93,17 +112,19 @@ void net_loop(void)
 		all = (n > gconf->time_now);
 		gconf->time_now = n;
 
-		for (i = 0; i < ARRAY_SIZE(g_cbs); i++) {
-			if (g_cbs[i]) {
-				int revents = g_fds[i].revents;
-				if (revents || all) {
-					g_cbs[i](revents, g_fds[i].fd);
-				}
+		for (i = 0; i < g_count; i++) {
+			revents = g_fds[i].revents;
+			if ((revents || all) && (g_cbs[i] != NULL)) {
+				g_cbs[i](revents, g_fds[i].fd);
 			}
+		}
+
+		if (g_entry_removed) {
+			compress_entries();
+			g_entry_removed = 0;
 		}
 	}
 }
-
 
 int net_socket(const char name[], const char ifname[], const int protocol, const int af)
 {
@@ -213,9 +234,9 @@ void net_free(void)
 {
 	int i;
 
-	for (i = 0; i < ARRAY_SIZE(g_cbs); i++) {
+	for (i = 0; i < g_count; i++) {
 		g_cbs[i] = NULL;
 		close(g_fds[i].fd);
-		g_fds[i] = (struct pollfd){ .fd = -1, .events = POLLIN, .revents = 0 };
+		g_fds[i] = (struct pollfd){ 0 };
 	}
 }
