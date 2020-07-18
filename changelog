@@ -1,3 +1,10 @@
+kadnode (2.3.0) stable; urgency=medium
+
+ * fix possible high CPU usage
+ * fix compilation on FreeBSD
+ * fix logging
+ * fix local peer discovery
+
 kadnode (2.2.6) stable; urgency=medium
 
  * update dht library to 0.26
