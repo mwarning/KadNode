@@ -2,7 +2,7 @@
 
 [Setup]
 AppName=KadNode
-AppVersion="2.2.1"
+AppVersion="2.3.0"
 AppPublisher="Moritz Warning"
 AppPublisherURL="https://github.com/mwarning/KadNode"
 DefaultDirName={pf}\KadNode
@@ -11,7 +11,7 @@ PrivilegesRequired=admin
 AllowNoIcons=yes
 LicenseFile=..\LICENSE
 OutputDir=..\build
-OutputBaseFilename=kadnode_2.2.1_i386
+OutputBaseFilename=kadnode_2.3.0_amd64
 Compression=lzma
 SolidCompression=yes
 
