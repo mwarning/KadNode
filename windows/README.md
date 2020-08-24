@@ -8,21 +8,10 @@ The following packages and its dependencies need to be selected:
 * All => Devel => gcc-core
 * All => Devel => make
 * All => Devel => git
-* All => Web   => wget
 
-If you want to use auth extension (for public/private keys),
-you need to download and install [mbedtls](https://github.com/ARMmbed/mbedtls/).
-Open the Cygwin terminal and execute:
+If you want to use auth extension (for public/private keys), you need to install [mbedtls](https://github.com/ARMmbed/mbedtls/).
 
-```
-wget https://tls.mbed.org/download/start/mbedtls-2.5.1-apache.tgz
-tar -xvf mbedtls-2.5.1-apache.tgz
-cd mbedtls-2.5.1-apache
-./configure
-make
-make install
-cd ..
-```
+* All => Devel => mbedtls-devel
 
 Now download and compile KadNode:
 
