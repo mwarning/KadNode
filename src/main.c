@@ -163,7 +163,7 @@ int main_run(void)
 #ifdef __CYGWIN__
 int main(int argc, char *argv[])
 {
-	char cmd[256];
+	char cmd[512];
 	char path[256];
 	int rc = 0;
 	char *p;
