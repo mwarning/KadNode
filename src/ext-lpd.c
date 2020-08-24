@@ -24,6 +24,9 @@
 * Local Peer Discovery
 */
 
+#ifdef __CYGWIN__
+#define AF_PACKET 17
+#endif
 
 enum {
 	// Packets per minute to be handled
