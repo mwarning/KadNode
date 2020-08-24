@@ -5,13 +5,24 @@ KadNode can be build for [Windows](https://www.microsoft.com/windows) systems us
 To build KadNode on Windows you need to download an execute the Cygwin installer.
 The following packages and its dependencies need to be selected:
 
-* All => Devel => gcc-core
-* All => Devel => make
-* All => Devel => git
+* All => Devel  => gcc-core
+* All => Devel  => make
+* All => Devel  => git
+* All => Python => python2
+* All => Python => python3
+* All => Web    => wget
 
 If you want to use auth extension (for public/private keys), you need to install [mbedtls](https://github.com/ARMmbed/mbedtls/).
 
-* All => Devel => mbedtls-devel
+```
+wget https://codeload.github.com/ARMmbed/mbedtls/tar.gz/v2.23.0 -O mbedtls-2.23.0.tgz
+tar -xvf mbedtls-2.23.0.tgz
+cd mbedtls-2.23.0
+make
+make install
+cd ..
+```
+(we compile it manually to be able to link mbedtls statically)
 
 Now download and compile KadNode:
 
