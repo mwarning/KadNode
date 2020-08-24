@@ -25,7 +25,9 @@
 */
 
 #ifdef __CYGWIN__
+#ifndef AF_PACKET
 #define AF_PACKET 17
+#endif
 #endif
 
 enum {
