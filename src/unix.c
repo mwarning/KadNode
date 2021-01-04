@@ -26,8 +26,6 @@ static void shutdown_handler(int signo)
 	}
 
 	gconf->is_running = 0;
-
-	log_info("Shutting down...");
 }
 
 void unix_signals(void)

@@ -110,6 +110,7 @@ int main_run(void)
 	if (rc == EXIT_SUCCESS) {
 		// Loop over all sockets and file descriptors
 		net_loop();
+		log_info("Shutting down...");
 	}
 
 	// Export peers if a file is provided
