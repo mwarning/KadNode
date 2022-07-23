@@ -177,10 +177,17 @@ static void tls_handle(int rc, int fd)
 		auth_end(resource, AUTH_FAILED);
 	} else {
 		// TLS handshake done
+#if (MBEDTLS_VERSION_MAJOR >= 2 && MBEDTLS_VERSION_MINOR >= 22)
+		log_debug("TLS-Client: Protocol [%s], Ciphersuite [%s] and fragment length %u: %s",
+			mbedtls_ssl_get_version(ssl), mbedtls_ssl_get_ciphersuite(ssl),
+			(unsigned int) mbedtls_ssl_get_output_max_frag_len(ssl), query
+		);
+#else
 		log_debug("TLS-Client: Protocol [%s], Ciphersuite [%s] and fragment length %u: %s",
 			mbedtls_ssl_get_version(ssl), mbedtls_ssl_get_ciphersuite(ssl),
 			(unsigned int) mbedtls_ssl_get_max_frag_len(ssl), query
 		);
+#endif
 
 		// Verify peer X.509 certificate
 		flags = mbedtls_ssl_get_verify_result(ssl);
