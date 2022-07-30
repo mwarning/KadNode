@@ -2,13 +2,13 @@ Source: kadnode
 Section: net
 Priority: optional
 Maintainer: Moritz Warning <moritzwarning@web.de>
-Build-Depends: debhelper (>=10)
+Build-Depends: debhelper (>=10), libmbedtls-dev, libnatpmp-dev, libminiupnpc-dev
 Standards-Version: 4.1.4
 Homepage: https://github.com/mwarning/kadnode
 
 Package: kadnode
 Architecture: any
-Depends: libmbedtls (>=2.4.2) | libmbedtls10 (>=2.4.2) | libmbedtls12 (>=2.4.2) | libmbedtls14, ${shlibs:Depends}, ${misc:Depends}, ${misc:Pre-Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, ${misc:Pre-Depends}
 Description: decentralized DynDNS alternative
  KadNode is a P2P DNS resolver that intercepts system requests for the
  p2p TLD. The decentralized BitTorrent DHT network is network is used
