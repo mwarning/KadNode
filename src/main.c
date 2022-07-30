@@ -208,6 +208,11 @@ int main(int argc, char *argv[])
 	if (gconf->is_daemon) {
 		gconf->use_syslog = 1;
 
+		// Close pipes
+		fclose(stderr);
+		fclose(stdout);
+		fclose(stdin);
+
 		// Fork before any threads are started
 		unix_fork();
 
@@ -217,10 +222,6 @@ int main(int argc, char *argv[])
 			SetCurrentDirectoryA(path);
 		}
 
-		// Close pipes
-		fclose(stderr);
-		fclose(stdout);
-		fclose(stdin);
 	} else {
 		conf_info();
 	}
@@ -259,6 +260,11 @@ int main(int argc, char *argv[])
 	if (gconf->is_daemon) {
 		gconf->use_syslog = 1;
 
+		// Close pipes
+		fclose(stderr);
+		fclose(stdout);
+		fclose(stdin);
+
 		// Fork before any threads are started
 		unix_fork();
 
@@ -266,11 +272,6 @@ int main(int argc, char *argv[])
 			log_error("Changing working directory to '/' failed: %s", strerror(errno));
 			exit(1);
 		}
-
-		// Close pipes
-		fclose(stderr);
-		fclose(stdout);
-		fclose(stdin);
 	} else {
 		conf_info();
 	}
