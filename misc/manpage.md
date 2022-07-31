@@ -9,7 +9,7 @@ kadnode(1) - P2P name resolver daemon
 
 ## DESCRIPTION
 
-**KadNode** is a small P2P DNS resolver. It supports authentication based on x509 certificates and hexadecimal public key queries.
+**KadNode** is a small P2P DNS resolver. It supports authentication based on x509 certificates and public key queries as base32 and hexadecimal strings.
 
 ## JOIN THE SWARM
 

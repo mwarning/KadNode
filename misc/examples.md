@@ -97,4 +97,4 @@ Note: The first lookup will initiate the search. Only subsequent lookups can be 
 
 ## Lookup using a key string
 
-KadNode can do simple lookups on the DHT, without any authentication/crypto. Any hex key in base16 or base32 that represents a DHT hash (20 Bytes) is used for simple DHT lookups.
+KadNode can do simple lookups on the DHT, without any authentication/crypto. Any key in base16 or base32 that represents a DHT hash (20 Bytes) is used for simple DHT lookups.
