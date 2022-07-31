@@ -32,6 +32,31 @@ KadNode intercepts .p2p domain queries on the systems level and resolves them us
 - [Usage examples](misc/examples.md)
 - [FAQ](misc/faq.md)
 
+## Installation
+You can download a latest package from [releases page](https://github.com/mwarning/KadNode/releases/)
+
+### OpenWrt
+From official package repository:
+`opkg install kadnode`
+
+### Debian/Ubuntu
+From PPA repository:
+```
+sudo add-apt-repository ppa:stokito/kadnode
+sudo apt update
+sudo apt install kadnode
+```
+
+Or install a downloaded package with `dpkg -i kadnode_*.deb`
+
+### FreeBSD
+From repository: `pkg install kadnode`
+ 
+Or install a downloaded package with `pkg install kadnode-*.txz`
+
+### ArchLinux
+install a downloaded package with:  `pacman -U kadnode-*.pkg.tar.xz`
+
 ## License
 
   MIT/X11
