@@ -31,28 +31,28 @@ int hex_get_id(uint8_t id[], size_t idsize, const char query[])
 	}
 */
 	querysize = strlen(query);
-	if (EXIT_SUCCESS == bytes_from_base32hex(id, idsize, query, querysize)) {
+	if (EXIT_SUCCESS == bytes_from_base32(id, idsize, query, querysize)) {
 		return EXIT_SUCCESS;
 	}
 
-	if (EXIT_SUCCESS == bytes_from_base16hex(id, idsize, query, querysize)) {
+	if (EXIT_SUCCESS == bytes_from_base16(id, idsize, query, querysize)) {
 		return EXIT_SUCCESS;
 	}
 
 	return EXIT_FAILURE;
 }
 
-static size_t base16hex_len(size_t len)
+static size_t base16_len(size_t len)
 {
 	return 2 * len;
 }
 
-int bytes_from_base16hex(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize)
+int bytes_from_base16(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize)
 {
 	size_t i;
 	size_t xv = 0;
 
-	if (base16hex_len(dstsize) != srcsize) {
+	if (base16_len(dstsize) != srcsize) {
 		return EXIT_FAILURE;
 	}
 
@@ -77,13 +77,13 @@ int bytes_from_base16hex(uint8_t dst[], size_t dstsize, const char src[], size_t
 	return EXIT_SUCCESS;
 }
 
-char *bytes_to_base16hex(char dst[], size_t dstsize, const uint8_t src[], size_t srcsize)
+char *bytes_to_base16(char dst[], size_t dstsize, const uint8_t src[], size_t srcsize)
 {
 	static const char hexchars[16] = "0123456789abcdef";
 	size_t i;
 
 	// + 1 for the '\0'
-	if (dstsize != (base16hex_len(srcsize) + 1)) {
+	if (dstsize != (base16_len(srcsize) + 1)) {
 		return NULL;
 	}
 
@@ -98,21 +98,21 @@ char *bytes_to_base16hex(char dst[], size_t dstsize, const uint8_t src[], size_t
 }
 
 // get length of len hex string as bytes string
-// e.g.: 32 bytes need 52 characters to encode in base32hex
-static size_t base32hex_len(size_t len)
+// e.g.: 32 bytes need 52 characters to encode in base32
+static size_t base32_len(size_t len)
 {
 	const size_t mod = (len % 5);
 	return 8 * (len / 5) + 2 * mod - (mod > 2);
 }
 
-int bytes_from_base32hex(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize)
+int bytes_from_base32(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize)
 {
 	size_t processed = 0;
 	unsigned char *d = dst;
 	int i;
 	int v;
 
-	if (srcsize != base32hex_len(dstsize)) {
+	if (srcsize != base32_len(dstsize)) {
 		return EXIT_FAILURE;
 	}
 
@@ -212,14 +212,14 @@ int bytes_from_base32hex(uint8_t dst[], size_t dstsize, const char src[], size_t
 	return EXIT_SUCCESS;
 }
 
-char *bytes_to_base32hex(char dst[], size_t dstsize, const uint8_t *src, size_t srcsize) {
+char *bytes_to_base32(char dst[], size_t dstsize, const uint8_t *src, size_t srcsize) {
 	const uint8_t *s = src;
 	int byte = 0;
 	uint8_t *d = (uint8_t*) dst;
 	int i;
 
 	// + 1 for the '\0'
-	if (dstsize != (base32hex_len(srcsize) + 1)) {
+	if (dstsize != (base32_len(srcsize) + 1)) {
 		return NULL;
 	}
 
@@ -389,7 +389,7 @@ int id_equal(const uint8_t id1[], const uint8_t id2[])
 const char *str_id(const uint8_t id[])
 {
 	static char hexbuf[SHA1_HEX_LENGTH + 1];
-	return bytes_to_base16hex(hexbuf, sizeof(hexbuf), id, SHA1_BIN_LENGTH);
+	return bytes_to_base16(hexbuf, sizeof(hexbuf), id, SHA1_BIN_LENGTH);
 }
 
 const char *str_af(int af) {

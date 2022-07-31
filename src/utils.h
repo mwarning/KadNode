@@ -28,10 +28,10 @@
 
 int hex_get_id(uint8_t id[], size_t idsize, const char query[]);
 
-int bytes_from_base32hex(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize);
-char *bytes_to_base32hex(char dst[], size_t dstsize, const uint8_t src[], size_t srcsize);
-int bytes_from_base16hex(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize);
-char *bytes_to_base16hex(char dst[], size_t dstsize, const uint8_t src[], size_t srcsize);
+int bytes_from_base32(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize);
+char *bytes_to_base32(char dst[], size_t dstsize, const uint8_t src[], size_t srcsize);
+int bytes_from_base16(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize);
+char *bytes_to_base16(char dst[], size_t dstsize, const uint8_t src[], size_t srcsize);
 
 int port_random(void);
 int port_parse(const char pstr[], int err);

@@ -173,8 +173,8 @@ int bob_get_id(uint8_t id[], size_t idlen, const char query[])
 	size_t querylen = strlen(query);
 	uint8_t bin[32];
 
-	if (EXIT_SUCCESS == bytes_from_base32hex(bin, sizeof(bin), query, querylen)
-		|| EXIT_SUCCESS == bytes_from_base16hex(bin, sizeof(bin), query, querylen)) {
+	if (EXIT_SUCCESS == bytes_from_base32(bin, sizeof(bin), query, querylen)
+		|| EXIT_SUCCESS == bytes_from_base16(bin, sizeof(bin), query, querylen)) {
 			memcpy(id, bin, idlen);
 			return EXIT_SUCCESS;
 	}
@@ -215,7 +215,7 @@ static void bob_send_challenge(int sock, struct bob_resource *resource)
 	resource->challenges_send += 1;
 	log_debug("Send challenge to %s: %s (try %d)",
 		str_addr(&resource->addr),
-		bytes_to_base32hex(hexbuf, sizeof(hexbuf), buf, sizeof(buf)),
+		bytes_to_base32(hexbuf, sizeof(hexbuf), buf, sizeof(buf)),
 		resource->challenges_send
 	);
 
@@ -248,7 +248,7 @@ void bob_trigger_auth(void)
 		// Hex to binary and compressed form (assuming even Y => 0x02)
 		compressed[0] = 0x02;
 
-		if (0 != bytes_from_base32hex(compressed + 1, sizeof(compressed) - 1, query, strlen(query))) {
+		if (0 != bytes_from_base32(compressed + 1, sizeof(compressed) - 1, query, strlen(query))) {
 			log_error("BOB: Unexpected query length: %s", query);
 			bob_auth_end(resource, AUTH_ERROR);
 			return;
@@ -317,14 +317,14 @@ static int write_pem(const mbedtls_pk_context *key, const char path[])
 	return 0;
 }
 
-static const char *get_pkey_base32hex(const mbedtls_pk_context *ctx)
+static const char *get_pkey_base32(const mbedtls_pk_context *ctx)
 {
 	static char hexbuf[52 + 1];
 	uint8_t buf[ECPARAMS_SIZE];
 
 	mbedtls_mpi_write_binary(&mbedtls_pk_ec(*ctx)->Q.X, buf, sizeof(buf));
 
-	return bytes_to_base32hex(hexbuf, sizeof(hexbuf), buf, sizeof(buf));
+	return bytes_to_base32(hexbuf, sizeof(hexbuf), buf, sizeof(buf));
 }
 
 // Generate a new key pair, write the secret key
@@ -369,7 +369,7 @@ int bob_create_key(const char path[])
 		return EXIT_FAILURE;
 	}
 
-	printf("Public key: %s.%s\n", get_pkey_base32hex(&ctx), gconf->query_tld);
+	printf("Public key: %s.%s\n", get_pkey_base32(&ctx), gconf->query_tld);
 	printf("Wrote secret key to %s\n", path);
 
 	return EXIT_SUCCESS;
@@ -409,7 +409,7 @@ int bob_load_key(const char path[])
 	}
 	g_keys = entry;
 
-	log_info("Loaded %s (Public key: %s)", path, get_pkey_base32hex(&ctx));
+	log_info("Loaded %s (Public key: %s)", path, get_pkey_base32(&ctx));
 
 	return EXIT_SUCCESS;
 }
@@ -515,7 +515,7 @@ void bob_encrypt_challenge(int sock, uint8_t buf[], size_t buflen, IP *addr)
 		}
 	} else {
 		log_debug("BOB: Secret key not found for public key: %s",
-			bytes_to_base32hex (hexbuf, sizeof(hexbuf), pkey, ECPARAMS_SIZE)
+			bytes_to_base32(hexbuf, sizeof(hexbuf), pkey, ECPARAMS_SIZE)
 		);
 	}
 }
@@ -562,7 +562,7 @@ void bob_debug_keys(FILE *fp)
 
 	key = g_keys;
 	while (key) {
-		fprintf(fp, "Public key: %s (%s)\n", get_pkey_base32hex(&key->ctx_sign), key->path);
+		fprintf(fp, "Public key: %s (%s)\n", get_pkey_base32(&key->ctx_sign), key->path);
 		key = key->next;
 	}
 }
@@ -588,7 +588,7 @@ int bob_setup(void)
 	key = g_keys;
 	while (key) {
 		// Start announcing public key for the entire runtime
-		hkey = get_pkey_base32hex(&key->ctx_sign);
+		hkey = get_pkey_base32(&key->ctx_sign);
 		announces_add(hkey, gconf->dht_port, LONG_MAX);
 		key = key->next;
 	}
