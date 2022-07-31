@@ -2,7 +2,7 @@
 
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
-export FEATURES="tls bob lpd cmd nss"
+export FEATURES="dns lpd tls bob cmd nss natpmp upnp"
 
 # https://wiki.debian.org/Multiarch/Implementation#dh.281.29_and_autotools
 DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
