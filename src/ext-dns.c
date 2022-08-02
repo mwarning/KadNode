@@ -563,11 +563,11 @@ static void proxy_read_resolv(IP *dst, const char path[])
 {
 	static time_t last_checked = 0;
 	static time_t last_modified = 0;
-	last_checked = gconf->time_now;
 	// Check at most every second
 	if (last_checked == gconf->time_now) {
 		return;
 	}
+    last_checked = gconf->time_now;
 
 	const char *m = "nameserver ";
 	IP addr;
