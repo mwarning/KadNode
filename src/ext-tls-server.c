@@ -112,7 +112,7 @@ static void tls_client_handler(int rc, int sock)
 #ifdef DEBUG
 		if (ret == MBEDTLS_ERR_X509_CERT_VERIFY_FAILED) {
 			char vrfy_buf[512];
-			int flags = mbedtls_ssl_get_verify_result(&g_ssl);
+			uint32_t flags = mbedtls_ssl_get_verify_result(&g_ssl);
 			mbedtls_x509_crt_verify_info(vrfy_buf, sizeof(vrfy_buf), "", flags);
 
 			log_debug("TLS-Server: Verify failed: %s", vrfy_buf);

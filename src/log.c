@@ -28,8 +28,8 @@ const char *log_time()
 	}
 
 	sprintf(buf, "[%8.2f] ",
-		((double) now.tv_sec + 1.0e-9 * now.tv_nsec) -
-		((double) log_start.tv_sec + 1.0e-9 * log_start.tv_nsec)
+		((double) now.tv_sec + 1.0e-9 * (double)now.tv_nsec) -
+		((double) log_start.tv_sec + 1.0e-9 * (double)log_start.tv_nsec)
 	);
 
 	return buf;
