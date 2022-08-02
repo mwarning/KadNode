@@ -38,7 +38,7 @@ static int _nss_kadnode_lookup(struct kadnode_nss_response *res, const struct ka
 	const char *path = NSS_PATH;
 	struct timeval tv;
 	int sock;
-	int rc;
+	ssize_t rc;
 
 	sock = socket(AF_LOCAL, SOCK_STREAM, 0);
 	if (sock < 0) {
