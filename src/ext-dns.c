@@ -587,12 +587,16 @@ static void proxy_read_resolv(IP *dst, const char path[])
 			const char *beg = strstr(buf, m);
 			if (beg == NULL) {
 				// Ignore missing address
-			} else if (addr_parse(&addr, beg + strlen(m), "53", AF_UNSPEC) < 0) {
+			}
+			const char *dns_serv = beg + strlen(m);
+			int addr_parse_rc = addr_parse(&addr, dns_serv, "53", AF_UNSPEC);
+			if (addr_parse_rc < 0) {
 				log_warning("DNS: Failed to read DNS server from %s", path);
 			} else if (addr_is_localhost(&addr)) {
 				// Ignore localhost entries
 			} else {
 				*dst = addr;
+				log_debug("DNS: Pick a DNS server %s from %s", dns_serv, path);
 			}
 		} else {
 			log_warning("DNS: Failed to open %s", path);
