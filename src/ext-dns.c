@@ -563,38 +563,39 @@ static void proxy_read_resolv(IP *dst, const char path[])
 {
 	static time_t last_checked = 0;
 	static time_t last_modified = 0;
+	last_checked = gconf->time_now;
+	// Check at most every second
+	if (last_checked == gconf->time_now) {
+		return;
+	}
+
 	const char *m = "\nnameserver ";
 	char buf[512] = { 0 };
 	IP addr;
 	struct stat attr;
 	FILE *file;
 
-	// Check at most every second
-	if (last_checked != gconf->time_now) {
-		last_checked = gconf->time_now;
+	// Check if path was modified
+	stat(path, &attr);
+	if (last_modified != attr.st_mtime) {
+		last_modified = attr.st_mtime;
 
-		// Check if path was modified
-		stat(path, &attr);
-		if (last_modified != attr.st_mtime) {
-			last_modified = attr.st_mtime;
-
-			file = fopen(path, "rb");
-			if (file) {
-				fread(buf, sizeof(buf) - 1, 1, file);
-				fclose(file);
-				const char *beg = strstr(buf, m);
-				if (beg == NULL) {
-					// Ignore missing address
-				} else if (addr_parse(&addr, beg + strlen(m), "53", AF_UNSPEC) < 0) {
-					log_warning("DNS: Failed to read DNS server from %s", path);
-				} else if (addr_is_localhost(&addr)) {
-					// Ignore localhost entries
-				} else {
-					*dst = addr;
-				}
+		file = fopen(path, "rb");
+		if (file) {
+			fread(buf, sizeof(buf) - 1, 1, file);
+			fclose(file);
+			const char *beg = strstr(buf, m);
+			if (beg == NULL) {
+				// Ignore missing address
+			} else if (addr_parse(&addr, beg + strlen(m), "53", AF_UNSPEC) < 0) {
+				log_warning("DNS: Failed to read DNS server from %s", path);
+			} else if (addr_is_localhost(&addr)) {
+				// Ignore localhost entries
 			} else {
-				log_warning("DNS: Failed to open %s", path);
+				*dst = addr;
 			}
+		} else {
+			log_warning("DNS: Failed to open %s", path);
 		}
 	}
 }
