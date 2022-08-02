@@ -569,11 +569,13 @@ static void proxy_read_resolv(IP *dst, const char path[])
 		return;
 	}
 
-	const char *m = "\nnameserver ";
-	char buf[512] = { 0 };
+	const char *m = "nameserver ";
 	IP addr;
 	struct stat attr;
 	FILE *file;
+	char *line = NULL;
+	size_t len = 0;
+	ssize_t nread;
 
 	// Check if path was modified
 	stat(path, &attr);
@@ -582,22 +584,30 @@ static void proxy_read_resolv(IP *dst, const char path[])
 
 		file = fopen(path, "rb");
 		if (file) {
-			fread(buf, sizeof(buf) - 1, 1, file);
+			while ((nread = getline(&line, &len, file)) != -1) {
+				if (nread == 0) {
+					continue;
+				}
+				const char *beg = strstr(line, m);
+				if (beg == NULL) {
+					// Ignore missing address
+					continue;
+				}
+				const char *dns_serv = beg + strlen(m);
+				int addr_parse_rc = addr_parse(&addr, dns_serv, "53", AF_UNSPEC);
+				if (addr_parse_rc < 0) {
+					log_warning("DNS: Failed to read DNS server %s from %s", dns_serv, path);
+					continue;
+				}
+				if (addr_is_localhost(&addr)) {
+					// Ignore localhost entries
+				} else {
+					*dst = addr;
+					log_debug("DNS: Pick the DNS server %s from %s", dns_serv, path);
+				}
+			}
+			free(line);
 			fclose(file);
-			const char *beg = strstr(buf, m);
-			if (beg == NULL) {
-				// Ignore missing address
-			}
-			const char *dns_serv = beg + strlen(m);
-			int addr_parse_rc = addr_parse(&addr, dns_serv, "53", AF_UNSPEC);
-			if (addr_parse_rc < 0) {
-				log_warning("DNS: Failed to read DNS server from %s", path);
-			} else if (addr_is_localhost(&addr)) {
-				// Ignore localhost entries
-			} else {
-				*dst = addr;
-				log_debug("DNS: Pick a DNS server %s from %s", dns_serv, path);
-			}
 		} else {
 			log_warning("DNS: Failed to open %s", path);
 		}
