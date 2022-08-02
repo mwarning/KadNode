@@ -179,7 +179,7 @@ static const char g_names[MAX_ADDR_RECORDS][3] = {
 * Basic memory operations.
 */
 
-static size_t get16bits(const uint8_t** buffer)
+static uint16_t get16bits(const uint8_t** buffer)
 {
 	uint16_t value;
 
@@ -333,12 +333,9 @@ static int dns_decode_msg(struct Message *msg, const uint8_t *buffer)
 			return -1;
 		}
 
-		int qType = get16bits(&buffer);
-		int qClass = get16bits(&buffer);
-
 		msg->question.qName = msg->qName_buffer;
-		msg->question.qType = qType;
-		msg->question.qClass = qClass;
+		msg->question.qType = get16bits(&buffer);
+		msg->question.qClass = get16bits(&buffer);
 		return 1;
 	}
 
