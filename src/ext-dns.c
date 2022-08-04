@@ -563,19 +563,20 @@ static void proxy_read_resolv(IP *dst, const char path[])
 {
 	static time_t last_checked = 0;
 	static time_t last_modified = 0;
+
 	// Check at most every second
 	if (last_checked == gconf->time_now) {
 		return;
 	}
-    last_checked = gconf->time_now;
+	last_checked = gconf->time_now;
 
-	const char *m = "nameserver ";
 	IP addr;
 	struct stat attr;
 	FILE *file;
 	char *line = NULL;
 	size_t len = 0;
 	ssize_t nread;
+	char dns_serv[256];
 
 	// Check if path was modified
 	stat(path, &attr);
@@ -588,22 +589,23 @@ static void proxy_read_resolv(IP *dst, const char path[])
 				if (nread == 0) {
 					continue;
 				}
-				const char *beg = strstr(line, m);
-				if (beg == NULL) {
-					// Ignore missing address
+
+				int rc = sscanf(line, "nameserver %255[^ \t\r\n#]", dns_serv);
+				if (rc != 1) {
 					continue;
 				}
-				const char *dns_serv = beg + strlen(m);
+
 				int addr_parse_rc = addr_parse(&addr, dns_serv, "53", AF_UNSPEC);
 				if (addr_parse_rc < 0) {
 					log_warning("DNS: Failed to read DNS server %s from %s", dns_serv, path);
 					continue;
 				}
-				if (addr_is_localhost(&addr)) {
-					// Ignore localhost entries
-				} else {
+
+				if (!addr_is_localhost(&addr)) {
 					*dst = addr;
 					log_debug("DNS: Pick the DNS server %s from %s", dns_serv, path);
+					// we pick the first IP address
+					break;
 				}
 			}
 			free(line);
