@@ -2,3 +2,4 @@
 *.so.2
 kadnode
 kadnode-ctl
+build
