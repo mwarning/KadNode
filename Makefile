@@ -26,7 +26,7 @@ ifeq ($(findstring lpd,$(FEATURES)),lpd)
 endif
 
 ifeq ($(findstring bob,$(FEATURES)),bob)
-  OBJS += build/ext-bob.o
+  OBJS += build/ext-bob.o build/ecc_point_compression.o
   CFLAGS += -DBOB
   LDFLAGS += -lmbedtls -lmbedx509 -lmbedcrypto
 endif
