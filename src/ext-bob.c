@@ -167,7 +167,7 @@ void bob_auth_end(struct bob_resource *resource, int state)
 	bob_trigger_auth();
 }
 
-// Try to create a DHT id from a sanitzed key query
+// Try to create a DHT id from a sanitized key query
 int bob_get_id(uint8_t id[], size_t idlen, const char query[])
 {
 	size_t querylen = strlen(query);
@@ -302,7 +302,7 @@ static int write_pem(const mbedtls_pk_context *key, const char path[])
 		return -1;
 	}
 
-	// Set u+rw persmissions
+	// Set u+rw permissions
 	chmod(path, 0600);
 
 	len = strlen((char*) buf);
@@ -584,7 +584,7 @@ int bob_setup(void)
 		mbedtls_ecp_group_load(&mbedtls_pk_ec(resource->ctx_verify)->grp, ECPARAMS);
 	}
 
-	// Anounce keys via DHT
+	// Announce keys via DHT
 	key = g_keys;
 	while (key) {
 		// Start announcing public key for the entire runtime
