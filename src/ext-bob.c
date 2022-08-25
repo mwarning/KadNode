@@ -6,20 +6,16 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 
-#include "mbedtls/platform.h"
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/ecdsa.h"
 #include "mbedtls/error.h"
-#include "mbedtls/rsa.h"
 #include "mbedtls/x509.h"
 
 #include "main.h"
 #include "conf.h"
 #include "log.h"
 #include "utils.h"
-#include "kad.h"
-#include "net.h"
 #include "announces.h"
 #include "searches.h"
 #include "ext-bob.h"
