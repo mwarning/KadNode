@@ -23,7 +23,7 @@
 #include "announces.h"
 #include "searches.h"
 #include "ext-bob.h"
-
+#include "ecc_point_compression.h"
 
 /*
 * This is an experimental/naive authentication scheme. Hence called Bob.
@@ -72,88 +72,6 @@ static struct bob_resource g_bob_resources[8];
 static mbedtls_entropy_context g_entropy;
 static mbedtls_ctr_drbg_context g_ctr_drbg;
 
-
-// Decompress key since mbedtls does not have this feature.
-int mbedtls_ecp_decompress(
-	const mbedtls_ecp_group *grp,
-	const unsigned char *input, size_t ilen,
-	unsigned char *output, size_t *olen, size_t osize)
-{
-	int ret;
-	size_t plen;
-	mbedtls_mpi r;
-	mbedtls_mpi x;
-	mbedtls_mpi n;
-
-	plen = mbedtls_mpi_size(&grp->P);
-
-	*olen = 2 * plen + 1;
-
-	if (osize < *olen)
-		return(MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL);
-
-	if (ilen != plen + 1)
-		return(MBEDTLS_ERR_ECP_BAD_INPUT_DATA);
-
-	if (input[0] != 0x02 && input[0] != 0x03)
-		return(MBEDTLS_ERR_ECP_BAD_INPUT_DATA);
-
-	// output will consist of 0x04|X|Y
-	memcpy(output, input, ilen);
-	output[0] = 0x04;
-
-	mbedtls_mpi_init(&r);
-	mbedtls_mpi_init(&x);
-	mbedtls_mpi_init(&n);
-
-	// x <= input
-	MBEDTLS_MPI_CHK(mbedtls_mpi_read_binary(&x, input + 1, plen));
-
-	// r = x^2
-	MBEDTLS_MPI_CHK(mbedtls_mpi_mul_mpi(&r, &x, &x));
-
-	// r = x^2 + a
-	if (grp->A.p == NULL) {
-		// Special case where a is -3
-		MBEDTLS_MPI_CHK(mbedtls_mpi_sub_int(&r, &r, 3));
-	} else {
-		MBEDTLS_MPI_CHK(mbedtls_mpi_add_mpi(&r, &r, &grp->A));
-	}
-
-	// r = x^3 + ax
-	MBEDTLS_MPI_CHK(mbedtls_mpi_mul_mpi(&r, &r, &x));
-
-	// r = x^3 + ax + b
-	MBEDTLS_MPI_CHK(mbedtls_mpi_add_mpi(&r, &r, &grp->B));
-
-	// Calculate quare root of r over finite field P
-	// r = sqrt(x^3 + ax + b) = (x^3 + ax + b) ^ ((P + 1) / 4) (mod P)
-
-	// n = P + 1
-	MBEDTLS_MPI_CHK(mbedtls_mpi_add_int(&n, &grp->P, 1));
-
-	// n = (P + 1) / 4
-	MBEDTLS_MPI_CHK(mbedtls_mpi_shift_r(&n, 2));
-
-	// r ^ ((P + 1) / 4) (mod p)
-	MBEDTLS_MPI_CHK(mbedtls_mpi_exp_mod(&r, &r, &n, &grp->P, NULL));
-
-	// Select solution that has the correct "sign" (equals odd/even solution in finite group)
-	if ((input[0] == 0x03) != mbedtls_mpi_get_bit(&r, 0)) {
-		// r = p - r
-		MBEDTLS_MPI_CHK(mbedtls_mpi_sub_mpi(&r, &grp->P, &r));
-	}
-
-	// y => output
-	ret = mbedtls_mpi_write_binary(&r, output + 1 + plen, plen);
-
-cleanup:
-	mbedtls_mpi_free(&r);
-	mbedtls_mpi_free(&x);
-	mbedtls_mpi_free(&n);
-
-	return(ret);
-}
 
 void bob_auth_end(struct bob_resource *resource, int state)
 {
