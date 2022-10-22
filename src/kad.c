@@ -16,6 +16,7 @@
 #include "ext-bob.h"
 #endif
 
+// include dht.c instead of dht.h to access private vars
 #include "dht.c"
 
 
