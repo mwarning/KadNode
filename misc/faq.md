@@ -3,14 +3,14 @@
     In short, KadNode does DNS based on the BitTorrent network.  
     Slightly longer; KadNode is a tool that resolves names to IP addresses using the BitTorrent DHT network.
     KadNode runs in background and intercepts and answers name request for the .p2p domain.
-    It has a very low resource consumption. The main task is to just return IP addresses for identifiers, not necessarly traditional DNS.
+    It has a very low resource consumption. The main task is to just return IP addresses for identifiers, not necessarily traditional DNS.
 * **How long does it take to resolve a domain?**  
     On the Internet, if KadNode has been running for a few minutes to fully bootstrap, then it takes around 1 - 8 seconds for a domain to be initially resolved.
 * **Is the .p2p TLS mandatory?**  
     No, it is only used to intercept requests and then stripped for the entire lookup process.
-* **How does KadNode intercept DNS reqests?**  
+* **How does KadNode intercept DNS requests?**  
     On some systems the Name Service Switch (NSS) support (see /etc/nsswitch.conf) is used. For other systems KadNode includes a basic DNS server that listens on the local host (Supported are A, AAAA and SRV requests - to transmit the port). It can also act as a simple DNS proxy.
-* **Can annoucements be made for other nodes? Can I announce the IP address of e.g. google.de?**  
+* **Can announcements be made for other nodes? Can I announce the IP address of e.g. google.de?**  
     No, the IP address of the sender of an announcement is used. This can be seen as a pro and cons.
 * **How long does it take to resolve an address?**  
     An estimate would be 8 seconds. Unless the address has been cached.
@@ -32,12 +32,12 @@ using the public key as you would use a domain name. The resolved IP addresses a
     No. The current mechanism is vulnerable to man-in-the-middle attacks!
 * **How to compile KadNode without UPNP, NAT-PMP or authentication (mbedtls) support?**  
     Edit the FEATURES variable in Makefile and remove 'upnp', 'natpmp' or 'bob' and 'tls'. You can check the binary using `kadnode -v`.
-* **Local Peer Discover (LPD) does not work on bridged devices..**  
+* **Local Peer Discover (LPD) does not work on bridged devices.**  
     Try to disable the multicast_snooping or multicast_querier option, this is needed for OpenWrt: echo 0 > /sys/devices/virtual/net/br-lan/bridge/multicast_snooping
 * **How does the authentication work?**  
     Please consult the [Authentication Details](https://github.com/mwarning/KadNode/wiki/Cryptography-Details).
 * **Lookup is slow? What is going on?**  
-    KadNode may need a few seconds to resolve an identifier. If it takes considerably longer than 10 seconds, then your node might no properly bootstrapped. Let me now if you have reason to assume otherwise. There has been added a [branch](/mwarning/KadNode/commits/big_buckets) for speed enhancements.
+    KadNode may need a few seconds to resolve an identifier. If it takes considerably longer than 10 seconds, then your node might no properly bootstrapped. Let me know if you have reason to assume otherwise. There has been added a [branch](/mwarning/KadNode/commits/big_buckets) for speed enhancements.
 * **What are the compile dependencies?**  
     When you try to compile KadNode, then you need to have [mbedtls](https://github.com/ARMmbed/mbedtls/) installed.
 * **Why use the secp256r1 elliptic curve instead of ed25519?**  

@@ -8,7 +8,7 @@
 /*
 * Every value id announcement also carries a port on which
 * the id can be satisfied. There needs to be a port forwarding
-* to allow another node on the Internet to reach this computers
+* to allow another node on the Internet to reach this computer's
 * local port.
 */
 
