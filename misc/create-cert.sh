@@ -7,7 +7,7 @@
 domain="$1"
 ca_name="My Certificate Authority"
 
-if [ -z "domain" ]; then
+if [ -z "$domain" ]; then
   echo "Usage: $0 <domain>"
   exit 1
 fi
