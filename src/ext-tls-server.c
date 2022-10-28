@@ -177,7 +177,7 @@ static void tls_server_handler(int rc, int sock)
 	net_add_handler(client_fd->fd, &tls_client_handler);
 }
 
-// Get the CN field of an certificate
+// Get the CN field of a certificate
 static int get_common_name(char buf[], size_t len, const mbedtls_x509_crt *crt)
 {
 	const mbedtls_x509_name *name;

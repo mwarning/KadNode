@@ -22,7 +22,7 @@ Now you should be able to do `ping mydomain.com.p2p`. The `.p2p` extension cause
 
 ## Use existing HTTPS server for authentication
 
-Instead of KadNode, a HTTPS server (e.g. apache, nginx) on the same host can provide the authentication. In this case KadNode only does the announcements:
+Instead of KadNode, an HTTPS server (e.g. apache, nginx) on the same host can provide the authentication. In this case KadNode only does the announcements:
 
 Server configuration:
 ```  

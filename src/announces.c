@@ -80,7 +80,7 @@ void announces_debug(FILE *fp)
 	fprintf(fp, " Found %d entries.\n", value_counter);
 }
 
-// Announce a sanitzed query
+// Announce a sanitized query
 struct value_t *announces_add(const char query[], int port, time_t lifetime)
 {
 	uint8_t id[SHA1_BIN_LENGTH];
