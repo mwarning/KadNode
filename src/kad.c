@@ -3,6 +3,9 @@
 
 #include <sys/time.h>
 #include <assert.h>
+#include <string.h>
+#include <errno.h>
+#include <stdlib.h>
 
 #include "log.h"
 #include "main.h"
