@@ -45,7 +45,7 @@
 #include "ext-tls-server.h"
 #endif
 
-static int g_pidfile_written = 0;
+static bool g_pidfile_written = false;
 
 
 int main_run(void)
@@ -232,7 +232,7 @@ int main(int argc, char *argv[])
 	// Write pid file
 	if (gconf->pidfile) {
 		unix_write_pidfile(GetCurrentProcessId(), gconf->pidfile);
-		g_pidfile_written = 1;
+		g_pidfile_written = true;
 	}
 
 	// Drop privileges
@@ -282,7 +282,7 @@ int main(int argc, char *argv[])
 	// Write pid file
 	if (gconf->pidfile) {
 		unix_write_pidfile(getpid(), gconf->pidfile);
-		g_pidfile_written = 1;
+		g_pidfile_written = true;
 	}
 
 	// Drop privileges

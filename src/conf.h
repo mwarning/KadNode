@@ -14,9 +14,7 @@ int conf_load(void);
 void conf_info(void);
 void conf_free(void);
 
-
 struct gconf_t {
-
 	// Current time
 	time_t time_now;
 
@@ -81,7 +79,7 @@ struct gconf_t {
 
 #ifdef DNS
 	int dns_port;
-	int dns_proxy_enable;
+	bool dns_proxy_enable;
 	char *dns_proxy_server;
 #endif
 

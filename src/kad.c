@@ -421,7 +421,7 @@ int kad_announce(const char query[], int port, time_t lifetime)
 	char hostname[QUERY_MAX_SIZE];
 
 	// Remove .p2p suffix and convert to lowercase
-	if (EXIT_FAILURE == query_sanitize(hostname, sizeof(hostname), query)) {
+	if (!query_sanitize(hostname, sizeof(hostname), query)) {
 		return EXIT_FAILURE;
 	}
 
@@ -436,7 +436,7 @@ const struct search_t *kad_lookup(const char query[])
 	struct search_t *search;
 
 	// Remove .p2p suffix and convert to lowercase
-	if (EXIT_FAILURE == query_sanitize(hostname, sizeof(hostname), query)) {
+	if (!query_sanitize(hostname, sizeof(hostname), query)) {
 		log_debug("KAD: query_sanitize error");
 		return NULL;
 	}

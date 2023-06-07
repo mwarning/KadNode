@@ -16,7 +16,7 @@
 #include "utils.h"
 
 
-int hex_get_id(uint8_t id[], size_t idsize, const char query[])
+bool hex_get_id(uint8_t id[], size_t idsize, const char query[])
 {
 	size_t querysize;
 /*
@@ -31,15 +31,15 @@ int hex_get_id(uint8_t id[], size_t idsize, const char query[])
 	}
 */
 	querysize = strlen(query);
-	if (EXIT_SUCCESS == bytes_from_base32(id, idsize, query, querysize)) {
-		return EXIT_SUCCESS;
+	if (bytes_from_base32(id, idsize, query, querysize)) {
+		return true;
 	}
 
-	if (EXIT_SUCCESS == bytes_from_base16(id, idsize, query, querysize)) {
-		return EXIT_SUCCESS;
+	if (bytes_from_base16(id, idsize, query, querysize)) {
+		return true;
 	}
 
-	return EXIT_FAILURE;
+	return false;
 }
 
 static size_t base16_len(size_t len)
@@ -47,13 +47,13 @@ static size_t base16_len(size_t len)
 	return 2 * len;
 }
 
-int bytes_from_base16(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize)
+bool bytes_from_base16(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize)
 {
 	size_t i;
 	size_t xv = 0;
 
 	if (base16_len(dstsize) != srcsize) {
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	for (i = 0; i < srcsize; ++i) {
@@ -63,7 +63,7 @@ int bytes_from_base16(uint8_t dst[], size_t dstsize, const char src[], size_t sr
 		} else if (c >= 'a' && c <= 'f') {
 			xv += (c - 'a') + 10;
 		} else {
-			return EXIT_FAILURE;
+			return false;
 		}
 
 		if (i % 2) {
@@ -74,7 +74,7 @@ int bytes_from_base16(uint8_t dst[], size_t dstsize, const char src[], size_t sr
 		}
 	}
 
-	return EXIT_SUCCESS;
+	return true;
 }
 
 char *bytes_to_base16(char dst[], size_t dstsize, const uint8_t src[], size_t srcsize)
@@ -105,7 +105,7 @@ static size_t base32_len(size_t len)
 	return 8 * (len / 5) + 2 * mod - (mod > 2);
 }
 
-int bytes_from_base32(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize)
+bool bytes_from_base32(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize)
 {
 	size_t processed = 0;
 	unsigned char *d = dst;
@@ -113,7 +113,7 @@ int bytes_from_base32(uint8_t dst[], size_t dstsize, const char src[], size_t sr
 	int v;
 
 	if (srcsize != base32_len(dstsize)) {
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	for (i = 0; i < srcsize; i++) {
@@ -125,7 +125,7 @@ int bytes_from_base32(uint8_t dst[], size_t dstsize, const char src[], size_t sr
 			src++;
 			continue;
 		} else {
-			return EXIT_FAILURE;
+			return false;
 		}
 
 		src++;
@@ -133,14 +133,14 @@ int bytes_from_base32(uint8_t dst[], size_t dstsize, const char src[], size_t sr
 		switch (processed % 8) {
 		case 0:
 			if (dstsize <= 0) {
-				return EXIT_FAILURE;
+				return false;
 			}
 			d[0] &= 0x07;
 			d[0] |= (v << 3) & 0xF8;
 			break;
 		case 1:
 			if (dstsize < 1) {
-				return EXIT_FAILURE;
+				return false;
 			}
 			d[0] &= 0xF8;
 			d[0] |= (v >> 2) & 0x07;
@@ -151,14 +151,14 @@ int bytes_from_base32(uint8_t dst[], size_t dstsize, const char src[], size_t sr
 			break;
 		case 2:
 			if (dstsize < 2) {
-				return EXIT_FAILURE;
+				return false;
 			}
 			d[1] &= 0xC1;
 			d[1] |= (v << 1) & 0x3E;
 			break;
 		case 3:
 			if (dstsize < 2) {
-				return EXIT_FAILURE;
+				return false;
 			}
 			d[1] &= 0xFE;
 			d[1] |= (v >> 4) & 0x01;
@@ -169,7 +169,7 @@ int bytes_from_base32(uint8_t dst[], size_t dstsize, const char src[], size_t sr
 			break;
 		case 4:
 			if (dstsize < 3) {
-				return EXIT_FAILURE;
+				return false;
 			}
 			d[2] &= 0xF0;
 			d[2] |= (v >> 1) & 0x0F;
@@ -180,14 +180,14 @@ int bytes_from_base32(uint8_t dst[], size_t dstsize, const char src[], size_t sr
 			break;
 		case 5:
 			if (dstsize < 4) {
-				return EXIT_FAILURE;
+				return false;
 			}
 			d[3] &= 0x83;
 			d[3] |= (v << 2) & 0x7C;
 			break;
 		case 6:
 			if (dstsize < 4) {
-				return EXIT_FAILURE;
+				return false;
 			}
 			d[3] &= 0xFC;
 			d[3] |= (v >> 3) & 0x03;
@@ -198,7 +198,7 @@ int bytes_from_base32(uint8_t dst[], size_t dstsize, const char src[], size_t sr
 			break;
 		default:
 			if (dstsize < 5) {
-				return EXIT_FAILURE;
+				return false;
 			}
 			d[4] &= 0xE0;
 			d[4] |= v & 0x1F;
@@ -209,7 +209,7 @@ int bytes_from_base32(uint8_t dst[], size_t dstsize, const char src[], size_t sr
 		processed++;
 	}
 
-	return EXIT_SUCCESS;
+	return true;
 }
 
 char *bytes_to_base32(char dst[], size_t dstsize, const uint8_t *src, size_t srcsize) {
@@ -280,7 +280,7 @@ char *bytes_to_base32(char dst[], size_t dstsize, const uint8_t *src, size_t src
 
 // Check if a string has and extension.
 // ext is epected to start with a dot.
-int has_tld(const char str[], const char ext[])
+bool has_tld(const char str[], const char ext[])
 {
 	const char *dot = strrchr(str, '.');
 	return dot && (strcmp(dot + 1, ext) == 0);
@@ -295,7 +295,7 @@ int has_tld(const char str[], const char ext[])
 * example.p2p => example
 * eXample.COM.P2P => example.com
 */
-int query_sanitize(char buf[], size_t buflen, const char query[])
+bool query_sanitize(char buf[], size_t buflen, const char query[])
 {
 	const char *tld;
 	size_t len;
@@ -305,7 +305,7 @@ int query_sanitize(char buf[], size_t buflen, const char query[])
 
 	if ((len + 1) > buflen) {
 		// Output buffer too small
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	// Convert to lower case
@@ -320,7 +320,7 @@ int query_sanitize(char buf[], size_t buflen, const char query[])
 		buf[len] = '\0';
 	}
 
-	return EXIT_SUCCESS;
+	return true;
 }
 
 // Create a random port != 0
@@ -348,7 +348,7 @@ int port_parse(const char pstr[], int err)
 	}
 }
 
-int port_set(IP *addr, uint16_t port)
+bool port_set(IP *addr, uint16_t port)
 {
 	switch (addr->ss_family) {
 	case AF_INET:
@@ -363,7 +363,7 @@ int port_set(IP *addr, uint16_t port)
 }
 
 // Fill buffer with random bytes
-int bytes_random(uint8_t buffer[], size_t size)
+bool bytes_random(uint8_t buffer[], size_t size)
 {
 	int fd;
 	int rc;
@@ -378,10 +378,10 @@ int bytes_random(uint8_t buffer[], size_t size)
 
 	close(fd);
 
-	return rc;
+	return rc == 0;
 }
 
-int id_equal(const uint8_t id1[], const uint8_t id2[])
+bool id_equal(const uint8_t id1[], const uint8_t id2[])
 {
 	return (memcmp(id1, id2, SHA1_BIN_LENGTH) == 0);
 }
@@ -432,7 +432,7 @@ const char *str_addr(const IP *addr)
 	return addrbuf;
 }
 
-int addr_is_localhost(const IP *addr)
+bool addr_is_localhost(const IP *addr)
 {
 	// 127.0.0.1
 	const uint32_t inaddr_loopback = htonl(INADDR_LOOPBACK);
@@ -443,11 +443,11 @@ int addr_is_localhost(const IP *addr)
 	case AF_INET6:
 		return (memcmp(&((IP6 *)addr)->sin6_addr, &in6addr_loopback, 16) == 0);
 	default:
-		return 0;
+		return false;
 	}
 }
 
-int addr_is_multicast(const IP *addr)
+bool addr_is_multicast(const IP *addr)
 {
 	switch (addr->ss_family) {
 	case AF_INET:
@@ -455,7 +455,7 @@ int addr_is_multicast(const IP *addr)
 	case AF_INET6:
 		return IN6_IS_ADDR_MULTICAST(&((IP6*) addr)->sin6_addr);
 	default:
-		return 0;
+		return false;
 	}
 }
 
@@ -483,12 +483,12 @@ int addr_len(const IP *addr)
 	}
 }
 
-static int addr_parse_internal(IP *ret, const char addr_str[], const char port_str[], int af)
+static bool addr_parse_internal(IP *ret, const char addr_str[], const char port_str[], int af)
 {
     struct addrinfo hints;
     struct addrinfo *info = NULL;
     struct addrinfo *p = NULL;
-    int rc = EXIT_FAILURE;
+    bool rc = false;
 
     memset(&hints, '\0', sizeof(struct addrinfo));
     hints.ai_socktype = SOCK_STREAM;
@@ -496,20 +496,20 @@ static int addr_parse_internal(IP *ret, const char addr_str[], const char port_s
     hints.ai_family = af;
 
     if (getaddrinfo(addr_str, port_str, &hints, &info) != 0) {
-        return EXIT_FAILURE;
+        return false;
     }
 
     p = info;
     while (p != NULL) {
         if ((af == AF_UNSPEC || af == AF_INET6) && p->ai_family == AF_INET6) {
             memcpy(ret, p->ai_addr, sizeof(IP6));
-            rc = EXIT_SUCCESS;
+            rc = true;
             break;
         }
 
         if ((af == AF_UNSPEC || af == AF_INET) && p->ai_family == AF_INET) {
             memcpy(ret, p->ai_addr, sizeof(IP4));
-            rc = EXIT_SUCCESS;
+            rc = true;
             break;
         }
         p = p->ai_next;
@@ -531,7 +531,7 @@ static int addr_parse_internal(IP *ret, const char addr_str[], const char port_s
 * "[<address>]"
 * "[<address>]:<port>"
 */
-int addr_parse(IP *addr_ret, const char full_addr_str[], const char default_port[], int af)
+bool addr_parse(IP *addr_ret, const char full_addr_str[], const char default_port[], int af)
 {
 	char addr_buf[256];
 	char *addr_beg;
@@ -544,7 +544,7 @@ int addr_parse(IP *addr_ret, const char full_addr_str[], const char default_port
 	len = strlen(full_addr_str);
 	if (len >= (sizeof(addr_buf) - 1)) {
 		// address too long
-		return -1;
+		return false;
 	} else {
 		addr_beg = addr_buf;
 	}
@@ -560,7 +560,7 @@ int addr_parse(IP *addr_ret, const char full_addr_str[], const char default_port
 
 		if (addr_tmp == NULL) {
 			// broken format
-			return EXIT_FAILURE;
+			return false;
 		}
 
 		*addr_tmp = '\0';
@@ -572,7 +572,7 @@ int addr_parse(IP *addr_ret, const char full_addr_str[], const char default_port
 			port_str = addr_tmp + 2;
 		} else {
 			// port expected
-			return EXIT_FAILURE;
+			return false;
 		}
 	} else if (last_colon && last_colon == strchr(addr_buf, ':')) {
 		// <non-ipv6-addr>:<port>
@@ -595,7 +595,7 @@ int addr_parse(IP *addr_ret, const char full_addr_str[], const char default_port
 }
 
 // Compare two ip addresses, ignore port
-int addr_equal(const IP *addr1, const IP *addr2)
+bool addr_equal(const IP *addr1, const IP *addr2)
 {
 	if (addr1->ss_family != addr2->ss_family) {
 		return 0;
@@ -604,14 +604,14 @@ int addr_equal(const IP *addr1, const IP *addr2)
 	} else if (addr1->ss_family == AF_INET6) {
 		return 0 == memcmp(&((IP6 *)addr1)->sin6_addr, &((IP6 *)addr2)->sin6_addr, 16);
 	} else {
-		return 0;
+		return false;
 	}
 }
 
-int socket_addr(int sock, IP *addr)
+bool socket_addr(int sock, IP *addr)
 {
 	socklen_t len = sizeof(IP);
-	return getsockname(sock, (struct sockaddr *) addr, &len);
+	return getsockname(sock, (struct sockaddr *) addr, &len) == 0;
 }
 
 time_t time_add_secs(uint32_t seconds)

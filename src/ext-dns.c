@@ -595,8 +595,7 @@ static void proxy_read_resolv(IP *dst, const char path[])
 					continue;
 				}
 
-				int addr_parse_rc = addr_parse(&addr, dns_serv, "53", AF_UNSPEC);
-				if (addr_parse_rc < 0) {
+				if (!addr_parse(&addr, dns_serv, "53", AF_UNSPEC)) {
 					log_warning("DNS: Failed to read DNS server %s from %s", dns_serv, path);
 					continue;
 				}
@@ -761,7 +760,7 @@ int dns_setup(void)
 
 	// Initialize g_proxy_addr
 	if (gconf->dns_proxy_enable && gconf->dns_proxy_server) {
-		if (addr_parse(&g_proxy_addr, gconf->dns_proxy_server, "53", AF_UNSPEC) != 0) {
+		if (!addr_parse(&g_proxy_addr, gconf->dns_proxy_server, "53", AF_UNSPEC)) {
 			log_error("DNS: Failed to parse IP address: %s", gconf->dns_proxy_server);
 			return EXIT_FAILURE;
 		}

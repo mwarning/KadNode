@@ -3,6 +3,7 @@
 #define _UTILS_H_
 
 #include <sys/time.h>
+#include <stdbool.h>
 
 
 // Number of elements in an array
@@ -26,34 +27,34 @@
 #define time_now_sec() (gconf->time_now)
 
 
-int hex_get_id(uint8_t id[], size_t idsize, const char query[]);
+bool hex_get_id(uint8_t id[], size_t idsize, const char query[]);
 
-int bytes_from_base32(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize);
+bool bytes_from_base32(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize);
 char *bytes_to_base32(char dst[], size_t dstsize, const uint8_t src[], size_t srcsize);
-int bytes_from_base16(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize);
+bool bytes_from_base16(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize);
 char *bytes_to_base16(char dst[], size_t dstsize, const uint8_t src[], size_t srcsize);
 
 int port_random(void);
 int port_parse(const char pstr[], int err);
-int port_set(IP *addr, uint16_t port);
+bool port_set(IP *addr, uint16_t port);
 
-int has_tld(const char str[], const char tld[]);
-int query_sanitize(char buf[], size_t buflen, const char query[]);
-int bytes_random(uint8_t buffer[], size_t size);
-int id_equal(const uint8_t id1[], const uint8_t id2[]);
+bool has_tld(const char str[], const char tld[]);
+bool query_sanitize(char buf[], size_t buflen, const char query[]);
+bool bytes_random(uint8_t buffer[], size_t size);
+bool id_equal(const uint8_t id1[], const uint8_t id2[]);
 
 const char *str_af(int af);
 const char *str_id(const uint8_t id[]);
 const char *str_addr(const IP *addr);
 
-int addr_is_localhost(const IP *addr);
-int addr_is_multicast(const IP *addr);
-int addr_parse(IP *addr, const char full_addr_str[], const char default_port[], int af);
+bool addr_is_localhost(const IP *addr);
+bool addr_is_multicast(const IP *addr);
+bool addr_parse(IP *addr, const char full_addr_str[], const char default_port[], int af);
 int addr_port(const IP *addr);
 int addr_len(const IP *addr);
-int addr_equal(const IP *addr1, const IP *addr2);
+bool addr_equal(const IP *addr1, const IP *addr2);
 
-int socket_addr(int sock, IP *addr);
+bool socket_addr(int sock, IP *addr);
 
 time_t time_add_secs(uint32_t seconds);
 time_t time_add_mins(uint32_t minutes);

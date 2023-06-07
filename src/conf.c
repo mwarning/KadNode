@@ -487,7 +487,7 @@ static int conf_set(const char opt[], const char val[])
 	case oDnsPort:
 		return conf_port(opt, &gconf->dns_port, val);
 	case oDnsProxyEnable:
-		gconf->dns_proxy_enable = 1;
+		gconf->dns_proxy_enable = true;
 		break;
 	case oDnsProxyServer:
 		return conf_str(opt, &gconf->dns_proxy_server, val);

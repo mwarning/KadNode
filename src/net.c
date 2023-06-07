@@ -24,7 +24,7 @@
 static struct pollfd g_fds[16] = { 0 };
 static net_callback* g_cbs[16] = { NULL };
 static int g_count = 0;
-static int g_entry_removed = 0;
+static bool g_entry_removed = false;
 
 
 // Set a socket non-blocking
@@ -69,7 +69,7 @@ void net_remove_handler(int fd, net_callback *cb)
 		if (g_cbs[i] == cb && g_fds[i].fd == fd) {
 			// mark for removal in compress_entries()
 			g_cbs[i] = NULL;
-			g_entry_removed = 1;
+			g_entry_removed = true;
 			return;
 		}
 	}
@@ -121,7 +121,7 @@ void net_loop(void)
 
 		if (g_entry_removed) {
 			compress_entries();
-			g_entry_removed = 0;
+			g_entry_removed = false;
 		}
 	}
 }
@@ -183,10 +183,8 @@ int net_bind(
 	IP sockaddr;
 	int sock = -1;
 
-	if (addr_parse(&sockaddr, addr, "0", AF_UNSPEC) != EXIT_SUCCESS) {
-		log_error("%s: Failed to parse IP address '%s'",
-			name, addr
-		);
+	if (!addr_parse(&sockaddr, addr, "0", AF_UNSPEC)) {
+		log_error("%s: Failed to parse IP address '%s'", name, addr);
 		goto fail;
 	}
 

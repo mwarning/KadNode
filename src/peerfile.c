@@ -69,25 +69,25 @@ void peerfile_export(void)
 static int peerfile_import_peer(const char addr_str[])
 {
 	const char *port_str = STR(DHT_PORT);
-	int parsed = 0;
-	int pinged = 0;
+	bool parsed = false;
+	bool pinged = false;
 	IP addr = {0};
 	int af = gconf->af;
 
 	if (af == AF_UNSPEC || af == AF_INET6) {
-		if (addr_parse(&addr, addr_str, port_str, AF_INET6) == EXIT_SUCCESS) {
-			parsed = 1;
+		if (addr_parse(&addr, addr_str, port_str, AF_INET6)) {
+			parsed = true;
 			if (kad_ping(&addr) == 0) {
-				pinged = 1;
+				pinged = true;
 			}
 		}
 	}
 
 	if (af == AF_UNSPEC || af == AF_INET) {
-		if (addr_parse(&addr, addr_str, port_str, AF_INET) == EXIT_SUCCESS) {
-			parsed = 1;
+		if (addr_parse(&addr, addr_str, port_str, AF_INET)) {
+			parsed = true;
 			if (kad_ping(&addr) == 0) {
-				pinged = 1;
+				pinged = true;
 			}
 		}
 	}

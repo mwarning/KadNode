@@ -87,8 +87,8 @@ int bob_get_id(uint8_t id[], size_t idlen, const char query[])
 	size_t querylen = strlen(query);
 	uint8_t bin[32];
 
-	if (EXIT_SUCCESS == bytes_from_base32(bin, sizeof(bin), query, querylen)
-		|| EXIT_SUCCESS == bytes_from_base16(bin, sizeof(bin), query, querylen)) {
+	if (bytes_from_base32(bin, sizeof(bin), query, querylen)
+		|| bytes_from_base16(bin, sizeof(bin), query, querylen)) {
 			memcpy(id, bin, idlen);
 			return EXIT_SUCCESS;
 	}
@@ -162,7 +162,7 @@ void bob_trigger_auth(void)
 		// Hex to binary and compressed form (assuming even Y => 0x02)
 		compressed[0] = 0x02;
 
-		if (0 != bytes_from_base32(compressed + 1, sizeof(compressed) - 1, query, strlen(query))) {
+		if (!bytes_from_base32(compressed + 1, sizeof(compressed) - 1, query, strlen(query))) {
 			log_error("BOB: Unexpected query length: %s", query);
 			bob_auth_end(resource, AUTH_ERROR);
 			return;
