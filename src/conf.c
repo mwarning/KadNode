@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/un.h>
 #include <sys/stat.h>
 #include <signal.h>
 #include <limits.h>
@@ -135,45 +136,6 @@ static const char *kadnode_usage_str =
 " -v, --version				Print program version.\n";
 
 
-// Set default if setting was not set and validate settings
-void conf_defaults(void)
-{
-	if (gconf->af == 0) {
-		gconf->af = AF_UNSPEC;
-	}
-
-	if (gconf->query_tld == NULL) {
-		gconf->query_tld = strdup(QUERY_TLD_DEFAULT);
-	}
-
-	if (gconf->dht_port < 0) {
-		gconf->dht_port = DHT_PORT;
-	}
-
-#ifdef CMD
-	if (gconf->cmd_path == NULL) {
-		gconf->cmd_path = strdup(CMD_PATH);
-	}
-#endif
-
-#ifdef DNS
-	if (gconf->dns_port < 0) {
-		gconf->dns_port = DNS_PORT;
-	}
-#endif
-
-#ifdef NSS
-	if (gconf->nss_path == NULL) {
-		gconf->nss_path = strdup(NSS_PATH);
-	}
-#endif
-
-	time_t now = time(NULL);
-	gconf->time_now = now;
-	gconf->startup_time = now;
-	gconf->is_running = 1;
-}
-
 const char *verbosity_str(int verbosity)
 {
 	switch (verbosity) {
@@ -255,7 +217,6 @@ enum OPCODE {
 	oIpv4,
 	oIpv6,
 	oPort,
-	oLpdAddr,
 	oLpdDisable,
 	oFwdDisable,
 	oServiceInstall,
@@ -285,7 +246,7 @@ static struct option_t g_options[] = {
 	{"--verbosity", 1, oVerbosity},
 #ifdef CMD
 	{"--cmd-disable-stdin", 0, oCmdDisableStdin},
-	{"--cmd-port", 1, oCmdPath},
+	{"--cmd-path", 1, oCmdPath},
 #endif
 #ifdef DNS
 	{"--dns-port", 1, oDnsPort},
@@ -306,7 +267,6 @@ static struct option_t g_options[] = {
 	{"-6", 0, oIpv6},
 	{"--ipv6", 0, oIpv6},
 #ifdef LPD
-	{"--lpd-addr", 1, oLpdAddr},
 	{"--lpd-disable", 0, oLpdDisable},
 #endif
 #ifdef FWD
@@ -517,6 +477,10 @@ static int conf_set(const char opt[], const char val[])
 		gconf->cmd_disable_stdin = 1;
 		break;
 	case oCmdPath:
+		if (strlen(val) > FIELD_SIZEOF(struct sockaddr_un, sun_path) - 1) {
+			log_error("Path too long for %s", opt);
+			return EXIT_FAILURE;
+		}
 		return conf_str(opt, &gconf->cmd_path, val);
 #endif
 #ifdef DNS
@@ -654,6 +618,42 @@ int conf_load(void)
 	return (rc != 0) ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
+static struct gconf_t *conf_alloc()
+{
+	struct gconf_t *conf;
+	time_t now = time(NULL);
+
+	conf = (struct gconf_t*) calloc(1, sizeof(struct gconf_t));
+	*conf = ((struct gconf_t) {
+		.dht_port = DHT_PORT,
+		.af = AF_UNSPEC,
+#ifdef DNS
+		.dns_port = -1,
+#endif
+#ifdef DEBUG
+		.verbosity = VERBOSITY_DEBUG,
+#else
+		.verbosity = VERBOSITY_VERBOSE,
+#endif
+		.query_tld = strdup(QUERY_TLD_DEFAULT),
+#ifdef CMD
+		.cmd_path = strdup(CMD_PATH),
+#endif
+#ifdef DNS
+		.dns_port = DNS_PORT,
+#endif
+
+#ifdef NSS
+		.nss_path = strdup(NSS_PATH),
+#endif
+		.time_now = now,
+		.startup_time = now,
+		.is_running = 1
+	});
+
+	return conf;
+}
+
 int conf_setup(int argc, char **argv)
 {
 	const char *opt;
@@ -661,19 +661,7 @@ int conf_setup(int argc, char **argv)
 	int rc;
 	int i;
 
-	gconf = (struct gconf_t*) calloc(1, sizeof(struct gconf_t));
-	*gconf = ((struct gconf_t) {
-		.dht_port = -1,
-		.af = AF_UNSPEC,
-#ifdef DNS
-		.dns_port = -1,
-#endif
-#ifdef DEBUG
-		.verbosity = VERBOSITY_DEBUG
-#else
-		.verbosity = VERBOSITY_VERBOSE
-#endif
-	});
+	gconf = conf_alloc();
 
 	for (i = 1; i < argc; ++i) {
 		opt = argv[i];
@@ -700,9 +688,6 @@ int conf_setup(int argc, char **argv)
 			return EXIT_FAILURE;
 		}
 	}
-
-	// Set defaults for unset settings
-	conf_defaults();
 
 	return EXIT_SUCCESS;
 }
