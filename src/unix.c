@@ -21,11 +21,11 @@
 static void shutdown_handler(int signo)
 {
 	// exit on second stop request
-	if (gconf->is_running == 0) {
+	if (!gconf->is_running) {
 		exit(1);
 	}
 
-	gconf->is_running = 0;
+	gconf->is_running = false;
 }
 
 void unix_signals(void)

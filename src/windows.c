@@ -25,7 +25,7 @@ void windows_service_control(DWORD dwControl)
 		sStatus.dwCheckPoint = 0;
 		sStatus.dwWaitHint = 3000; // Three seconds
 		sStatus.dwWin32ExitCode = 0;
-		gconf->is_running = 0;
+		gconf->is_running = false;
 	default:
 		sStatus.dwCheckPoint = 0;
 	}
@@ -129,7 +129,7 @@ static BOOL WINAPI windows_console_handler(int event)
 	switch(event) {
 	case CTRL_C_EVENT:
 	case CTRL_BREAK_EVENT:
-		gconf->is_running = 0;
+		gconf->is_running = false;
 		log_info("Shutting down...");
 		return TRUE;
 	default:

@@ -313,7 +313,7 @@ int cmd_setup(void)
 
 		net_add_handler(g_cmd_sock, &cmd_server_handler);
 
-		if (gconf->is_daemon == 0 && gconf->cmd_disable_stdin == 0) {
+		if (!gconf->is_daemon && !gconf->cmd_disable_stdin) {
 			fprintf(stdout, "Press Enter for help.\n");
 			net_add_handler(STDIN_FILENO, &cmd_console_handler);
 		}

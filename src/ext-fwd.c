@@ -238,7 +238,7 @@ void fwd_handle(int _rc, int _sock)
 
 int fwd_setup(void)
 {
-	if (gconf->fwd_disable == 1) {
+	if (gconf->fwd_disable) {
 		return 0;
 	}
 

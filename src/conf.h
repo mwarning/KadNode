@@ -3,6 +3,7 @@
 #define _CONF_H_
 
 #include <time.h>
+#include <stdbool.h>
 #include "main.h"
 
 
@@ -38,10 +39,10 @@ struct gconf_t {
 	char *configfile;
 
 	// Start in Foreground / Background
-	int is_daemon;
+	bool is_daemon;
 
 	// Thread terminator
-	int is_running;
+	bool is_running;
 
 	// Quiet / Verbose / Debug
 	int verbosity;
@@ -65,17 +66,17 @@ struct gconf_t {
 
 #ifdef FWD
 	// Disable port forwarding
-	int fwd_disable;
+	bool fwd_disable;
 #endif
 
 #ifdef LPD
 	// Disable ping on multicast address
-	int lpd_disable;
+	bool lpd_disable;
 #endif
 
 #ifdef CMD
 	char *cmd_path;
-	int cmd_disable_stdin;
+	bool cmd_disable_stdin;
 #endif
 
 #ifdef DNS

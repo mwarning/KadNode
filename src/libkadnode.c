@@ -20,7 +20,7 @@ int kadnode_init(void) {
 
 void kadnode_stop(void) {
 	if (gconf) {
-		gconf->is_running = 0;
+		gconf->is_running = false;
 	}
 }
 
@@ -34,7 +34,7 @@ int kadnode_set(const char opt[], const char val[]) {
 
 void kadnode_loop(void)
 {
-	if (gconf && gconf->is_running == 0) {
+	if (gconf && !gconf->is_running) {
 		conf_check();
 
 		main_setup();

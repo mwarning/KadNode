@@ -474,7 +474,7 @@ static int conf_set(const char opt[], const char val[])
 		break;
 #ifdef CMD
 	case oCmdDisableStdin:
-		gconf->cmd_disable_stdin = 1;
+		gconf->cmd_disable_stdin = true;
 		break;
 	case oCmdPath:
 		if (strlen(val) > FIELD_SIZEOF(struct sockaddr_un, sun_path) - 1) {
@@ -519,12 +519,12 @@ static int conf_set(const char opt[], const char val[])
 		return conf_port(opt, &gconf->dht_port, val);
 #ifdef LPD
 	case oLpdDisable:
-		gconf->lpd_disable = 1;
+		gconf->lpd_disable = true;
 		break;
 #endif
 #ifdef FWD
 	case oFwdDisable:
-		gconf->fwd_disable = 1;
+		gconf->fwd_disable = true;
 		break;
 #endif
 #ifdef __CYGWIN__
@@ -535,7 +535,7 @@ static int conf_set(const char opt[], const char val[])
 		windows_service_remove();
 		exit(0);
 	case oServiceStart:
-		gconf->service_start = 1;
+		gconf->service_start = true;
 		break;
 #endif
 	case oIfname:
@@ -543,7 +543,7 @@ static int conf_set(const char opt[], const char val[])
 	case oUser:
 		return conf_str(opt, &gconf->user, val);
 	case oDaemon:
-		gconf->is_daemon = 1;
+		gconf->is_daemon = true;
 		break;
 	case oHelp:
 		printf("%s\n", kadnode_usage_str);
@@ -648,7 +648,7 @@ static struct gconf_t *conf_alloc()
 #endif
 		.time_now = now,
 		.startup_time = now,
-		.is_running = 1
+		.is_running = true
 	});
 
 	return conf;
