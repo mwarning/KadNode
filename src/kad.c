@@ -296,7 +296,7 @@ int kad_setup(void)
 
 void kad_free(void)
 {
-	// Nothing to do
+	dht_uninit();
 }
 
 int kad_count_bucket(const struct bucket *bucket, int good)
