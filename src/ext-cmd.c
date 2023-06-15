@@ -237,46 +237,88 @@ static void cmd_exec(FILE *fp, const char request[], int allow_debug)
 
 static void cmd_client_handler(int rc, int clientsock)
 {
-	char request[256];
-	ssize_t size;
-	FILE* fp;
+	// save state since a line and come in multiple calls
+	static char request[256];
+	static ssize_t request_length = 0;
+	static int current_clientsock = -1;
+	static FILE* current_clientfd = NULL;
 
 	if (rc <= 0) {
 		return;
 	}
 
-	size = recv(clientsock, request, sizeof(request) - 1, 0);
+	ssize_t remaining = sizeof(request) - request_length;
+	ssize_t size = read(clientsock, &request[request_length], remaining);
 
-	if (size > 0) {
-		request[size] = '\0';
-		// Execute command line
-		fp = fdopen(clientsock, "w");
-
-#ifdef DEBUG
-		cmd_exec(fp, request, 1);
-#else
-		cmd_exec(fp, request, 0);
-#endif
-		fclose(fp);
+	if (size == -1) {
+		return;
 	} else {
-		close(clientsock);
+		request_length += size;
 	}
 
-	net_remove_handler(clientsock, &cmd_client_handler);
+	if (current_clientfd == NULL) {
+		current_clientfd = fdopen(clientsock, "w");
+	}
+
+	if (current_clientfd) {
+		if (request_length > 0) {
+			// split lines
+			char* beg = request;
+			const char* end = request + request_length;
+			char *cur = beg;
+			while (true) {
+				char *next = memchr(cur, '\n', end - cur);
+				if (next) {
+					*next = '\0'; // replace newline with 0
+					#ifdef DEBUG
+						cmd_exec(current_clientfd, cur, 1);
+					#else
+						cmd_exec(current_clientfd, cur, 0);
+					#endif
+					fflush(current_clientfd);
+					cur = next + 1;
+
+					// force connection to be
+					// closed after one command
+					size = 0;
+				} else {
+					break;
+				}
+			}
+
+			if (cur > beg) {
+				memmove(beg, cur, cur - beg);
+				request_length = end - cur;
+			}
+
+		}
+	}
+
+	if (size == 0) {
+		// socket closed
+		if (current_clientfd) {
+			fclose(current_clientfd);
+		} else {
+			close(current_clientsock);
+		}
+
+		current_clientsock = -1;
+		current_clientfd = NULL;
+		request_length = 0;
+
+		net_remove_handler(clientsock, &cmd_client_handler);
+	}
 }
 
 static void cmd_server_handler(int rc, int serversock)
 {
-	socklen_t addrlen;
 	int clientsock;
-	struct sockaddr_un addr;
 
 	if (rc <= 0) {
 		return;
 	}
 
-	addrlen = sizeof(addr);
-	clientsock = accept(serversock, (struct sockaddr *) &addr, &addrlen);
+	clientsock = accept(serversock, NULL, NULL);
 	if (clientsock < 0) {
 		log_error("accept(): %s", strerror(errno));
 		return;
@@ -357,8 +399,9 @@ int cmd_client(int argc, char *argv[])
 {
 	char buffer[256];
 	const char *path;
-	struct sockaddr_un addr;
+	struct sockaddr_un addr = { 0 };
 	ssize_t size;
+	size_t all;
 	size_t pos;
 	int sock;
 	int i;
@@ -387,16 +430,31 @@ int cmd_client(int argc, char *argv[])
 		}
 	}
 
-	// Concatenate arguments
-	buffer[0] = ' ';
-	buffer[1] = '\0';
-	for (i = 0, pos = 1; i < argc; i++) {
-		pos += snprintf(buffer + pos, sizeof(buffer) - pos, "%s ", argv[i]);
-		if (pos >= sizeof(buffer)) {
-			fprintf(stderr, "Input too long\n");
-			return EXIT_FAILURE;
-		}
+	if (strlen(path) > FIELD_SIZEOF(struct sockaddr_un, sun_path) - 1) {
+		fprintf(stderr, "Path too long!\n");
+		return EXIT_FAILURE;
 	}
+
+	for (all = 0, i = 1; i < argc; i++) {
+		all += strlen(argv[i]) + 1;
+	}
+
+	if (all >= sizeof(buffer)) {
+		fprintf(stderr, "Input too long!\n");
+		return EXIT_FAILURE;
+	}
+
+	// Concatenate arguments
+	for (i = 0, pos = 0; i < argc; i++) {
+		size_t len = strlen(argv[i]);
+		//printf("add %s\n", argv[i]);
+		memcpy(&buffer[pos], argv[i], len);
+		pos += len;
+		buffer[pos] = ' ';
+		pos += 1;
+	}
+	buffer[pos] = '\n';
+	pos += 1;
 
 	sock = socket(AF_LOCAL, SOCK_STREAM, 0);
 	if (sock < 0) {
@@ -405,7 +463,7 @@ int cmd_client(int argc, char *argv[])
 	}
 
 	addr.sun_family = AF_LOCAL;
-	strcpy(addr.sun_path, path);
+	strncpy(addr.sun_path, path, sizeof(addr.sun_path) - 1);
 
 	if (connect(sock, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
 		fprintf(stderr, "Failed to connect to '%s': %s\n", path, strerror(errno));
@@ -425,24 +483,29 @@ int cmd_client(int argc, char *argv[])
 	}
 #endif
 
-	// Send request
-	send(sock, buffer, strlen(buffer) + 1, 0);
+	// Write request
+	size_t ret = write(sock, buffer, pos);
 
-	while (1) {
+	if (ret < 0) {
+		fprintf(stderr, "write(): %s\n", strerror(errno));
+		goto error;
+	}
+
+	while (true) {
 		// Receive replies
 #ifdef __CYGWIN__
-		size = select_read(sock, buffer, strlen(buffer), &tv);
+		size = select_read(sock, buffer, sizeof(buffer), &tv);
 #else
-		size = read(sock, buffer, strlen(buffer));
+		size = read(sock, buffer, sizeof(buffer));
 #endif
-		if (size <= 0) {
+		if (size == 0) {
+			// socket closed
 			break;
+		} else if (size > 0) {
+			// Print to console
+			buffer[size] = 0;
+			printf("%s", buffer);
 		}
-
-		buffer[size] = '\0';
-
-		// Print to console
-		printf("%s", buffer);
 	}
 
 	close(sock);
