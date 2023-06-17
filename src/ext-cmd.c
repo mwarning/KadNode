@@ -260,41 +260,40 @@ static void cmd_client_handler(int rc, int clientsock)
 		current_clientfd = fdopen(clientsock, "w");
 	}
 
-	if (current_clientfd) {
-		if (request_length > 0) {
-			// split lines
-			char* beg = request;
-			const char* end = request + request_length;
-			char *cur = beg;
-			while (true) {
-				char *next = memchr(cur, '\n', end - cur);
-				if (next) {
-					*next = '\0'; // replace newline with 0
-					#ifdef DEBUG
-						cmd_exec(current_clientfd, cur, 1);
-					#else
-						cmd_exec(current_clientfd, cur, 0);
-					#endif
-					fflush(current_clientfd);
-					cur = next + 1;
+	if (request_length > 0 && size != 0) {
+		// split lines
+		char* beg = request;
+		const char* end = request + request_length;
+		char *cur = beg;
+		while (true) {
+			char *next = memchr(cur, '\n', end - cur);
+			if (next) {
+				*next = '\0'; // replace newline with 0
+				#ifdef DEBUG
+					cmd_exec(current_clientfd, cur, 1);
+				#else
+					cmd_exec(current_clientfd, cur, 0);
+				#endif
+				fflush(current_clientfd);
+				cur = next + 1;
 
-					// force connection to be
-					// closed after one command
-					size = 0;
-				} else {
-					break;
-				}
+				// force connection to be
+				// closed after one command
+				size = 0;
+			} else {
+				break;
 			}
+		}
 
-			if (cur > beg) {
-				memmove(beg, cur, cur - beg);
-				request_length = end - cur;
-			}
-
+		// move unhandled data to the front of the buffer
+		if (cur > beg) {
+			memmove(beg, cur, cur - beg);
+			request_length = end - cur;
+			remaining = sizeof(request) - request_length;
 		}
 	}
 
-	if (size == 0) {
+	if (size == 0 || remaining == 0) {
 		// socket closed
 		if (current_clientfd) {
 			fclose(current_clientfd);
