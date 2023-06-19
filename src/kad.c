@@ -320,7 +320,7 @@ int kad_count_bucket(const struct bucket *bucket, int good)
 	return count;
 }
 
-int kad_count_nodes(int good)
+int kad_count_nodes(bool good)
 {
 	// Count nodes in IPv4 and IPv6 buckets
 	return kad_count_bucket(buckets, good) + kad_count_bucket(buckets6, good);
@@ -386,13 +386,13 @@ void kad_status(FILE *fp)
 	);
 }
 
-int kad_ping(const IP* addr)
+bool kad_ping(const IP* addr)
 {
 	int rc;
 
 	rc = dht_ping_node((struct sockaddr *)addr, addr_len(addr));
 
-	return (rc < 0) ? -1 : 0;
+	return (rc < 0) ? false : true;
 }
 
 /*
@@ -506,12 +506,11 @@ int kad_lookup_node(const char query[], IP *addr_return)
 }
 #endif
 
-int kad_blacklist(const IP* addr)
+bool kad_blacklist(const IP* addr)
 {
-
 	blacklist_node(NULL, (struct sockaddr *) addr, sizeof(IP));
 
-	return EXIT_SUCCESS;
+	return true;
 }
 
 // Export known nodes; the maximum is 200 nodes

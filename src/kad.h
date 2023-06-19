@@ -14,10 +14,10 @@ int kad_setup(void);
 void kad_free(void);
 
 // Ping this node to add it to the node table
-int kad_ping(const IP *addr);
+bool kad_ping(const IP *addr);
 
 // Blacklist a specific address
-int kad_blacklist(const IP* addr);
+bool kad_blacklist(const IP* addr);
 
 /*
 * Lookup the addresses of the nodes who have announced value id.
@@ -32,7 +32,7 @@ int kad_export_nodes(FILE *fp);
 void kad_status(FILE *fp);
 
 // Count good or all known peers
-int kad_count_nodes(int good);
+int kad_count_nodes(bool good);
 
 /*
 * Announce that the resource identified by id can

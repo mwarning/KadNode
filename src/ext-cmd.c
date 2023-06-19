@@ -63,7 +63,7 @@ static int cmd_ping(FILE *fp, const char addr_str[], int af)
 	IP addr;
 
 	if (addr_parse(&addr, addr_str, STR(DHT_PORT), af)) {
-		if (kad_ping(&addr) == 0) {
+		if (kad_ping(&addr)) {
 			fprintf(fp, "Send ping to: %s\n", str_addr(&addr));
 			return 1;
 		} else {

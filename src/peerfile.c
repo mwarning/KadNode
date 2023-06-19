@@ -77,7 +77,7 @@ static int peerfile_import_peer(const char addr_str[])
 	if (af == AF_UNSPEC || af == AF_INET6) {
 		if (addr_parse(&addr, addr_str, port_str, AF_INET6)) {
 			parsed = true;
-			if (kad_ping(&addr) == 0) {
+			if (kad_ping(&addr)) {
 				pinged = true;
 			}
 		}
@@ -86,7 +86,7 @@ static int peerfile_import_peer(const char addr_str[])
 	if (af == AF_UNSPEC || af == AF_INET) {
 		if (addr_parse(&addr, addr_str, port_str, AF_INET)) {
 			parsed = true;
-			if (kad_ping(&addr) == 0) {
+			if (kad_ping(&addr)) {
 				pinged = true;
 			}
 		}
@@ -172,7 +172,7 @@ int peerfile_add_peer(const char addr_str[])
 static void peerfile_handle_peerfile(int _rc, int _sock)
 {
 	// We know no peers
-	if (peerfile_import_time <= time_now_sec() && kad_count_nodes(0) == 0) {
+	if (peerfile_import_time <= time_now_sec() && kad_count_nodes(false) == 0) {
 		// Ping peers from peerfile, if present
 		peerfile_import();
 
@@ -184,7 +184,7 @@ static void peerfile_handle_peerfile(int _rc, int _sock)
 	}
 
 	// We know good peers
-	if (peerfile_export_time <= time_now_sec() && kad_count_nodes(1) != 0) {
+	if (peerfile_export_time <= time_now_sec() && kad_count_nodes(true) != 0) {
 		// Export peers
 		peerfile_export();
 

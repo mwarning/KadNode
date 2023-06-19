@@ -55,7 +55,7 @@ void announces_debug(FILE *fp)
 
 	now = time_now_sec();
 	value_counter = 0;
-	nodes_counter = kad_count_nodes(0);
+	nodes_counter = kad_count_nodes(false);
 	value = g_values;
 
 	fprintf(fp, "Announcements:\n");
@@ -226,7 +226,7 @@ static void announces_handle(int _rc, int _sock)
 		g_announces_expire = time_add_mins(1);
 	}
 
-	if (g_announces_announce <= time_now_sec() && kad_count_nodes(0) != 0) {
+	if (g_announces_announce <= time_now_sec() && kad_count_nodes(false) != 0) {
 		announces_announce();
 
 		// Try again in ~1 minute

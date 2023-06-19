@@ -151,7 +151,7 @@ static void handle_mcast(int rc, struct lpd_state* lpd)
 			join_mcast(lpd, ifaddrs);
 
 			// No peers known, send multicast
-			if (kad_count_nodes(0) == 0) {
+			if (kad_count_nodes(false) == 0) {
 				send_mcasts(lpd, ifaddrs);
 			}
 			freeifaddrs(ifaddrs);
