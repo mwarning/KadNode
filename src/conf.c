@@ -403,14 +403,21 @@ static int conf_load_file(const char path[])
 	return EXIT_SUCCESS;
 }
 
-// Append to an array (assumes there is alway enough space ...)
-static void array_append(const char **array, const char element[])
+// Append to an array
+static bool array_append(const char **array, size_t array_length, const char element[])
 {
-	while (*array) {
-		array++;
+	size_t i = 0;
+
+	while ((i < array_length) && (array[i] != NULL)) {
+		i += 1;
 	}
 
-	*array = strdup(element);
+	if (i < array_length) {
+		array[i] = strdup(element);
+		return true;
+	} else {
+		return false;
+	}
 }
 
 // Free array elements
@@ -446,7 +453,10 @@ static int conf_set(const char opt[], const char val[])
 	switch (option->code)
 	{
 	case oAnnounce:
-		array_append(&g_announce_args[0], val);
+		if (!array_append(&g_announce_args[0], ARRAY_SIZE(g_announce_args), val)) {
+			log_error("Too many announce entries");
+			return EXIT_FAILURE;
+		}
 		break;
 	case oQueryTld:
 		// ignore old dot prefix
@@ -498,10 +508,16 @@ static int conf_set(const char opt[], const char val[])
 #endif
 #ifdef TLS
 	case oTlsClientCert:
-		array_append(&g_tls_client_args[0], val);
+		if (!array_append(&g_tls_client_args[0], ARRAY_SIZE(g_tls_client_args), val)) {
+			log_error("Too many TLS client certificate entries");
+			return EXIT_FAILURE;
+		}
 		break;
 	case oTlsServerCert:
-		array_append(&g_tls_server_args[0], val);
+		if (!array_append(&g_tls_server_args[0], ARRAY_SIZE(g_tls_server_args), val)) {
+			log_error("Too many TLS server certificate entries");
+			return EXIT_FAILURE;
+		}
 		break;
 #endif
 	case oConfig:
