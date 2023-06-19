@@ -50,10 +50,12 @@ void announces_debug(FILE *fp)
 {
 	struct value_t *value;
 	time_t now;
+	int nodes_counter;
 	int value_counter;
 
 	now = time_now_sec();
 	value_counter = 0;
+	nodes_counter = kad_count_nodes(0);
 	value = g_values;
 
 	fprintf(fp, "Announcements:\n");
@@ -62,7 +64,12 @@ void announces_debug(FILE *fp)
 		fprintf(fp, "  id: %s\n", str_id(value->id));
 		fprintf(fp, "  port: %d\n", value->port);
 		if (value->refresh < now) {
-			fprintf(fp, "  refresh: now\n");
+			if (nodes_counter > 0) {
+				fprintf(fp, "  refresh: now\n");
+			} else {
+				// no nodes we can announce to
+				fprintf(fp, "  refresh: wait\n");
+			}
 		} else {
 			fprintf(fp, "  refresh: in %ld min\n", (value->refresh - now) / 60);
 		}
