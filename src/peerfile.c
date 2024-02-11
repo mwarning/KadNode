@@ -54,7 +54,7 @@ void peerfile_export(void)
 
 	log_info("PEERFILE: Export peers to %s", filename);
 
-	num = kad_export_nodes(fp);
+	num = kad_export_peers(fp);
 	fclose(fp);
 
 	// No peers to export
@@ -108,25 +108,19 @@ static int peerfile_import_peer(const char addr_str[])
 
 static void peerfile_import(void)
 {
-	const char *filename;
-	char linebuf[256];
-	FILE *fp;
-	int num;
-
-	filename = gconf->peerfile;
+	const char * filename = gconf->peerfile;
 	if (filename == NULL) {
 		return;
 	}
 
-	fp = fopen(filename, "r");
+	FILE *fp = fopen(filename, "r");
 	if (fp == NULL) {
-		log_warning("PEERFILE: Cannot open file '%s' for peer import: %s", filename, strerror(errno));
+		log_warning("PEERFILE: Cannot open file for peer import: %s (%s)", filename, strerror(errno));
 		return;
 	}
 
-	log_info("PEERFILE: Import peers from %s", filename);
-
-	num = 0;
+	int num = 0;
+	char linebuf[256];
 	while (fgets(linebuf, sizeof(linebuf), fp) != NULL && gconf->is_running) {
 		linebuf[strcspn(linebuf, "\n\r")] = '\0';
 
@@ -139,14 +133,12 @@ static void peerfile_import(void)
 
 	fclose(fp);
 
-	log_info("PEERFILE: Imported %d peers from: '%s'", num, filename);
+	log_info("PEERFILE: Imported %d peers from %s", num, filename);
 }
 
 static void peerfile_import_static(const struct peer *peers)
 {
-	int num;
-
-	num = 0;
+	int num = 0;
 	while (peers) {
 		num += peerfile_import_peer(peers->addr_str);
 		peers = peers->next;
@@ -159,10 +151,10 @@ static void peerfile_import_static(const struct peer *peers)
 
 bool peerfile_add_peer(const char addr_str[])
 {
-	struct peer *new;
-
-	new = (struct peer *) malloc(sizeof(struct peer));
+	struct peer *new = (struct peer *) malloc(sizeof(struct peer));
 	new->addr_str = strdup(addr_str);
+
+	// prepend to list
 	new->next = g_peers;
 	g_peers = new;
 
