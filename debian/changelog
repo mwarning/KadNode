@@ -6,3 +6,12 @@ kadnode (2.3.0-1) stable; urgency=medium
   * fix ttl value for dns interface reply
 
  -- Moritz Warning <moritzwarning@web.de>  Sun, 09 Feb 2020 00:00:00 +0100
+
+kadnode (2.2.5-1) stable; urgency=medium
+
+  * replace stale unix socket files on startup
+  * add freebsd nss code again, was removed by accident
+  * remove linker flags from compile calls
+  * fix freebsd nss module crash when no address was found
+
+ -- Moritz Warning <moritzwarning@web.de>  Fri, 24 Aug 2018 03:27:44 +0100
