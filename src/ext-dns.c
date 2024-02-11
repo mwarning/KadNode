@@ -752,17 +752,17 @@ static void dns_handler(int rc, int sock)
 	}
 }
 
-int dns_setup(void)
+bool dns_setup(void)
 {
 	if (gconf->dns_port < 1) {
-		return EXIT_SUCCESS;
+		return true;
 	}
 
 	// Initialize g_proxy_addr
 	if (gconf->dns_proxy_enable && gconf->dns_proxy_server) {
 		if (!addr_parse(&g_proxy_addr, gconf->dns_proxy_server, "53", AF_UNSPEC)) {
 			log_error("DNS: Failed to parse IP address: %s", gconf->dns_proxy_server);
-			return EXIT_FAILURE;
+			return false;
 		}
 	}
 
@@ -777,7 +777,7 @@ int dns_setup(void)
 		net_add_handler(g_sock6, &dns_handler);
 	}
 
-	return EXIT_SUCCESS;
+	return true;
 }
 
 void dns_free(void)
