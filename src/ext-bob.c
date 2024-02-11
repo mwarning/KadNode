@@ -82,7 +82,7 @@ void bob_auth_end(struct bob_resource *resource, int state)
 }
 
 // Try to create a DHT id from a sanitized key query
-int bob_get_id(uint8_t id[], size_t idlen, const char query[])
+bool bob_get_id(uint8_t id[], size_t idlen, const char query[])
 {
 	size_t querylen = strlen(query);
 	uint8_t bin[32];
@@ -90,10 +90,10 @@ int bob_get_id(uint8_t id[], size_t idlen, const char query[])
 	if (bytes_from_base32(bin, sizeof(bin), query, querylen)
 		|| bytes_from_base16(bin, sizeof(bin), query, querylen)) {
 			memcpy(id, bin, idlen);
-			return EXIT_SUCCESS;
+			return true;
 	}
 
-	return EXIT_FAILURE;
+	return false;
 }
 
 // Find a resource instance that is currently not in use
@@ -243,7 +243,7 @@ static const char *get_pkey_base32(const mbedtls_pk_context *ctx)
 
 // Generate a new key pair, write the secret key
 // to path and print public key to stdout.
-int bob_create_key(const char path[])
+bool bob_create_key(const char path[])
 {
 	mbedtls_entropy_context entropy;
 	mbedtls_ctr_drbg_context ctr_drbg;
@@ -259,14 +259,14 @@ int bob_create_key(const char path[])
 	if ((ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
 			(const unsigned char *) pers, strlen(pers))) != 0) {
 		fprintf(stderr, "mbedtls_ctr_drbg_seed returned %d\n", ret);
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	printf("Generating %s key pair...\n", ECPARAMS_NAME);
 
 	if ((ret = mbedtls_pk_setup(&ctx, mbedtls_pk_info_from_type(MBEDTLS_PK_ECKEY))) != 0) {
 		fprintf(stderr, "mbedtls_pk_setup returned -0x%04x\n", -ret);
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	// Generate key where Y is even (called positive in a prime group)
@@ -275,22 +275,22 @@ int bob_create_key(const char path[])
 		if ((ret = mbedtls_ecp_gen_key(ECPARAMS, mbedtls_pk_ec(ctx),
 			mbedtls_ctr_drbg_random, &ctr_drbg)) != 0) {
 			fprintf(stderr, "mbedtls_ecp_gen_key returned -0x%04x\n", -ret);
-			return EXIT_FAILURE;
+			return false;
 		}
 	} while (mbedtls_mpi_get_bit(&mbedtls_pk_ec(ctx)->Q.Y, 0) != 0);
 
 	if (write_pem(&ctx, path) != 0) {
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	printf("Public key: %s.%s\n", get_pkey_base32(&ctx), gconf->query_tld);
 	printf("Wrote secret key to %s\n", path);
 
-	return EXIT_SUCCESS;
+	return true;
 }
 
 // Add secret key
-int bob_load_key(const char path[])
+bool bob_load_key(const char path[])
 {
 	mbedtls_pk_context ctx;
 	char msg[300];
@@ -302,7 +302,7 @@ int bob_load_key(const char path[])
 		mbedtls_pk_free(&ctx);
 		mbedtls_strerror(ret, msg, sizeof(msg));
 		log_error("Error loading %s: %s", path, msg);
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	if (mbedtls_pk_ec(ctx)->grp.id != ECPARAMS) {
@@ -310,7 +310,7 @@ int bob_load_key(const char path[])
 			mbedtls_ecp_curve_info_from_grp_id(mbedtls_pk_ec(ctx)->grp.id)->name,
 			ECPARAMS_NAME
 		);
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	struct key_t *entry = (struct key_t*) calloc(1, sizeof(struct key_t));
@@ -325,7 +325,7 @@ int bob_load_key(const char path[])
 
 	log_info("Loaded %s (Public key: %s)", path, get_pkey_base32(&ctx));
 
-	return EXIT_SUCCESS;
+	return true;
 }
 
 // Send challenges
@@ -434,7 +434,7 @@ void bob_encrypt_challenge(int sock, uint8_t buf[], size_t buflen, IP *addr)
 	}
 }
 
-int bob_handler(int fd, uint8_t buf[], uint32_t buflen, IP *from)
+bool bob_handler(int fd, uint8_t buf[], uint32_t buflen, IP *from)
 {
 	time_t now;
 
@@ -451,7 +451,7 @@ int bob_handler(int fd, uint8_t buf[], uint32_t buflen, IP *from)
 			// Handle reply to a challenge request
 			bob_verify_challenge(fd, buf, buflen, from);
 		}
-		return 0;
+		return true;
 	}
 
 	now = time_add_secs(0);
@@ -462,7 +462,7 @@ int bob_handler(int fd, uint8_t buf[], uint32_t buflen, IP *from)
 		bob_send_challenges(fd);
 	}
 
-	return 1;
+	return false;
 }
 
 void bob_debug_keys(FILE *fp)
@@ -481,7 +481,7 @@ void bob_debug_keys(FILE *fp)
 	}
 }
 
-int bob_setup(void)
+bool bob_setup(void)
 {
 	struct bob_resource *resource;
 	struct key_t *key;
@@ -507,7 +507,7 @@ int bob_setup(void)
 		key = key->next;
 	}
 
-	return EXIT_SUCCESS;
+	return true;
 }
 
 void bob_free(void)

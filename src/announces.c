@@ -93,30 +93,30 @@ struct value_t *announces_add(const char query[], int port, time_t lifetime)
 	uint8_t id[SHA1_BIN_LENGTH];
 	struct value_t *cur;
 	struct value_t *new;
-	int ret = EXIT_FAILURE;
+	int ret = false;
 	time_t now = time_now_sec();
 
 	// Get id from query
 #ifdef BOB
 	// base32 or base64
-	if (ret == EXIT_FAILURE) {
+	if (!ret) {
 		ret = bob_get_id(id, sizeof(id), query);
 	}
 #endif
 
 #ifdef TLS
 	// contains dot (.p2p is already removed here) => sha256 hash
-	if (ret == EXIT_FAILURE) {
+	if (!ret) {
 		ret = tls_client_get_id(id, sizeof(id), query);
 	}
 #endif
 
 	// base32 or base64
-	if (ret == EXIT_FAILURE) {
+	if (!ret) {
 		ret = hex_get_id(id, sizeof(id), query);
 	}
 
-	if (ret == EXIT_FAILURE) {
+	if (!ret) {
 		log_debug("No idea how what method to use for announcement: %s", query);
 		return NULL;
 	}
