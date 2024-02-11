@@ -2,7 +2,7 @@
 #ifndef _EXT_NSS_H_
 #define _EXT_NSS_H_
 
-int nss_setup(void);
+bool nss_setup(void);
 void nss_free(void);
 
 #endif /* _EXT_NSS_H_ */
