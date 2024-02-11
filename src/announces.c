@@ -29,227 +29,227 @@ static struct announcement_t *g_values = NULL;
 
 struct announcement_t* announces_get(void)
 {
-	return g_values;
+    return g_values;
 }
 
 struct announcement_t* announces_find(const uint8_t id[])
 {
-	struct announcement_t *value;
+    struct announcement_t *value;
 
-	value = g_values;
-	while (value) {
-		if (id_equal(id, value->id)) {
-			return value;
-		}
-		value = value->next;
-	}
-	return NULL;
+    value = g_values;
+    while (value) {
+        if (id_equal(id, value->id)) {
+            return value;
+        }
+        value = value->next;
+    }
+    return NULL;
 }
 
 void announces_debug(FILE *fp)
 {
-	struct announcement_t *value;
-	time_t now;
-	int nodes_counter;
-	int value_counter;
+    struct announcement_t *value;
+    time_t now;
+    int nodes_counter;
+    int value_counter;
 
-	now = time_now_sec();
-	value_counter = 0;
-	nodes_counter = kad_count_nodes(false);
-	value = g_values;
+    now = time_now_sec();
+    value_counter = 0;
+    nodes_counter = kad_count_nodes(false);
+    value = g_values;
 
-	fprintf(fp, "Announcements:\n");
-	while (value) {
-		fprintf(fp, " query: %s\n", value->query);
-		fprintf(fp, "  id: %s\n", str_id(value->id));
-		fprintf(fp, "  port: %d\n", value->port);
-		if (value->refresh < now) {
-			if (nodes_counter > 0) {
-				fprintf(fp, "  refresh: now\n");
-			} else {
-				// no nodes we can announce to
-				fprintf(fp, "  refresh: wait\n");
-			}
-		} else {
-			fprintf(fp, "  refresh: in %ld min\n", (value->refresh - now) / 60);
-		}
+    fprintf(fp, "Announcements:\n");
+    while (value) {
+        fprintf(fp, " query: %s\n", value->query);
+        fprintf(fp, "  id: %s\n", str_id(value->id));
+        fprintf(fp, "  port: %d\n", value->port);
+        if (value->refresh < now) {
+            if (nodes_counter > 0) {
+                fprintf(fp, "  refresh: now\n");
+            } else {
+                // no nodes we can announce to
+                fprintf(fp, "  refresh: wait\n");
+            }
+        } else {
+            fprintf(fp, "  refresh: in %ld min\n", (value->refresh - now) / 60);
+        }
 
-		if (value->lifetime == LONG_MAX) {
-			fprintf(fp, "  lifetime: entire runtime\n");
-		} else {
-			fprintf(fp, "  lifetime: %ld min left\n", (value->lifetime -  now) / 60);
-		}
+        if (value->lifetime == LONG_MAX) {
+            fprintf(fp, "  lifetime: entire runtime\n");
+        } else {
+            fprintf(fp, "  lifetime: %ld min left\n", (value->lifetime -  now) / 60);
+        }
 
-		value_counter++;
-		value = value->next;
-	}
+        value_counter++;
+        value = value->next;
+    }
 
-	fprintf(fp, " Found %d entries.\n", value_counter);
+    fprintf(fp, " Found %d entries.\n", value_counter);
 }
 
 // Announce a sanitized query
 struct announcement_t *announces_add(FILE *fp, const char query[], int port, time_t lifetime)
 {
-	uint8_t id[SHA1_BIN_LENGTH];
-	struct announcement_t *cur;
-	struct announcement_t *new;
-	int ret = false;
-	time_t now = time_now_sec();
+    uint8_t id[SHA1_BIN_LENGTH];
+    struct announcement_t *cur;
+    struct announcement_t *new;
+    int ret = false;
+    time_t now = time_now_sec();
 
-	// Get id from query
+    // Get id from query
 #ifdef BOB
-	// base32 or base64
-	if (!ret) {
-		ret = bob_get_id(id, sizeof(id), query);
-	}
+    // base32 or base64
+    if (!ret) {
+        ret = bob_get_id(id, sizeof(id), query);
+    }
 #endif
 
 #ifdef TLS
-	// contains dot (.p2p is already removed here) => sha256 hash
-	if (!ret) {
-		ret = tls_client_get_id(id, sizeof(id), query);
-	}
+    // contains dot (.p2p is already removed here) => sha256 hash
+    if (!ret) {
+        ret = tls_client_get_id(id, sizeof(id), query);
+    }
 #endif
 
-	// base32 or base64
-	if (!ret) {
-		ret = hex_get_id(id, sizeof(id), query);
-	}
+    // base32 or base64
+    if (!ret) {
+        ret = hex_get_id(id, sizeof(id), query);
+    }
 
-	if (!ret) {
-		log_debug("No idea how what method to use for announcement: %s", query);
-		return NULL;
-	}
+    if (!ret) {
+        log_debug("No idea how what method to use for announcement: %s", query);
+        return NULL;
+    }
 
-	if (port < 1 || port > 65535) {
-		log_error("Invalid port for announcement: %s (port %d)", query, port);
-		return NULL;
-	}
+    if (port < 1 || port > 65535) {
+        log_error("Invalid port for announcement: %s (port %d)", query, port);
+        return NULL;
+    }
 
-	if (lifetime < now) {
-		// Invalid lifetime, should not happen.
-		log_error("Announcement can't be in the past");
-		return NULL;
-	}
+    if (lifetime < now) {
+        // Invalid lifetime, should not happen.
+        log_error("Announcement can't be in the past");
+        return NULL;
+    }
 
-	// Value already exists - refresh
-	if ((cur = announces_find(id)) != NULL) {
-		cur->refresh = now - 1;
+    // Value already exists - refresh
+    if ((cur = announces_find(id)) != NULL) {
+        cur->refresh = now - 1;
 
-		if (lifetime > now) {
-			cur->lifetime = lifetime;
-		}
+        if (lifetime > now) {
+            cur->lifetime = lifetime;
+        }
 
-		// Trigger immediate handling
-		g_announces_announce = 0;
+        // Trigger immediate handling
+        g_announces_announce = 0;
 
-		return cur;
-	}
+        return cur;
+    }
 
-	// Prepend new entry
-	new = (struct announcement_t*) calloc(1, sizeof(struct announcement_t));
-	memcpy(new->id, id, SHA1_BIN_LENGTH);
-	memcpy(new->query, query, strlen(query));
-	new->port = port;
-	new->refresh = now - 1; // Send first announcement as soon as possible
-	new->lifetime = lifetime;
+    // Prepend new entry
+    new = (struct announcement_t*) calloc(1, sizeof(struct announcement_t));
+    memcpy(new->id, id, SHA1_BIN_LENGTH);
+    memcpy(new->query, query, strlen(query));
+    new->port = port;
+    new->refresh = now - 1; // Send first announcement as soon as possible
+    new->lifetime = lifetime;
 
-	if (lifetime == LONG_MAX) {
-		log_debug("Add announcement for %s:%hu. Keep alive for entire runtime.", query, port);
-	} else {
-		log_debug("Add announcement for %s:%hu. Keep alive for %lu minutes.", query, port, (lifetime - now) / 60);
-	}
+    if (lifetime == LONG_MAX) {
+        log_debug("Add announcement for %s:%hu. Keep alive for entire runtime.", query, port);
+    } else {
+        log_debug("Add announcement for %s:%hu. Keep alive for %lu minutes.", query, port, (lifetime - now) / 60);
+    }
 
-	// Prepend to list
-	new->next = g_values;
-	g_values = new;
+    // Prepend to list
+    new->next = g_values;
+    g_values = new;
 
-	// Trigger immediate handling
-	g_announces_announce = 0;
+    // Trigger immediate handling
+    g_announces_announce = 0;
 
-	return new;
+    return new;
 }
 
 void value_free(struct announcement_t *value)
 {
-	free(value);
+    free(value);
 }
 
 static void announces_expire(void)
 {
-	struct announcement_t *pre;
-	struct announcement_t *cur;
-	time_t now;
+    struct announcement_t *pre;
+    struct announcement_t *cur;
+    time_t now;
 
-	now = time_now_sec();
-	pre = NULL;
-	cur = g_values;
-	while (cur) {
-		if (cur->lifetime < now) {
-			if (pre) {
-				pre->next = cur->next;
-			} else {
-				g_values = cur->next;
-			}
-			value_free(cur);
-			return;
-		}
-		pre = cur;
-		cur = cur->next;
-	}
+    now = time_now_sec();
+    pre = NULL;
+    cur = g_values;
+    while (cur) {
+        if (cur->lifetime < now) {
+            if (pre) {
+                pre->next = cur->next;
+            } else {
+                g_values = cur->next;
+            }
+            value_free(cur);
+            return;
+        }
+        pre = cur;
+        cur = cur->next;
+    }
 }
 
 static void announces_announce(void)
 {
-	struct announcement_t *value;
-	time_t now;
+    struct announcement_t *value;
+    time_t now;
 
-	now = time_now_sec();
-	value = g_values;
-	while (value) {
-		if (value->refresh < now) {
-			log_debug("Announce %s:%hu", value->query, value->port);
-			kad_announce_once(value->id, value->port);
-			value->refresh = now + ANNOUNCES_INTERVAL;
-		}
-		value = value->next;
-	}
+    now = time_now_sec();
+    value = g_values;
+    while (value) {
+        if (value->refresh < now) {
+            log_debug("Announce %s:%hu", value->query, value->port);
+            kad_announce_once(value->id, value->port);
+            value->refresh = now + ANNOUNCES_INTERVAL;
+        }
+        value = value->next;
+    }
 }
 
 static void announces_handle(int _rc, int _sock)
 {
-	// Expire search results
-	if (g_announces_expire <= time_now_sec()) {
-		announces_expire();
+    // Expire search results
+    if (g_announces_expire <= time_now_sec()) {
+        announces_expire();
 
-		// Try again in ~1 minute
-		g_announces_expire = time_add_mins(1);
-	}
+        // Try again in ~1 minute
+        g_announces_expire = time_add_mins(1);
+    }
 
-	if (g_announces_announce <= time_now_sec() && kad_count_nodes(false) != 0) {
-		announces_announce();
+    if (g_announces_announce <= time_now_sec() && kad_count_nodes(false) != 0) {
+        announces_announce();
 
-		// Try again in ~1 minute
-		g_announces_announce = time_add_mins(1);
-	}
+        // Try again in ~1 minute
+        g_announces_announce = time_add_mins(1);
+    }
 }
 
 void announces_setup(void)
 {
-	// Cause the callback to be called in intervals
-	net_add_handler(-1, &announces_handle);
+    // Cause the callback to be called in intervals
+    net_add_handler(-1, &announces_handle);
 }
 
 void announces_free(void)
 {
-	struct announcement_t *cur;
-	struct announcement_t *next;
+    struct announcement_t *cur;
+    struct announcement_t *next;
 
-	cur = g_values;
-	while (cur) {
-		next = cur->next;
-		value_free(cur);
-		cur = next;
-	}
-	g_values = NULL;
+    cur = g_values;
+    while (cur) {
+        next = cur->next;
+        value_free(cur);
+        cur = next;
+    }
+    g_values = NULL;
 }

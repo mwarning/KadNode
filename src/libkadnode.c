@@ -9,53 +9,53 @@
 
 
 int kadnode_init(void) {
-	if (gconf == NULL) {
-		// Setup gconf
-		conf_init();
-		return 0;
-	} else {
-		return 1;
-	}
+    if (gconf == NULL) {
+        // Setup gconf
+        conf_init();
+        return 0;
+    } else {
+        return 1;
+    }
 }
 
 void kadnode_stop(void) {
-	if (gconf) {
-		gconf->is_running = false;
-	}
+    if (gconf) {
+        gconf->is_running = false;
+    }
 }
 
 int kadnode_set(const char opt[], const char val[]) {
-	if (gconf && !gconf->is_running) {
-		return conf_set(opt, val);
-	} else {
-		return 1;
-	}
+    if (gconf && !gconf->is_running) {
+        return conf_set(opt, val);
+    } else {
+        return 1;
+    }
 }
 
 void kadnode_loop(void)
 {
-	if (gconf && !gconf->is_running) {
-		conf_check();
+    if (gconf && !gconf->is_running) {
+        conf_check();
 
-		main_setup();
+        main_setup();
 
-		// Loop over all sockets and file descriptors
-		net_loop();
+        // Loop over all sockets and file descriptors
+        net_loop();
 
-		// Export peers if a file is provided
-		peerfile_export();
+        // Export peers if a file is provided
+        peerfile_export();
 
-		main_free();
+        main_free();
 
-		conf_free();
-	}
+        conf_free();
+    }
 }
 
 int kadnode_lookup(const char query[], struct sockaddr_storage addr_array[], size_t *addr_num)
 {
-	if (gconf && gconf->is_running) {
-		return kad_lookup(query, addr_array, addr_num);
-	} else {
-		return EXIT_FAILURE;
-	}
+    if (gconf && gconf->is_running) {
+        return kad_lookup(query, addr_array, addr_num);
+    } else {
+        return EXIT_FAILURE;
+    }
 }

@@ -50,236 +50,236 @@ static bool g_pidfile_written = false;
 
 int main_run(void)
 {
-	bool rc = true;
+    bool rc = true;
 
-	if (EXIT_SUCCESS != 0) {
-		fprintf(stderr, "Problematic EXIT_SUCCESS definition\n");
-		return EXIT_FAILURE;
-	}
+    if (EXIT_SUCCESS != 0) {
+        fprintf(stderr, "Problematic EXIT_SUCCESS definition\n");
+        return EXIT_FAILURE;
+    }
 
-	/* Run setup */
+    /* Run setup */
 
-	// Early exit
-	if (!conf_load()) {
-		return EXIT_FAILURE;
-	}
+    // Early exit
+    if (!conf_load()) {
+        return EXIT_FAILURE;
+    }
 
-	// Setup port-forwarding
+    // Setup port-forwarding
 #ifdef FWD
-	rc &= fwd_setup();
+    rc &= fwd_setup();
 #endif
 
-	// Setup the Kademlia DHT
-	rc &= kad_setup();
+    // Setup the Kademlia DHT
+    rc &= kad_setup();
 
-	// Setup handler to announces
-	announces_setup();
+    // Setup handler to announces
+    announces_setup();
 
-	// Setup handler to expire results
-	searches_setup();
+    // Setup handler to expire results
+    searches_setup();
 
-	// Setup import of peerfile
-	peerfile_setup();
+    // Setup import of peerfile
+    peerfile_setup();
 
-	// Setup extensions
+    // Setup extensions
 #ifdef LPD
-	rc &= lpd_setup();
+    rc &= lpd_setup();
 #endif
 
 #ifdef BOB
-	rc &= bob_setup();
+    rc &= bob_setup();
 #endif
 #ifdef DNS
-	rc &= dns_setup();
+    rc &= dns_setup();
 #endif
 #ifdef NSS
-	rc &= nss_setup();
+    rc &= nss_setup();
 #endif
 #ifdef TLS
-	rc &= tls_client_setup();
-	rc &= tls_server_setup();
+    rc &= tls_client_setup();
+    rc &= tls_server_setup();
 #endif
 #ifdef CMD
-	rc &= cmd_setup();
+    rc &= cmd_setup();
 #endif
 
-	/* Run program */
+    /* Run program */
 
-	if (rc) {
-		// Loop over all sockets and file descriptors
-		net_loop();
-		log_info("Shutting down...");
-	}
+    if (rc) {
+        // Loop over all sockets and file descriptors
+        net_loop();
+        log_info("Shutting down...");
+    }
 
-	// Export peers if a file is provided
-	peerfile_export();
+    // Export peers if a file is provided
+    peerfile_export();
 
-	/* Free resources */
+    /* Free resources */
 
 #ifdef CMD
-	cmd_free();
+    cmd_free();
 #endif
 #ifdef NSS
-	nss_free();
+    nss_free();
 #endif
 #ifdef DNS
-	dns_free();
+    dns_free();
 #endif
 #ifdef BOB
-	bob_free();
+    bob_free();
 #endif
 #ifdef LPD
-	lpd_free();
+    lpd_free();
 #endif
 #ifdef TLS
-	tls_server_free();
-	tls_client_free();
+    tls_server_free();
+    tls_client_free();
 #endif
 
-	peerfile_free();
+    peerfile_free();
 
-	searches_free();
+    searches_free();
 
-	announces_free();
+    announces_free();
 
-	kad_free();
+    kad_free();
 
 #ifdef FWD
-	fwd_free();
+    fwd_free();
 #endif
 
-	conf_free();
+    conf_free();
 
-	net_free();
+    net_free();
 
-	if (g_pidfile_written) {
-		unlink(gconf->pidfile);
-	}
+    if (g_pidfile_written) {
+        unlink(gconf->pidfile);
+    }
 
-	return rc ? EXIT_SUCCESS : EXIT_FAILURE;
+    return rc ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 #ifdef __CYGWIN__
 int main(int argc, char *argv[])
 {
-	char cmd[512];
-	char path[256];
-	int rc = 0;
-	char *p;
+    char cmd[512];
+    char path[256];
+    int rc = 0;
+    char *p;
 
 #ifdef CMD
-	if (strstr(argv[0], "kadnode-ctl")) {
-		return cmd_client(argc, argv);
-	}
+    if (strstr(argv[0], "kadnode-ctl")) {
+        return cmd_client(argc, argv);
+    }
 #endif
 
-	if (!conf_setup(argc, argv)) {
-		return EXIT_FAILURE;
-	}
+    if (!conf_setup(argc, argv)) {
+        return EXIT_FAILURE;
+    }
 
-	if (gconf->service_start) {
-		gconf->use_syslog = 1;
+    if (gconf->service_start) {
+        gconf->use_syslog = 1;
 
-		// Get kadnode.exe binary lcoation
-		if (GetModuleFileNameA(NULL, path, sizeof(path)) && (p = strrchr(path, '\\'))) {
-			*(p + 1) = '\0';
-		} else {
-			log_error("Cannot get location of KadNode binary.");
-			exit(1);
-		}
+        // Get kadnode.exe binary lcoation
+        if (GetModuleFileNameA(NULL, path, sizeof(path)) && (p = strrchr(path, '\\'))) {
+            *(p + 1) = '\0';
+        } else {
+            log_error("Cannot get location of KadNode binary.");
+            exit(1);
+        }
 
-		// Set DNS server to localhost
-		sprintf(cmd, "cmd.exe /c \"%s\\dns_setup.bat\"", path);
-		windows_exec(cmd);
+        // Set DNS server to localhost
+        sprintf(cmd, "cmd.exe /c \"%s\\dns_setup.bat\"", path);
+        windows_exec(cmd);
 
-		rc = windows_service_start((void (*)()) main_run);
+        rc = windows_service_start((void (*)()) main_run);
 
-		// Reset DNS settings to DHCP
-		sprintf(cmd, "cmd.exe /c \"%s\\dns_reset.bat\"", path);
-		windows_exec(cmd);
+        // Reset DNS settings to DHCP
+        sprintf(cmd, "cmd.exe /c \"%s\\dns_reset.bat\"", path);
+        windows_exec(cmd);
 
-		return rc;
-	}
+        return rc;
+    }
 
-	if (gconf->is_daemon) {
-		gconf->use_syslog = 1;
+    if (gconf->is_daemon) {
+        gconf->use_syslog = 1;
 
-		// Close pipes
-		fclose(stderr);
-		fclose(stdout);
-		fclose(stdin);
+        // Close pipes
+        fclose(stderr);
+        fclose(stdout);
+        fclose(stdin);
 
-		// Fork before any threads are started
-		unix_fork();
+        // Fork before any threads are started
+        unix_fork();
 
-		// Change working directory to C:\ directory or disk equivalent
-		if (GetModuleFileNameA(NULL, path, sizeof(path)) && (p = strchr(path, '\\'))) {
-			*(p + 1) = 0;
-			SetCurrentDirectoryA(path);
-		}
+        // Change working directory to C:\ directory or disk equivalent
+        if (GetModuleFileNameA(NULL, path, sizeof(path)) && (p = strchr(path, '\\'))) {
+            *(p + 1) = 0;
+            SetCurrentDirectoryA(path);
+        }
 
-	} else {
-		conf_info();
-	}
+    } else {
+        conf_info();
+    }
 
-	// Catch signals
-	windows_signals();
+    // Catch signals
+    windows_signals();
 
-	// Write pid file
-	if (gconf->pidfile) {
-		unix_write_pidfile(GetCurrentProcessId(), gconf->pidfile);
-		g_pidfile_written = true;
-	}
+    // Write pid file
+    if (gconf->pidfile) {
+        unix_write_pidfile(GetCurrentProcessId(), gconf->pidfile);
+        g_pidfile_written = true;
+    }
 
-	// Drop privileges
-	unix_dropuid0();
+    // Drop privileges
+    unix_dropuid0();
 
-	return main_run();
+    return main_run();
 }
 #else
 int main(int argc, char *argv[])
 {
 #ifdef CMD
-	if (strstr(argv[0], "kadnode-ctl")) {
-		return cmd_client(argc, argv);
-	}
+    if (strstr(argv[0], "kadnode-ctl")) {
+        return cmd_client(argc, argv);
+    }
 #endif
 
-	if (!conf_setup(argc, argv)) {
-		return EXIT_FAILURE;
-	}
+    if (!conf_setup(argc, argv)) {
+        return EXIT_FAILURE;
+    }
 
-	if (gconf->is_daemon) {
-		gconf->use_syslog = 1;
+    if (gconf->is_daemon) {
+        gconf->use_syslog = 1;
 
-		// Close pipes
-		fclose(stderr);
-		fclose(stdout);
-		fclose(stdin);
+        // Close pipes
+        fclose(stderr);
+        fclose(stdout);
+        fclose(stdin);
 
-		// Fork before any threads are started
-		unix_fork();
+        // Fork before any threads are started
+        unix_fork();
 
-		if (chdir("/") != 0) {
-			log_error("Changing working directory to '/' failed: %s", strerror(errno));
-			exit(1);
-		}
-	} else {
-		conf_info();
-	}
+        if (chdir("/") != 0) {
+            log_error("Changing working directory to '/' failed: %s", strerror(errno));
+            exit(1);
+        }
+    } else {
+        conf_info();
+    }
 
-	// Catch signals
-	unix_signals();
+    // Catch signals
+    unix_signals();
 
-	// Write pid file
-	if (gconf->pidfile) {
-		unix_write_pidfile(getpid(), gconf->pidfile);
-		g_pidfile_written = true;
-	}
+    // Write pid file
+    if (gconf->pidfile) {
+        unix_write_pidfile(getpid(), gconf->pidfile);
+        g_pidfile_written = true;
+    }
 
-	// Drop privileges
-	unix_dropuid0();
+    // Drop privileges
+    unix_dropuid0();
 
-	return main_run();
+    return main_run();
 }
 #endif
