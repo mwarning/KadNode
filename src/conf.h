@@ -9,8 +9,8 @@
 
 extern const char *kadnode_version_str;
 
-int conf_setup(int argc, char **argv);
-int conf_load(void);
+bool conf_setup(int argc, char **argv);
+bool conf_load(void);
 void conf_info(void);
 void conf_free(void);
 

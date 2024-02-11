@@ -286,39 +286,39 @@ static option_t g_options[] = {
 };
 
 // Set a string once - error when already set
-static int conf_str(const char opt[], char *dst[], const char src[])
+static bool conf_str(const char opt[], char *dst[], const char src[])
 {
 	if (*dst != NULL) {
 		log_error("Value was already set for %s: %s", opt, src);
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	*dst = strdup(src);
-	return EXIT_SUCCESS;
+	return true;
 }
 
-static int conf_port(const char opt[], int *dst, const char src[])
+static bool conf_port(const char opt[], int *dst, const char src[])
 {
 	int n = port_parse(src, -1);
 
 	if (n < 0) {
 		log_error("Invalid port for %s: %s", opt, src);
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	if (*dst >= 0) {
 		log_error("Value was already set for %s: %s", opt, src);
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	*dst = n;
-	return EXIT_SUCCESS;
+	return true;
 }
 
 // forward declaration
-static int conf_set(const char opt[], const char val[]);
+static bool conf_set(const char opt[], const char val[]);
 
-static int conf_load_file(const char path[])
+static bool conf_load_file(const char path[])
 {
 	char option[32];
 	char value[256];
@@ -332,14 +332,14 @@ static int conf_load_file(const char path[])
 
 	if (stat(path, &s) == 0 && !(s.st_mode & S_IFREG)) {
 		log_error("File expected: %s", path);
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	nline = 0;
 	file = fopen(path, "r");
 	if (file == NULL) {
 		log_error("Cannot open file: %s (%s)", path, strerror(errno));
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	while (fgets(line, sizeof(line), file) != NULL) {
@@ -362,24 +362,23 @@ static int conf_load_file(const char path[])
 			if (strcmp(option, "--config ") == 0) {
 				fclose(file);
 				log_error("Option '--config' not allowed inside a configuration file, line %ld.", nline);
-				return EXIT_FAILURE;
+				return false;
 			}
 
 			// parse --option value / --option
-			ret = conf_set(option, (ret == 2) ? value : NULL);
-			if (ret == EXIT_FAILURE) {
+			if (!conf_set(option, (ret == 2) ? value : NULL)) {
 				fclose(file);
-				return EXIT_FAILURE;
+				return false;
 			}
 		} else {
 			fclose(file);
 			log_error("Invalid line in config file: %s (%d)", path, nline);
-			return EXIT_FAILURE;
+			return false;
 		}
 	}
 
 	fclose(file);
-	return EXIT_SUCCESS;
+	return true;
 }
 
 // Append to an array
@@ -408,23 +407,23 @@ static void array_free(const char **array)
 	}
 }
 
-static int conf_set(const char opt[], const char val[])
+static bool conf_set(const char opt[], const char val[])
 {
 	const option_t *option = find_option(g_options, opt);
 
 	if (option == NULL) {
 		log_error("Unknown parameter: %s", opt);
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	if (option->num_args == 1 && val == NULL) {
 		log_error("Argument expected for option: %s", opt);
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	if (option->num_args == 0 && val != NULL) {
 		log_error("No argument expected for option: %s", opt);
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	switch (option->code)
@@ -432,7 +431,7 @@ static int conf_set(const char opt[], const char val[])
 	case oAnnounce:
 		if (!array_append(&g_announce_args[0], ARRAY_SIZE(g_announce_args), val)) {
 			log_error("Too many announce entries");
-			return EXIT_FAILURE;
+			return false;
 		}
 		break;
 	case oQueryTld:
@@ -456,7 +455,7 @@ static int conf_set(const char opt[], const char val[])
 			gconf->verbosity = VERBOSITY_DEBUG;
 		} else {
 			log_error("Invalid argument for %s", opt);
-			return EXIT_FAILURE;
+			return false;
 		}
 		break;
 #ifdef CMD
@@ -466,7 +465,7 @@ static int conf_set(const char opt[], const char val[])
 	case oCmdPath:
 		if (strlen(val) > FIELD_SIZEOF(struct sockaddr_un, sun_path) - 1) {
 			log_error("Path too long for %s", opt);
-			return EXIT_FAILURE;
+			return false;
 		}
 		return conf_str(opt, &gconf->cmd_path, val);
 #endif
@@ -487,13 +486,13 @@ static int conf_set(const char opt[], const char val[])
 	case oTlsClientCert:
 		if (!array_append(&g_tls_client_args[0], ARRAY_SIZE(g_tls_client_args), val)) {
 			log_error("Too many TLS client certificate entries");
-			return EXIT_FAILURE;
+			return false;
 		}
 		break;
 	case oTlsServerCert:
 		if (!array_append(&g_tls_server_args[0], ARRAY_SIZE(g_tls_server_args), val)) {
 			log_error("Too many TLS server certificate entries");
-			return EXIT_FAILURE;
+			return false;
 		}
 		break;
 #endif
@@ -503,7 +502,7 @@ static int conf_set(const char opt[], const char val[])
 	case oIpv6:
 		if (gconf->af != AF_UNSPEC) {
 			log_error("IPv4 or IPv6 mode already set: %s", opt);
-			return EXIT_FAILURE;
+			return false;
 		}
 
 		gconf->af = (option->code == oIpv6) ? AF_INET6 : AF_INET;
@@ -546,48 +545,48 @@ static int conf_set(const char opt[], const char val[])
 		exit(0);
 #ifdef BOB
 	case oBobCreateKey:
-		exit(bob_create_key(val));
+		exit(bob_create_key(val) ? EXIT_SUCCESS : EXIT_FAILURE);
 	case oBobLoadKey:
 		return bob_load_key(val);
 #endif
 	default:
-		return EXIT_FAILURE;
+		return false;
 	}
 
-	return EXIT_SUCCESS;
+	return true;
 }
 
 // Load some values that depend on proper settings
-int conf_load(void)
+bool conf_load(void)
 {
 	const char **args;
-	int rc = 0;
+	bool rc = true;
 
 	args = g_announce_args;
-	while (rc == 0 && *args) {
+	while (rc && *args) {
 		uint16_t port = gconf->dht_port;
 		char name[QUERY_MAX_SIZE] = { 0 };
 
 		int n = sscanf(*args, "%254[^:]:%hu", name, &port);
 		if (n == 1 || n == 2) {
-			rc = (EXIT_FAILURE == kad_announce(name, port, LONG_MAX));
+			rc = kad_announce(name, port, LONG_MAX);
 		} else {
 			log_error("Invalid announcement: %s", *args);
-			rc = 1;
+			rc = false;
 		}
 		args += 1;
 	}
 
 #ifdef TLS
 	args = g_tls_client_args;
-	while (rc == 0 && *args) {
+	while (rc && *args) {
 		// Add Certificate Authority (CA) entries for the TLS client
 		rc = tls_client_add_ca(*args);
 		args += 1;
 	}
 
 	args = g_tls_server_args;
-	while (rc == 0 && *args) {
+	while (rc && *args) {
 		// Add SNI entries for the TLS server (e.g. my.cert,my.key)
 		char crt_file[128];
 		char key_file[128];
@@ -596,7 +595,7 @@ int conf_load(void)
 			rc = tls_server_add_sni(crt_file, key_file);
 		} else {
 			log_error("Invalid cert/key tuple: %s", *args);
-			rc = 1;
+			rc = false;
 		}
 		args += 1;
 	}
@@ -608,7 +607,7 @@ int conf_load(void)
 	array_free(&g_tls_server_args[0]);
 #endif
 
-	return (rc != 0) ? EXIT_FAILURE : EXIT_SUCCESS;
+	return rc;
 }
 
 static struct gconf_t *conf_alloc()
@@ -647,40 +646,36 @@ static struct gconf_t *conf_alloc()
 	return conf;
 }
 
-int conf_setup(int argc, char **argv)
+bool conf_setup(int argc, char **argv)
 {
 	const char *opt;
 	const char *val;
-	int rc;
-	int i;
 
 	gconf = conf_alloc();
 
-	for (i = 1; i < argc; ++i) {
+	for (size_t i = 1; i < argc; ++i) {
 		opt = argv[i];
 		val = argv[i + 1];
 
 		if (val && val[0] != '-') {
 			// -x abc
-			rc = conf_set(opt, val);
+			if (!conf_set(opt, val)) {
+				return false;
+			}
 			i += 1;
 		} else {
 			// -x
-			rc = conf_set(opt, NULL);
-		}
-
-		if (rc == EXIT_FAILURE) {
-			return EXIT_FAILURE;
+			if (!conf_set(opt, NULL)) {
+				return false;
+			}
 		}
 	}
 
 	if (gconf->configfile) {
-		rc = conf_load_file(gconf->configfile);
-
-		if (rc == EXIT_FAILURE) {
-			return EXIT_FAILURE;
+		if (!conf_load_file(gconf->configfile)) {
+			return false;
 		}
 	}
 
-	return EXIT_SUCCESS;
+	return true;
 }
