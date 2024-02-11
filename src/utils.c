@@ -16,6 +16,19 @@
 #include "utils.h"
 
 
+const option_t *find_option(const option_t options[], const char name[])
+{
+	const option_t *option = options;
+	while (option->name && name) {
+		if (0 == strcmp(name, option->name)) {
+			return option;
+		}
+		option++;
+	}
+
+	return NULL;
+}
+
 bool hex_get_id(uint8_t id[], size_t idsize, const char query[])
 {
 	size_t querysize;

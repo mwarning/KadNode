@@ -26,7 +26,13 @@
 // Direct access to time in seconds
 #define time_now_sec() (gconf->time_now)
 
+typedef struct {
+	const char *name;
+	uint16_t num_args;
+	uint16_t code;
+} option_t;
 
+const option_t *find_option(const option_t options[], const char name[]);
 bool hex_get_id(uint8_t id[], size_t idsize, const char query[]);
 
 bool bytes_from_base32(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize);

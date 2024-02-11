@@ -231,13 +231,7 @@ enum OPCODE {
 	oVersion
 };
 
-struct option_t {
-	const char *name;
-	uint16_t num_args;
-	uint16_t code;
-};
-
-static struct option_t g_options[] = {
+static option_t g_options[] = {
 	{"--announce", 1, oAnnounce},
 	{"--query-tld", 1, oQueryTld},
 	{"--pidfile", 1, oPidFile},
@@ -290,21 +284,6 @@ static struct option_t g_options[] = {
 	{"--version", 0, oVersion},
 	{NULL, 0, 0}
 };
-
-static const struct option_t *find_option(const char name[])
-{
-	struct option_t *option;
-
-	option = g_options;
-	while (option->name) {
-		if (0 == strcmp(name, option->name)) {
-			return option;
-		}
-		option++;
-	}
-
-	return NULL;
-}
 
 // Set a string once - error when already set
 static int conf_str(const char opt[], char *dst[], const char src[])
@@ -431,9 +410,7 @@ static void array_free(const char **array)
 
 static int conf_set(const char opt[], const char val[])
 {
-	const struct option_t *option;
-
-	option = find_option(opt);
+	const option_t *option = find_option(g_options, opt);
 
 	if (option == NULL) {
 		log_error("Unknown parameter: %s", opt);
