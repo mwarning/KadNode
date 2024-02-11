@@ -51,7 +51,7 @@ static struct tls_resource g_tls_resources[2];
 
 
 // Start TLS connection
-static int tls_connect_init(mbedtls_ssl_context *ssl, mbedtls_net_context *fdc, const char query[], const IP *addr)
+static bool tls_connect_init(mbedtls_ssl_context *ssl, mbedtls_net_context *fdc, const char query[], const IP *addr)
 {
 	int ret;
 
@@ -59,19 +59,19 @@ static int tls_connect_init(mbedtls_ssl_context *ssl, mbedtls_net_context *fdc, 
 
 	if ((ret = mbedtls_ssl_set_hostname(ssl, query)) != 0) {
 		log_error("TLS-Client: mbedtls_ssl_set_hostname returned -0x%x", -ret);
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	fdc->fd = socket(addr->ss_family, SOCK_STREAM, IPPROTO_TCP);
 	if (fdc->fd < 0) {
 		log_error("TLS-Client: Socket creation failed: %s", strerror(errno));
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	ret = mbedtls_net_set_nonblock(fdc);
 	if (ret < 0) {
 		log_error("TLS-Client: Failed to set socket non-blocking: %s", strerror(errno));
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	// Start connection
@@ -80,10 +80,10 @@ static int tls_connect_init(mbedtls_ssl_context *ssl, mbedtls_net_context *fdc, 
 		log_error("TLS-Client: Connect failed: %s", strerror(errno));
 		mbedtls_net_free(fdc);
 		mbedtls_net_init(fdc);
-		return EXIT_FAILURE;
+		return false;
 	}
 
-	return EXIT_SUCCESS;
+	return true;
 }
 
 // Find resource used by socket
@@ -210,7 +210,7 @@ static void tls_handle(int rc, int fd)
 }
 
 // Try to create a DHT id from sanitized domain query
-int tls_client_get_id(uint8_t id[], size_t len, const char query[])
+bool tls_client_get_id(uint8_t id[], size_t len, const char query[])
 {
 	uint8_t hash[32];
 	int ret = 0;
@@ -231,10 +231,10 @@ int tls_client_get_id(uint8_t id[], size_t len, const char query[])
 		memset(id, 0, len);
 		memcpy(id, hash, MIN(len, sizeof(hash)));
 
-		return (ret == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
+		return (ret == 0);
 	}
 
-	return EXIT_FAILURE;
+	return false;
 }
 
 // Find a resource instance that is currently not in use
@@ -273,7 +273,7 @@ void tls_client_trigger_auth(void)
 			&resource->query[0], &resource->addr,
 			&tls_client_trigger_auth)) != NULL) {
 
-		if (EXIT_FAILURE == tls_connect_init(&resource->ssl, &resource->fdc, &resource->query[0], &result->addr)) {
+		if (!tls_connect_init(&resource->ssl, &resource->fdc, &resource->query[0], &result->addr)) {
 			// Failed to initiate connection
 			result->state = AUTH_ERROR;
 		} else {
@@ -307,7 +307,7 @@ static int tls_conf_verify(void *data, mbedtls_x509_crt *crt, int depth, uint32_
 #endif
 
 // Load the trusted CA root certificates
-int tls_client_add_ca(const char path[])
+bool tls_client_add_ca(const char path[])
 {
 	char error_buf[100];
 	int ret;
@@ -323,14 +323,14 @@ int tls_client_add_ca(const char path[])
 		mbedtls_strerror(ret, error_buf, sizeof(error_buf));
 		log_warning("TLS-Client: Failed to load CA root certificates from %s (%s)", path, error_buf);
 		// We do not abort when a path was not loaded
-		return EXIT_SUCCESS;
+		return true;
 	}
 
 	log_info("TLS-Client: Loaded certificates from %s (%d skipped)", path, ret);
-	return EXIT_SUCCESS;
+	return true;
 }
 
-int tls_client_setup(void)
+bool tls_client_setup(void)
 {
 	const char *pers = "kadnode";
 	int ret;
@@ -338,12 +338,12 @@ int tls_client_setup(void)
 
 	// Reject query if TLS client disabled
 	if (g_client_enable == 0) {
-		return EXIT_SUCCESS;
+		return true;
 	}
 
 	if (g_cacert.version <= 0) {
 		log_error("TLS-Client: No root CA certificates could be loaded.");
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	//mbedtls_debug_set_threshold(0);
@@ -370,7 +370,7 @@ int tls_client_setup(void)
 		MBEDTLS_SSL_TRANSPORT_STREAM,
 		MBEDTLS_SSL_PRESET_DEFAULT)) != 0) {
 		log_error("TLS-Client: mbedtls_ssl_config_defaults returned -0x%x", -ret);
-		return EXIT_FAILURE;
+		return false;
 	}
 
 #ifdef DEBUG
@@ -385,11 +385,11 @@ int tls_client_setup(void)
 	for (i = 0; i < ARRAY_SIZE(g_tls_resources); ++i) {
 		if ((ret = mbedtls_ssl_setup(&g_tls_resources[i].ssl, &g_conf)) != 0) {
 			log_error("TLS-Client: mbedtls_ssl_setup returned -0x%x", -ret);
-			return EXIT_SUCCESS;
+			return false;
 		}
 	}
 
-	return EXIT_SUCCESS;
+	return true;
 }
 
 void tls_client_free(void)
