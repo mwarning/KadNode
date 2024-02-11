@@ -61,7 +61,7 @@ void windows_service_main(int argc, char **argv)
 int windows_service_start(void (*func)())
 {
 	static SERVICE_TABLE_ENTRY services[] = {
-		{ (char*) MAIN_SRVNAME,  (LPSERVICE_MAIN_FUNCTIONA) windows_service_main },
+		{ (char*) PROGRAM_NAME,  (LPSERVICE_MAIN_FUNCTIONA) windows_service_main },
 		{ NULL, NULL }
 	};
 

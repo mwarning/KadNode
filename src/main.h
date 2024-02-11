@@ -5,8 +5,8 @@
 
 #include <netinet/in.h>
 
-#define MAIN_SRVNAME "kadnode"
-#define MAIN_VERSION "2.3.0"
+#define PROGRAM_NAME "kadnode"
+#define PROGRAM_VERSION "2.3.0"
 
 #define SHA1_BIN_LENGTH 20
 #define SHA1_HEX_LENGTH (2 * SHA1_BIN_LENGTH)

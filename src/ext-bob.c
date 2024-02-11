@@ -248,7 +248,7 @@ bool bob_create_key(const char path[])
 	mbedtls_entropy_context entropy;
 	mbedtls_ctr_drbg_context ctr_drbg;
 	mbedtls_pk_context ctx;
-	const char *pers = MAIN_SRVNAME;
+	const char *pers = PROGRAM_NAME;
 	int ret;
 
 	mbedtls_pk_init(&ctx);

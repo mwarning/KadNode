@@ -39,7 +39,7 @@ static const char *g_tls_client_args[16] = { 0 };
 static const char *g_tls_server_args[16] = { 0 };
 #endif
 
-const char *kadnode_version_str = "KadNode v"MAIN_VERSION" ("
+const char *kadnode_version_str = PROGRAM_NAME " " PROGRAM_VERSION" ("
 #ifdef BOB
 " bob"
 #endif

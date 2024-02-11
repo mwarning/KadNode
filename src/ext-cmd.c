@@ -29,7 +29,7 @@
 
 
 static const char *g_client_usage =
-MAIN_SRVNAME" Control Program - Send commands to a KadNode instance.\n\n"
+PROGRAM_NAME" Control Program - Send commands to a KadNode instance.\n\n"
 "Usage: kadnode-ctl [OPTIONS] [COMMANDS]\n"
 "\n"
 " -p <file>	Connect to this unix socket (Default: "CMD_PATH")\n"
