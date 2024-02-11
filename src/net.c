@@ -36,12 +36,12 @@ int net_set_nonblocking(int fd)
 void net_add_handler(int fd, net_callback *cb)
 {
 	if (cb == NULL) {
-		log_error("Invalid arguments.");
+		log_error("net_add_handler() Callback is null.");
 		exit(1);
 	}
 
 	if (g_count == ARRAY_SIZE(g_cbs)) {
-		log_error("No more space for handlers.");
+		log_error("net_add_handler() No more space for handlers.");
 		exit(1);
 	}
 
@@ -58,14 +58,12 @@ void net_add_handler(int fd, net_callback *cb)
 
 void net_remove_handler(int fd, net_callback *cb)
 {
-	int i;
-
 	if (cb == NULL) {
-		fprintf(stderr, "Invalid arguments.");
+		log_error("net_remove_handler() callback is null");
 		exit(1);
 	}
 
-	for (i = 0; i < g_count; i++) {
+	for (size_t i = 0; i < g_count; i++) {
 		if (g_cbs[i] == cb && g_fds[i].fd == fd) {
 			// mark for removal in compress_entries()
 			g_cbs[i] = NULL;
@@ -74,15 +72,13 @@ void net_remove_handler(int fd, net_callback *cb)
 		}
 	}
 
-	log_error("Handler not found to remove.");
+	log_error("net_remove_handler() handler not found");
 	exit(1);
 }
 
 static void compress_entries()
 {
-	int i;
-
-	for (i = 0; i < g_count; i += 1) {
+	for (size_t i = 0; i < g_count; i += 1) {
 		while (g_cbs[i] == NULL && i < g_count) {
 			g_count -= 1;
 			g_cbs[i] = g_cbs[g_count];
@@ -94,27 +90,34 @@ static void compress_entries()
 
 void net_loop(void)
 {
-	time_t n;
-	int revents;
-	int all;
-	int rc;
-	int i;
+	bool call_all = false;
+	time_t call_all_time = time(NULL);
+
+	// call all callbacks immediately
+	for (size_t i = 0; i < g_count; i++) {
+		g_cbs[i](-1, g_fds[i].fd);
+	}
 
 	while (gconf->is_running) {
-		rc = poll(g_fds, g_count, 1000);
+		int rc = poll(g_fds, g_count, 1000);
 
 		if (rc < 0) {
 			//log_error("poll(): %s", strerror(errno));
 			break;
 		}
 
-		n = time(NULL);
-		all = (n > gconf->time_now);
-		gconf->time_now = n;
+		gconf->time_now = time(NULL);
 
-		for (i = 0; i < g_count; i++) {
-			revents = g_fds[i].revents;
-			if ((revents || all) && (g_cbs[i] != NULL)) {
+		if ((gconf->time_now - call_all_time) >= 1) {
+			call_all = true;
+			call_all_time = gconf->time_now;
+		} else {
+			call_all = false;
+		}
+
+		for (size_t i = 0; i < g_count; i++) {
+			int revents = g_fds[i].revents;
+			if (revents || call_all) {
 				g_cbs[i](revents, g_fds[i].fd);
 			}
 		}
