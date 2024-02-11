@@ -24,12 +24,13 @@ void announces_free(void);
 
 struct announcement_t* announces_get(void);
 struct announcement_t* announces_find(const uint8_t id[]);
+void announces_remove(const uint8_t id[]);
 
 // List all entries
-void announces_debug(FILE *fp);
+void announces_print(FILE *fp);
 
 // Add a value id / port that will be announced until lifetime is exceeded
-struct announcement_t *announces_add(FILE *fp, const char query[], int port, time_t lifetime);
+struct announcement_t *announces_add(FILE *fp, const char query[], time_t lifetime);
 
 
 #endif // _EXT_ANNOUNCES_H_

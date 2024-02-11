@@ -421,7 +421,7 @@ bool kad_announce_once(const uint8_t id[], int port)
 /*
 * Add a new value to the announcement list or refresh an announcement.
 */
-bool kad_announce(const char query[], int port, time_t lifetime)
+bool kad_announce(const char query[], time_t lifetime)
 {
     char hostname[QUERY_MAX_SIZE];
 
@@ -430,8 +430,7 @@ bool kad_announce(const char query[], int port, time_t lifetime)
         return false;
     }
 
-    // Store query to call kad_announce_once() later/multiple times
-    return announces_add(NULL, hostname, port, lifetime) ? true : false;
+    return announces_add(NULL, hostname, lifetime) ? true : false;
 }
 
 // Lookup known nodes that are nearest to the given id

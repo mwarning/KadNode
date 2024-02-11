@@ -486,13 +486,12 @@ bool bob_setup(void)
     struct bob_resource *resource;
     struct key_t *key;
     const char *hkey;
-    int i;
 
     mbedtls_ctr_drbg_init(&g_ctr_drbg);
     mbedtls_entropy_init(&g_entropy);
 
     // Initialize resources handlers ctx_verify value
-    for (i = 0; i < ARRAY_SIZE(g_bob_resources); ++i) {
+    for (size_t i = 0; i < ARRAY_SIZE(g_bob_resources); ++i) {
         resource = &g_bob_resources[i];
         mbedtls_pk_setup(&resource->ctx_verify, mbedtls_pk_info_from_type(MBEDTLS_PK_ECKEY));
         mbedtls_ecp_group_load(&mbedtls_pk_ec(resource->ctx_verify)->grp, ECPARAMS);
@@ -503,7 +502,7 @@ bool bob_setup(void)
     while (key) {
         // Start announcing public key for the entire runtime
         hkey = get_pkey_base32(&key->ctx_sign);
-        announces_add(hkey, gconf->dht_port, LONG_MAX);
+        announces_add(NULL, hkey, LONG_MAX);
         key = key->next;
     }
 

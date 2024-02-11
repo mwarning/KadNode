@@ -26,6 +26,7 @@
 #include "kad.h"
 #include "net.h"
 #include "searches.h"
+#include "announces.h"
 #include "ext-tls-server.h"
 
 
@@ -314,7 +315,7 @@ static void tls_announce_all_cnames(void)
     while (cur) {
         // Won't announce wildcard domains
         if (query_sanitize(name, sizeof(name), cur->name)) {
-            kad_announce(name, gconf->dht_port, LONG_MAX);
+            announces_add(NULL, name, LONG_MAX);
         }
         cur = cur->next;
     }

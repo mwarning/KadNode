@@ -224,17 +224,11 @@ static void cmd_exec(FILE *fp, char request[], int allow_debug)
         // Print node id and statistics
         kad_status(fp);
         break;
-    case oAnnounceStart: {
-        int port;
-        if (parse_annoucement(&id[0], &port, argv[1], gconf->dht_port)) {
-            announces_add(fp, id, port, LONG_MAX);
-        } else {
-            fprintf(fp, "Invalid announcement.\n");
-        }
+    case oAnnounceStart:
+		announces_add(fp, argv[1], LONG_MAX);
         break;
-    }
     case oAnnounceStop:
-        announcement_remove(id);
+        announces_remove(id);
         break;
     case oPrintSearches:
         kad_print_searches(fp);

@@ -46,7 +46,7 @@ struct announcement_t* announces_find(const uint8_t id[])
     return NULL;
 }
 
-void announces_debug(FILE *fp)
+void announces_print(FILE *fp)
 {
     struct announcement_t *value;
     time_t now;
@@ -88,12 +88,13 @@ void announces_debug(FILE *fp)
 }
 
 // Announce a sanitized query
-struct announcement_t *announces_add(FILE *fp, const char query[], int port, time_t lifetime)
+struct announcement_t *announces_add(FILE *fp, const char query[], time_t lifetime)
 {
     uint8_t id[SHA1_BIN_LENGTH];
     struct announcement_t *cur;
     struct announcement_t *new;
     int ret = false;
+    int port = gconf->dht_port;
     time_t now = time_now_sec();
 
     // Get id from query
@@ -113,7 +114,7 @@ struct announcement_t *announces_add(FILE *fp, const char query[], int port, tim
 
     // base32 or base64
     if (!ret) {
-        ret = hex_get_id(id, sizeof(id), query);
+        ret = parse_annoucement(id, &port, query, gconf->dht_port);
     }
 
     if (!ret) {
@@ -121,7 +122,7 @@ struct announcement_t *announces_add(FILE *fp, const char query[], int port, tim
         return NULL;
     }
 
-    if (port < 1 || port > 65535) {
+    if (!port_valid(port)) {
         log_error("Invalid port for announcement: %s (port %d)", query, port);
         return NULL;
     }
@@ -170,9 +171,31 @@ struct announcement_t *announces_add(FILE *fp, const char query[], int port, tim
     return new;
 }
 
-void value_free(struct announcement_t *value)
+static void announcement_free(struct announcement_t *value)
 {
     free(value);
+}
+
+void announces_remove(const uint8_t id[])
+{
+    struct announcement_t *pre;
+    struct announcement_t *cur;
+
+    pre = NULL;
+    cur = g_values;
+    while (cur) {
+        if (id_equal(id, cur->id)) {
+            if (pre) {
+                pre->next = cur->next;
+            } else {
+                g_values = cur->next;
+            }
+            announcement_free(cur);
+            return;
+        }
+        pre = cur;
+        cur = cur->next;
+    }
 }
 
 static void announces_expire(void)
@@ -191,7 +214,7 @@ static void announces_expire(void)
             } else {
                 g_values = cur->next;
             }
-            value_free(cur);
+            announcement_free(cur);
             return;
         }
         pre = cur;
@@ -248,7 +271,7 @@ void announces_free(void)
     cur = g_values;
     while (cur) {
         next = cur->next;
-        value_free(cur);
+        announcement_free(cur);
         cur = next;
     }
     g_values = NULL;

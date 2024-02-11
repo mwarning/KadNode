@@ -16,6 +16,7 @@
 #include "conf.h"
 #include "peerfile.h"
 #include "kad.h"
+#include "announces.h"
 #ifdef TLS
 #include "ext-tls-client.h"
 #include "ext-tls-server.h"
@@ -564,13 +565,7 @@ bool conf_load(void)
 
     args = g_announce_args;
     while (rc && *args) {
-        uint16_t port = gconf->dht_port;
-        char name[QUERY_MAX_SIZE] = { 0 };
-
-        int n = sscanf(*args, "%254[^:]:%hu", name, &port);
-        if (n == 1 || n == 2) {
-            rc = kad_announce(name, port, LONG_MAX);
-        } else {
+        if (!announces_add(stderr, *args, LONG_MAX)) {
             log_error("Invalid announcement: %s", *args);
             rc = false;
         }
