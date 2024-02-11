@@ -111,7 +111,7 @@ static void nss_server_handler(int rc, int serversock)
 
 int nss_setup(void)
 {
-	if (unix_create_unix_socket(gconf->nss_path, &g_nss_sock) == EXIT_SUCCESS) {
+	if (unix_create_unix_socket(gconf->nss_path, &g_nss_sock)) {
 		log_info("NSS: Bind to %s", gconf->nss_path);
 		net_add_handler(g_nss_sock, &nss_server_handler);
 		return EXIT_SUCCESS;

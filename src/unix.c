@@ -70,7 +70,7 @@ static int is_unix_socket_valid(const char path[])
 	return (rc == 0);
 }
 
-int unix_create_unix_socket(const char path[], int *sock_out)
+bool unix_create_unix_socket(const char path[], int *sock_out)
 {
 	struct sockaddr_un addr;
 	struct stat st;
@@ -121,7 +121,7 @@ int unix_create_unix_socket(const char path[], int *sock_out)
 
 	*sock_out = sock;
 
-	return EXIT_SUCCESS;
+	return true;
 err:
 	if (dir) {
 		free(dir);
@@ -131,7 +131,7 @@ err:
 		unix_remove_unix_socket(path, sock);
 	}
 
-	return EXIT_FAILURE;
+	return false;
 }
 
 void unix_remove_unix_socket(const char path[], int sock_in)
