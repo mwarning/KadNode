@@ -25,8 +25,11 @@ bool kad_blacklist(const IP* addr);
 */
 const struct search_t *kad_lookup(const char query[]);
 
+// Block a specific address
+bool kad_block(const IP* addr);
+
 // Export good nodes
-int kad_export_nodes(FILE *fp);
+int kad_export_peers(FILE *fp);
 
 // Print status information
 void kad_status(FILE *fp);
@@ -44,10 +47,10 @@ int kad_announce_once(const uint8_t id[], int port);
 int kad_announce(const char query[], int port, time_t lifetime);
 
 // Various debug functions
-void kad_debug_buckets(FILE *fp);
-void kad_debug_searches(FILE *fp);
-void kad_debug_storage(FILE *fp);
-void kad_debug_blacklist(FILE *fp);
-void kad_debug_constants(FILE *fp);
+void kad_print_buckets(FILE *fp);
+void kad_print_searches(FILE *fp);
+void kad_print_storage(FILE *fp);
+void kad_print_blocklist(FILE *fp);
+void kad_print_constants(FILE *fp);
 
 #endif // _KAD_H_

@@ -24,17 +24,17 @@
 
 static time_t g_announces_expire = 0;
 static time_t g_announces_announce = 0;
-static struct value_t *g_values = NULL;
+static struct announcement_t *g_values = NULL;
 
 
-struct value_t* announces_get(void)
+struct announcement_t* announces_get(void)
 {
 	return g_values;
 }
 
-struct value_t* announces_find(const uint8_t id[])
+struct announcement_t* announces_find(const uint8_t id[])
 {
-	struct value_t *value;
+	struct announcement_t *value;
 
 	value = g_values;
 	while (value) {
@@ -48,7 +48,7 @@ struct value_t* announces_find(const uint8_t id[])
 
 void announces_debug(FILE *fp)
 {
-	struct value_t *value;
+	struct announcement_t *value;
 	time_t now;
 	int nodes_counter;
 	int value_counter;
@@ -88,11 +88,11 @@ void announces_debug(FILE *fp)
 }
 
 // Announce a sanitized query
-struct value_t *announces_add(const char query[], int port, time_t lifetime)
+struct announcement_t *announces_add(FILE *fp, const char query[], int port, time_t lifetime)
 {
 	uint8_t id[SHA1_BIN_LENGTH];
-	struct value_t *cur;
-	struct value_t *new;
+	struct announcement_t *cur;
+	struct announcement_t *new;
 	int ret = false;
 	time_t now = time_now_sec();
 
@@ -147,7 +147,7 @@ struct value_t *announces_add(const char query[], int port, time_t lifetime)
 	}
 
 	// Prepend new entry
-	new = (struct value_t*) calloc(1, sizeof(struct value_t));
+	new = (struct announcement_t*) calloc(1, sizeof(struct announcement_t));
 	memcpy(new->id, id, SHA1_BIN_LENGTH);
 	memcpy(new->query, query, strlen(query));
 	new->port = port;
@@ -170,15 +170,15 @@ struct value_t *announces_add(const char query[], int port, time_t lifetime)
 	return new;
 }
 
-void value_free(struct value_t *value)
+void value_free(struct announcement_t *value)
 {
 	free(value);
 }
 
 static void announces_expire(void)
 {
-	struct value_t *pre;
-	struct value_t *cur;
+	struct announcement_t *pre;
+	struct announcement_t *cur;
 	time_t now;
 
 	now = time_now_sec();
@@ -201,7 +201,7 @@ static void announces_expire(void)
 
 static void announces_announce(void)
 {
-	struct value_t *value;
+	struct announcement_t *value;
 	time_t now;
 
 	now = time_now_sec();
@@ -242,8 +242,8 @@ void announces_setup(void)
 
 void announces_free(void)
 {
-	struct value_t *cur;
-	struct value_t *next;
+	struct announcement_t *cur;
+	struct announcement_t *next;
 
 	cur = g_values;
 	while (cur) {

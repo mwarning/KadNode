@@ -9,12 +9,53 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <ctype.h>
+#include <limits.h>
 
 #include "main.h"
 #include "log.h"
 #include "conf.h"
 #include "utils.h"
 
+
+// separate a string into a list of arguments (int argc, char **argv)
+int setargs(const char **argv, int argv_size, char *args)
+{
+	int count = 0;
+
+	// skip spaces
+	while (isspace(*args)) {
+		++args;
+	}
+
+	while (*args) {
+		if ((count + 1) < argv_size) {
+			argv[count] = args;
+		} else {
+			log_error("CLI: too many arguments");
+			break;
+		}
+
+		// parse word
+		while (*args && !isspace(*args)) {
+			++args;
+		}
+
+		if (*args) {
+			*args++ = '\0';
+		}
+
+		// skip spaces
+		while (isspace(*args)) {
+			++args;
+		}
+
+		count++;
+	}
+
+	argv[MIN(count, argv_size - 1)] = NULL;
+
+	return count;
+}
 
 const option_t *find_option(const option_t options[], const char name[])
 {
@@ -27,6 +68,48 @@ const option_t *find_option(const option_t options[], const char name[])
 	}
 
 	return NULL;
+}
+
+bool parse_id(uint8_t id[], size_t idsize, const char query[], size_t querysize)
+{
+	if (bytes_from_base32(id, idsize, query, querysize)) {
+		return true;
+	}
+
+	if (bytes_from_base16(id, idsize, query, querysize)) {
+		return true;
+	}
+
+	return false;
+}
+
+// "<hex-id>[:<port>]"
+bool parse_annoucement(uint8_t id[], int *port, const char query[], int default_port)
+{
+	const char *beg = query;
+	const char *colon = strchr(beg, ':');
+	size_t len = strlen(query);
+
+	if (colon) {
+		int n = parse_int(colon + 1, -1);
+		if (!port_valid(n)) {
+			return false;
+		}
+		*port = n;
+		len = colon - beg;
+	} else {
+		*port = default_port;
+	}
+
+	return parse_id(id, SHA1_BIN_LENGTH, query, len);
+}
+
+// "<hex-id>[:<port>]"
+bool is_announcement(const char query[])
+{
+	uint8_t id[SHA1_BIN_LENGTH];
+	int port;
+	return parse_annoucement(id, &port, query, -1);
 }
 
 bool hex_get_id(uint8_t id[], size_t idsize, const char query[])
@@ -53,6 +136,23 @@ bool hex_get_id(uint8_t id[], size_t idsize, const char query[])
 	}
 
 	return false;
+}
+
+bool port_valid(int port)
+{
+	return port > 0 && port <= 65536;
+}
+
+int parse_int(const char *s, int err)
+{
+	char *endptr = NULL;
+	const char *end = s + strlen(s);
+	ssize_t n = strtoul(s, &endptr, 10);
+	if (endptr != s && endptr == end && n >= INT_MIN && n < INT_MAX) {
+		return n;
+	} else {
+		return err;
+	}
 }
 
 static size_t base16_len(size_t len)
@@ -416,6 +516,30 @@ const char *str_af(int af) {
 	default:
 		return "<invalid>";
 	}
+}
+
+const char *str_addr2(const void *ip, uint8_t length, uint16_t port)
+{
+	static char addrbuf[FULL_ADDSTRLEN];
+	char buf[INET6_ADDRSTRLEN];
+	const char *fmt;
+
+	switch (length) {
+	case 16:
+		inet_ntop(AF_INET6, ip, buf, sizeof(buf));
+		fmt = "[%s]:%d";
+		break;
+	case 4:
+		inet_ntop(AF_INET, ip, buf, sizeof(buf));
+		fmt = "%s:%d";
+		break;
+	default:
+		return "<invalid address>";
+	}
+
+	sprintf(addrbuf, fmt, buf, port);
+
+	return addrbuf;
 }
 
 const char *str_addr(const IP *addr)

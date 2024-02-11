@@ -27,13 +27,12 @@
 // Expected lifetime of announcements
 #define MAX_SEARCH_LIFETIME (20*60)
 #define MAX_RESULTS_PER_SEARCH 16
-#define MAX_SEARCHES 64
 
 
 // A ring buffer for all searches
-static struct search_t *g_searches[MAX_SEARCHES] = { NULL };
-static size_t g_searches_idx = 0;
+static struct search_t *g_searches = NULL;
 
+// TODO: are searches deleted?
 
 static const char *str_state(int state)
 {
@@ -53,14 +52,14 @@ static const char *str_state(int state)
 
 struct search_t *searches_find_by_id(const uint8_t id[])
 {
-	struct search_t **searches;
+	struct search_t *search;
 
-	searches = &g_searches[0];
-	while (*searches) {
-		if (memcmp((*searches)->id, id, SHA1_BIN_LENGTH) == 0) {
-			return *searches;
+	search = g_searches;
+	while (search) {
+		if (memcmp(search->id, id, SHA1_BIN_LENGTH) == 0) {
+			return search;
 		}
-		searches++;
+		search = search->next;
 	}
 
 	return NULL;
@@ -68,16 +67,14 @@ struct search_t *searches_find_by_id(const uint8_t id[])
 
 static struct search_t *searches_find_by_query(const char query[])
 {
-	struct search_t **search;
-	struct search_t *searches;
+	struct search_t *search;
 
-	search = &g_searches[0];
-	while (*search) {
-		searches = *search;
-		if (0 == strcmp(query, &searches->query[0])) {
-			return searches;
+	search = g_searches;
+	while (search) {
+		if (0 == strcmp(query, &search->query[0])) {
+			return search;
 		}
-		search++;
+		search = search->next;
 	}
 
 	return NULL;
@@ -118,14 +115,14 @@ static struct result_t *find_next_result(struct search_t *search)
 // Get next search to authenticate
 static struct search_t *find_next_search(auth_callback *callback)
 {
-	struct search_t **searches;
+	struct search_t *search;
 
-	searches = &g_searches[0];
-	while (*searches) {
-		if (!(*searches)->done && (*searches)->callback == callback) {
-			return *searches;
+	search = g_searches;
+	while (search) {
+		if (!search->done && search->callback == callback) {
+			return search;
 		}
-		searches++;
+		search = search->next;
 	}
 	return NULL;
 }
@@ -204,18 +201,16 @@ static const char* str_callback(auth_callback *cb) {
 
 void searches_debug(FILE *fp)
 {
-	struct search_t **searches;
 	struct search_t *search;
 	struct result_t *result;
 	int result_counter;
 	int search_counter;
 
 	search_counter = 0;
-	searches = &g_searches[0];
+	search = g_searches;
 
 	fprintf(fp, "Result buckets:\n");
-	while (*searches) {
-		search = *searches;
+	while (search) {
 		fprintf(fp, " query: '%s'\n", &search->query[0]);
 		fprintf(fp, "  id: %s\n", str_id(search->id));
 		fprintf(fp, "  done: %s\n", search->done ? "true" : "false");
@@ -232,7 +227,7 @@ void searches_debug(FILE *fp)
 		fprintf(fp, "  Found %d results.\n", result_counter);
 		result_counter += 1;
 		search_counter += 1;
-		searches++;
+		search = search->next;
 	}
 
 	fprintf(fp, " Found %d searches.\n", search_counter);
@@ -303,7 +298,6 @@ struct search_t* searches_start(const char query[])
 	uint8_t id[SHA1_BIN_LENGTH];
 	auth_callback *callback;
 	struct search_t* search;
-	struct search_t* new;
 
 	// Find existing search
 	if ((search = searches_find_by_query(query)) != NULL) {
@@ -316,20 +310,20 @@ struct search_t* searches_start(const char query[])
 	}
 
 #ifdef TLS
-	if (EXIT_SUCCESS == tls_client_get_id(id, sizeof(id), query)) {
+	if (tls_client_get_id(id, sizeof(id), query)) {
 		// Use TLS authentication
 		// For e.g. example.com.p2p
 		callback = &tls_client_trigger_auth;
 	} else
 #endif
 #ifdef BOB
-	if (EXIT_SUCCESS == bob_get_id(id, sizeof(id), query)) {
+	if (bob_get_id(id, sizeof(id), query)) {
 		// Use Bob authentication
 		// For e.g. <32BytePublicKey>.p2p
 		callback = &bob_trigger_auth;
 	} else
 #endif
-	if (EXIT_SUCCESS == hex_get_id(id, sizeof(id), query)) {
+	if (hex_get_id(id, sizeof(id), query)) {
 		// Use no authentication
 		// For e.g. <20ByteHashKey>.p2p
 		callback = NULL;
@@ -339,24 +333,18 @@ struct search_t* searches_start(const char query[])
 		return NULL;
 	}
 
-	new = calloc(1, sizeof(struct search_t));
-	memcpy(new->id, id, sizeof(id));
-	new->callback = callback;
-	memcpy(&new->query, query, sizeof(new->query));
-	new->start_time = time_now_sec();
+	search = calloc(1, sizeof(struct search_t));
+	memcpy(search->id, id, sizeof(id));
+	search->callback = callback;
+	memcpy(&search->query, query, sizeof(search->query));
+	search->start_time = time_now_sec();
 
 	log_debug("Searches: Create new search for query: %s", query);
 
-	// Free slot if taken
-	if (g_searches[g_searches_idx] != NULL) {
-		// Remove and abort entire search
-		search_free(g_searches[g_searches_idx]);
-	}
+	search->next = g_searches;
+	g_searches = search;
 
-	g_searches[g_searches_idx] = new;
-	g_searches_idx = (g_searches_idx + 1) % MAX_SEARCHES;
-
-	return new;
+	return search;
 }
 
 // Add a resolved address to the search (and continue with verification if needed)
@@ -421,12 +409,13 @@ void searches_setup(void)
 
 void searches_free(void)
 {
-	struct search_t **search;
+	struct search_t *search;
+	struct search_t *prev;
 
-	search = &g_searches[0];
-	while (*search) {
-		search_free(*search);
-		*search = NULL;
-		search++;
+	search = g_searches;
+	while (search) {
+		prev = search;
+		search = search->next;
+		search_free(prev);
 	}
 }

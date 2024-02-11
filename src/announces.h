@@ -1,6 +1,6 @@
 
-#ifndef _EXT_announces_H_
-#define _EXT_announces_H_
+#ifndef _EXT_ANNOUNCES_H_
+#define _EXT_ANNOUNCES_H_
 
 #include <sys/time.h>
 #include <stdio.h>
@@ -10,8 +10,8 @@
 * intervals until the lifetime expires.
 */
 
-struct value_t {
-	struct value_t *next;
+struct announcement_t {
+	struct announcement_t *next;
 	uint8_t id[SHA1_BIN_LENGTH];
 	char query[QUERY_MAX_SIZE];
 	int port;
@@ -22,14 +22,14 @@ struct value_t {
 void announces_setup(void);
 void announces_free(void);
 
-struct value_t* announces_get(void);
-struct value_t* announces_find(const uint8_t id[]);
+struct announcement_t* announces_get(void);
+struct announcement_t* announces_find(const uint8_t id[]);
 
 // List all entries
 void announces_debug(FILE *fp);
 
 // Add a value id / port that will be announced until lifetime is exceeded
-struct value_t *announces_add(const char query[], int port, time_t lifetime);
+struct announcement_t *announces_add(FILE *fp, const char query[], int port, time_t lifetime);
 
 
-#endif // _EXT_announces_H_
+#endif // _EXT_ANNOUNCES_H_

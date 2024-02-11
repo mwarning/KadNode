@@ -33,7 +33,15 @@ typedef struct {
 } option_t;
 
 const option_t *find_option(const option_t options[], const char name[]);
-bool hex_get_id(uint8_t id[], size_t idsize, const char query[]);
+int setargs(const char **argv, int argv_size, char *args);
+
+int parse_int(const char *s, int err);
+
+bool parse_id(uint8_t id[], size_t idsize, const char query[], size_t querysize);
+bool hex_get_id(uint8_t id[], size_t idsize, const char query[]); // TODO: remove
+
+bool parse_annoucement(uint8_t id[], int *port, const char query[], int default_port);
+bool is_announcement(const char query[]); // "<hex-id>[:<port>]"
 
 bool bytes_from_base32(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize);
 char *bytes_to_base32(char dst[], size_t dstsize, const uint8_t src[], size_t srcsize);
@@ -41,7 +49,8 @@ bool bytes_from_base16(uint8_t dst[], size_t dstsize, const char src[], size_t s
 char *bytes_to_base16(char dst[], size_t dstsize, const uint8_t src[], size_t srcsize);
 
 int port_random(void);
-int port_parse(const char pstr[], int err);
+bool port_valid(int port);
+int port_parse(const char pstr[], int err); // TODO: remove
 bool port_set(IP *addr, uint16_t port);
 
 bool has_tld(const char str[], const char tld[]);
@@ -52,6 +61,7 @@ bool id_equal(const uint8_t id1[], const uint8_t id2[]);
 const char *str_af(int af);
 const char *str_id(const uint8_t id[]);
 const char *str_addr(const IP *addr);
+const char *str_addr2(const void *ip, uint8_t length, uint16_t port);
 
 bool addr_is_localhost(const IP *addr);
 bool addr_is_multicast(const IP *addr);
