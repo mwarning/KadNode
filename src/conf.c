@@ -616,7 +616,7 @@ int conf_load(void)
 		char key_file[128];
 
 		if (sscanf(*args, "%127[^,],%127[^,]", crt_file, key_file) == 2) {
-			rc = (EXIT_FAILURE == tls_server_add_sni(crt_file, key_file));
+			rc = tls_server_add_sni(crt_file, key_file);
 		} else {
 			log_error("Invalid cert/key tuple: %s", *args);
 			rc = 1;

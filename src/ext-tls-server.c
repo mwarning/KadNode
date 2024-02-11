@@ -236,7 +236,7 @@ static int sni_callback(void *p_info, mbedtls_ssl_context *ssl, const unsigned c
 	return -1;
 }
 
-int tls_server_add_sni(const char crt_file[], const char key_file[])
+bool tls_server_add_sni(const char crt_file[], const char key_file[])
 {
 	char error_buf[100];
 	mbedtls_x509_crt crt;
@@ -252,19 +252,19 @@ int tls_server_add_sni(const char crt_file[], const char key_file[])
 	if ((ret = mbedtls_x509_crt_parse_file(&crt, crt_file)) != 0) {
 		mbedtls_strerror(ret, error_buf, sizeof(error_buf));
 		log_error("TLS-Server: %s: %s", crt_file, error_buf);
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	if ((ret = mbedtls_pk_parse_keyfile(&key, key_file, "" /* no password */)) != 0) {
 		mbedtls_strerror(ret, error_buf, sizeof(error_buf));
 		log_error("TLS-Server: %s: %s", key_file, error_buf);
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	// Check if common name is set
 	if (get_common_name(name, sizeof(name), &crt) != 0) {
 		log_error("TLS-Server: No common name set in %s", crt_file);
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	// Check for duplicate entries
@@ -272,7 +272,7 @@ int tls_server_add_sni(const char crt_file[], const char key_file[])
 	while (cur) {
 		if (strcmp(cur->name, name) == 0) {
 			log_error("TLS-Server: Duplicate entry %s", name);
-			return EXIT_FAILURE;
+			return false;
 		}
 		cur = cur->next;
 	}
@@ -280,7 +280,7 @@ int tls_server_add_sni(const char crt_file[], const char key_file[])
 	// Create new entry
 	if ((new = calloc(1, sizeof(struct sni_entry))) == NULL) {
 		log_error("TLS-Server: Error calling calloc()");
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	new->name = strdup(name);
@@ -301,7 +301,7 @@ int tls_server_add_sni(const char crt_file[], const char key_file[])
 
 	log_info("TLS-Server: Loaded server credentials for %s (%s, %s)", name, crt_file, key_file);
 
-	return EXIT_SUCCESS;
+	return true;
 }
 
 static void tls_announce_all_cnames(void)
@@ -320,14 +320,14 @@ static void tls_announce_all_cnames(void)
 	}
 }
 
-int tls_server_setup(void)
+bool tls_server_setup(void)
 {
 	const char *pers = "kadnode";
 	int ret;
 
 	// Without SNI entries, there is no reason to start the TLS server
 	if (g_sni_entries == NULL) {
-		return EXIT_SUCCESS;
+		return true;
 	}
 
 	// Initialize sockets
@@ -349,7 +349,7 @@ int tls_server_setup(void)
 	if ((ret = mbedtls_ctr_drbg_seed(&g_drbg, mbedtls_entropy_func, &g_entropy,
 		(const unsigned char *) pers, strlen(pers))) != 0) {
 		log_error("TLS-Server: mbedtls_ctr_drbg_seed returned -0x%x", -ret);
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	// May return -1 if protocol not enabled/supported
@@ -362,7 +362,7 @@ int tls_server_setup(void)
 		MBEDTLS_SSL_PRESET_DEFAULT)) != 0)
 	{
 		log_error("TLS-Server: mbedtls_ssl_config_defaults returned -0x%x", -ret);
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	mbedtls_ssl_conf_authmode(&g_conf, MBEDTLS_SSL_VERIFY_REQUIRED);
@@ -373,7 +373,7 @@ int tls_server_setup(void)
 
 	if ((ret = mbedtls_ssl_setup(&g_ssl, &g_conf)) != 0) {
 		log_error("TLS-Server: mbedtls_ssl_setup returned -0x%x", -ret);
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	if (g_listen_fd4.fd > -1) {
@@ -386,7 +386,7 @@ int tls_server_setup(void)
 		net_add_handler(g_listen_fd6.fd, &tls_server_handler);
 	}
 
-	return EXIT_SUCCESS;
+	return true;
 }
 
 void tls_server_free(void)
