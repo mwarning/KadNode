@@ -157,7 +157,7 @@ static void peerfile_import_static(const struct peer *peers)
 	}
 }
 
-int peerfile_add_peer(const char addr_str[])
+bool peerfile_add_peer(const char addr_str[])
 {
 	struct peer *new;
 
@@ -166,7 +166,7 @@ int peerfile_add_peer(const char addr_str[])
 	new->next = g_peers;
 	g_peers = new;
 
-	return EXIT_SUCCESS;
+	return true;
 }
 
 static void peerfile_handle_peerfile(int _rc, int _sock)
