@@ -12,6 +12,10 @@
 #include "mbedtls/error.h"
 #include "mbedtls/x509.h"
 
+#ifndef MBEDTLS_PRIVATE
+#define MBEDTLS_PRIVATE(x) x
+#endif
+
 #include "main.h"
 #include "conf.h"
 #include "log.h"
@@ -121,7 +125,7 @@ static void bob_send_challenge(int sock, struct bob_resource *resource)
     memcpy(buf, "BOB", 3);
 
     // Append X value of public key
-    mbedtls_mpi_write_binary(&mbedtls_pk_ec(resource->ctx_verify)->Q.X, buf + 3, ECPARAMS_SIZE);
+    mbedtls_mpi_write_binary(&mbedtls_pk_ec(resource->ctx_verify)->MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(X), buf + 3, ECPARAMS_SIZE);
 
     // Append challenge bytes
     memcpy(buf + 3 + ECPARAMS_SIZE, resource->challenge, CHALLENGE_BIN_LENGTH);
@@ -170,7 +174,7 @@ void bob_trigger_auth(void)
 
         // Compressed form to decompressed
         if ((ret = mbedtls_ecp_decompress(
-                &kp->grp, compressed, sizeof(compressed),
+                &kp->MBEDTLS_PRIVATE(grp), compressed, sizeof(compressed),
                 decompressed, &olen, sizeof(decompressed))) != 0) {
             log_error("Error in mbedtls_ecp_decompress: %d\n", ret);
             bob_auth_end(resource, AUTH_ERROR);
@@ -179,7 +183,7 @@ void bob_trigger_auth(void)
 
         // Decompressed form to Q
         if ((ret = mbedtls_ecp_point_read_binary(
-                &kp->grp, &kp->Q,
+                &kp->MBEDTLS_PRIVATE(grp), &kp->MBEDTLS_PRIVATE(Q),
                 decompressed, sizeof(decompressed))) != 0) {
             log_error("Error in mbedtls_ecp_point_read_binary: %d\n", ret);
             bob_auth_end(resource, AUTH_ERROR);
@@ -236,7 +240,7 @@ static const char *get_pkey_base32(const mbedtls_pk_context *ctx)
     static char hexbuf[52 + 1];
     uint8_t buf[ECPARAMS_SIZE];
 
-    mbedtls_mpi_write_binary(&mbedtls_pk_ec(*ctx)->Q.X, buf, sizeof(buf));
+    mbedtls_mpi_write_binary(&mbedtls_pk_ec(*ctx)->MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(X), buf, sizeof(buf));
 
     return bytes_to_base32(hexbuf, sizeof(hexbuf), buf, sizeof(buf));
 }
@@ -245,22 +249,10 @@ static const char *get_pkey_base32(const mbedtls_pk_context *ctx)
 // to path and print public key to stdout.
 bool bob_create_key(const char path[])
 {
-    mbedtls_entropy_context entropy;
-    mbedtls_ctr_drbg_context ctr_drbg;
     mbedtls_pk_context ctx;
-    const char *pers = PROGRAM_NAME;
     int ret;
 
     mbedtls_pk_init(&ctx);
-    mbedtls_ctr_drbg_init(&ctr_drbg);
-    mbedtls_entropy_init(&entropy);
-
-    //TODO: see gen_key.c example for better seed method
-    if ((ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
-            (const unsigned char *) pers, strlen(pers))) != 0) {
-        fprintf(stderr, "mbedtls_ctr_drbg_seed returned %d\n", ret);
-        return false;
-    }
 
     printf("Generating %s key pair...\n", ECPARAMS_NAME);
 
@@ -273,11 +265,11 @@ bool bob_create_key(const char path[])
     // This spares us from transmitting the sign along with the public key
     do {
         if ((ret = mbedtls_ecp_gen_key(ECPARAMS, mbedtls_pk_ec(ctx),
-            mbedtls_ctr_drbg_random, &ctr_drbg)) != 0) {
+            mbedtls_ctr_drbg_random, &g_ctr_drbg)) != 0) {
             fprintf(stderr, "mbedtls_ecp_gen_key returned -0x%04x\n", -ret);
             return false;
         }
-    } while (mbedtls_mpi_get_bit(&mbedtls_pk_ec(ctx)->Q.Y, 0) != 0);
+    } while (mbedtls_mpi_get_bit(&mbedtls_pk_ec(ctx)->MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(Y), 0) != 0);
 
     if (write_pem(&ctx, path) != 0) {
         return false;
@@ -298,16 +290,25 @@ bool bob_load_key(const char path[])
 
     mbedtls_pk_init(&ctx);
 
-    if ((ret = mbedtls_pk_parse_keyfile(&ctx, path, NULL)) != 0) {
+#if MBEDTLS_VERSION_NUMBER >= 0x03000000
+#if defined(MBEDTLS_USE_PSA_CRYPTO)
+    ret = mbedtls_pk_parse_keyfile(&ctx, path, NULL, mbedtls_psa_get_random, MBEDTLS_PSA_RANDOM_STATE);
+#else
+    ret = mbedtls_pk_parse_keyfile(&ctx, path, NULL, mbedtls_ctr_drbg_random, &g_ctr_drbg);
+#endif
+#else
+    ret = mbedtls_pk_parse_keyfile(&ctx, path, NULL);
+#endif
+    if (ret != 0) {
         mbedtls_pk_free(&ctx);
         mbedtls_strerror(ret, msg, sizeof(msg));
         log_error("Error loading %s: %s", path, msg);
         return false;
     }
 
-    if (mbedtls_pk_ec(ctx)->grp.id != ECPARAMS) {
+    if (mbedtls_pk_ec(ctx)->MBEDTLS_PRIVATE(grp).id != ECPARAMS) {
         log_error("Unsupported key type for %s: %s (expected %s)", path,
-            mbedtls_ecp_curve_info_from_grp_id(mbedtls_pk_ec(ctx)->grp.id)->name,
+            mbedtls_ecp_curve_info_from_grp_id(mbedtls_pk_ec(ctx)->MBEDTLS_PRIVATE(grp).id)->name,
             ECPARAMS_NAME
         );
         return false;
@@ -388,7 +389,7 @@ struct key_t *bob_find_key(const uint8_t pkey[])
     struct key_t *key = g_keys;
 
     while (key) {
-        mbedtls_mpi_write_binary(&mbedtls_pk_ec(key->ctx_sign)->Q.X, epkey, ECPARAMS_SIZE);
+        mbedtls_mpi_write_binary(&mbedtls_pk_ec(key->ctx_sign)->MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(X), epkey, ECPARAMS_SIZE);
         if (memcmp(epkey, pkey, ECPARAMS_SIZE) == 0) {
             return key;
         }
@@ -415,10 +416,17 @@ void bob_encrypt_challenge(int sock, uint8_t buf[], size_t buflen, IP *addr)
     key = bob_find_key(pkey);
     if (key) {
         memcpy(sig, "BOB", 3);
+#if MBEDTLS_VERSION_NUMBER >= 0x03000000
+        ret = mbedtls_ecdsa_write_signature(
+            mbedtls_pk_ec(key->ctx_sign), MBEDTLS_MD_SHA256,
+            challenge, CHALLENGE_BIN_LENGTH,
+            sig + 3, sizeof(sig)-3, &slen, mbedtls_ctr_drbg_random, &g_ctr_drbg);
+#else
         ret = mbedtls_ecdsa_write_signature(
             mbedtls_pk_ec(key->ctx_sign), MBEDTLS_MD_SHA256,
             challenge, CHALLENGE_BIN_LENGTH,
             sig + 3, &slen, mbedtls_ctr_drbg_random, &g_ctr_drbg);
+#endif
         slen += 3;
 
         if (ret != 0) {
@@ -487,14 +495,25 @@ bool bob_setup(void)
     struct key_t *key;
     const char *hkey;
 
+#ifdef MBEDTLS_USE_PSA_CRYPTO
+    psa_crypto_init();
+#endif
+
     mbedtls_ctr_drbg_init(&g_ctr_drbg);
     mbedtls_entropy_init(&g_entropy);
+
+    int ret;
+    if ((ret = mbedtls_ctr_drbg_seed(&g_ctr_drbg, mbedtls_entropy_func, &g_entropy,
+            (const unsigned char *) PROGRAM_NAME, sizeof(PROGRAM_NAME)-1)) != 0) {
+        fprintf(stderr, "mbedtls_ctr_drbg_seed returned %d\n", ret);
+        return false;
+    }
 
     // Initialize resources handlers ctx_verify value
     for (size_t i = 0; i < ARRAY_SIZE(g_bob_resources); ++i) {
         resource = &g_bob_resources[i];
         mbedtls_pk_setup(&resource->ctx_verify, mbedtls_pk_info_from_type(MBEDTLS_PK_ECKEY));
-        mbedtls_ecp_group_load(&mbedtls_pk_ec(resource->ctx_verify)->grp, ECPARAMS);
+        mbedtls_ecp_group_load(&mbedtls_pk_ec(resource->ctx_verify)->MBEDTLS_PRIVATE(grp), ECPARAMS);
     }
 
     // Announce keys via DHT

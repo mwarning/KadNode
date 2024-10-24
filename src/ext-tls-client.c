@@ -8,7 +8,7 @@
 #include <errno.h>
 #include <unistd.h>
 
-#include "mbedtls/config.h"
+#include "mbedtls/version.h"
 #include "mbedtls/platform.h"
 #include "mbedtls/net_sockets.h"
 #include "mbedtls/ssl.h"
@@ -347,6 +347,10 @@ bool tls_client_setup(void)
     }
 
     //mbedtls_debug_set_threshold(0);
+
+#ifdef MBEDTLS_USE_PSA_CRYPTO
+    psa_crypto_init();
+#endif
 
     mbedtls_ctr_drbg_init(&g_drbg);
     mbedtls_entropy_init(&g_entropy);

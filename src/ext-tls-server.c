@@ -7,7 +7,7 @@
 #include <netinet/in.h>
 #include <errno.h>
 
-#include "mbedtls/config.h"
+#include "mbedtls/version.h"
 #include "mbedtls/platform.h"
 #include "mbedtls/net_sockets.h"
 #include "mbedtls/ssl.h"
@@ -256,7 +256,16 @@ bool tls_server_add_sni(const char crt_file[], const char key_file[])
         return false;
     }
 
-    if ((ret = mbedtls_pk_parse_keyfile(&key, key_file, "" /* no password */)) != 0) {
+#if MBEDTLS_VERSION_NUMBER >= 0x03000000
+#if defined(MBEDTLS_USE_PSA_CRYPTO)
+    ret = mbedtls_pk_parse_keyfile(&key, key_file, "" /* no password */, mbedtls_psa_get_random, MBEDTLS_PSA_RANDOM_STATE);
+#else
+    ret = mbedtls_pk_parse_keyfile(&key, key_file, "" /* no password */, mbedtls_ctr_drbg_random, &g_drbg);
+#endif
+#else
+    ret = mbedtls_pk_parse_keyfile(&key, key_file, "" /* no password */);
+#endif
+    if (ret != 0) {
         mbedtls_strerror(ret, error_buf, sizeof(error_buf));
         log_error("TLS-Server: %s: %s", key_file, error_buf);
         return false;
@@ -330,6 +339,10 @@ bool tls_server_setup(void)
     if (g_sni_entries == NULL) {
         return true;
     }
+
+#ifdef MBEDTLS_USE_PSA_CRYPTO
+    psa_crypto_init();
+#endif
 
     // Initialize sockets
     mbedtls_net_init(&g_client_fd4);
