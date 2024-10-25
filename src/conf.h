@@ -6,6 +6,8 @@
 #include <stdbool.h>
 #include "main.h"
 
+// Measurement duration for traffic
+#define TRAFFIC_DURATION_SECONDS 8
 
 extern const char *kadnode_version_str;
 
@@ -86,6 +88,13 @@ struct gconf_t {
 #ifdef NSS
 	char *nss_path;
 #endif
+
+	// Traffic measurement
+	time_t traffic_time;
+	uint64_t traffic_in_sum;
+	uint64_t traffic_out_sum;
+	uint32_t traffic_in[TRAFFIC_DURATION_SECONDS];
+	uint32_t traffic_out[TRAFFIC_DURATION_SECONDS];
 };
 
 extern struct gconf_t *gconf;

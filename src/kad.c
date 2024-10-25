@@ -136,6 +136,33 @@ void kad_lookup_own_announcements(struct search_t *search)
 }
 #endif
 
+static void clear_old_traffic_counters()
+{
+    size_t idx = gconf->time_now % TRAFFIC_DURATION_SECONDS;
+    uint32_t since = (gconf->time_now - gconf->traffic_time);
+    size_t n = MIN(since, TRAFFIC_DURATION_SECONDS);
+
+    // clear old traffic measurement buckets
+    for (size_t i = 0; i < n; ++i) {
+        size_t j = (TRAFFIC_DURATION_SECONDS + idx + i + 1) % TRAFFIC_DURATION_SECONDS;
+        gconf->traffic_in[j] = 0;
+        gconf->traffic_out[j] = 0;
+    }
+}
+
+static void record_traffic(uint32_t in_bytes, uint32_t out_bytes)
+{
+    clear_old_traffic_counters();
+
+    gconf->traffic_in_sum += in_bytes;
+    gconf->traffic_out_sum += out_bytes;
+
+    size_t idx = gconf->time_now % TRAFFIC_DURATION_SECONDS;
+    gconf->traffic_time = gconf->time_now;
+    gconf->traffic_in[idx] += out_bytes;
+    gconf->traffic_out[idx] += in_bytes;
+}
+
 // Handle incoming packets and pass them to the DHT code
 void dht_handler(int rc, int sock)
 {
@@ -153,6 +180,8 @@ void dht_handler(int rc, int sock)
         if (buflen <= 0 || buflen >= sizeof(buf)) {
             return;
         }
+
+        record_traffic(buflen, 0);
 
         // The DHT code expects the message to be null-terminated.
         buf[buflen] = '\0';
@@ -207,9 +236,11 @@ void dht_handler(int rc, int sock)
 * Kademlia needs dht_blacklisted/dht_hash/dht_random_bytes functions to be present.
 */
 
-int dht_sendto(int sockfd, const void *buf, int len, int flags, const struct sockaddr *to, int tolen)
+int dht_sendto(int sockfd, const void *buf, int buflen, int flags, const struct sockaddr *to, int tolen)
 {
-    return sendto(sockfd, buf, len, flags, to, tolen);
+    record_traffic(0, buflen);
+
+    return sendto(sockfd, buf, buflen, flags, to, tolen);
 }
 
 int dht_blacklisted(const struct sockaddr *sa, int salen)
@@ -375,24 +406,39 @@ void kad_status(FILE *fp)
     int nodes4_good = kad_count_bucket(buckets, true);
     int nodes6_good = kad_count_bucket(buckets6, true);
 
+    clear_old_traffic_counters();
+    uint32_t traffic_sum_in = 0;
+    uint32_t traffic_sum_out = 0;
+    for (size_t i = 0; i < TRAFFIC_DURATION_SECONDS; ++i) {
+        traffic_sum_in += gconf->traffic_in[i];
+        traffic_sum_out += gconf->traffic_out[i];
+    }
+
     fprintf(
         fp,
         "%s\n"
         "DHT id: %s\n"
+        "DHT uptime: %s\n"
         "DHT listen on: %s / device: %s / port: %d\n"
         "DHT nodes: %d IPv4 (%d good), %d IPv6 (%d good)\n"
         "DHT storage: %d entries with %d addresses\n"
         "DHT searches: %d IPv4 (%d done), %d IPv6 active (%d done)\n"
         "DHT announcements: %d\n"
-        "DHT blocklist: %d\n",
+        "DHT blocklist: %d\n"
+        "DHT traffic: %s, %s/s (in) / %s, %s/s (out)\n",
         kadnode_version_str,
         str_id(myid),
+        str_time(gconf->time_now - gconf->startup_time),
         str_af(gconf->af), gconf->dht_ifname ? gconf->dht_ifname : "<any>", gconf->dht_port,
         nodes4, nodes4_good, nodes6, nodes6_good,
         numstorage, numstorage_peers,
         numsearches4_active, numsearches4_done, numsearches6_active, numsearches6_done,
         numannounces,
-        (next_blacklisted % DHT_MAX_BLACKLISTED)
+        (next_blacklisted % DHT_MAX_BLACKLISTED),
+        str_bytes(gconf->traffic_in_sum),
+        str_bytes(traffic_sum_in / TRAFFIC_DURATION_SECONDS),
+        str_bytes(gconf->traffic_out_sum),
+        str_bytes(traffic_sum_out / TRAFFIC_DURATION_SECONDS)
     );
 }
 

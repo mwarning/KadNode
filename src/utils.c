@@ -765,3 +765,68 @@ time_t time_add_hours(uint32_t hours)
 {
     return gconf->time_now + (60 * 60 * hours);
 }
+
+const char *str_bytes(uint64_t bytes)
+{
+    static char strbytesbuf[4][8];
+    static size_t strbytesbuf_i = 0;
+    char *buf = strbytesbuf[++strbytesbuf_i % 4];
+
+    if (bytes < 1000) {
+        snprintf(buf, 8, "%u B", (unsigned) bytes);
+    } else if (bytes < 1000000) {
+        snprintf(buf, 8, "%.1f K", bytes / 1000.0);
+    } else if (bytes < 1000000000) {
+        snprintf(buf, 8, "%.1f M", bytes / 1000000.0);
+    } else if (bytes < 1000000000000) {
+        snprintf(buf, 8, "%.1f G", bytes / 1000000000.0);
+    } else if (bytes < 1000000000000000) {
+        snprintf(buf, 8, "%.1f T", bytes / 1000000000000.0);
+    } else if (bytes < 1000000000000000000) {
+        snprintf(buf, 8, "%.1f P", bytes / 1000000000000000.0);
+    } else {
+        snprintf(buf, 8, "%.1f E", bytes / 1000000000000000000.0);
+    }
+
+    return buf;
+}
+
+const char *str_time(time_t time)
+{
+    static char strdurationbuf[4][64];
+    static size_t strdurationbuf_i = 0;
+    char *buf = strdurationbuf[++strdurationbuf_i % 4];
+
+    size_t years, days, hours, minutes, seconds;
+    const char *prefix = "";
+
+    if (time < 0) {
+        time = -time;
+        // prepend minus sign
+        prefix = "-";
+    }
+
+    years = time / (365 * 24 * 60 * 60);
+    time -= years * (365 * 24 * 60 * 60);
+    days = time / (24 * 60 * 60);
+    time -= days * (24 * 60 * 60);
+    hours = time / (60 * 60);
+    time -= hours * (60 * 60);
+    minutes = time / 60;
+    time -= minutes * 60;
+    seconds = time;
+
+    if (years > 0) {
+        snprintf(buf, 64, "%s%zuy%zud", prefix, years, days);
+    } else if (days > 0) {
+        snprintf(buf, 64, "%s%zud%zuh", prefix, days, hours);
+    } else if (hours > 0) {
+        snprintf(buf, 64, "%s%zuh%zum", prefix, hours, minutes);
+    } else if (minutes > 0) {
+        snprintf(buf, 64, "%s%zum%zus", prefix, minutes, seconds);
+    } else {
+        snprintf(buf, 64, "%s%zus", prefix, seconds);
+    }
+
+    return buf;
+}

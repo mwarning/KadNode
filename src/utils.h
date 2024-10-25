@@ -62,6 +62,8 @@ const char *str_af(int af);
 const char *str_id(const uint8_t id[]);
 const char *str_addr(const IP *addr);
 const char *str_addr2(const void *ip, uint8_t length, uint16_t port);
+const char *str_bytes(uint64_t bytes);
+const char *str_time(time_t time);
 
 bool addr_is_localhost(const IP *addr);
 bool addr_is_multicast(const IP *addr);
