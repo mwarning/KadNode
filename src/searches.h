@@ -15,7 +15,7 @@ enum AUTH_STATE {
 	AUTH_WAITING // Not yet started
 };
 
-typedef void auth_callback(void);
+typedef void auth_callback_t(void);
 
 // An address that was received as a result of an id search
 struct result_t {
@@ -32,11 +32,11 @@ struct search_t {
 	char query[QUERY_MAX_SIZE];
 	time_t start_time;
 	struct result_t *results;
-	auth_callback *callback;
+	auth_callback_t *callback;
 };
 
 void searches_set_auth_state(const char query[], const IP *addr, const int state);
-struct result_t *searches_get_auth_target(char query[], IP *addr, auth_callback *callback);
+struct result_t *searches_get_auth_target(char query[], IP *addr, auth_callback_t *callback);
 int is_valid_result(const struct result_t *result);
 
 void searches_setup(void);

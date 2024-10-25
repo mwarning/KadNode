@@ -113,7 +113,7 @@ static struct result_t *find_next_result(struct search_t *search)
 }
 
 // Get next search to authenticate
-static struct search_t *find_next_search(auth_callback *callback)
+static struct search_t *find_next_search(auth_callback_t *callback)
 {
     struct search_t *search;
 
@@ -187,7 +187,7 @@ void searches_set_auth_state(const char query[], const IP *addr, const int state
     }
 }
 
-static const char* str_callback(auth_callback *cb) {
+static const char* str_callback(auth_callback_t *cb) {
     if (cb == &tls_client_trigger_auth) {
         return "tls";
     }
@@ -296,7 +296,7 @@ static void search_restart(struct search_t *search)
 struct search_t* searches_start(const char query[])
 {
     uint8_t id[SHA1_BIN_LENGTH];
-    auth_callback *callback;
+    auth_callback_t *callback;
     struct search_t* search;
 
     // Find existing search
