@@ -44,7 +44,7 @@ static mbedtls_x509_crt g_cacert;
 static mbedtls_entropy_context g_entropy;
 static mbedtls_ctr_drbg_context g_drbg;
 static mbedtls_ssl_config g_conf;
-static int g_client_enable = 0;
+static bool g_client_enable = false;
 
 // Allow two parallel authentications at once
 static struct tls_resource g_tls_resources[2];
@@ -258,7 +258,7 @@ void tls_client_trigger_auth(void)
     struct result_t *result;
 
     // Reject query if TLS client disabled
-    if (g_client_enable == 0) {
+    if (!g_client_enable) {
         log_warning("No CA available to authenticate any query.");
         return;
     }
@@ -313,9 +313,9 @@ bool tls_client_add_ca(const char path[])
     int ret;
 
     // Enable client and initialize certs storage
-    if (g_client_enable == 0) {
+    if (!g_client_enable) {
         mbedtls_x509_crt_init(&g_cacert);
-        g_client_enable = 1;
+        g_client_enable = true;
     }
 
     if (((ret = mbedtls_x509_crt_parse_file(&g_cacert, path)) < 0) &&
@@ -337,7 +337,7 @@ bool tls_client_setup(void)
     int i;
 
     // Reject query if TLS client disabled
-    if (g_client_enable == 0) {
+    if (!g_client_enable) {
         return true;
     }
 
