@@ -22,7 +22,7 @@
 
 
 static struct pollfd g_fds[16] = { 0 };
-static net_callback* g_cbs[16] = { NULL };
+static net_callback_t* g_cbs[16] = { NULL };
 static int g_count = 0;
 static bool g_entry_removed = false;
 
@@ -33,7 +33,7 @@ int net_set_nonblocking(int fd)
     return fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK);
 }
 
-void net_add_handler(int fd, net_callback *cb)
+void net_add_handler(int fd, net_callback_t *cb)
 {
     if (cb == NULL) {
         log_error("net_add_handler() Callback is null.");
@@ -56,7 +56,7 @@ void net_add_handler(int fd, net_callback *cb)
     g_count += 1;
 }
 
-void net_remove_handler(int fd, net_callback *cb)
+void net_remove_handler(int fd, net_callback_t *cb)
 {
     if (cb == NULL) {
         log_error("net_remove_handler() callback is null");
