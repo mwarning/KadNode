@@ -129,6 +129,7 @@ static const option_t g_options[] = {
     {"help", 1, oHelp},
     {"peer", 2, oPeer},
     {"lookup", 2, oLookup},
+    {"status", 1, oStatus},
     {"announce-start", 2, oAnnounceStart},
     {"announce-stop", 2, oAnnounceStop},
     {"blocklist", 1, oPrintBlocked},
