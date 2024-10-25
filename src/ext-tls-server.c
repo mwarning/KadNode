@@ -36,7 +36,7 @@
 */
 
 static mbedtls_entropy_context g_entropy;
-static mbedtls_ctr_drbg_context g_drbg;
+static mbedtls_ctr_drbg_context g_ctr_drbg;
 static mbedtls_ssl_context g_ssl;
 static mbedtls_ssl_config g_conf;
 
@@ -260,7 +260,7 @@ bool tls_server_add_sni(const char crt_file[], const char key_file[])
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
     ret = mbedtls_pk_parse_keyfile(&key, key_file, "" /* no password */, mbedtls_psa_get_random, MBEDTLS_PSA_RANDOM_STATE);
 #else
-    ret = mbedtls_pk_parse_keyfile(&key, key_file, "" /* no password */, mbedtls_ctr_drbg_random, &g_drbg);
+    ret = mbedtls_pk_parse_keyfile(&key, key_file, "" /* no password */, mbedtls_ctr_drbg_random, &g_ctr_drbg);
 #endif
 #else
     ret = mbedtls_pk_parse_keyfile(&key, key_file, "" /* no password */);
@@ -352,7 +352,7 @@ bool tls_server_setup(void)
 
     mbedtls_ssl_init(&g_ssl);
     mbedtls_ssl_config_init(&g_conf);
-    mbedtls_ctr_drbg_init(&g_drbg);
+    mbedtls_ctr_drbg_init(&g_ctr_drbg);
 
     // Announce all common names from certificates
     tls_announce_all_cnames();
@@ -360,7 +360,7 @@ bool tls_server_setup(void)
     //mbedtls_debug_set_threshold(0);
 
     mbedtls_entropy_init(&g_entropy);
-    if ((ret = mbedtls_ctr_drbg_seed(&g_drbg, mbedtls_entropy_func, &g_entropy,
+    if ((ret = mbedtls_ctr_drbg_seed(&g_ctr_drbg, mbedtls_entropy_func, &g_entropy,
         (const unsigned char *) pers, strlen(pers))) != 0) {
         log_error("TLS-Server: mbedtls_ctr_drbg_seed returned -0x%x", -ret);
         return false;
@@ -380,7 +380,7 @@ bool tls_server_setup(void)
     }
 
     mbedtls_ssl_conf_authmode(&g_conf, MBEDTLS_SSL_VERIFY_REQUIRED);
-    mbedtls_ssl_conf_rng(&g_conf, mbedtls_ctr_drbg_random, &g_drbg);
+    mbedtls_ssl_conf_rng(&g_conf, mbedtls_ctr_drbg_random, &g_ctr_drbg);
     //mbedtls_ssl_conf_dbg(&g_conf, my_debug, stdout);
 
     mbedtls_ssl_conf_sni(&g_conf, sni_callback, g_sni_entries);
@@ -405,5 +405,6 @@ bool tls_server_setup(void)
 
 void tls_server_free(void)
 {
-    // Nothing to do
+    mbedtls_ctr_drbg_free(&g_ctr_drbg);
+    mbedtls_entropy_free(&g_entropy);
 }
