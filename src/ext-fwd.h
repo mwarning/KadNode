@@ -15,16 +15,16 @@
 
 // Return values for UPNP/NAT-PMP
 enum {
-	PF_DONE = 1,
-	PF_RETRY = 0,
-	PF_ERROR = -1
+    PF_DONE = 1,
+    PF_RETRY = 0,
+    PF_ERROR = -1
 };
 
 struct forwarding_t {
-	struct forwarding_t *next;
-	int port; // Port to be forwarded on the router
-	time_t lifetime; // Keep entry until lifetime expires
-	time_t refreshed; // Last time the entry was refreshed
+    struct forwarding_t *next;
+    int port; // Port to be forwarded on the router
+    time_t lifetime; // Keep entry until lifetime expires
+    time_t refreshed; // Last time the entry was refreshed
 };
 
 int fwd_setup(void);

@@ -6,33 +6,33 @@
 
 // Authentication states
 enum AUTH_STATE {
-	AUTH_OK, // Authentication successful or not needed
-	AUTH_AGAIN, // Was already successful, but needs to be retested
-	AUTH_FAILED, // Verification failed
-	AUTH_ERROR, // No reply
-	AUTH_SKIP, // Skipped, only one result needed
-	AUTH_PROGRESS, // In progress
-	AUTH_WAITING // Not yet started
+    AUTH_OK, // Authentication successful or not needed
+    AUTH_AGAIN, // Was already successful, but needs to be retested
+    AUTH_FAILED, // Verification failed
+    AUTH_ERROR, // No reply
+    AUTH_SKIP, // Skipped, only one result needed
+    AUTH_PROGRESS, // In progress
+    AUTH_WAITING // Not yet started
 };
 
 typedef void auth_callback_t(void);
 
 // An address that was received as a result of an id search
 struct result_t {
-	struct result_t *next;
-	IP addr;
-	enum AUTH_STATE state;
+    struct result_t *next;
+    IP addr;
+    enum AUTH_STATE state;
 };
 
 // A bucket of results received when in search of an id
 struct search_t {
-	struct search_t *next;
-	uint8_t id[SHA1_BIN_LENGTH];
-	bool done;
-	char query[QUERY_MAX_SIZE];
-	time_t start_time;
-	struct result_t *results;
-	auth_callback_t *callback;
+    struct search_t *next;
+    uint8_t id[SHA1_BIN_LENGTH];
+    bool done;
+    char query[QUERY_MAX_SIZE];
+    time_t start_time;
+    struct result_t *results;
+    auth_callback_t *auth_cb;
 };
 
 void searches_set_auth_state(const char query[], const IP *addr, const int state);

@@ -99,8 +99,8 @@ void windows_service_install(void)
         NULL, // No load order group
         NULL, // No tag identifier
         "", // Dependencies
-        0,	// LocalSystem account
-        0	// No password
+        0, // LocalSystem account
+        0 // No password
     );
 
     CloseServiceHandle(hService);

@@ -226,7 +226,7 @@ static void cmd_exec(FILE *fp, char request[], int allow_debug)
         kad_status(fp);
         break;
     case oAnnounceStart:
-		announces_add(fp, argv[1], LONG_MAX);
+        announces_add(fp, argv[1], LONG_MAX);
         break;
     case oAnnounceStop:
         announces_remove(id);

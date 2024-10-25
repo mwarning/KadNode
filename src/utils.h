@@ -27,9 +27,9 @@
 #define time_now_sec() (gconf->time_now)
 
 typedef struct {
-	const char *name;
-	uint16_t num_args;
-	uint16_t code;
+    const char *name;
+    uint16_t num_args;
+    uint16_t code;
 } option_t;
 
 const option_t *find_option(const option_t options[], const char name[]);

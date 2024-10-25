@@ -661,7 +661,7 @@ static bool addr_parse_internal(IP *ret, const char addr_str[], const char port_
 * Parse/Resolve various string representations of
 * IPv4/IPv6 addresses and optional port.
 * An address can also be a domain name.
-* A port can also be a service	(e.g. 'www').
+* A port can also be a service (e.g. 'www').
 *
 * "<address>"
 * "<ipv4_address>:<port>"
