@@ -38,7 +38,7 @@ int setargs(const char **argv, int argv_size, char *args);
 int parse_int(const char *s, int err);
 
 bool parse_id(uint8_t id[], size_t idsize, const char query[], size_t querysize);
-bool hex_get_id(uint8_t id[], size_t idsize, const char query[]); // TODO: remove
+bool hex_parse_id(uint8_t id[], size_t idsize, const char query[]); // TODO: remove
 
 bool parse_annoucement(uint8_t id[], int *port, const char query[], int default_port);
 bool is_announcement(const char query[]); // "<hex-id>[:<port>]"

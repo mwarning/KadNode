@@ -101,14 +101,14 @@ struct announcement_t *announces_add(FILE *fp, const char query[], time_t lifeti
 #ifdef BOB
     // base32 or base64
     if (!ret) {
-        ret = bob_get_id(id, sizeof(id), query);
+        ret = bob_parse_id(id, sizeof(id), query);
     }
 #endif
 
 #ifdef TLS
     // contains dot (.p2p is already removed here) => sha256 hash
     if (!ret) {
-        ret = tls_client_get_id(id, sizeof(id), query);
+        ret = tls_client_parse_id(id, sizeof(id), query);
     }
 #endif
 

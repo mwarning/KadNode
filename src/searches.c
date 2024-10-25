@@ -310,20 +310,20 @@ struct search_t* searches_start(const char query[])
     }
 
 #ifdef TLS
-    if (tls_client_get_id(id, sizeof(id), query)) {
+    if (tls_client_parse_id(id, sizeof(id), query)) {
         // Use TLS authentication
         // For e.g. example.com.p2p
         callback = &tls_client_trigger_auth;
     } else
 #endif
 #ifdef BOB
-    if (bob_get_id(id, sizeof(id), query)) {
+    if (bob_parse_id(id, sizeof(id), query)) {
         // Use Bob authentication
         // For e.g. <32BytePublicKey>.p2p
         callback = &bob_trigger_auth;
     } else
 #endif
-    if (hex_get_id(id, sizeof(id), query)) {
+    if (hex_parse_id(id, sizeof(id), query)) {
         // Use no authentication
         // For e.g. <20ByteHashKey>.p2p
         callback = NULL;

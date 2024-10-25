@@ -7,7 +7,7 @@
 bool tls_client_add_ca(const char ca_path[]);
 
 // Decide if the query is meant to be authorized via an CA
-bool tls_client_get_id(uint8_t id[], size_t len, const char query[]);
+bool tls_client_parse_id(uint8_t id[], size_t len, const char query[]);
 
 // Trigger authorisation of results; need to be called multiple times.
 void tls_client_trigger_auth(void);

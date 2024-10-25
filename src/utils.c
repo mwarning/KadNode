@@ -112,7 +112,7 @@ bool is_announcement(const char query[])
     return parse_annoucement(id, &port, query, -1);
 }
 
-bool hex_get_id(uint8_t id[], size_t idsize, const char query[])
+bool hex_parse_id(uint8_t id[], size_t idsize, const char query[])
 {
     size_t querysize;
 /*

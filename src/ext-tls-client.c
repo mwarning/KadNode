@@ -210,7 +210,7 @@ static void tls_handle(int rc, int fd)
 }
 
 // Try to create a DHT id from sanitized domain query
-bool tls_client_get_id(uint8_t id[], size_t len, const char query[])
+bool tls_client_parse_id(uint8_t id[], size_t len, const char query[])
 {
     uint8_t hash[32];
     int ret = 0;

@@ -86,7 +86,7 @@ void bob_auth_end(struct bob_resource *resource, int state)
 }
 
 // Try to create a DHT id from a sanitized key query
-bool bob_get_id(uint8_t id[], size_t idlen, const char query[])
+bool bob_parse_id(uint8_t id[], size_t idlen, const char query[])
 {
     size_t querylen = strlen(query);
     uint8_t bin[32];
