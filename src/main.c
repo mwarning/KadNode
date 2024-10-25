@@ -105,7 +105,7 @@ int main_run(void)
 
     /* Run program */
 
-    if (rc) {
+    if (rc == 0) {
         // Loop over all sockets and file descriptors
         net_loop();
         log_info("Shutting down...");
