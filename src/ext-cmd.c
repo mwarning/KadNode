@@ -200,11 +200,11 @@ static void cmd_exec(FILE *fp, char request[], int allow_debug)
         const struct search_t *search = kad_lookup(argv[1]);
 
         if (search) {
-            int found = 0;
+            bool found = false;
             for (const struct result_t *result = search->results; result; result = result->next) {
                 if (is_valid_result(result)) {
                     fprintf(fp, "%s\n", str_addr(&result->addr));
-                    found = 1;
+                    found = true;
                 }
             }
 
