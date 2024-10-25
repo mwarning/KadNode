@@ -175,7 +175,7 @@ void searches_set_auth_state(const char query[], const IP *addr, const int state
 
         // Skip all other results if we found one that is ok
         if (state == AUTH_OK) {
-            search->done = 1;
+            search->done = true;
             result = search->results;
             while (result) {
                 if (result->state == AUTH_WAITING) {
@@ -238,14 +238,14 @@ static void search_restart(struct search_t *search)
     struct result_t *result;
     struct result_t *prev;
     struct result_t *next;
-    int remove;
+    bool remove;
 
     log_debug("Searches: Restart search for query: %s", search->query);
 
     search->start_time = time_now_sec();
-    search->done = 0;
+    search->done = false;
 
-    remove = 0;
+    remove = false;
     next = NULL;
     prev = NULL;
 
@@ -256,7 +256,7 @@ static void search_restart(struct search_t *search)
         case AUTH_ERROR:
         case AUTH_AGAIN:
         case AUTH_FAILED:
-            remove = 1;
+            remove = true;
             // Remove result
             break;
         case AUTH_OK:
@@ -284,7 +284,7 @@ static void search_restart(struct search_t *search)
             }
             free(result);
             result = next;
-            remove = 0;
+            remove = false;
         } else {
             prev = result;
             result = result->next;

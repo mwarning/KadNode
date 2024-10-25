@@ -28,7 +28,7 @@ struct result_t {
 struct search_t {
 	struct search_t *next;
 	uint8_t id[SHA1_BIN_LENGTH];
-	uint16_t done;
+	bool done;
 	char query[QUERY_MAX_SIZE];
 	time_t start_time;
 	struct result_t *results;
