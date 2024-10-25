@@ -410,9 +410,9 @@ static const char* dns_lookup_ptr(const char ptr_name[])
     typedef struct {
         const char* ptr_name;
         const char* hostname;
-    } Entry;
+    } entry_t;
 
-    static const Entry entries[] = {
+    static const entry_t entries[] = {
         { "1.0.0.127.in-addr.arpa", "localhost" },
         { "1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.ip6.arpa", "localhost" }
     };
