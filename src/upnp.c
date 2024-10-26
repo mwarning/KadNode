@@ -134,8 +134,14 @@ int upnp_handler(struct upnp_handle_t *handle, uint16_t port, time_t lifespan, t
             handle->retry = now + (10 * 60);
             handle->state = UPNP_STATE_DISCOVER_GATEWAY;
             return PF_RETRY;
+#if (MINIUPNPC_API_VERSION <= 17)
         } else if (UPNP_GetValidIGD(devlist, &handle->urls, &handle->data,
                 handle->addr, sizeof(handle->addr)) == 1) {
+#else
+        } else if (UPNP_GetValidIGD(devlist, &handle->urls, &handle->data,
+                handle->addr, sizeof(handle->addr), NULL, 0) == 1) {
+#endif
+
             freeUPNPDevlist(devlist);
             log_info("UPnP: Found gateway device \"%s\".", handle->urls.controlURL);
             handle->state = UPNP_STATE_GET_PORTMAPPING;
