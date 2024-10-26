@@ -211,12 +211,12 @@ static int write_pem(const mbedtls_pk_context *key, const char path[])
 
     if ((file = fopen(path, "r")) != NULL) {
         fclose(file);
-        log_error("File already exists: %s", path);
+        fprintf(stderr, "File already exists: %s\n", path);
         return -1;
     }
 
     if ((file = fopen(path, "wb")) == NULL) {
-        log_error("%s %s", path,  strerror(errno));
+        fprintf(stderr, "%s %s\n", path,  strerror(errno));
         return -1;
     }
 
@@ -226,7 +226,7 @@ static int write_pem(const mbedtls_pk_context *key, const char path[])
     len = strlen((char*) buf);
     if (fwrite(buf, 1, len, file) != len) {
         fclose(file);
-        log_error("%s: %s", path, strerror(errno));
+        fprintf(stderr, "%s: %s\n", path, strerror(errno));
         return -1;
     }
 
@@ -249,29 +249,45 @@ static const char *get_pkey_base32(const mbedtls_pk_context *ctx)
 // to path and print public key to stdout.
 bool bob_create_key(const char path[])
 {
+    mbedtls_entropy_context entropy;
+    mbedtls_ctr_drbg_context ctr_drbg;
     mbedtls_pk_context ctx;
     int ret;
 
-    mbedtls_pk_init(&ctx);
+#ifdef MBEDTLS_USE_PSA_CRYPTO
+    psa_crypto_init();
+#endif
 
-    printf("Generating %s key pair...\n", ECPARAMS_NAME);
+    mbedtls_ctr_drbg_init(&ctr_drbg);
+    mbedtls_entropy_init(&entropy);
+
+    if ((ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
+            (const unsigned char *) PROGRAM_NAME, strlen(PROGRAM_NAME))) != 0) {
+        fprintf(stderr, "mbedtls_ctr_drbg_seed returned %d\n", ret);
+        return false;
+    }
+
+    mbedtls_pk_init(&ctx);
 
     if ((ret = mbedtls_pk_setup(&ctx, mbedtls_pk_info_from_type(MBEDTLS_PK_ECKEY))) != 0) {
         fprintf(stderr, "mbedtls_pk_setup returned -0x%04x\n", -ret);
         return false;
     }
 
+    printf("Generating %s key pair...\n", ECPARAMS_NAME);
+
     // Generate key where Y is even (called positive in a prime group)
     // This spares us from transmitting the sign along with the public key
     do {
         if ((ret = mbedtls_ecp_gen_key(ECPARAMS, mbedtls_pk_ec(ctx),
-            mbedtls_ctr_drbg_random, &g_ctr_drbg)) != 0) {
+            mbedtls_ctr_drbg_random, &ctr_drbg)) != 0) {
             fprintf(stderr, "mbedtls_ecp_gen_key returned -0x%04x\n", -ret);
             return false;
         }
     } while (mbedtls_mpi_get_bit(&mbedtls_pk_ec(ctx)->MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(Y), 0) != 0);
 
-    if (write_pem(&ctx, path) != 0) {
+
+    if ((ret = write_pem(&ctx, path)) != 0) {
         return false;
     }
 
