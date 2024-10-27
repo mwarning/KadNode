@@ -75,9 +75,9 @@ static const char *kadnode_usage_str =
 "\n"
 "Usage: kadnode [OPTIONS]\n"
 "\n"
-" --announce <query>:<port>		Announce a name and port.\n\n"
+" --announce <query>[:<port>]		Announce a domain name or key.\n\n"
 " --peerfile <file>			Import/Export peers from and to a file.\n\n"
-" --peer <ip-address>			Add a static peer address.\n"
+" --peer <address>[:<port>]		Add a static peer by IP address or domain name.\n"
 "					This option may occur multiple times.\n\n"
 " --user <user>				Change the UUID after start.\n\n"
 " --port	<port>				Bind DHT to this port.\n"
@@ -431,7 +431,7 @@ static bool conf_set(const char opt[], const char val[])
     {
     case oAnnounce:
         if (!array_append(&g_announce_args[0], ARRAY_SIZE(g_announce_args), val)) {
-            log_error("Too many announce entries");
+            log_error("Too many announcements.");
             return false;
         }
         break;
