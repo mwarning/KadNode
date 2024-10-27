@@ -1,7 +1,7 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "KADNODE" "1" "January 2018" "mwarning" "Kadnode Manual"
+.TH "KADNODE" "1" "October 2024" "mwarning" "Kadnode Manual"
 .
 .SH "NAME"
 \fBkadnode\fR \- P2P name resolver daemon
@@ -13,10 +13,10 @@
 \fBkadnode\-ctl\fR [\.\.\.]
 .
 .SH "DESCRIPTION"
-\fBKadNode\fR is a small P2P DNS resolver\. It supports authentication based on x509 certificates and hexadecimal public key queries\.
+\fBKadNode\fR is a small P2P DNS resolver\. It supports authentication based on x509 certificates and public key queries as base32 and hexadecimal strings\.
 .
 .SH "JOIN THE SWARM"
-KadNode needs to know at least one active peer to join / bootstrap into the swarm\. There are three ways to archieve this:
+KadNode needs to know at least one active peer to join / bootstrap into the swarm\. There are three ways to achieve this:
 .
 .IP "1." 4
 Provide one or more peers to the command line arguments\. These could be public BitTorrent trackers, or other KadNode instances: \fBkadnode \-\-peer bttracker\.debian\.org \-\-peer 192\.168\.1\.1\fR
@@ -52,7 +52,7 @@ kadnode \-\-announce mynode\.p2p \-\-tls\-server\-cert mynode\.crt,mynode\.key
 .IP "" 0
 .
 .P
-As an alternative, ownerhip can be proven using a HTTPS server running on the same host\. In this case, KadNode itself does not need certificates, but needs to announce the HTTPS port:
+As an alternative, ownership can be proven using an HTTPS server running on the same host\. In this case, KadNode itself does not need certificates, but needs to announce the HTTPS port:
 .
 .IP "" 4
 .
@@ -103,10 +103,10 @@ Wrote secret key to mysecretkey\.pem
 Now make the secret key load on KadNode startup: \fBkadnode \-\-bob\-load\-key mysecretkey\.pem\fR
 .
 .P
-Any reachable node can now resolve c492192ac20144ed2a43d57e7239f5ef5f6bb418a51600980e55ff565cc916a4\.p2p to the IP address of the announcing host\. There is no need to share any additional information beforehand\.
+Any reachable node can now resolve \fBc492192ac20144ed2a43d57e7239f5ef5f6bb418a51600980e55ff565cc916a4\.p2p\fR to the IP address of the announcing host\. There is no need to share any additional information beforehand\.
 .
 .SH "No Authentication"
-KadNode also allows to just lookup a hexdecimal string and to get IP addresses as return\. This is the plain use of the DHT\. The hexadecimal string will be cut down or filled up with zeros internally to fit the size the DHT uses (currently 20 bytes)\.
+KadNode also allows to just lookup a hexadecimal string and to get IP addresses as return\. This is the plain use of the DHT\. The hexadecimal string will be cut down or filled up with zeros internally to fit the size the DHT uses (currently 20 bytes)\.
 .
 .SH "OPTIONS"
 .
@@ -323,66 +323,109 @@ When not started in background, KadNode accepts a variety of commands from stand
 \fBstatus\fR
 .
 .br
-Print the node id, the number of known nodes / searches / stored hashes and more\.
+Print various status information\. This includes DHT identifier,
+.
+.br
+uptime, traffic, number of searches and announcements\.
 .
 .IP "\(bu" 4
-\fBlookup\fR \fIdomain\fR
+\fBlookup\fR \fIquery\fR
 .
 .br
-Lookup the IP addresses of all nodes that claim to satisfy the domain\.
+Lookup a domain, base16 or base32 string\.
 .
 .br
-The first call will start the search\.
+The \.p2p TLD is optional\.
 .
 .IP "\(bu" 4
-\fBannounce\fR [\fIdomain\fR[\fI:\fIport\fR\fR] [\fI\fIminutes\fR\fR]]
+\fBannounce\-start\fR \fIquery\fR[\fI:\fIport\fR\fR]
 .
 .br
-Announce that this instance is associated with a domain
-.
-.br
-and an optional port\. The default port is random (but not equal 0)\.
-.
-.br
-A missing \fIminutes\fR argument trigger a single announcement\. Negative \fIminutes\fR
-.
-.br
-last for the entire runtime\. Otherwise the lifetime is set \fIminutes\fR into the future\.
-.
-.br
-No arguments will announce all identifiers at once\.
+Start to announce a query\.
 .
 .IP "\(bu" 4
-\fBimport\fR \fIaddr\fR
+\fBannounce\-stop\fR \fIquery\fR
 .
 .br
-Send a ping to another KadNode instance to establish a connection\.
+Remove an announcement\.
 .
 .IP "\(bu" 4
-\fBexport\fR
+\fBannouncements\fR
 .
 .br
-Print a few good nodes\.
+List all announcements\.
 .
 .IP "\(bu" 4
-\fBlist\fR [\fBblacklist\fR|\fBbuckets\fR|\fBconstants\fR|\fBforwardings\fR|\fBresults\fR|\fBsearches\fR|\fBstorage\fR|\fBvalues\fR]
+\fBsearches\fR
 .
 .br
-List various internal data structures\.
+List all searches\.
 .
 .IP "\(bu" 4
-\fBblacklist\fR \fIaddr\fR
+\fBbob\-keys\fR
 .
 .br
-Blacklist a specific IP address\.
+List bob keys\.
+.
+.IP "\(bu" 4
+\fBhelp\fR
+.
+.br
+Print detailed help\.
+.
+.IP "" 0
+.
+.P
+Internal commands:
+.
+.IP "\(bu" 4
+\fBport\-forwardings\fR
+.
+.br
+List the port forwardings
+.
+.IP "\(bu" 4
+\fBconstants\fR
+.
+.br
+List internal constants\.
+.
+.IP "" 0
+.
+.P
+DHT specific commands:
+.
+.IP "\(bu" 4
+\fBdht\-ping\fR \fIip\-address\fR[\fI:\fIport\fR\fR]
+.
+.br
+Ping another DHT peer\. Can be used to bootstrap\.
+.
+.IP "\(bu" 4
+\fBdht\-blocklist\fR
+.
+.br
+List blocked IP addresses\.
+.
+.IP "\(bu" 4
+\fBdht\-peers\fR
+.
+.br
+Print IP addresses of all peers\.
+.
+.IP "\(bu" 4
+\fBdht\-buckets\fR|\fBdht\-searches\fR|\fBdht\-storage\fR
+.
+.br
+Print various DHT internal data structures\.
 .
 .IP "" 0
 .
 .SH "KadNode External Console"
-KadNode allows a limited set of commands to be send from any user from other consoles\.
+KadNode allows a limited set of commands to be sent from any user from other consoles\.
 .
 .P
-\fBkadnode\-ctl\fR [\-p path] [status|lookup|announce|import|export|blacklist]
+\fBkadnode\-ctl\fR [\-p path] [status|lookup|\.\.\.]
 .
 .IP "\(bu" 4
 \fB\-p\fR \fIpath\fR
@@ -399,7 +442,7 @@ Print this help\.
 .IP "" 0
 .
 .SH "Name Service Switch (NSS)"
-Kadnode can intercept system wide DNS lookups via NSS\. This is need to be able to use kadnode links in the web browser or for command line tools like ssh\. For this, \fB/etc/nsswitch\.conf\fR need to be configured:
+Kadnode can intercept system\-wide DNS lookups via NSS\. This is need to be able to use kadnode links in the web browser or for command line tools like ssh\. For this, \fB/etc/nsswitch\.conf\fR need to be configured:
 .
 .IP "\(bu" 4
 Copy libnss_kadnode\.so\.2 to /lib/\. Other libnss_*\.so files are likely to be there as well\.
@@ -415,7 +458,7 @@ Copy libnss_kadnode\.so\.2 to /lib/\. Other libnss_*\.so files are likely to be 
 .IP "" 0
 .
 .SH "Automatic Port Forwarding"
-If KadNode runs on a computer in a private network, it will try to establish a port forwarding for the DHT port and ports used for announcements\. Port forwarding only works if UPnP/NAT\-PMP is compiled into KadNode and is supported by the gateway/router\. This is useful to make a local service (e\.g\. a web server) reachable from the Internet without the need to configure port forwardings manually\.
+If KadNode runs on a computer in a private network, it will try to establish a port forwarding for the DHT port and ports used for announcements\. Port forwarding only works if UPnP/NAT\-PMP is compiled into KadNode (features "natpmp" and "upnp") and it is enabled by the gateway/router\. This is useful to make a local service (e\.g\. a web server) reachable from the Internet without the need to configure port forwardings manually\.
 .
 .SH "LICENSE"
 MIT/X11

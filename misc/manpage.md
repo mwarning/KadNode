@@ -1,5 +1,5 @@
 kadnode(1) - P2P name resolver daemon
-====================================
+=====================================
 
 ## SYNOPSIS
 
@@ -80,7 +80,7 @@ Now make the secret key load on KadNode startup:
 kadnode --bob-load-key mysecretkey.pem
 ```
 
-Any reachable node can now resolve c492192ac20144ed2a43d57e7239f5ef5f6bb418a51600980e55ff565cc916a4.p2p to the IP address of the announcing host. There is no need to share any additional information beforehand.
+Any reachable node can now resolve `c492192ac20144ed2a43d57e7239f5ef5f6bb418a51600980e55ff565cc916a4.p2p` to the IP address of the announcing host. There is no need to share any additional information beforehand.
 
 ## No Authentication
 
@@ -188,36 +188,58 @@ This is the plain use of the DHT. The hexadecimal string will be cut down or fil
 When not started in background, KadNode accepts a variety of commands from standard input.
 
   * `status`  
-    Print the node id, the number of known nodes / searches / stored hashes and more.
+    Print various status information. This includes DHT identifier,  
+    uptime, traffic, number of searches and announcements.
 
-  * `lookup` *domain*  
-    Lookup the IP addresses of all nodes that claim to satisfy the domain.  
-    The first call will start the search.
+  * `lookup` *query*  
+    Lookup a domain, base16 or base32 string.  
+    The .p2p TLD is optional.
 
-  * `announce` [*domain*[<i>:*port*</i>] [<i>*minutes*</i>]]  
-    Announce that this instance is associated with a domain  
-    and an optional port. The default port is random (but not equal 0).  
-    A missing *minutes* argument trigger a single announcement. Negative *minutes*  
-    last for the entire runtime. Otherwise the lifetime is set *minutes* into the future.  
-    No arguments will announce all identifiers at once.
+  * `announce-start` *query*[<i>:*port*</i>]  
+    Start to announce a query.
 
-  * `import` *addr*  
-    Send a ping to another KadNode instance to establish a connection.
+  * `announce-stop` *query*  
+    Remove an announcement.
 
-  * `export`  
-    Print a few good nodes.
+  * `announcements`  
+    List all announcements.
 
-  * `list` [`blacklist`|`buckets`|`constants`|`forwardings`|`results`|`searches`|`storage`|`values`]  
-    List various internal data structures.
+  * `searches`  
+    List all searches.
 
-  * `blacklist` *addr*  
-    Blacklist a specific IP address.
+  * `bob-keys`  
+    List bob keys.
+
+  * `help`  
+    Print detailed help.
+
+Internal commands:
+
+  * `port-forwardings`  
+    List the port forwardings
+
+  * `constants`  
+    List internal constants.
+
+DHT specific commands:
+
+  * `dht-ping` *ip-address*[<i>:*port*</i>]  
+    Ping another DHT peer. Can be used to bootstrap.
+
+  * `dht-blocklist`  
+    List blocked IP addresses.
+
+  * `dht-peers`  
+    Print IP addresses of all peers.
+
+  * `dht-buckets`|`dht-searches`|`dht-storage`  
+    Print various DHT internal data structures.
 
 ## KadNode External Console
 
 KadNode allows a limited set of commands to be sent from any user from other consoles.
 
-`kadnode-ctl` [-p path] [status|lookup|announce|import|export|blacklist]
+`kadnode-ctl` [-p path] [status|lookup|...]
 
   * `-p` *path*  
     Unix socket used to connect to the command shell of a local KadNode instance (Default: /tmp/kadnode.sock).
@@ -236,7 +258,7 @@ Kadnode can intercept system-wide DNS lookups via NSS. This is need to be able t
 ## Automatic Port Forwarding
 
 If KadNode runs on a computer in a private network, it will try to establish a port forwarding for the DHT port and ports used for announcements.
-Port forwarding only works if UPnP/NAT-PMP is compiled into KadNode and is supported by the gateway/router.
+Port forwarding only works if UPnP/NAT-PMP is compiled into KadNode (features "natpmp" and "upnp") and it is enabled by the gateway/router.
 This is useful to make a local service (e.g. a web server) reachable from the Internet without the need to
 configure port forwardings manually.
 
