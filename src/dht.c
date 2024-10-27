@@ -1127,6 +1127,10 @@ expire_searches(dht_callback_t *callback, void *closure)
                                 DHT_EVENT_SEARCH_DONE : DHT_EVENT_SEARCH_DONE6,
                                 sr->id, NULL, 0);
             }
+
+            if(callback)
+                (*callback)(closure, DHT_EVENT_SEARCH_EXPIRED, sr->id, NULL, 0);
+
             free(sr);
         } else {
             previous = sr;

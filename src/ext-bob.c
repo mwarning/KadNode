@@ -86,10 +86,9 @@ void bob_auth_end(struct bob_resource *resource, int state)
 }
 
 // Try to create a DHT id from a sanitized key query
-bool bob_parse_id(uint8_t id[], size_t idlen, const char query[])
+bool bob_parse_id(uint8_t id[], size_t idlen, const char query[], size_t querylen)
 {
-    size_t querylen = strlen(query);
-    uint8_t bin[32];
+    uint8_t bin[32] = {0};
 
     if (bytes_from_base32(bin, sizeof(bin), query, querylen)
         || bytes_from_base16(bin, sizeof(bin), query, querylen)) {
@@ -520,7 +519,7 @@ bool bob_setup(void)
 
     int ret;
     if ((ret = mbedtls_ctr_drbg_seed(&g_ctr_drbg, mbedtls_entropy_func, &g_entropy,
-            (const unsigned char *) PROGRAM_NAME, sizeof(PROGRAM_NAME)-1)) != 0) {
+            (const unsigned char *) PROGRAM_NAME, strlen(PROGRAM_NAME))) != 0) {
         fprintf(stderr, "mbedtls_ctr_drbg_seed returned %d\n", ret);
         return false;
     }

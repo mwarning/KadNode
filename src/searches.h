@@ -28,8 +28,8 @@ struct result_t {
 struct search_t {
     struct search_t *next;
     uint8_t id[SHA1_BIN_LENGTH];
+    char query[QUERY_MAX_SIZE]; // sanitized query (lower case, not .p2p TLD)
     bool done;
-    char query[QUERY_MAX_SIZE];
     time_t start_time;
     struct result_t *results;
     auth_callback_t *auth_cb;
@@ -39,6 +39,15 @@ void searches_set_auth_state(const char query[], const IP *addr, const int state
 struct result_t *searches_get_auth_target(char query[], IP *addr, auth_callback_t *callback);
 int is_valid_result(const struct result_t *result);
 
+enum QUERY_TYPE {
+    QUERY_TYPE_INVALID,
+    QUERY_TYPE_TLS,
+    QUERY_TYPE_BOB,
+    QUERY_TYPE_NONE,
+};
+
+int parse_query(uint8_t id_ret[], char squery_ret[], int *port_ret, const char query[]);
+
 void searches_setup(void);
 void searches_free(void);
 
@@ -47,6 +56,8 @@ struct search_t *searches_start(const char query[]);
 
 // Find a search by infohash, so we can add results
 struct search_t *searches_find_by_id(const uint8_t id[]);
+
+void searches_remove_by_id(const uint8_t id[]);
 
 // Add an address to a result bucket
 void searches_add_addr(struct search_t *search, const IP *addr);

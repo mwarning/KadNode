@@ -99,7 +99,7 @@ clean:
 	rm -rf build/*
 
 manpage:
-	ronn --roff --manual=Kadnode\ Manual --organization=mwarning --date=2018-01-01 misc/manpage.md
+	ronn --roff --manual=Kadnode\ Manual --organization=mwarning --date=2024-10-26 misc/manpage.md
 	mv misc/manpage.1 misc/manpage
 
 install:

@@ -82,7 +82,7 @@ static void nss_client_handler(int rc, int clientsock)
     res.count = count;
 
 finish:
-    write(clientsock, &res, sizeof(res));
+    rc = write(clientsock, &res, sizeof(res));
 
 abort:
     close(clientsock);

@@ -70,68 +70,13 @@ const option_t *find_option(const option_t options[], const char name[])
     return NULL;
 }
 
-bool parse_id(uint8_t id[], size_t idsize, const char query[], size_t querysize)
+bool hex_parse_id(uint8_t id[], size_t idsize, const char query[], size_t querylen)
 {
-    if (bytes_from_base32(id, idsize, query, querysize)) {
+    if (bytes_from_base32(id, idsize, query, querylen)) {
         return true;
     }
 
-    if (bytes_from_base16(id, idsize, query, querysize)) {
-        return true;
-    }
-
-    return false;
-}
-
-// "<hex-id>[:<port>]"
-bool parse_annoucement(uint8_t id[], int *port, const char query[], int default_port)
-{
-    const char *beg = query;
-    const char *colon = strchr(beg, ':');
-    size_t len = strlen(query);
-
-    if (colon) {
-        int n = parse_int(colon + 1, -1);
-        if (!port_valid(n)) {
-            return false;
-        }
-        *port = n;
-        len = colon - beg;
-    } else {
-        *port = default_port;
-    }
-
-    return parse_id(id, SHA1_BIN_LENGTH, query, len);
-}
-
-// "<hex-id>[:<port>]"
-bool is_announcement(const char query[])
-{
-    uint8_t id[SHA1_BIN_LENGTH];
-    int port;
-    return parse_annoucement(id, &port, query, -1);
-}
-
-bool hex_parse_id(uint8_t id[], size_t idsize, const char query[])
-{
-    size_t querysize;
-/*
-    const char *dot;
-
-    // Cut out first domain
-    dot = strchr(query, '.');
-    if (dot) {
-        querysize = dot - &query[0];
-    } else {
-        querysize = strlen(query);
-    }
-*/
-    querysize = strlen(query);
-    if (bytes_from_base32(id, idsize, query, querysize)) {
-        return true;
-    }
-
-    if (bytes_from_base16(id, idsize, query, querysize)) {
+    if (bytes_from_base16(id, idsize, query, querylen)) {
         return true;
     }
 
@@ -408,29 +353,28 @@ bool has_tld(const char str[], const char ext[])
 * example.p2p => example
 * eXample.COM.P2P => example.com
 */
-bool query_sanitize(char buf[], size_t buflen, const char query[])
+bool query_sanitize(char buf[], size_t buflen, const char query[], size_t querylen)
 {
     const char *tld;
-    size_t len;
     size_t i;
 
-    len = strlen(query);
-
-    if ((len + 1) > buflen) {
+    if ((querylen + 1) > buflen) {
         // Output buffer too small
         return false;
     }
 
+    memset(buf, 0, buflen);
+
     // Convert to lower case
-    for (i = 0; i <= len; ++i) {
+    for (i = 0; i <= querylen; ++i) {
         buf[i] = tolower(query[i]);
     }
 
     // Remove .p2p suffix
     tld = gconf->query_tld;
     if (has_tld(buf, tld)) {
-        len -= 1 + strlen(tld);
-        buf[len] = '\0';
+        querylen -= 1 + strlen(tld);
+        buf[querylen] = '\0';
     }
 
     return true;
@@ -446,19 +390,6 @@ int port_random(void)
     } while (port == 0);
 
     return port;
-}
-
-// Parse a port - treats 0 as valid port
-int port_parse(const char pstr[], int err)
-{
-    int port;
-    char c;
-
-    if (pstr && sscanf(pstr, "%d%c", &port, &c) == 1 && port >= 0 && port <= 65535) {
-        return port;
-    } else {
-        return err;
-    }
 }
 
 bool port_set(IP *addr, uint16_t port)

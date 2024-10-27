@@ -1,3 +1,10 @@
+kadnode (3.0.0) stable; urgency=medium
+
+  * fix compilation for mbedtls >=3.0.0
+  * fix compilation for miniupnpc >=2.2.8
+  * remove old searches after ~62 minutes
+  * various bug fixes
+
 kadnode (2.3.0) stable; urgency=medium
 
  * fix possible high CPU usage

@@ -34,6 +34,7 @@ dht_callback_t(void *closure, int event,
 #define DHT_EVENT_VALUES6 2
 #define DHT_EVENT_SEARCH_DONE 3
 #define DHT_EVENT_SEARCH_DONE6 4
+#define DHT_EVENT_SEARCH_EXPIRED 5
 
 extern FILE *dht_debug;
 

@@ -13,7 +13,6 @@
 #include "mbedtls/ssl.h"
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
-#include "mbedtls/certs.h"
 #include "mbedtls/x509.h"
 #include "mbedtls/debug.h"
 #include "mbedtls/oid.h"
@@ -298,7 +297,7 @@ bool tls_server_add_sni(const char crt_file[], const char key_file[])
     memcpy(&new->crt, &crt, sizeof(crt));
 
 #ifdef DEBUG
-    char buf[MBEDTLS_SSL_MAX_CONTENT_LEN];
+    char buf[MBEDTLS_SSL_OUT_CONTENT_LEN];
     mbedtls_x509_crt_info(buf, sizeof(buf), "  ", &new->crt);
     log_debug("%s:\n%s", crt_file, buf);
 #endif
@@ -317,15 +316,12 @@ bool tls_server_add_sni(const char crt_file[], const char key_file[])
 static void tls_announce_all_cnames(void)
 {
     struct sni_entry *cur;
-    char name[QUERY_MAX_SIZE];
 
     // Announce cnames
     cur = g_sni_entries;
     while (cur) {
         // Won't announce wildcard domains
-        if (query_sanitize(name, sizeof(name), cur->name)) {
-            announces_add(NULL, name, LONG_MAX);
-        }
+        announces_add(NULL, cur->name, LONG_MAX);
         cur = cur->next;
     }
 }

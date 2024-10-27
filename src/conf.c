@@ -75,9 +75,9 @@ static const char *kadnode_usage_str =
 "\n"
 "Usage: kadnode [OPTIONS]\n"
 "\n"
-" --announce <name>:<port>		Announce a name and port.\n\n"
+" --announce <query>:<port>		Announce a name and port.\n\n"
 " --peerfile <file>			Import/Export peers from and to a file.\n\n"
-" --peer <addr>				Add a static peer address.\n"
+" --peer <ip-address>			Add a static peer address.\n"
 "					This option may occur multiple times.\n\n"
 " --user <user>				Change the UUID after start.\n\n"
 " --port	<port>				Bind DHT to this port.\n"
@@ -300,9 +300,9 @@ static bool conf_str(const char opt[], char *dst[], const char src[])
 
 static bool conf_port(const char opt[], int *dst, const char src[])
 {
-    int n = port_parse(src, -1);
+    int n = parse_int(src, -1);
 
-    if (n < 0) {
+    if (!port_valid(n)) {
         log_error("Invalid port for %s: %s", opt, src);
         return false;
     }
@@ -545,8 +545,10 @@ static bool conf_set(const char opt[], const char val[])
         printf("%s\n", kadnode_version_str);
         exit(0);
 #ifdef BOB
-    case oBobCreateKey:
-        exit(bob_create_key(val) ? EXIT_SUCCESS : EXIT_FAILURE);
+    case oBobCreateKey: {
+        bool success = bob_create_key(val);
+        exit(success ? EXIT_SUCCESS : EXIT_FAILURE);
+    }
     case oBobLoadKey:
         return bob_load_key(val);
 #endif

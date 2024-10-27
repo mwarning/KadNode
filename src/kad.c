@@ -99,7 +99,10 @@ void dht_callback_func(void *closure, int event, const uint8_t *info_hash, const
             break;
         case DHT_EVENT_SEARCH_DONE:
         case DHT_EVENT_SEARCH_DONE6:
-            // Ignore..
+            // ignore..
+            break;
+        case DHT_EVENT_SEARCH_EXPIRED:
+            searches_remove_by_id(info_hash);
             break;
     }
 }
@@ -167,14 +170,12 @@ static void record_traffic(uint32_t in_bytes, uint32_t out_bytes)
 void dht_handler(int rc, int sock)
 {
     uint8_t buf[1500];
-    uint32_t buflen;
+    ssize_t buflen = 0;
     IP from;
-    socklen_t fromlen;
-    time_t time_wait = 0;
 
     if (rc > 0) {
         // Check which socket received the data
-        fromlen = sizeof(from);
+        socklen_t fromlen = sizeof(from);
         buflen = recvfrom(sock, buf, sizeof(buf) - 1, 0, (struct sockaddr*) &from, &fromlen);
 
         if (buflen <= 0 || buflen >= sizeof(buf)) {
@@ -185,9 +186,8 @@ void dht_handler(int rc, int sock)
 
         // The DHT code expects the message to be null-terminated.
         buf[buflen] = '\0';
-    } else {
-        buflen = 0;
     }
+
 
 #ifdef BOB
     // Hook up BOB extension on the DHT socket
@@ -198,11 +198,13 @@ void dht_handler(int rc, int sock)
 
     if (buflen > 0) {
         // Handle incoming data
+        time_t time_wait = 0;
+        socklen_t fromlen = sizeof(from);
         rc = dht_periodic(buf, buflen, (struct sockaddr*) &from, fromlen, &time_wait, dht_callback_func, NULL);
 
         if (rc < 0 && errno != EINTR) {
             if (rc == EINVAL || rc == EFAULT) {
-                log_error("KAD: Error calling dht_periodic.");
+                log_error("KAD: Error calling dht_periodic");
                 exit(1);
             }
             g_dht_maintenance = time_now_sec() + 1;
@@ -211,11 +213,12 @@ void dht_handler(int rc, int sock)
         }
     } else if (g_dht_maintenance <= time_now_sec()) {
         // Do a maintenance call
+        time_t time_wait = 0;
         rc = dht_periodic(NULL, 0, NULL, 0, &time_wait, dht_callback_func, NULL);
 
         // Wait for the next maintenance call
         g_dht_maintenance = time_now_sec() + time_wait;
-        log_debug("KAD: Next maintenance call in %u seconds.", (unsigned int) time_wait);
+        //log_debug("KAD: Next maintenance call in %u seconds.", (unsigned) time_wait);
     } else {
         rc = 0;
     }
@@ -467,34 +470,20 @@ bool kad_announce_once(const uint8_t id[], int port)
 /*
 * Add a new value to the announcement list or refresh an announcement.
 */
-bool kad_announce(const char query[], time_t lifetime)
+bool kad_announce(FILE *fp, const char query[], time_t lifetime)
 {
-    char hostname[QUERY_MAX_SIZE];
-
-    // Remove .p2p suffix and convert to lowercase
-    if (!query_sanitize(hostname, sizeof(hostname), query)) {
-        return false;
-    }
-
-    return announces_add(NULL, hostname, lifetime) ? true : false;
+    return announces_add(fp, query, lifetime) ? true : false;
 }
 
 // Lookup known nodes that are nearest to the given id
 const struct search_t *kad_lookup(const char query[])
 {
-    char hostname[QUERY_MAX_SIZE];
     struct search_t *search;
 
-    // Remove .p2p suffix and convert to lowercase
-    if (!query_sanitize(hostname, sizeof(hostname), query)) {
-        log_debug("KAD: query_sanitize error");
-        return NULL;
-    }
-
-    log_debug("KAD: Lookup identifier: %s", hostname);
+    log_debug("KAD: lookup identifier: %s", query);
 
     // Find existing or create new search
-    search = searches_start(hostname);
+    search = searches_start(query);
 
     if (search == NULL) {
         // Failed to create a new search
@@ -606,8 +595,8 @@ void kad_print_buckets(FILE* fp)
         struct node * n = b->nodes;
         for (i = 0; n; ++i) {
             fprintf(fp, "   id: %s\n", str_id(n->id));
-            fprintf(fp, "	 address: %s\n", str_addr(&n->ss));
-            fprintf(fp, "	 pinged: %d\n", n->pinged);
+            fprintf(fp, "    address: %s\n", str_addr(&n->ss));
+            fprintf(fp, "    pinged: %d\n", n->pinged);
             n = n->next;
         }
         fprintf(fp, "  Found %u nodes.\n", (unsigned) i);

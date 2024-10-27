@@ -28,7 +28,7 @@
 #include "ext-cmd.h"
 
 
-static const char *g_client_usage =
+static const char *g_control_arguments =
 PROGRAM_NAME" Control Program - Send commands to a KadNode instance.\n\n"
 "Usage: kadnode-ctl [OPTIONS] [COMMANDS]\n"
 "\n"
@@ -36,24 +36,62 @@ PROGRAM_NAME" Control Program - Send commands to a KadNode instance.\n\n"
 " -h		Print this help.\n"
 "\n";
 
-static const char* g_server_usage =
+// short list of commands
+static const char* g_cli_usage =
     "Usage:\n"
-    "	status\n"
-    "	lookup <query>\n"
-    "	announce <query>[:<port>]\n"
-    "	ping <addr>\n"
-    "	blacklist <addr>\n"
-    "	list blacklist|searches|announcements|nodes"
-#ifdef FWD
-    "|forwardings"
-#endif
+    "  status\n"
+    "  lookup <query>\n"
+    "  announce-start <query>\n"
+    "  announce-stop <query>\n"
+    "  announcements\n"
+    "  searches\n"
 #ifdef BOB
-    "|keys"
+    "  bob-keys\n"
 #endif
-    "|constants\n"
-    "	list dht_buckets|dht_searches|dht_storage\n";
+    "  help\n";
 
-static const char* g_server_help = "TODO";
+static const char* g_cli_help =
+    "Main Commands\n"
+    "  status\n"
+    "      Print various status information.\n"
+    "  lookup <query>\n"
+    "      Lookup a domain, base16 or base32 string.\n"
+    "      The %s TLD is optional.\n"
+    "  announce-start <query>[:<port>]\n"
+    "      Start to announce a query.\n"
+    "  announce-stop <query>\n"
+    "      Remove an announcement.\n"
+    "  announcements\n"
+    "      List all announcements.\n"
+    "  searches\n"
+    "      List all lookups.\n"
+    "  help\n"
+    "      Print this help.\n"
+#ifdef BOB
+    "  bob-keys\n"
+    "      List bob keys.\n"
+#endif
+    "\n"
+    "Internal commands\n"
+    "\n"
+#ifdef FWD
+    "  port-forwardings\n"
+    "      List the port forwardings.\n"
+#endif
+    "  constants\n"
+    "      List internal constants.\n"
+    "\n"
+    "DHT specific commands\n"
+    "\n"
+    "  dht-ping <ip-address>[:<port>]\n"
+    "      Ping another DHT peer. Can be used to bootstrap.\n"
+    "  dht-blocklist\n"
+    "      List blocked IP addresses.\n"
+    "  dht-peers\n"
+    "      Print IP addresses of all peers.\n"
+    "  dht-buckets|dht-searches|dht-storage\n"
+    "      Print various DHT internal data structures.\n"
+    "\n";
 
 static int g_cmd_sock = -1;
 
@@ -108,51 +146,50 @@ static void cmd_announce(FILE *fp, const char hostname[], int port, int minutes)
 
 enum {
     oHelp,
-    oPeer,
     oLookup,
     oStatus,
     oAnnounceStart,
     oAnnounceStop,
-    oPrintBlocked,
+    oDHTPing,
+    oPrintBobKeys,
     oPrintConstants,
-    oPrintPeers,
     oPrintAnnouncements,
-    oPrintBuckets,
-    oPrintSearches,
-    oPrintStorage,
+    oPrintDHTBlocklist,
+    oPrintDHTPeers,
+    oPrintDHTBuckets,
+    oPrintDHTSearches,
+    oPrintDHTStorage,
     oPrintForwardings,
-    oPrintKeys
 };
 
 static const option_t g_options[] = {
     {"h", 1, oHelp},
     {"help", 1, oHelp},
-    {"peer", 2, oPeer},
     {"lookup", 2, oLookup},
     {"status", 1, oStatus},
     {"announce-start", 2, oAnnounceStart},
     {"announce-stop", 2, oAnnounceStop},
-    {"blocklist", 1, oPrintBlocked},
     {"constants", 1, oPrintConstants},
-    {"peers", 1, oPrintPeers},
     {"announcements", 1, oPrintAnnouncements},
-    {"buckets", 1, oPrintBuckets},
-    {"searches", 1, oPrintSearches},
-    {"storage", 1, oPrintStorage},
-    {"forwardings", 1, oPrintForwardings},
-    {"keys", 1, oPrintKeys},
+    {"dht-blocklist", 1, oPrintDHTBlocklist},
+    {"dht-peers", 1, oPrintDHTPeers},
+    {"dht-ping", 2, oDHTPing},
+    {"dht-buckets", 1, oPrintDHTBuckets},
+    {"dht-searches", 1, oPrintDHTSearches},
+    {"dht-storage", 1, oPrintDHTStorage},
+    {"port-forwardings", 1, oPrintForwardings},
+    {"bob-keys", 1, oPrintBobKeys},
     {NULL, 0, 0}
 };
 
 static void cmd_exec(FILE *fp, char request[], int allow_debug)
 {
-    uint8_t id[SHA1_BIN_LENGTH];
     const char *argv[8];
     int argc = setargs(&argv[0], ARRAY_SIZE(argv), request);
 
     if (argc == 0) {
         // Print usage
-        fprintf(fp, "%s", g_server_usage);
+        fprintf(fp, "%s", g_cli_usage);
         return;
     }
 
@@ -168,19 +205,11 @@ static void cmd_exec(FILE *fp, char request[], int allow_debug)
         return;
     }
 
-    // parse identifier
-    if (option->code == oAnnounceStop) {
-        if (!parse_id(id, sizeof(id), argv[1], strlen(argv[1]))) {
-            fprintf(fp, "Failed to parse identifier.\n");
-            return;
-        }
-    }
-
     switch (option->code) {
     case oHelp:
-        fprintf(fp, "%s", g_server_help);
+        fprintf(fp, g_cli_help, gconf->query_tld);
         break;
-    case oPeer: {
+    case oDHTPing: {
         const char *address = argv[1];
         int count = 0;
 
@@ -229,27 +258,27 @@ static void cmd_exec(FILE *fp, char request[], int allow_debug)
         announces_add(fp, argv[1], LONG_MAX);
         break;
     case oAnnounceStop:
-        announces_remove(id);
+        announces_remove(fp, argv[1]);
         break;
-    case oPrintSearches:
+    case oPrintDHTSearches:
         kad_print_searches(fp);
         break;
     case oPrintAnnouncements:
         announces_print(fp);
         break;
-    case oPrintBlocked:
+    case oPrintDHTBlocklist:
         kad_print_blocklist(fp);
         break;
     case oPrintConstants:
         kad_print_constants(fp);
         break;
-    case oPrintPeers:
+    case oPrintDHTPeers:
         kad_export_peers(fp);
         break;
-    case oPrintBuckets:
+    case oPrintDHTBuckets:
         kad_print_buckets(fp);
         break;
-    case oPrintStorage:
+    case oPrintDHTStorage:
         kad_print_storage(fp);
         break;
 #ifdef FWD
@@ -258,7 +287,7 @@ static void cmd_exec(FILE *fp, char request[], int allow_debug)
         break;
 #endif
 #ifdef BOB
-    case oPrintKeys:
+    case oPrintBobKeys:
         bob_debug_keys(fp);
         break;
 #endif
@@ -435,7 +464,7 @@ int cmd_client(int argc, char *argv[])
 
     if (argc >= 1) {
         if (strcmp(argv[0], "-h") == 0) {
-            fprintf(stdout, "%s", g_client_usage);
+            fprintf(stdout, "%s", g_control_arguments);
             return EXIT_SUCCESS;
         } else if (strcmp(argv[0], "-p") == 0) {
             if (argc >= 2) {

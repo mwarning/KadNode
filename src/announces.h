@@ -24,7 +24,7 @@ void announces_free(void);
 
 struct announcement_t* announces_get(void);
 struct announcement_t* announces_find(const uint8_t id[]);
-void announces_remove(const uint8_t id[]);
+void announces_remove(FILE *fp, const char query[]);
 
 // List all entries
 void announces_print(FILE *fp);

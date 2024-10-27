@@ -14,7 +14,6 @@
 #include "mbedtls/ssl.h"
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
-#include "mbedtls/certs.h"
 #include "mbedtls/x509.h"
 #include "mbedtls/error.h"
 #include "mbedtls/debug.h"
@@ -177,10 +176,10 @@ static void tls_handle(int rc, int fd)
         auth_end(resource, AUTH_FAILED);
     } else {
         // TLS handshake done
-#if (MBEDTLS_VERSION_MAJOR >= 2 && MBEDTLS_VERSION_MINOR >= 22)
+#if (MBEDTLS_VERSION_MAJOR > 2 || (MBEDTLS_VERSION_MAJOR == 2 && MBEDTLS_VERSION_MINOR >= 22))
         log_debug("TLS-Client: Protocol [%s], Ciphersuite [%s] and fragment length %u: %s",
             mbedtls_ssl_get_version(ssl), mbedtls_ssl_get_ciphersuite(ssl),
-            (unsigned int) mbedtls_ssl_get_output_max_frag_len(ssl), query
+            (unsigned int) mbedtls_ssl_get_max_out_record_payload(ssl), query
         );
 #else
         log_debug("TLS-Client: Protocol [%s], Ciphersuite [%s] and fragment length %u: %s",
@@ -193,7 +192,7 @@ static void tls_handle(int rc, int fd)
         flags = mbedtls_ssl_get_verify_result(ssl);
 
 #ifdef DEBUG
-        char buf[MBEDTLS_SSL_MAX_CONTENT_LEN];
+        char buf[MBEDTLS_SSL_OUT_CONTENT_LEN];
 
         if (flags != 0) {
             mbedtls_x509_crt_verify_info(buf, sizeof(buf), "", flags);
@@ -210,28 +209,22 @@ static void tls_handle(int rc, int fd)
 }
 
 // Try to create a DHT id from sanitized domain query
-bool tls_client_parse_id(uint8_t id[], size_t len, const char query[])
+bool tls_client_parse_id(uint8_t id[], size_t idlen, const char query[], size_t querylen)
 {
-    uint8_t hash[32];
-    int ret = 0;
+    uint8_t hash[32] = {0};
 
     // Match dot in query, e.g. 'example.com'
-    if (strchr(query, '.')) {
+    if (memchr(query, '.', querylen)) {
         mbedtls_sha256_context ctx;
         mbedtls_sha256_init(&ctx);
 
-#if (MBEDTLS_VERSION_MAJOR >= 2 && MBEDTLS_VERSION_MINOR >= 7)
-        ret |= mbedtls_sha256_update_ret(&ctx, (uint8_t*) &query[0], strlen(query));
-        ret |= mbedtls_sha256_finish_ret(&ctx, hash);
-#else
-        mbedtls_sha256_update(&ctx, (uint8_t*) &query[0], strlen(query));
+        mbedtls_sha256_update(&ctx, (uint8_t*) &query[0], querylen);
         mbedtls_sha256_finish(&ctx, hash);
-#endif
 
-        memset(id, 0, len);
-        memcpy(id, hash, MIN(len, sizeof(hash)));
+        memset(id, 0, idlen);
+        memcpy(id, hash, MIN(idlen, sizeof(hash)));
 
-        return (ret == 0);
+        return true;
     }
 
     return false;
@@ -289,8 +282,8 @@ void tls_client_trigger_auth(void)
 // Verify configuration
 static int tls_conf_verify(void *data, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
 {
-    char buf1[MBEDTLS_SSL_MAX_CONTENT_LEN];
-    char buf2[MBEDTLS_SSL_MAX_CONTENT_LEN];
+    char buf1[MBEDTLS_SSL_OUT_CONTENT_LEN];
+    char buf2[MBEDTLS_SSL_OUT_CONTENT_LEN];
     ((void) data);
 
     mbedtls_x509_crt_info(buf1, sizeof(buf1), "", crt);

@@ -71,13 +71,13 @@ void fwd_debug(FILE *fp)
         if (cur->refreshed == 0) {
             fprintf(fp, "  refreshed: never\n");
         } else {
-            fprintf(fp, "  refreshed: %ld minutes ago\n", (now - cur->refreshed) / 60);
+            fprintf(fp, "  refreshed: %d minutes ago\n", (int) (now - cur->refreshed) / 60);
         }
 
         if (cur->lifetime == LONG_MAX) {
             fprintf(fp, "  lifetime: infinite\n");
         } else {
-            fprintf(fp, "  lifetime: %ld minutes remaining\n", (cur->lifetime -  now) / 60);
+            fprintf(fp, "  lifetime: %d minutes remaining\n", (int) (cur->lifetime -  now) / 60);
         }
 
         counter++;

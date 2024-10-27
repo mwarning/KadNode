@@ -90,40 +90,21 @@ void announces_print(FILE *fp)
 // Announce a sanitized query
 struct announcement_t *announces_add(FILE *fp, const char query[], time_t lifetime)
 {
+    char squery[QUERY_MAX_SIZE];
     uint8_t id[SHA1_BIN_LENGTH];
     struct announcement_t *cur;
     struct announcement_t *new;
-    int ret = false;
     int port = gconf->dht_port;
     time_t now = time_now_sec();
 
-    // Get id from query
-#ifdef BOB
-    // base32 or base64
-    if (!ret) {
-        ret = bob_parse_id(id, sizeof(id), query);
-    }
-#endif
+    int type = parse_query(id, squery, &port, query);
 
-#ifdef TLS
-    // contains dot (.p2p is already removed here) => sha256 hash
-    if (!ret) {
-        ret = tls_client_parse_id(id, sizeof(id), query);
-    }
-#endif
-
-    // base32 or base64
-    if (!ret) {
-        ret = parse_annoucement(id, &port, query, gconf->dht_port);
-    }
-
-    if (!ret) {
-        log_debug("No idea how what method to use for announcement: %s", query);
-        return NULL;
-    }
-
-    if (!port_valid(port)) {
-        log_error("Invalid port for announcement: %s (port %d)", query, port);
+    if (type == QUERY_TYPE_INVALID) {
+        if (fp) {
+            fprintf(fp, "Invalid query: %s", query);
+        } else {
+            log_warning("Invalid query: %s", query);
+        }
         return NULL;
     }
 
@@ -150,15 +131,23 @@ struct announcement_t *announces_add(FILE *fp, const char query[], time_t lifeti
     // Prepend new entry
     new = (struct announcement_t*) calloc(1, sizeof(struct announcement_t));
     memcpy(new->id, id, SHA1_BIN_LENGTH);
-    memcpy(new->query, query, strlen(query));
+    memcpy(new->query, squery, strlen(query));
     new->port = port;
     new->refresh = now - 1; // Send first announcement as soon as possible
     new->lifetime = lifetime;
 
     if (lifetime == LONG_MAX) {
-        log_debug("Add announcement for %s:%hu. Keep alive for entire runtime.", query, port);
+        if (fp) {
+            fprintf(fp, "Add announcement for %s:%hu. Keep alive for entire runtime.", query, port);
+        } else {
+            log_debug("Add announcement for %s:%hu. Keep alive for entire runtime.", query, port);
+        }
     } else {
-        log_debug("Add announcement for %s:%hu. Keep alive for %lu minutes.", query, port, (lifetime - now) / 60);
+        if (fp) {
+            fprintf(fp, "Add announcement for %s:%hu. Keep alive for %lu minutes.", query, port, (lifetime - now) / 60);
+        } else {
+            log_debug("Add announcement for %s:%hu. Keep alive for %lu minutes.", query, port, (lifetime - now) / 60);
+        }
     }
 
     // Prepend to list
@@ -176,10 +165,23 @@ static void announcement_free(struct announcement_t *value)
     free(value);
 }
 
-void announces_remove(const uint8_t id[])
+void announces_remove(FILE *fp, const char query[])
 {
+    char squery[QUERY_MAX_SIZE];
+    uint8_t id[SHA1_BIN_LENGTH];
     struct announcement_t *pre;
     struct announcement_t *cur;
+
+    int type = parse_query(id, squery, NULL, query);
+
+    if (type == QUERY_TYPE_INVALID) {
+        if (fp) {
+            fprintf(fp, "Invalid query: %s", query);
+        } else {
+            log_warning("Invalid query: %s", query);
+        }
+        return;
+    }
 
     pre = NULL;
     cur = g_values;
@@ -191,6 +193,9 @@ void announces_remove(const uint8_t id[])
                 g_values = cur->next;
             }
             announcement_free(cur);
+            if (fp) {
+                fprintf(fp, "Removed announcement: %s", query);
+            }
             return;
         }
         pre = cur;

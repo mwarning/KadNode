@@ -37,11 +37,7 @@ int setargs(const char **argv, int argv_size, char *args);
 
 int parse_int(const char *s, int err);
 
-bool parse_id(uint8_t id[], size_t idsize, const char query[], size_t querysize);
-bool hex_parse_id(uint8_t id[], size_t idsize, const char query[]); // TODO: remove
-
-bool parse_annoucement(uint8_t id[], int *port, const char query[], int default_port);
-bool is_announcement(const char query[]); // "<hex-id>[:<port>]"
+bool hex_parse_id(uint8_t id[], size_t idsize, const char query[], size_t querylen);
 
 bool bytes_from_base32(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize);
 char *bytes_to_base32(char dst[], size_t dstsize, const uint8_t src[], size_t srcsize);
@@ -50,11 +46,10 @@ char *bytes_to_base16(char dst[], size_t dstsize, const uint8_t src[], size_t sr
 
 int port_random(void);
 bool port_valid(int port);
-int port_parse(const char pstr[], int err); // TODO: remove
 bool port_set(IP *addr, uint16_t port);
 
 bool has_tld(const char str[], const char tld[]);
-bool query_sanitize(char buf[], size_t buflen, const char query[]);
+bool query_sanitize(char buf[], size_t buflen, const char query[], size_t querylen);
 bool bytes_random(uint8_t buffer[], size_t size);
 bool id_equal(const uint8_t id1[], const uint8_t id2[]);
 
