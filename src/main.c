@@ -189,13 +189,13 @@ int main(int argc, char *argv[])
         }
 
         // Set DNS server to localhost
-        sprintf(cmd, "cmd.exe /c \"%s\\dns_setup.bat\"", path);
+        snprintf(cmd, sizeof(cmd), "cmd.exe /c \"%s\\dns_setup.bat\"", path);
         windows_exec(cmd);
 
         rc = windows_service_start((void (*)()) main_run);
 
         // Reset DNS settings to DHCP
-        sprintf(cmd, "cmd.exe /c \"%s\\dns_reset.bat\"", path);
+        snprintf(cmd, sizeof(cmd), "cmd.exe /c \"%s\\dns_reset.bat\"", path);
         windows_exec(cmd);
 
         return rc;
