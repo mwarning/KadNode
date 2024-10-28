@@ -69,6 +69,7 @@ static struct key_t *g_keys = NULL;
 static time_t g_send_challenges = 0;
 static struct bob_resource g_bob_resources[8];
 
+static bool g_mbedtls_initialized = false;
 static mbedtls_entropy_context g_entropy;
 static mbedtls_ctr_drbg_context g_ctr_drbg;
 
@@ -244,32 +245,51 @@ static const char *get_pkey_base32(const mbedtls_pk_context *ctx)
     return bytes_to_base32(hexbuf, sizeof(hexbuf), buf, sizeof(buf));
 }
 
+static bool bob_init()
+{
+    if (g_mbedtls_initialized) {
+        return true;
+    }
+
+    mbedtls_entropy_init(&g_entropy);
+    mbedtls_ctr_drbg_init(&g_ctr_drbg);
+
+#ifdef MBEDTLS_USE_PSA_CRYPTO
+    if (psa_crypto_init() != PSA_SUCCESS) {
+        log_error("psa_crypto_init() failed");
+        return false;
+    }
+#endif
+
+    const char *pers = "kadnode";
+    int ret = mbedtls_ctr_drbg_seed(&g_ctr_drbg, mbedtls_entropy_func, &g_entropy,
+                                     (const uint8_t*) pers,
+                                     strlen(pers));
+    if (ret != 0) {
+        log_error("mbedtls_ctr_drbg_seed() returned %d", ret);
+        return false;
+    }
+
+    g_mbedtls_initialized = true;
+
+    return true;
+}
+
 // Generate a new key pair, write the secret key
 // to path and print public key to stdout.
 bool bob_create_key(const char path[])
 {
-    mbedtls_entropy_context entropy;
-    mbedtls_ctr_drbg_context ctr_drbg;
     mbedtls_pk_context ctx;
     int ret;
 
-#ifdef MBEDTLS_USE_PSA_CRYPTO
-    psa_crypto_init();
-#endif
-
-    mbedtls_ctr_drbg_init(&ctr_drbg);
-    mbedtls_entropy_init(&entropy);
-
-    if ((ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
-            (const unsigned char *) PROGRAM_NAME, strlen(PROGRAM_NAME))) != 0) {
-        fprintf(stderr, "mbedtls_ctr_drbg_seed returned %d\n", ret);
+    if (!bob_init()) {
         return false;
     }
 
     mbedtls_pk_init(&ctx);
 
     if ((ret = mbedtls_pk_setup(&ctx, mbedtls_pk_info_from_type(MBEDTLS_PK_ECKEY))) != 0) {
-        fprintf(stderr, "mbedtls_pk_setup returned -0x%04x\n", -ret);
+        fprintf(stderr, "mbedtls_pk_setup returned %d\n", ret);
         return false;
     }
 
@@ -279,7 +299,7 @@ bool bob_create_key(const char path[])
     // This spares us from transmitting the sign along with the public key
     do {
         if ((ret = mbedtls_ecp_gen_key(ECPARAMS, mbedtls_pk_ec(ctx),
-            mbedtls_ctr_drbg_random, &ctr_drbg)) != 0) {
+            mbedtls_ctr_drbg_random, &g_ctr_drbg)) != 0) {
             fprintf(stderr, "mbedtls_ecp_gen_key returned -0x%04x\n", -ret);
             return false;
         }
@@ -303,6 +323,10 @@ bool bob_load_key(const char path[])
     char msg[300];
     int ret;
 
+    if (!bob_init()) {
+        return false;
+    }
+
     mbedtls_pk_init(&ctx);
 
 #if MBEDTLS_VERSION_NUMBER >= 0x03000000
@@ -314,6 +338,7 @@ bool bob_load_key(const char path[])
 #else
     ret = mbedtls_pk_parse_keyfile(&ctx, path, NULL);
 #endif
+
     if (ret != 0) {
         mbedtls_pk_free(&ctx);
         mbedtls_strerror(ret, msg, sizeof(msg));
@@ -510,17 +535,7 @@ bool bob_setup(void)
     struct key_t *key;
     const char *hkey;
 
-#ifdef MBEDTLS_USE_PSA_CRYPTO
-    psa_crypto_init();
-#endif
-
-    mbedtls_ctr_drbg_init(&g_ctr_drbg);
-    mbedtls_entropy_init(&g_entropy);
-
-    int ret;
-    if ((ret = mbedtls_ctr_drbg_seed(&g_ctr_drbg, mbedtls_entropy_func, &g_entropy,
-            (const unsigned char *) PROGRAM_NAME, strlen(PROGRAM_NAME))) != 0) {
-        fprintf(stderr, "mbedtls_ctr_drbg_seed returned %d\n", ret);
+    if (!bob_init()) {
         return false;
     }
 
