@@ -101,7 +101,7 @@ struct announcement_t *announces_add(FILE *fp, const char query[], time_t lifeti
 
     if (type == QUERY_TYPE_INVALID) {
         if (fp) {
-            fprintf(fp, "Invalid query: %s", query);
+            fprintf(fp, "Invalid query: %s\n", query);
         } else {
             log_warning("Invalid query: %s", query);
         }
@@ -138,13 +138,13 @@ struct announcement_t *announces_add(FILE *fp, const char query[], time_t lifeti
 
     if (lifetime == LONG_MAX) {
         if (fp) {
-            fprintf(fp, "Add announcement for %s:%hu. Keep alive for entire runtime.", query, port);
+            fprintf(fp, "Add announcement for %s:%hu. Keep alive for entire runtime.\n", query, port);
         } else {
             log_debug("Add announcement for %s:%hu. Keep alive for entire runtime.", query, port);
         }
     } else {
         if (fp) {
-            fprintf(fp, "Add announcement for %s:%hu. Keep alive for %lu minutes.", query, port, (lifetime - now) / 60);
+            fprintf(fp, "Add announcement for %s:%hu. Keep alive for %lu minutes.\n", query, port, (lifetime - now) / 60);
         } else {
             log_debug("Add announcement for %s:%hu. Keep alive for %lu minutes.", query, port, (lifetime - now) / 60);
         }
@@ -176,7 +176,7 @@ void announces_remove(FILE *fp, const char query[])
 
     if (type == QUERY_TYPE_INVALID) {
         if (fp) {
-            fprintf(fp, "Invalid query: %s", query);
+            fprintf(fp, "Invalid query: %s\n", query);
         } else {
             log_warning("Invalid query: %s", query);
         }
@@ -194,7 +194,7 @@ void announces_remove(FILE *fp, const char query[])
             }
             announcement_free(cur);
             if (fp) {
-                fprintf(fp, "Removed announcement: %s", query);
+                fprintf(fp, "Announcement removed: %s\n", query);
             }
             return;
         }
