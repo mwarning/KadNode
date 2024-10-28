@@ -40,10 +40,12 @@ struct tls_resource {
 
 // Global TLS resources
 static mbedtls_x509_crt g_cacert;
-static mbedtls_entropy_context g_entropy;
-static mbedtls_ctr_drbg_context g_drbg;
 static mbedtls_ssl_config g_conf;
 static bool g_client_enable = false;
+
+static bool g_mbedtls_initialized = false;
+static mbedtls_entropy_context g_entropy;
+static mbedtls_ctr_drbg_context g_ctr_drbg;
 
 // Allow two parallel authentications at once
 static struct tls_resource g_tls_resources[2];
@@ -323,9 +325,38 @@ bool tls_client_add_ca(const char path[])
     return true;
 }
 
+static bool tls_init()
+{
+    if (g_mbedtls_initialized) {
+        return true;
+    }
+
+    mbedtls_entropy_init(&g_entropy);
+    mbedtls_ctr_drbg_init(&g_ctr_drbg);
+
+#ifdef MBEDTLS_USE_PSA_CRYPTO
+    if (psa_crypto_init() != PSA_SUCCESS) {
+        log_error("psa_crypto_init() failed");
+        return false;
+    }
+#endif
+
+    const char *pers = "kadnode";
+    int ret = mbedtls_ctr_drbg_seed(&g_ctr_drbg, mbedtls_entropy_func, &g_entropy,
+                                     (const uint8_t*) pers,
+                                     strlen(pers));
+    if (ret != 0) {
+        log_error("mbedtls_ctr_drbg_seed() returned %d", ret);
+        return false;
+    }
+
+    g_mbedtls_initialized = true;
+
+    return true;
+}
+
 bool tls_client_setup(void)
 {
-    const char *pers = "kadnode";
     int ret;
     int i;
 
@@ -341,17 +372,8 @@ bool tls_client_setup(void)
 
     //mbedtls_debug_set_threshold(0);
 
-#ifdef MBEDTLS_USE_PSA_CRYPTO
-    psa_crypto_init();
-#endif
-
-    mbedtls_ctr_drbg_init(&g_drbg);
-    mbedtls_entropy_init(&g_entropy);
-
-    if ((ret = mbedtls_ctr_drbg_seed(&g_drbg, mbedtls_entropy_func, &g_entropy,
-        (const unsigned char *) pers, strlen(pers))) != 0) {
-        log_error("TLS-Client: mbedtls_ctr_drbg_seed returned -0x%x", -ret);
-        return EXIT_FAILURE;
+    if (!tls_init()) {
+        return false;
     }
 
     for (i = 0; i < ARRAY_SIZE(g_tls_resources); ++i) {
@@ -374,7 +396,7 @@ bool tls_client_setup(void)
     mbedtls_ssl_conf_verify(&g_conf, tls_conf_verify, NULL);
 #endif
 
-    mbedtls_ssl_conf_rng(&g_conf, mbedtls_ctr_drbg_random, &g_drbg);
+    mbedtls_ssl_conf_rng(&g_conf, mbedtls_ctr_drbg_random, &g_ctr_drbg);
     mbedtls_ssl_conf_read_timeout(&g_conf, 0);
     mbedtls_ssl_conf_ca_chain(&g_conf, &g_cacert, NULL);
 
@@ -401,5 +423,5 @@ void tls_client_free(void)
     mbedtls_x509_crt_free(&g_cacert);
     mbedtls_ssl_config_free(&g_conf);
     mbedtls_entropy_free(&g_entropy);
-    mbedtls_ctr_drbg_free(&g_drbg);
+    mbedtls_ctr_drbg_free(&g_ctr_drbg);
 }
