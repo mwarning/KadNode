@@ -566,11 +566,9 @@ bool conf_load(void)
     bool rc = true;
 
     args = g_announce_args;
+
     while (rc && *args) {
-        if (!announces_add(stderr, *args, LONG_MAX)) {
-            log_error("Invalid announcement: %s", *args);
-            rc = false;
-        }
+        rc = announces_add(NULL, *args, LONG_MAX) ? true : false;
         args += 1;
     }
 
