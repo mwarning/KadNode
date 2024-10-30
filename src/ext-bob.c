@@ -327,6 +327,11 @@ bool bob_load_key(const char path[])
         return false;
     }
 
+    if (!file_exists(path)) {
+        log_error("Cannot read file: %s", path);
+        return false;
+    }
+
     mbedtls_pk_init(&ctx);
 
 #if MBEDTLS_VERSION_NUMBER >= 0x03000000

@@ -406,6 +406,16 @@ bool port_set(IP *addr, uint16_t port)
     }
 }
 
+bool file_exists(const char *filename)
+{
+    FILE *fp = fopen(filename, "r");
+    if (fp != NULL) {
+        fclose(fp);
+        return true;
+    }
+    return false;
+}
+
 // Fill buffer with random bytes
 bool bytes_random(uint8_t buffer[], size_t size)
 {

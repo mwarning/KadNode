@@ -52,6 +52,7 @@ bool has_tld(const char str[], const char tld[]);
 bool query_sanitize(char buf[], size_t buflen, const char query[], size_t querylen);
 bool bytes_random(uint8_t buffer[], size_t size);
 bool id_equal(const uint8_t id1[], const uint8_t id2[]);
+bool file_exists(const char *filename);
 
 const char *str_af(int af);
 const char *str_id(const uint8_t id[]);
