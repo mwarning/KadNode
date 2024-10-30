@@ -449,30 +449,6 @@ const char *str_af(int af) {
     }
 }
 
-const char *str_addr2(const void *ip, uint8_t length, uint16_t port)
-{
-    static char addrbuf[FULL_ADDSTRLEN];
-    char buf[INET6_ADDRSTRLEN];
-    const char *fmt;
-
-    switch (length) {
-    case 16:
-        inet_ntop(AF_INET6, ip, buf, sizeof(buf));
-        fmt = "[%s]:%d";
-        break;
-    case 4:
-        inet_ntop(AF_INET, ip, buf, sizeof(buf));
-        fmt = "%s:%d";
-        break;
-    default:
-        return "<invalid address>";
-    }
-
-    sprintf(addrbuf, fmt, buf, port);
-
-    return addrbuf;
-}
-
 const char *str_addr(const IP *addr)
 {
     static char addrbuf[FULL_ADDSTRLEN];

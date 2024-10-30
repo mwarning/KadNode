@@ -605,6 +605,30 @@ void kad_print_buckets(FILE* fp)
     fprintf(fp, "Found %u buckets.\n", (unsigned) j);
 }
 
+const char *str_addr2(const void *ip, uint8_t length, uint16_t port)
+{
+    static char addrbuf[FULL_ADDSTRLEN];
+    char buf[INET6_ADDRSTRLEN];
+    const char *fmt;
+
+    switch (length) {
+    case 16:
+        inet_ntop(AF_INET6, ip, buf, sizeof(buf));
+        fmt = "[%s]:%d";
+        break;
+    case 4:
+        inet_ntop(AF_INET, ip, buf, sizeof(buf));
+        fmt = "%s:%d";
+        break;
+    default:
+        return "<invalid address>";
+    }
+
+    sprintf(addrbuf, fmt, buf, port);
+
+    return addrbuf;
+}
+
 // Print announced ids we have received
 void kad_print_storage(FILE *fp)
 {

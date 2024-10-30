@@ -56,7 +56,6 @@ bool id_equal(const uint8_t id1[], const uint8_t id2[]);
 const char *str_af(int af);
 const char *str_id(const uint8_t id[]);
 const char *str_addr(const IP *addr);
-const char *str_addr2(const void *ip, uint8_t length, uint16_t port);
 const char *str_bytes(uint64_t bytes);
 const char *str_time(time_t time);
 
