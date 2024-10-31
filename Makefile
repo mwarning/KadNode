@@ -37,6 +37,7 @@ ifeq ($(findstring cmd,$(FEATURES)),cmd)
 endif
 
 ifeq ($(findstring debug,$(FEATURES)),debug)
+  OBJS += build/tests.o
   CFLAGS += -g -DDEBUG
 endif
 

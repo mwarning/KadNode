@@ -18,6 +18,9 @@
 #include "announces.h"
 #include "searches.h"
 #include "peerfile.h"
+#ifdef DEBUG
+#include "tests.h"
+#endif
 #ifdef __CYGWIN__
 #include "windows.h"
 #endif
@@ -243,6 +246,10 @@ int main(int argc, char *argv[])
     if (strstr(argv[0], "kadnode-ctl")) {
         return cmd_client(argc, argv);
     }
+#endif
+
+#ifdef DEBUG
+    run_tests();
 #endif
 
     if (!conf_setup(argc, argv)) {
