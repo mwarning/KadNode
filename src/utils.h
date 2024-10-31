@@ -4,7 +4,7 @@
 
 #include <sys/time.h>
 #include <stdbool.h>
-
+#include <netinet/in.h>
 
 // Number of elements in an array
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
@@ -25,6 +25,10 @@
 
 // Direct access to time in seconds
 #define time_now_sec() (gconf->time_now)
+
+typedef struct sockaddr_storage IP;
+typedef struct sockaddr_in IP4;
+typedef struct sockaddr_in6 IP6;
 
 typedef struct {
     const char *name;

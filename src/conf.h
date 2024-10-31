@@ -4,7 +4,7 @@
 
 #include <time.h>
 #include <stdbool.h>
-#include "main.h"
+#include <stdint.h>
 
 // Measurement duration for traffic
 #define TRAFFIC_DURATION_SECONDS 8

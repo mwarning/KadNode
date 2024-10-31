@@ -3,8 +3,6 @@
 #define _MAIN_H_
 
 
-#include <netinet/in.h>
-
 #define PROGRAM_NAME "kadnode"
 #define PROGRAM_VERSION "3.0.0"
 
@@ -22,11 +20,6 @@
 
 #define QUERY_TLD_DEFAULT "p2p"
 #define QUERY_MAX_SIZE 256
-
-typedef struct sockaddr_storage IP;
-typedef struct sockaddr_in IP4;
-typedef struct sockaddr_in6 IP6;
-
 
 void main_setup(void);
 void main_free(void);

@@ -3,6 +3,10 @@
 #define _EXT_SEARCHES_H_
 
 #include <stdio.h>
+#include <stdint.h>
+
+#include "main.h"
+#include "utils.h"
 
 // Authentication states
 enum AUTH_STATE {
