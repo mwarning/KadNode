@@ -6,8 +6,9 @@
 #define PROGRAM_NAME "kadnode"
 #define PROGRAM_VERSION "3.0.0"
 
-#define SHA1_BIN_LENGTH 20
-#define SHA1_HEX_LENGTH (2 * SHA1_BIN_LENGTH)
+#define ID_BINARY_LENGTH 20
+#define ID_BASE16_LENGTH 40
+#define ID_BASE32_LENGTH 32
 
 // Default addresses and ports
 #define LPD_ADDR4 "239.192.152.143"

@@ -70,19 +70,6 @@ const option_t *find_option(const option_t options[], const char name[])
     return NULL;
 }
 
-bool hex_parse_id(uint8_t id[], size_t idsize, const char query[], size_t querylen)
-{
-    if (bytes_from_base32(id, idsize, query, querylen)) {
-        return true;
-    }
-
-    if (bytes_from_base16(id, idsize, query, querylen)) {
-        return true;
-    }
-
-    return false;
-}
-
 bool port_valid(int port)
 {
     return port > 0 && port <= 65536;
@@ -100,31 +87,35 @@ int parse_int(const char *s, int err)
     }
 }
 
-static size_t base16_len(size_t len)
+size_t base16encsize(size_t byte_count)
 {
-    return 2 * len;
+    return byte_count * 2;
 }
 
-bool bytes_from_base16(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize)
+size_t base16decsize(size_t char_count)
 {
-    size_t i;
+    return char_count / 2;
+}
+
+bool base16dec(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize)
+{
     size_t xv = 0;
 
-    if (base16_len(dstsize) != srcsize) {
-        return false;
-    }
-
-    for (i = 0; i < srcsize; ++i) {
+    for (size_t i = 0; i < srcsize; ++i) {
         const char c = src[i];
         if (c >= '0' && c <= '9') {
             xv += c - '0';
         } else if (c >= 'a' && c <= 'f') {
             xv += (c - 'a') + 10;
         } else {
+            // unknown character
             return false;
         }
 
         if (i % 2) {
+            if ((i / 2) >= dstsize) {
+                return false;
+            }
             dst[i / 2] = xv;
             xv = 0;
         } else {
@@ -135,17 +126,17 @@ bool bytes_from_base16(uint8_t dst[], size_t dstsize, const char src[], size_t s
     return true;
 }
 
-char *bytes_to_base16(char dst[], size_t dstsize, const uint8_t src[], size_t srcsize)
+char *base16enc(char dst[], size_t dstsize, const uint8_t src[], size_t srcsize)
 {
     static const char hexchars[16] = "0123456789abcdef";
-    size_t i;
 
     // + 1 for the '\0'
-    if (dstsize != (base16_len(srcsize) + 1)) {
+    if (dstsize < (base16encsize(srcsize) + 1)) {
+        // destination buffer is too small
         return NULL;
     }
 
-    for (i = 0; i < srcsize; ++i) {
+    for (size_t i = 0; i < srcsize; ++i) {
         dst[2 * i] = hexchars[src[i] / 16];
         dst[2 * i + 1] = hexchars[src[i] % 16];
     }
@@ -155,185 +146,96 @@ char *bytes_to_base16(char dst[], size_t dstsize, const uint8_t src[], size_t sr
     return dst;
 }
 
-// get length of len hex string as bytes string
-// e.g.: 32 bytes need 52 characters to encode in base32
-static size_t base32_len(size_t len)
+size_t base32encsize(size_t byte_count)
 {
-    const size_t mod = (len % 5);
-    return 8 * (len / 5) + 2 * mod - (mod > 2);
+    size_t size = -1;
+    size = byte_count << 3;
+    return (size / 5) + ((size % 5) ? 1 : 0);
 }
 
-bool bytes_from_base32(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize)
+size_t base32decsize(size_t char_count)
 {
-    size_t processed = 0;
-    unsigned char *d = dst;
-    int i;
-    int v;
+    return (char_count * 5) / 8;
+}
 
-    if (srcsize != base32_len(dstsize)) {
-        return false;
-    }
+// a-z0-9 with i,o,0,1 removed
+// base32 is usually upper case, but URL are case insensitive...
+const char base32_map[33] = "abcdefghjklmnpqrstuvwxyz23456789";
 
-    for (i = 0; i < srcsize; i++) {
-        if (*src >= 'a' && *src <= 'v') {
-            v = *src - 'a' + 10;
-        } else if (*src >= '0' && *src <= '9') {
-            v = *src - '0';
-        } else if (*src == '=') {
-            src++;
-            continue;
-        } else {
+bool base32dec(uint8_t *dest, int destlen, const char *src, size_t srcsize)
+{
+    int destlen_bits = 8 * destlen;
+    size_t out_bits = 0;
+    for (size_t i = 0; i < srcsize; ++i) {
+        int sym, sbits, dbits, b;
+        const int c = src[i];
+        for (int j = 0; j < 32; j++) {
+            if (c == base32_map[j]) {
+                sym = j;
+                goto found;
+            }
+        }
+        return false;  // Bad input symbol
+        found:
+
+        // Stop if we're out of space.
+        if (out_bits >= destlen_bits)
             return false;
+        // See how many bits we get to use from this symbol
+        sbits = MIN(5, destlen_bits - out_bits);
+        if (sbits < 5)
+            sym >>= (5 - sbits);
+        // Fill up the rest of the current byte
+        dbits = 8 - (out_bits & 7);
+        b = MIN(dbits, sbits);
+        if (dbits == 8)
+            dest[out_bits / 8] = 0;  // Starting a new byte
+        dest[out_bits / 8] |= (sym << (dbits - b)) >> (sbits - b);
+        out_bits += b;
+        sbits -= b;
+        /* Start the next byte if there's space */
+        if (sbits > 0) {
+            dest[out_bits / 8] = sym << (8 - sbits);
+            out_bits += sbits;
         }
-
-        src++;
-
-        switch (processed % 8) {
-        case 0:
-            if (dstsize <= 0) {
-                return false;
-            }
-            d[0] &= 0x07;
-            d[0] |= (v << 3) & 0xF8;
-            break;
-        case 1:
-            if (dstsize < 1) {
-                return false;
-            }
-            d[0] &= 0xF8;
-            d[0] |= (v >> 2) & 0x07;
-            if (dstsize >= 2) {
-                d[1] &= 0x3F;
-                d[1] |= (v << 6) & 0xC0;
-            }
-            break;
-        case 2:
-            if (dstsize < 2) {
-                return false;
-            }
-            d[1] &= 0xC1;
-            d[1] |= (v << 1) & 0x3E;
-            break;
-        case 3:
-            if (dstsize < 2) {
-                return false;
-            }
-            d[1] &= 0xFE;
-            d[1] |= (v >> 4) & 0x01;
-            if (dstsize >= 3) {
-                d[2] &= 0x0F;
-                d[2] |= (v << 4) & 0xF0;
-            }
-            break;
-        case 4:
-            if (dstsize < 3) {
-                return false;
-            }
-            d[2] &= 0xF0;
-            d[2] |= (v >> 1) & 0x0F;
-            if (dstsize >= 4) {
-                d[3] &= 0x7F;
-                d[3] |= (v << 7) & 0x80;
-            }
-            break;
-        case 5:
-            if (dstsize < 4) {
-                return false;
-            }
-            d[3] &= 0x83;
-            d[3] |= (v << 2) & 0x7C;
-            break;
-        case 6:
-            if (dstsize < 4) {
-                return false;
-            }
-            d[3] &= 0xFC;
-            d[3] |= (v >> 3) & 0x03;
-            if (dstsize >= 5) {
-                d[4] &= 0x1F;
-                d[4] |= (v << 5) & 0xE0;
-            }
-            break;
-        default:
-            if (dstsize < 5) {
-                return false;
-            }
-            d[4] &= 0xE0;
-            d[4] |= v & 0x1F;
-            d += 5;
-            dstsize -= 5;
-            break;
-        }
-        processed++;
     }
 
     return true;
 }
 
-char *bytes_to_base32(char dst[], size_t dstsize, const uint8_t *src, size_t srcsize) {
-    const uint8_t *s = src;
-    int byte = 0;
-    uint8_t *d = (uint8_t*) dst;
-    int i;
-
-    // + 1 for the '\0'
-    if (dstsize != (base32_len(srcsize) + 1)) {
+char *base32enc(char *dest, int destlen, const uint8_t *src, int srclen)
+{
+    int srclen_bits = srclen * 8;
+    int didx = 0;
+    *dest = 0;
+    // Make sure destination is big enough
+    int destlen_needed = (srclen_bits + 4) / 5;  // Symbols before adding CRC
+    destlen_needed++;  // For terminating null
+    if (destlen < destlen_needed)
         return NULL;
-    }
-
-    while (srcsize) {
-        switch (byte) {
-        case 0:
-            d[0] = *s >> 3;
-            d[1] = (*s & 0x07) << 2;
-            break;
-        case 1:
-            d[1] |= (*s >> 6) & 0x03;
-            d[2] = (*s >> 1) & 0x1f;
-            d[3] = (*s & 0x01) << 4;
-            break;
-        case 2:
-            d[3] |= (*s >> 4) & 0x0f;
-            d[4] = (*s & 0x0f) << 1;
-            break;
-        case 3:
-            d[4] |= (*s >> 7) & 0x01;
-            d[5] = (*s >> 2) & 0x1f;
-            d[6] = (*s & 0x03) << 3;
-            break;
-        case 4:
-            d[6] |= (*s >> 5) & 0x07;
-            d[7] = *s & 0x1f;
-            break;
-        }
-
-        srcsize--;
-        s++;
-        byte++;
-
-        if (byte == 5) {
-            d += 8;
-            byte = 0;
-        }
-    }
-
-    d = (uint8_t*) dst;
-
-    dstsize--;
-    for (i = 0; i < dstsize; i++) {
-        if (*d < 10) {
-            *d = *d +'0';
-        } else if (*d < 32) {
-            *d = *d - 10 + 'a';
+    for (int i = 0; i < srclen_bits; i += 5) {
+        int sym;
+        int sidx = i / 8;
+        int bit_offs = i % 8;
+        if (bit_offs <= 3) {
+            // Entire symbol fits in that byte
+            sym = src[sidx] >> (3 - bit_offs);
         } else {
-            *d = '?';
+            // Use the bits we have left
+            sym = src[sidx] << (bit_offs - 3);
+            // Use the bits from the next byte, if any
+            if (i + 1 < srclen_bits)
+                sym |= src[sidx + 1] >> (11 - bit_offs);
         }
-        d++;
+        sym &= 0x1f;
+        // Pad incomplete symbol with 0 bits
+        if (srclen_bits - i < 5)
+            sym &= 0x1f << (5 + i - srclen_bits);
+        dest[didx++] = base32_map[sym];
     }
-
-    dst[dstsize] = '\0';
-
-    return dst;
+    // Terminate string and return
+    dest[didx] = 0;
+    return dest;
 }
 
 // Check if a string has and extension.
@@ -437,13 +339,13 @@ bool bytes_random(uint8_t buffer[], size_t size)
 
 bool id_equal(const uint8_t id1[], const uint8_t id2[])
 {
-    return (memcmp(id1, id2, SHA1_BIN_LENGTH) == 0);
+    return (memcmp(id1, id2, ID_BINARY_LENGTH) == 0);
 }
 
 const char *str_id(const uint8_t id[])
 {
-    static char hexbuf[SHA1_HEX_LENGTH + 1];
-    return bytes_to_base16(hexbuf, sizeof(hexbuf), id, SHA1_BIN_LENGTH);
+    static char buf[ID_BASE32_LENGTH + 1];
+    return base32enc(buf, sizeof(buf), id, ID_BINARY_LENGTH);
 }
 
 const char *str_af(int af) {

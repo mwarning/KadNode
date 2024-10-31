@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 // Decide if the query is meant to be authorized via BOB
-bool bob_parse_id(uint8_t id[], size_t ilen, const char query[], size_t querylen);
+bool bob_parse_id(uint8_t id[], const char query[], size_t querylen);
 void bob_trigger_auth(void);
 
 // .. for kad.c - remove?

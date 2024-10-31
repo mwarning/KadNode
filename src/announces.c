@@ -91,7 +91,7 @@ void announces_print(FILE *fp)
 struct announcement_t *announces_add(FILE *fp, const char query[], time_t lifetime)
 {
     char squery[QUERY_MAX_SIZE];
-    uint8_t id[SHA1_BIN_LENGTH];
+    uint8_t id[ID_BINARY_LENGTH];
     struct announcement_t *cur;
     struct announcement_t *new;
     int port = gconf->dht_port;
@@ -130,7 +130,7 @@ struct announcement_t *announces_add(FILE *fp, const char query[], time_t lifeti
 
     // Prepend new entry
     new = (struct announcement_t*) calloc(1, sizeof(struct announcement_t));
-    memcpy(new->id, id, SHA1_BIN_LENGTH);
+    memcpy(new->id, id, ID_BINARY_LENGTH);
     memcpy(new->query, squery, strlen(query));
     new->port = port;
     new->refresh = now - 1; // Send first announcement as soon as possible
@@ -168,7 +168,7 @@ static void announcement_free(struct announcement_t *value)
 void announces_remove(FILE *fp, const char query[])
 {
     char squery[QUERY_MAX_SIZE];
-    uint8_t id[SHA1_BIN_LENGTH];
+    uint8_t id[ID_BINARY_LENGTH];
     struct announcement_t *pre;
     struct announcement_t *cur;
 

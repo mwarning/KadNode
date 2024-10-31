@@ -211,7 +211,7 @@ static void tls_handle(int rc, int fd)
 }
 
 // Try to create a DHT id from sanitized domain query
-bool tls_client_parse_id(uint8_t id[], size_t idlen, const char query[], size_t querylen)
+bool tls_client_parse_id(uint8_t id[], const char query[], size_t querylen)
 {
     uint8_t hash[32] = {0};
 
@@ -223,8 +223,7 @@ bool tls_client_parse_id(uint8_t id[], size_t idlen, const char query[], size_t 
         mbedtls_sha256_update(&ctx, (uint8_t*) &query[0], querylen);
         mbedtls_sha256_finish(&ctx, hash);
 
-        memset(id, 0, idlen);
-        memcpy(id, hash, MIN(idlen, sizeof(hash)));
+        memcpy(id, hash, ID_BINARY_LENGTH);
 
         return true;
     }

@@ -12,7 +12,7 @@
 
 struct announcement_t {
     struct announcement_t *next;
-    uint8_t id[SHA1_BIN_LENGTH];
+    uint8_t id[ID_BINARY_LENGTH];
     char query[QUERY_MAX_SIZE];
     int port;
     time_t lifetime; // Keep entry refreshed until the lifetime expires

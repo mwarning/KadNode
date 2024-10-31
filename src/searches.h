@@ -31,7 +31,7 @@ struct result_t {
 // A bucket of results received when in search of an id
 struct search_t {
     struct search_t *next;
-    uint8_t id[SHA1_BIN_LENGTH];
+    uint8_t id[ID_BINARY_LENGTH];
     char query[QUERY_MAX_SIZE]; // sanitized query (lower case, not .p2p TLD)
     bool done;
     time_t start_time;

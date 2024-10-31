@@ -54,7 +54,7 @@ struct search_t *searches_find_by_id(const uint8_t id[])
 
     search = g_searches;
     while (search) {
-        if (memcmp(search->id, id, SHA1_BIN_LENGTH) == 0) {
+        if (memcmp(search->id, id, ID_BINARY_LENGTH) == 0) {
             return search;
         }
         search = search->next;
@@ -133,7 +133,7 @@ void searches_remove_by_id(const uint8_t id[])
     search = g_searches;
     prev = g_searches;
     while (search) {
-        if (0 == memcmp(&search->id, id, SHA1_BIN_LENGTH)) {
+        if (0 == memcmp(&search->id, id, ID_BINARY_LENGTH)) {
             if (search == g_searches) {
                 g_searches = search->next;
             } else {
@@ -312,6 +312,21 @@ static void search_restart(struct search_t *search)
     }
 }
 
+static bool hex_parse_id(uint8_t id[], const char query[], size_t querylen)
+{
+    if (base16decsize(querylen) == ID_BINARY_LENGTH
+            && base16dec(id, ID_BINARY_LENGTH, query, querylen)) {
+        return true;
+    }
+
+    if (base32decsize(querylen) == ID_BINARY_LENGTH
+            && base32dec(id, ID_BINARY_LENGTH, query, querylen)) {
+        return true;
+    }
+
+    return false;
+}
+
 int parse_query(uint8_t id_ret[], char squery_ret[], int *port_ret, const char query[])
 {
     const char *colon = strchr(query, ':');
@@ -334,21 +349,21 @@ int parse_query(uint8_t id_ret[], char squery_ret[], int *port_ret, const char q
     }
     squery_len = strlen(squery_ret);
 
-    #ifdef TLS
-    if (tls_client_parse_id(id_ret, SHA1_BIN_LENGTH, squery_ret, squery_len)) {
+#ifdef TLS
+    if (tls_client_parse_id(id_ret, squery_ret, squery_len)) {
         // Use TLS authentication
         // For e.g. example.com.p2p
         return QUERY_TYPE_TLS;
     } else
 #endif
 #ifdef BOB
-    if (bob_parse_id(id_ret, SHA1_BIN_LENGTH, squery_ret, squery_len)) {
+    if (bob_parse_id(id_ret, squery_ret, squery_len)) {
         // Use Bob authentication
         // For e.g. <32BytePublicKey>.p2p
         return QUERY_TYPE_BOB;
     } else
 #endif
-    if (hex_parse_id(id_ret, SHA1_BIN_LENGTH, squery_ret, squery_len)) {
+    if (hex_parse_id(id_ret, squery_ret, squery_len)) {
         // Use no authentication
         // For e.g. <20ByteHashKey>.p2p
         return QUERY_TYPE_NONE;
@@ -362,7 +377,7 @@ int parse_query(uint8_t id_ret[], char squery_ret[], int *port_ret, const char q
 struct search_t* searches_start(const char query[])
 {
     char squery[QUERY_MAX_SIZE];
-    uint8_t id[SHA1_BIN_LENGTH];
+    uint8_t id[ID_BINARY_LENGTH];
     auth_callback_t *cb;
     struct search_t* search;
 

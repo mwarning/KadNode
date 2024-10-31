@@ -87,14 +87,20 @@ void bob_auth_end(struct bob_resource *resource, int state)
 }
 
 // Try to create a DHT id from a sanitized key query
-bool bob_parse_id(uint8_t id[], size_t idlen, const char query[], size_t querylen)
+bool bob_parse_id(uint8_t id[], const char query[], size_t querylen)
 {
-    uint8_t bin[32] = {0};
+    uint8_t bin[ECPARAMS_SIZE];
 
-    if (bytes_from_base32(bin, sizeof(bin), query, querylen)
-        || bytes_from_base16(bin, sizeof(bin), query, querylen)) {
-            memcpy(id, bin, idlen);
-            return true;
+    if (base16decsize(querylen) == sizeof(bin)
+            && base16dec(bin, sizeof(bin), query, querylen)) {
+        memcpy(id, bin, ID_BINARY_LENGTH);
+        return true;
+    }
+
+    if (base32decsize(querylen) == sizeof(bin)
+            && base32dec(bin, sizeof(bin), query, querylen)) {
+        memcpy(id, bin, ID_BINARY_LENGTH);
+        return true;
     }
 
     return false;
@@ -133,7 +139,7 @@ static void bob_send_challenge(int sock, struct bob_resource *resource)
     resource->challenges_send += 1;
     log_debug("Send challenge to %s: %s (try %d)",
         str_addr(&resource->addr),
-        bytes_to_base32(hexbuf, sizeof(hexbuf), buf, sizeof(buf)),
+        base32enc(hexbuf, sizeof(hexbuf), buf, sizeof(buf)),
         resource->challenges_send
     );
 
@@ -166,7 +172,7 @@ void bob_trigger_auth(void)
         // Hex to binary and compressed form (assuming even Y => 0x02)
         compressed[0] = 0x02;
 
-        if (!bytes_from_base32(compressed + 1, sizeof(compressed) - 1, query, strlen(query))) {
+        if (!base32dec(compressed + 1, sizeof(compressed) - 1, query, strlen(query))) {
             log_error("BOB: Unexpected query length: %s", query);
             bob_auth_end(resource, AUTH_ERROR);
             return;
@@ -242,7 +248,7 @@ static const char *get_pkey_base32(const mbedtls_pk_context *ctx)
 
     mbedtls_mpi_write_binary(&mbedtls_pk_ec(*ctx)->MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(X), buf, sizeof(buf));
 
-    return bytes_to_base32(hexbuf, sizeof(hexbuf), buf, sizeof(buf));
+    return base32enc(hexbuf, sizeof(hexbuf), buf, sizeof(buf));
 }
 
 static bool bob_init()
@@ -482,7 +488,7 @@ void bob_encrypt_challenge(int sock, uint8_t buf[], size_t buflen, IP *addr)
         }
     } else {
         log_debug("BOB: Secret key not found for public key: %s",
-            bytes_to_base32(hexbuf, sizeof(hexbuf), pkey, ECPARAMS_SIZE)
+            base32enc(hexbuf, sizeof(hexbuf), pkey, ECPARAMS_SIZE)
         );
     }
 }

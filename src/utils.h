@@ -41,12 +41,15 @@ int setargs(const char **argv, int argv_size, char *args);
 
 int parse_int(const char *s, int err);
 
-bool hex_parse_id(uint8_t id[], size_t idsize, const char query[], size_t querylen);
+size_t base32encsize(size_t byte_count);
+size_t base32decsize(size_t char_count);
+bool base32dec(uint8_t *dest, int destlen, const char *src, size_t srcsize);
+char *base32enc(char *dest, int destlen, const uint8_t *src, int srclen);
 
-bool bytes_from_base32(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize);
-char *bytes_to_base32(char dst[], size_t dstsize, const uint8_t src[], size_t srcsize);
-bool bytes_from_base16(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize);
-char *bytes_to_base16(char dst[], size_t dstsize, const uint8_t src[], size_t srcsize);
+size_t base16encsize(size_t byte_count);
+size_t base16decsize(size_t char_count);
+bool base16dec(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize);
+char *base16enc(char dst[], size_t dstsize, const uint8_t src[], size_t srcsize);
 
 int port_random(void);
 bool port_valid(int port);

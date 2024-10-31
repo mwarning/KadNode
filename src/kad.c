@@ -295,14 +295,14 @@ int dht_random_bytes(void *buf, size_t size)
 
 int kad_setup(void)
 {
-    uint8_t node_id[SHA1_BIN_LENGTH];
+    uint8_t node_id[ID_BINARY_LENGTH];
 
 #ifdef DEBUG
     // Let the DHT output debug text
     dht_debug = stdout;
 #endif
 
-    bytes_random(node_id, SHA1_BIN_LENGTH);
+    bytes_random(node_id, ID_BINARY_LENGTH);
 
     g_dht_socket4 = net_bind("KAD", "0.0.0.0", gconf->dht_port, gconf->dht_ifname, IPPROTO_UDP);
     g_dht_socket6 = net_bind("KAD", "::", gconf->dht_port, gconf->dht_ifname, IPPROTO_UDP);
@@ -515,12 +515,12 @@ const struct search_t *kad_lookup(const char query[])
 */
 bool kad_lookup_node(const char query[], IP *addr_return)
 {
-    uint8_t id[SHA1_BIN_LENGTH];
+    uint8_t id[ID_BINARY_LENGTH];
     struct search *sr;
     int i;
     bool rc;
 
-    if (!bytes_from_base16hex(id, query, SHA1_HEX_LENGTH) {
+    if (base16dec(id, sizeof(id), query, ID_BASE16_LENGTH) != sizeof(id)) {
         return false;
     }
 
