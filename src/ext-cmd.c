@@ -52,11 +52,12 @@ static const char* g_cli_usage =
 
 static const char* g_cli_help =
     "Main Commands\n"
+    "\n"
     "  status\n"
     "      Print various status information.\n"
     "  lookup <query>\n"
-    "      Lookup a domain, base16 or base32 string.\n"
-    "      The %s TLD is optional.\n"
+    "      Lookup by domain, base16 or base32 string.\n"
+    "      The .%s at the end is optional.\n"
     "  announce-start <query>[:<port>]\n"
     "      Start to announce a query.\n"
     "  announce-stop <query>\n"
