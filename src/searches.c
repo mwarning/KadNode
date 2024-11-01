@@ -229,9 +229,9 @@ void searches_debug(FILE *fp)
     search_counter = 0;
     search = g_searches;
 
-    fprintf(fp, "Result buckets:\n");
+    fprintf(fp, "Searches:\n");
     while (search) {
-        fprintf(fp, " query: '%s'\n", &search->query[0]);
+        fprintf(fp, " query: %s\n", &search->query[0]);
         fprintf(fp, "  id: %s\n", str_id(search->id));
         fprintf(fp, "  done: %s\n", search->done ? "true" : "false");
         fprintf(fp, "  auth: %s\n", str_callback(search->auth_cb));
