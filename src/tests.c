@@ -25,7 +25,7 @@ static void base32_test2()
     uint8_t in1[20] = {0x21, 0x49, 0xf2, 0x7d, 0xec, 0x0e, 0x23, 0x8d, 0xb3, 0x12, 0xa4, 0xd0, 0xbe, 0x36, 0xb6, 0x8f, 0x14, 0xa2, 0xd8, 0x22};
 
     const char *base16encoded_expected = "2149f27dec0e238db312a4d0be36b68f14a2d822";
-    const char *base32encoded_expected = "efe9e9rnb2t25n2uwvjm6pxyt6llfybc";
+    const char *base32encoded_expected = "454z4zfc1rhrvcrjmk8bwdnphwaa5p12";
     char *base16encoded = base16enc(buf, sizeof(buf), in1, sizeof(in1));
     if (0 != strcmp(base16encoded, base16encoded_expected)) {
         fprintf(stderr, "base32_test2() failed for base16\n");
@@ -94,7 +94,7 @@ static void base32_test3()
 
 void base32_test4()
 {
-    const char *base32encoded = "efe9e9rnb2t25n2uwvjm6pxyt6llfybc";
+    const char *base32encoded = "454z4zfc1rhrvcrjmk8bwdnphwaa5p12";
     uint8_t out[20];
     bool ok1 = base32dec(out, sizeof(out), base32encoded, strlen(base32encoded));
     if (!ok1) {

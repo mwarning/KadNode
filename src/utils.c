@@ -158,9 +158,9 @@ size_t base32decsize(size_t char_count)
     return (char_count * 5) / 8;
 }
 
-// a-z0-9 with i,o,0,1 removed
-// base32 is usually upper case, but URL are case insensitive...
-const char base32_map[33] = "abcdefghjklmnpqrstuvwxyz23456789";
+// Character map for Crockford base32, but lower case for encoding.
+// 0-9a-z with 'i', 'l', 'o' and 'u' removed.
+const char base32_map[33] = "0123456789abcdefghjkmnpqrstvwxyz";
 
 bool base32dec(uint8_t *dest, int destlen, const char *src, size_t srcsize)
 {
