@@ -274,7 +274,7 @@ void tls_client_trigger_auth(void)
     }
 }
 
-#if DEBUG
+#ifdef DEBUG
 
 // Verify configuration
 static int tls_conf_verify(void *data, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
