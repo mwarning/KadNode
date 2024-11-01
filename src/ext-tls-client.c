@@ -90,9 +90,7 @@ static bool tls_connect_init(mbedtls_ssl_context *ssl, mbedtls_net_context *fdc,
 // Find resource used by socket
 static struct tls_resource *tls_find_resource(int fd)
 {
-    int i;
-
-    for (i = 0; i < ARRAY_SIZE(g_tls_resources); ++i) {
+    for (size_t i = 0; i < ARRAY_SIZE(g_tls_resources); ++i) {
         if (g_tls_resources[i].fdc.fd == fd) {
             return &g_tls_resources[i];
         }
@@ -234,9 +232,7 @@ bool tls_client_parse_id(uint8_t id[], const char query[], size_t querylen)
 // Find a resource instance that is currently not in use
 static struct tls_resource *tls_next_resource(void)
 {
-    int i;
-
-    for (i = 0; i < ARRAY_SIZE(g_tls_resources); ++i) {
+    for (size_t i = 0; i < ARRAY_SIZE(g_tls_resources); ++i) {
         if (g_tls_resources[i].fdc.fd < 0) {
             return &g_tls_resources[i];
         }
@@ -357,7 +353,6 @@ static bool tls_init()
 bool tls_client_setup(void)
 {
     int ret;
-    int i;
 
     // Reject query if TLS client disabled
     if (!g_client_enable) {
@@ -375,7 +370,7 @@ bool tls_client_setup(void)
         return false;
     }
 
-    for (i = 0; i < ARRAY_SIZE(g_tls_resources); ++i) {
+    for (size_t i = 0; i < ARRAY_SIZE(g_tls_resources); ++i) {
         mbedtls_ssl_init(&g_tls_resources[i].ssl);
         mbedtls_net_init(&g_tls_resources[i].fdc);
     }
@@ -400,7 +395,7 @@ bool tls_client_setup(void)
     mbedtls_ssl_conf_ca_chain(&g_conf, &g_cacert, NULL);
 
     // Initialize a bunch ob SSL contexts
-    for (i = 0; i < ARRAY_SIZE(g_tls_resources); ++i) {
+    for (size_t i = 0; i < ARRAY_SIZE(g_tls_resources); ++i) {
         if ((ret = mbedtls_ssl_setup(&g_tls_resources[i].ssl, &g_conf)) != 0) {
             log_error("TLS-Client: mbedtls_ssl_setup returned -0x%x", -ret);
             return false;
@@ -412,9 +407,7 @@ bool tls_client_setup(void)
 
 void tls_client_free(void)
 {
-    int i;
-
-    for (i = 0; i < ARRAY_SIZE(g_tls_resources); ++i) {
+    for (size_t i = 0; i < ARRAY_SIZE(g_tls_resources); ++i) {
         mbedtls_ssl_free(&g_tls_resources[i].ssl);
         mbedtls_net_free(&g_tls_resources[i].fdc);
     }

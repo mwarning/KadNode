@@ -99,7 +99,6 @@ _nss_kadnode_gethostbyname2_r(const char *name,
     struct kadnode_nss_request req;
     struct kadnode_nss_response res;
     enum nss_status status = NSS_STATUS_UNAVAIL;
-    int i;
     int rc;
     size_t addrlen;
     size_t idx;
@@ -184,11 +183,11 @@ _nss_kadnode_gethostbyname2_r(const char *name,
     idx += res.count * addrlen;
 
     /* Address array addrlen is always a multiple of 32bits */
-    for (i = 0; i < res.count; i++) {
+    for (size_t i = 0; i < res.count; i++) {
         ((char**) (buffer + idx))[i] = buffer + astart + addrlen * i;
     }
 
-    ((char**) (buffer + idx))[i] = NULL;
+    ((char**) (buffer + idx))[res.count] = NULL;
     result->h_addr_list = (char**) (buffer + idx);
 
     status = NSS_STATUS_SUCCESS;

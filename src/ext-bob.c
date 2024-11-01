@@ -109,9 +109,7 @@ bool bob_parse_id(uint8_t id[], const char query[], size_t querylen)
 // Find a resource instance that is currently not in use
 static struct bob_resource *bob_next_resource(void)
 {
-    int i;
-
-    for (i = 0; i < ARRAY_SIZE(g_bob_resources); i++) {
+    for (size_t i = 0; i < ARRAY_SIZE(g_bob_resources); i++) {
         if (g_bob_resources[i].query[0] == '\0') {
             return &g_bob_resources[i];
         }
@@ -384,10 +382,9 @@ bool bob_load_key(const char path[])
 void bob_send_challenges(int sock)
 {
     struct bob_resource *resource;
-    int i;
 
     // Send one packet per request
-    for (i = 0; i < ARRAY_SIZE(g_bob_resources); ++i) {
+    for (size_t i = 0; i < ARRAY_SIZE(g_bob_resources); ++i) {
         resource = &g_bob_resources[i];
         if (resource->query[0] == '\0') {
             continue;
@@ -404,9 +401,7 @@ void bob_send_challenges(int sock)
 
 struct bob_resource *bob_find_resource(const IP *addr)
 {
-    int i;
-
-    for (i = 0; i < ARRAY_SIZE(g_bob_resources); ++i) {
+    for (size_t i = 0; i < ARRAY_SIZE(g_bob_resources); ++i) {
         if (addr_equal(&g_bob_resources[i].addr, addr)) {
             return &g_bob_resources[i];
         }

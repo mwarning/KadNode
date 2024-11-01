@@ -635,12 +635,9 @@ static void proxy_forward_request(uint8_t *buffer, ssize_t buflen, IP *clientadd
 // Forward DNS response back to client address
 static void proxy_forward_response(uint8_t *buffer, ssize_t buflen, uint16_t id)
 {
-    int sock;
-    int i;
-
-    for (i = 0; i < ARRAY_SIZE(proxy_entries_id); ++i) {
+    for (size_t i = 0; i < ARRAY_SIZE(proxy_entries_id); ++i) {
         if (proxy_entries_id[i] == id) {
-            sock = (proxy_entries_addr[i].ss_family == AF_INET) ? g_sock4 : g_sock6;
+            int sock = (proxy_entries_addr[i].ss_family == AF_INET) ? g_sock4 : g_sock6;
             sendto(sock, buffer, buflen, 0, (struct sockaddr*) &proxy_entries_addr[i], sizeof(IP));
             return;
         }
