@@ -41,10 +41,10 @@ static const char* g_cli_usage =
     "Usage:\n"
     "  status\n"
     "  lookup <query>\n"
+    "  searches\n"
     "  announce-start <query>\n"
     "  announce-stop <query>\n"
     "  announcements\n"
-    "  searches\n"
 #ifdef BOB
     "  bob-keys\n"
 #endif
@@ -149,6 +149,7 @@ enum {
     oHelp,
     oLookup,
     oStatus,
+    oSearches,
     oAnnounceStart,
     oAnnounceStop,
     oDHTPing,
@@ -168,6 +169,7 @@ static const option_t g_options[] = {
     {"help", 1, oHelp},
     {"lookup", 2, oLookup},
     {"status", 1, oStatus},
+    {"searches", 1, oSearches},
     {"announce-start", 2, oAnnounceStart},
     {"announce-stop", 2, oAnnounceStop},
     {"constants", 1, oPrintConstants},
@@ -254,6 +256,9 @@ static void cmd_exec(FILE *fp, char request[], int allow_debug)
     case oStatus:
         // Print node id and statistics
         kad_status(fp);
+        break;
+    case oSearches:
+        searches_debug(fp);
         break;
     case oAnnounceStart:
         announces_add(fp, argv[1], LONG_MAX);
