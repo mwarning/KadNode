@@ -69,7 +69,7 @@ First, a key pair needs to be created:
 ```
 kadnode --bob-create-key secret.pem
 Generating secp256r1 key pair...
-Public key: ob73a4ltgfio35mqh5hcj1b09gpcse9pjlk6m09m57dl45sqksdg.p2p
+Public key: 6qjky0k1n1gzymsywn4hwd37pzgntr0b2q9r20veen8be3xz6dvg.p2p
 Wrote secret key to secret.pem
 ```
 
@@ -82,7 +82,7 @@ kadnode --bob-load-key secret.pem
 On another node, assuming KadNode runs in the background, the public key can be used to find the node.
 
 ```
-ping ob73a4ltgfio35mqh5hcj1b09gpcse9pjlk6m09m57dl45sqksdg.p2p
+ping 6qjky0k1n1gzymsywn4hwd37pzgntr0b2q9r20veen8be3xz6dvg.p2p
 ```
 
 You can also use the domain in your browser or any other program.
@@ -90,7 +90,7 @@ You can also use the domain in your browser or any other program.
 KadNode also has an optional console tool to do lookups:
 
 ```
-kadnode-ctl lookup ob73a4ltgfio35mqh5hcj1b09gpcse9pjlk6m09m57dl45sqksdg
+kadnode-ctl lookup 6qjky0k1n1gzymsywn4hwd37pzgntr0b2q9r20veen8be3xz6dvg
 ```
 
 Note: The first lookup will initiate the search. Only subsequent lookups can be expected to return a result.

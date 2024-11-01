@@ -252,8 +252,8 @@ KadNode allows a limited set of commands to be sent from any user from other con
 Kadnode can intercept system-wide DNS lookups via NSS. This is need to be able to use kadnode links in the web browser or for command line tools like ssh. For this, `/etc/nsswitch.conf` need to be configured:
 
   * Copy libnss_kadnode.so.2 to /lib/. Other libnss_*.so files are likely to be there as well.
-  * Edit `/etc/nsswitch.conf` to include `kadnode` in the `hosts:` line before entry `dns`:
-    * `hosts: kadnode dns`
+
+  * Edit `/etc/nsswitch.conf` to include `kadnode` in the `hosts:` line before entry `dns`: `hosts: kadnode dns`
 
 ## Automatic Port Forwarding
 

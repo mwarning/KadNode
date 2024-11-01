@@ -448,12 +448,7 @@ Kadnode can intercept system\-wide DNS lookups via NSS\. This is need to be able
 Copy libnss_kadnode\.so\.2 to /lib/\. Other libnss_*\.so files are likely to be there as well\.
 .
 .IP "\(bu" 4
-.
-.IP "\(bu" 4
-\fBhosts: kadnode dns\fR
-.
-.IP "" 0
-
+Edit \fB/etc/nsswitch\.conf\fR to include \fBkadnode\fR in the \fBhosts:\fR line before entry \fBdns\fR: \fBhosts: kadnode dns\fR
 .
 .IP "" 0
 .
