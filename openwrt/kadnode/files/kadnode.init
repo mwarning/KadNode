@@ -6,7 +6,8 @@ PROG=/usr/bin/kadnode
 OPTS=""
 
 
-boot() {
+boot()
+{
 	# Wait for the loopback interface to be ready
 	ubus -t 30 wait_for network.interface network.loopback 2>/dev/null
 	rc_procd start_service
@@ -50,19 +51,11 @@ start_instance() {
 	local CONFIG_FILE=/tmp/kadnode.${cfg}.conf
 
 	section_enabled "$cfg" || return
-	. /lib/functions/network.sh
 
 	OPTS=""
 
 	append_opts "$cfg" lpd_addr dns_server dns_port verbosity peerfile config \
-		query_tld user port cmd_port
-
-	config_get ifname "$cfg" "ifname"
-	if network_get_device IFNAME "$ifname";then
-		xappend "$IFNAME" "ifname"
-	else
-		[ -n "$ifname" ] && xappend "$ifname" "ifname"
-	fi
+		query_tld user port ifname cmd_port
 
 	append_opts_list "$cfg" announce peer tls_client_cert tls_server_cert bob_load_key
 
@@ -89,21 +82,6 @@ stop_instance() {
 	local CONFIG_FILE=/tmp/kadnode.${cfg}.conf
 
 	rm -f $CONFIG_FILE
-}
-
-add_interface_trigger() {
-	local ifname
-
-	config_get ifname "$1" ifname
-
-	[ -n "$ifname" ] && procd_add_interface_trigger "interface.*" "$ifname" /etc/init.d/kadnode restart
-}
-
-service_triggers() {
-	procd_add_reload_trigger "kadnode"
-
-	config_load kadnode
-	config_foreach add_interface_trigger kadnode
 }
 
 start_service() {
