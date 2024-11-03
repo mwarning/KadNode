@@ -289,16 +289,11 @@ fail:
 
 bool lpd_setup(void)
 {
-    const char *ifname;
-    bool ready = false;
-
     if (gconf->lpd_disable) {
-        return EXIT_SUCCESS;
+        return true;
     }
 
-    ifname = gconf->dht_ifname;
-
-    if (ifname && (gconf->af == AF_UNSPEC || gconf->af == AF_INET)) {
+    if (gconf->dht_ifname && (gconf->af == AF_UNSPEC || gconf->af == AF_INET)) {
         log_warning("LPD: ifname setting not supported for IPv4");
     }
 
@@ -313,17 +308,20 @@ bool lpd_setup(void)
     g_lpd6.sock_listen = create_receive_socket(&g_lpd6.mcast_addr);
     g_lpd6.sock_send = create_send_socket(AF_INET6);
 
+    bool lpd4_ready = false;
+    bool lpd6_ready = false;
+
     if (g_lpd4.sock_listen >= 0 && g_lpd4.sock_send >= 0) {
         net_add_handler(g_lpd4.sock_listen, &handle_mcast4);
-        ready = true;
+        lpd4_ready = true;
     }
 
     if (g_lpd6.sock_listen >= 0 && g_lpd6.sock_send >= 0) {
         net_add_handler(g_lpd6.sock_listen, &handle_mcast6);
-        ready = true;
+        lpd6_ready = true;
     }
 
-    return ready ? EXIT_SUCCESS : EXIT_FAILURE;
+    return (lpd4_ready || lpd6_ready);
 }
 
 void lpd_free(void)
