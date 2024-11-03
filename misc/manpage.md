@@ -266,6 +266,23 @@ Port forwarding only works if UPnP/NAT-PMP is compiled into KadNode (features "n
 This is useful to make a local service (e.g. a web server) reachable from the Internet without the need to
 configure port forwardings manually.
 
+## Compile Time Features
+
+The KadNode version is followed by a list of the features that were compiled in. E.g.:
+
+```
+$ kadnode -v
+kadnode 2.4.0 ( bob cmd debug dns lpd nss tls )
+```
+
+  * `bob`: Support for simple public key authentication (secp256r1).
+  * `cmd`: Remote command line support (`kadnode-ctl`).
+  * `debug`: Enable debug support. For development only.
+  * `dns`: KadNode offers a local DNS server interfaces.
+  * `lpd`: Local Peer Discovery. Find DHT clients on the local network.
+  * `nss`: Name Service Switch. Needed to intercept queries on the system level.
+  * `tls`: Transport Layer Security support. Authenticate via HTTPS.
+
 ## LICENSE
 
   MIT/X11

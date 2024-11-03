@@ -464,5 +464,42 @@ Edit \fB/etc/nsswitch\.conf\fR to include \fBkadnode\fR in the \fBhosts:\fR line
 .SH "Automatic Port Forwarding"
 If KadNode runs on a computer in a private network, it will try to establish a port forwarding for the DHT port and ports used for announcements\. Port forwarding only works if UPnP/NAT\-PMP is compiled into KadNode (features "natpmp" and "upnp") and it is enabled by the gateway/router\. This is useful to make a local service (e\.g\. a web server) reachable from the Internet without the need to configure port forwardings manually\.
 .
+.SH "Compile Time Features"
+The KadNode version is followed by a list of the features that were compiled in\. E\.g\.:
+.
+.IP "" 4
+.
+.nf
+
+$ kadnode \-v
+kadnode 2\.4\.0 ( bob cmd debug dns lpd nss tls )
+.
+.fi
+.
+.IP "" 0
+.
+.IP "\(bu" 4
+\fBbob\fR: Support for simple public key authentication (secp256r1)\.
+.
+.IP "\(bu" 4
+\fBcmd\fR: Remote command line support (\fBkadnode\-ctl\fR)\.
+.
+.IP "\(bu" 4
+\fBdebug\fR: Enable debug support\. For development only\.
+.
+.IP "\(bu" 4
+\fBdns\fR: KadNode offers a local DNS server interfaces\.
+.
+.IP "\(bu" 4
+\fBlpd\fR: Local Peer Discovery\. Find DHT clients on the local network\.
+.
+.IP "\(bu" 4
+\fBnss\fR: Name Service Switch\. Needed to intercept queries on the system level\.
+.
+.IP "\(bu" 4
+\fBtls\fR: Transport Layer Security support\. Authenticate via HTTPS\.
+.
+.IP "" 0
+.
 .SH "LICENSE"
 MIT/X11
