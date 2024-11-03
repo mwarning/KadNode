@@ -511,8 +511,8 @@ static bool conf_set(const char opt[], const char val[])
         return conf_str(opt, &gconf->configfile, val);
     case oIpv4:
     case oIpv6:
-        if (gconf->af != AF_UNSPEC) {
-            log_error("IPv4 or IPv6 mode already set: %s", opt);
+        if (gconf->af != -1) {
+            log_error("Network mode already set: %s", opt);
             return false;
         }
 
@@ -635,8 +635,8 @@ static struct gconf_t *conf_alloc()
 
     conf = (struct gconf_t*) calloc(1, sizeof(struct gconf_t));
     *conf = ((struct gconf_t) {
-        .dht_port = DHT_PORT,
-        .af = AF_UNSPEC,
+        .dht_port = -1,
+        .af = -1,
 #ifdef DNS
         .dns_port = -1,
 #endif
@@ -649,10 +649,6 @@ static struct gconf_t *conf_alloc()
 #ifdef CMD
         .cmd_path = strdup(CMD_PATH),
 #endif
-#ifdef DNS
-        .dns_port = DNS_PORT,
-#endif
-
 #ifdef NSS
         .nss_path = strdup(NSS_PATH),
 #endif
@@ -662,6 +658,23 @@ static struct gconf_t *conf_alloc()
     });
 
     return conf;
+}
+
+static void conf_set_defaults()
+{
+    if (gconf->af == -1) {
+        gconf->af = AF_UNSPEC;
+    }
+
+    if (gconf->dht_port == -1) {
+        gconf->dht_port = DHT_PORT;
+    }
+
+#ifdef DNS
+    if (gconf->dns_port == -1) {
+        gconf->dns_port = DNS_PORT;
+    }
+#endif
 }
 
 bool conf_setup(int argc, char **argv)
@@ -688,6 +701,8 @@ bool conf_setup(int argc, char **argv)
             }
         }
     }
+
+    conf_set_defaults();
 
     if (gconf->configfile) {
         if (!conf_load_file(gconf->configfile)) {
