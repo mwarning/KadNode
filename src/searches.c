@@ -148,7 +148,7 @@ void searches_remove_by_id(const uint8_t id[])
 }
 
 // Find query/IP-address to authenticate; auth_callback is used as a marker.
-struct result_t *searches_get_auth_target(char query[], IP *addr, auth_callback_t *cb)
+struct result_t *searches_get_auth_target(char query_ret[], IP *address_ret, auth_callback_t *cb)
 {
     struct search_t *search;
     struct result_t *result;
@@ -166,19 +166,19 @@ struct result_t *searches_get_auth_target(char query[], IP *addr, auth_callback_
     }
 
     // Set query and address to authenticate
-    memcpy(query, &search->query, sizeof(search->query));
-    memcpy(addr, &result->addr, sizeof(IP));
+    memcpy(query_ret, &search->query, sizeof(search->query));
+    memcpy(address_ret, &result->addr, sizeof(IP));
 
     return result;
 }
 
 // Set the authentication state of a result
-void searches_set_auth_state(const char query[], const IP *addr, const int state)
+void searches_set_auth_state(const char query[], const IP *address, const int state)
 {
     struct search_t *search;
     struct result_t *result;
 
-    log_debug("Searches: Set authentication state for %s (%s): %s", str_addr(addr), query, str_state(state));
+    log_debug("Set authentication state for %s (%s): %s", str_addr(address), query, str_state(state));
 
     search = searches_find_by_query(query);
 
@@ -186,7 +186,7 @@ void searches_set_auth_state(const char query[], const IP *addr, const int state
         // Search and set authentication state of result
         result = search->results;
         while (result) {
-            if (addr_equal(&result->addr, addr)) {
+            if (addr_equal(&result->addr, address)) {
                 result->state = state;
                 break;
             }
@@ -259,7 +259,7 @@ static void search_restart(struct search_t *search)
     struct result_t *next;
     bool remove;
 
-    log_debug("Searches: Restart search for query: %s", search->query);
+    log_debug("Restart search for query: %s", search->query);
 
     search->start_time = time_now_sec();
     search->done = false;
@@ -386,7 +386,7 @@ struct search_t* searches_start(const char query[])
     switch (type) {
     case QUERY_TYPE_INVALID:
         // No idea what to do
-        log_debug("searches: No idea how what method to use for %s", query);
+        log_debug("No idea how what method to use for %s", query);
         return NULL;
     case QUERY_TYPE_TLS:
         // Use TLS authentication
@@ -423,7 +423,7 @@ struct search_t* searches_start(const char query[])
     memcpy(&search->query, squery, sizeof(search->query));
     search->start_time = time_now_sec();
 
-    log_debug("Searches: Create new search for query: %s", squery);
+    log_debug("Create new search for query: %s", squery);
 
     search->next = g_searches;
     g_searches = search;
