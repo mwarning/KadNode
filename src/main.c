@@ -53,13 +53,6 @@ static bool g_pidfile_written = false;
 
 int main_run(void)
 {
-    bool rc = true;
-
-    if (EXIT_SUCCESS != 0) {
-        fprintf(stderr, "Problematic EXIT_SUCCESS definition\n");
-        return EXIT_FAILURE;
-    }
-
     /* Run setup */
 
     // Early exit
@@ -69,11 +62,15 @@ int main_run(void)
 
     // Setup port-forwarding
 #ifdef FWD
-    rc &= fwd_setup();
+    if (!fwd_setup()) {
+        return EXIT_FAILURE;
+    }
 #endif
 
     // Setup the Kademlia DHT
-    rc &= kad_setup();
+    if (!kad_setup()) {
+        return EXIT_FAILURE;
+    }
 
     // Setup handler to announces
     announces_setup();
@@ -86,33 +83,46 @@ int main_run(void)
 
     // Setup extensions
 #ifdef LPD
-    rc &= lpd_setup();
+    if (!lpd_setup()) {
+        return EXIT_FAILURE;
+    }
 #endif
 
 #ifdef BOB
-    rc &= bob_setup();
+    if (!bob_setup()) {
+        return EXIT_FAILURE;
+    }
 #endif
 #ifdef DNS
-    rc &= dns_setup();
+    if (!dns_setup()) {
+        return EXIT_FAILURE;
+    }
 #endif
 #ifdef NSS
-    rc &= nss_setup();
+    if (!nss_setup()) {
+        return EXIT_FAILURE;
+    }
 #endif
 #ifdef TLS
-    rc &= tls_client_setup();
-    rc &= tls_server_setup();
+    if (!tls_client_setup()) {
+        return EXIT_FAILURE;
+    }
+
+    if (!tls_server_setup()) {
+        return EXIT_FAILURE;
+    }
 #endif
 #ifdef CMD
-    rc &= cmd_setup();
+    if (!cmd_setup()) {
+        return EXIT_FAILURE;
+    }
 #endif
 
     /* Run program */
 
-    if (rc == 0) {
-        // Loop over all sockets and file descriptors
-        net_loop();
-        log_info("Shutting down...");
-    }
+    // Loop over all sockets and file descriptors
+    net_loop();
+    log_info("Shutting down...");
 
     // Export peers if a file is provided
     peerfile_export();
@@ -159,7 +169,7 @@ int main_run(void)
         unlink(gconf->pidfile);
     }
 
-    return rc ? EXIT_SUCCESS : EXIT_FAILURE;
+    return EXIT_SUCCESS;
 }
 
 #ifdef __CYGWIN__
