@@ -27,7 +27,7 @@ struct forwarding_t {
     time_t refreshed; // Last time the entry was refreshed
 };
 
-int fwd_setup(void);
+bool fwd_setup(void);
 void fwd_free(void);
 
 struct forwarding_t *fwd_get(void);

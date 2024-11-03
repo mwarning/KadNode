@@ -236,10 +236,10 @@ void fwd_handle(int _rc, int _sock)
 #endif
 }
 
-int fwd_setup(void)
+bool fwd_setup(void)
 {
     if (gconf->fwd_disable) {
-        return 0;
+        return false;
     }
 
 #ifdef FWD_NATPMP
@@ -257,7 +257,7 @@ int fwd_setup(void)
     // Cause the callback to be called in intervals
     net_add_handler(-1, &fwd_handle);
 
-    return 0;
+    return true;
 }
 
 void fwd_free(void)
