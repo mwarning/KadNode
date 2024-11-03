@@ -111,6 +111,10 @@ This is the plain use of the DHT. The hexadecimal string will be cut down or fil
   * `--ifname` *interface*  
     Bind to this specific interface.
 
+  * `--dht-isolation-prefix` *prefix*  
+    Only peer with nodes that use the same prefix (base16).  
+    This allows an isolated swarm of selected nodes.
+
   * `--fwd-disable`  
     Disable UPnP/NAT-PMP to forward router ports.
 

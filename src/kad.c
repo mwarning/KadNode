@@ -169,16 +169,17 @@ static void record_traffic(uint32_t in_bytes, uint32_t out_bytes)
 // Handle incoming packets and pass them to the DHT code
 void dht_handler(int rc, int sock)
 {
-    uint8_t buf[1500];
+    uint8_t buffer[1500];
+    uint8_t *buf = &buffer[0];
     ssize_t buflen = 0;
     IP from;
 
     if (rc > 0) {
         // Check which socket received the data
         socklen_t fromlen = sizeof(from);
-        buflen = recvfrom(sock, buf, sizeof(buf) - 1, 0, (struct sockaddr*) &from, &fromlen);
+        buflen = recvfrom(sock, buf, sizeof(buffer) - 1, 0, (struct sockaddr*) &from, &fromlen);
 
-        if (buflen <= 0 || buflen >= sizeof(buf)) {
+        if (buflen <= 0 || buflen >= sizeof(buffer)) {
             return;
         }
 
@@ -197,6 +198,20 @@ void dht_handler(int rc, int sock)
 #endif
 
     if (buflen > 0) {
+        size_t plen = gconf->dht_isolation_prefix_length;
+        if (plen > 0) {
+            // DHT isolation enabled - check and remove prefix
+            if ((buflen <= plen)
+                || (0 != memcmp(buf, &gconf->dht_isolation_prefix[0], plen))) {
+                    // prefix does not match
+                    return;
+            }
+
+            // strip prefix
+            buf += plen;
+            buflen -= plen;
+        }
+
         // Handle incoming data
         time_t time_wait = 0;
         socklen_t fromlen = sizeof(from);
@@ -241,9 +256,25 @@ void dht_handler(int rc, int sock)
 
 int dht_sendto(int sockfd, const void *buf, int buflen, int flags, const struct sockaddr *to, int tolen)
 {
-    record_traffic(0, buflen);
+    size_t plen = gconf->dht_isolation_prefix_length;
+    if (plen > 0) {
+        // DHT isolation enabled - add prefix
+        uint8_t buf2[1500];
+        int buflen2 = buflen + plen;
+        if (buflen2 > sizeof(buf2)) {
+            log_warning("dht_sendto() packet too big for prefix");
+            return -1;
+        }
+        memcpy(&buf2[0], &gconf->dht_isolation_prefix[0], plen);
+        memcpy(&buf2[plen], buf, buflen);
 
-    return sendto(sockfd, buf, buflen, flags, to, tolen);
+        record_traffic(0, buflen2);
+
+        return sendto(sockfd, buf2, buflen2, flags, to, tolen);
+    } else {
+        record_traffic(0, buflen);
+        return sendto(sockfd, buf, buflen, flags, to, tolen);
+    }
 }
 
 int dht_blacklisted(const struct sockaddr *sa, int salen)

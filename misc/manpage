@@ -159,6 +159,15 @@ option on each line\. Comments start after \'#\'\.
 Bind to this specific interface\.
 .
 .IP "\(bu" 4
+\fB\-\-dht\-isolation\-prefix\fR \fIprefix\fR
+.
+.br
+Only peer with nodes that use the same prefix (base16)\.
+.
+.br
+This allows an isolated swarm of selected nodes\.
+.
+.IP "\(bu" 4
 \fB\-\-fwd\-disable\fR
 .
 .br

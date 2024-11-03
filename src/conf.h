@@ -8,6 +8,7 @@
 
 // Measurement duration for traffic
 #define TRAFFIC_DURATION_SECONDS 8
+#define DHT_ISOLATION_PREFIX_MAX_LENGTH 8
 
 extern const char *kadnode_version_str;
 
@@ -88,6 +89,10 @@ struct gconf_t {
 #ifdef NSS
     char *nss_path;
 #endif
+
+    // Isolate DHT swarn
+    uint8_t dht_isolation_prefix_length;
+    uint8_t dht_isolation_prefix[DHT_ISOLATION_PREFIX_MAX_LENGTH];
 
     // Traffic measurement
     time_t traffic_time;

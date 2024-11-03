@@ -133,6 +133,8 @@ static const char *kadnode_usage_str =
 " --service-install			KadNode will be started/shut down along with Windows\n"
 " --service-remove			or on request by using the Service Control Manager.\n\n"
 #endif
+" --dht-isolation-prefix <prefix>	Only peer with nodes that use the same prefix (base16).\n"  
+"					This allows an isolated swarm of selected nodes.\n\n"
 " -h, --help				Print this help.\n\n"
 " -v, --version				Print program version.\n";
 
@@ -174,6 +176,12 @@ void conf_info(void)
         }
     }
 #endif
+    if (gconf->dht_isolation_prefix_length > 0) {
+        // DHT isolation is enabled
+        char buf[DHT_ISOLATION_PREFIX_MAX_LENGTH*2];
+        log_info("DHT isolation prefix: %s",
+            base16enc(buf, sizeof(buf), &gconf->dht_isolation_prefix[0], gconf->dht_isolation_prefix_length));
+    }
 }
 
 void conf_free(void)
@@ -208,6 +216,7 @@ enum OPCODE {
     oVerbosity,
     oCmdDisableStdin,
     oCmdPath,
+    oDhtIsolationPrefix,
     oDnsPort,
     oDnsProxyEnable,
     oDnsProxyServer,
@@ -276,6 +285,7 @@ static option_t g_options[] = {
     {"--bob-create-key", 1, oBobCreateKey},
     {"--bob-load-key", 1, oBobLoadKey},
 #endif
+    {"--dht-isolation-prefix", 1, oDhtIsolationPrefix},
     {"--ifname", 1, oIfname},
     {"--user", 1, oUser},
     {"--daemon", 0, oDaemon},
@@ -531,6 +541,19 @@ static bool conf_set(const char opt[], const char val[])
         gconf->service_start = true;
         break;
 #endif
+    case oDhtIsolationPrefix: {
+        int vlen = strlen(val);
+        uint8_t prefix[DHT_ISOLATION_PREFIX_MAX_LENGTH];
+        uint8_t plen = base16decsize(vlen);
+        if (vlen == 0 || !base16dec(prefix, sizeof(prefix), val, vlen)) {
+            log_error("DHT isolation prefix is not a base16 string of max %d bytes: %s", sizeof(prefix), val);
+            return false;
+        }
+
+        gconf->dht_isolation_prefix_length = plen;
+        memcpy(&gconf->dht_isolation_prefix[0], prefix, plen);
+        return true;
+    }
     case oIfname:
         return conf_str(opt, &gconf->dht_ifname, val);
     case oUser:
