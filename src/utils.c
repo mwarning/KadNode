@@ -94,12 +94,16 @@ size_t base16encsize(size_t byte_count)
 
 size_t base16decsize(size_t char_count)
 {
-    return char_count / 2;
+    return (char_count + 1) / 2;
 }
 
 bool base16dec(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize)
 {
     size_t xv = 0;
+
+    if (dstsize < base16decsize(srcsize)) {
+        return false;
+    }
 
     for (size_t i = 0; i < srcsize; ++i) {
         const char c = src[i];
@@ -113,9 +117,6 @@ bool base16dec(uint8_t dst[], size_t dstsize, const char src[], size_t srcsize)
         }
 
         if (i % 2) {
-            if ((i / 2) >= dstsize) {
-                return false;
-            }
             dst[i / 2] = xv;
             xv = 0;
         } else {
@@ -164,6 +165,10 @@ const char base32_map[33] = "0123456789abcdefghjkmnpqrstvwxyz";
 
 bool base32dec(uint8_t *dest, int destlen, const char *src, size_t srcsize)
 {
+    if (destlen < base32decsize(srcsize)) {
+        return false;
+    }
+
     int destlen_bits = 8 * destlen;
     size_t out_bits = 0;
     for (size_t i = 0; i < srcsize; ++i) {
