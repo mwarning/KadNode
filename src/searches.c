@@ -232,19 +232,18 @@ void searches_debug(FILE *fp)
     fprintf(fp, "Searches:\n");
     while (search) {
         fprintf(fp, " query: %s\n", &search->query[0]);
-        fprintf(fp, "  id: %s\n", str_id(search->id));
-        fprintf(fp, "  done: %s\n", search->done ? "true" : "false");
-        fprintf(fp, "  auth: %s\n", str_callback(search->auth_cb));
-        fprintf(fp, "  started: %ldm ago\n", (time_now_sec() - search->start_time) / 60);
+        fprintf(fp, "   id: %s\n", str_id(search->id));
+        fprintf(fp, "   auth: %s (done: %s)\n", str_callback(search->auth_cb), search->done ? "true" : "false");
+        fprintf(fp, "   started: %ldm ago\n", (time_now_sec() - search->start_time) / 60);
         result_counter = 0;
         result = search->results;
         while (result) {
-            fprintf(fp, "   addr: %s\n", str_addr(&result->addr));
-            fprintf(fp, "    state: %s\n", str_state(result->state));
+            fprintf(fp, "    addr: %s\n", str_addr(&result->addr));
+            fprintf(fp, "      state: %s\n", str_state(result->state));
             result_counter += 1;
             result = result->next;
         }
-        fprintf(fp, "  Found %d results.\n", result_counter);
+        fprintf(fp, "   Found %d results.\n", result_counter);
         result_counter += 1;
         search_counter += 1;
         search = search->next;
