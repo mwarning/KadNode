@@ -61,13 +61,13 @@ struct bob_resource {
     uint8_t challenge[32];
     uint8_t challenges_send;
     char query[QUERY_MAX_SIZE];
-    IP addr;
+    IP address;
 };
 
 static int g_dht_socket = -1;
 static struct key_t *g_keys = NULL;
 static time_t g_send_challenges = 0;
-static struct bob_resource g_bob_resources[8];
+static struct bob_resource g_bob_resources[8] = {0};
 
 static bool g_mbedtls_initialized = false;
 static mbedtls_entropy_context g_entropy;
@@ -77,7 +77,7 @@ static mbedtls_ctr_drbg_context g_ctr_drbg;
 void bob_auth_end(struct bob_resource *resource, int state)
 {
     // Set state of result
-    searches_set_auth_state(&resource->query[0], &resource->addr, state);
+    searches_set_auth_state(&resource->query[0], &resource->address, state);
 
     // Mark resource as free
     resource->query[0] = '\0';
@@ -107,7 +107,7 @@ bool bob_parse_id(uint8_t id[], const char query[], size_t querylen)
 }
 
 // Find a resource instance that is currently not in use
-static struct bob_resource *bob_next_resource(void)
+static struct bob_resource *bob_next_free_resource(void)
 {
     for (size_t i = 0; i < ARRAY_SIZE(g_bob_resources); i++) {
         if (g_bob_resources[i].query[0] == '\0') {
@@ -136,12 +136,12 @@ static void bob_send_challenge(int sock, struct bob_resource *resource)
 
     resource->challenges_send += 1;
     log_debug("Send challenge to %s: %s (try %d)",
-        str_addr(&resource->addr),
+        str_addr(&resource->address),
         base32enc(hexbuf, sizeof(hexbuf), buf, sizeof(buf)),
         resource->challenges_send
     );
 
-    sendto(sock, buf, sizeof(buf), 0, (struct sockaddr*) &resource->addr, sizeof(IP));
+    sendto(sock, buf, sizeof(buf), 0, (struct sockaddr*) &resource->address, sizeof(IP));
 }
 
 // Start auth procedure for result bucket and utilize all resources
@@ -154,7 +154,7 @@ void bob_trigger_auth(void)
     struct result_t *result;
     int ret;
 
-    resource = bob_next_resource();
+    resource = bob_next_free_resource();
     if (resource == NULL) {
         return;
     }
@@ -164,7 +164,7 @@ void bob_trigger_auth(void)
     char *query = &resource->query[0];
 
     // Find new query to authenticate and initialize resource
-    if ((result = searches_get_auth_target(query, &resource->addr, &bob_trigger_auth)) != NULL) {
+    if ((result = searches_get_auth_target(query, &resource->address, &bob_trigger_auth)) != NULL) {
         result->state = AUTH_PROGRESS;
 
         // Hex to binary and compressed form (assuming even Y => 0x02)
@@ -180,7 +180,7 @@ void bob_trigger_auth(void)
         if ((ret = mbedtls_ecp_decompress(
                 &kp->MBEDTLS_PRIVATE(grp), compressed, sizeof(compressed),
                 decompressed, &olen, sizeof(decompressed))) != 0) {
-            log_error("Error in mbedtls_ecp_decompress: %d\n", ret);
+            log_error("BOB: Error in mbedtls_ecp_decompress: %d\n", ret);
             bob_auth_end(resource, AUTH_ERROR);
             return;
         }
@@ -189,7 +189,7 @@ void bob_trigger_auth(void)
         if ((ret = mbedtls_ecp_point_read_binary(
                 &kp->MBEDTLS_PRIVATE(grp), &kp->MBEDTLS_PRIVATE(Q),
                 decompressed, sizeof(decompressed))) != 0) {
-            log_error("Error in mbedtls_ecp_point_read_binary: %d\n", ret);
+            log_error("BOB: Error in mbedtls_ecp_point_read_binary: %d\n", ret);
             bob_auth_end(resource, AUTH_ERROR);
             return;
         }
@@ -309,7 +309,6 @@ bool bob_create_key(const char path[])
         }
     } while (mbedtls_mpi_get_bit(&mbedtls_pk_ec(ctx)->MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(Y), 0) != 0);
 
-
     if ((ret = write_pem(&ctx, path)) != 0) {
         return false;
     }
@@ -387,6 +386,7 @@ void bob_send_challenges(int sock)
     for (size_t i = 0; i < ARRAY_SIZE(g_bob_resources); ++i) {
         resource = &g_bob_resources[i];
         if (resource->query[0] == '\0') {
+            // End of array reached
             continue;
         }
 
@@ -399,10 +399,10 @@ void bob_send_challenges(int sock)
     }
 }
 
-struct bob_resource *bob_find_resource(const IP *addr)
+struct bob_resource *bob_find_resource(const IP *address)
 {
     for (size_t i = 0; i < ARRAY_SIZE(g_bob_resources); ++i) {
-        if (addr_equal(&g_bob_resources[i].addr, addr)) {
+        if (addr_equal(&g_bob_resources[i].address, address)) {
             return &g_bob_resources[i];
         }
     }
@@ -411,21 +411,20 @@ struct bob_resource *bob_find_resource(const IP *addr)
 }
 
 // Receive a solved challenge and verify it
-void bob_verify_challenge(int sock, uint8_t buf[], size_t buflen, IP *addr)
+void bob_verify_challenge(int sock, uint8_t buf[], size_t buflen, IP *address)
 {
     struct bob_resource *resource;
-    int ret;
 
-    resource = bob_find_resource(addr);
+    resource = bob_find_resource(address);
 
     if (resource) {
-        ret = mbedtls_ecdsa_read_signature(mbedtls_pk_ec(resource->ctx_verify),
+        int ret = mbedtls_ecdsa_read_signature(mbedtls_pk_ec(resource->ctx_verify),
             resource->challenge, CHALLENGE_BIN_LENGTH, buf + 3, buflen - 3);
 
-        log_debug("BOB: Received response from %s does not verify: %s\n", str_addr(addr), resource->query);
+        log_debug("BOB: Received response from %s does not verify: %s", str_addr(address), resource->query);
         bob_auth_end(resource, ret ? AUTH_FAILED : AUTH_OK);
     } else {
-        log_warning("BOB: No session found for address %s", str_addr(addr));
+        log_warning("BOB: No session found for address %s", str_addr(address));
     }
 }
 
@@ -446,7 +445,7 @@ struct key_t *bob_find_key(const uint8_t pkey[])
 }
 
 // Receive a challenge and solve it using a secret key
-void bob_encrypt_challenge(int sock, uint8_t buf[], size_t buflen, IP *addr)
+void bob_encrypt_challenge(int sock, uint8_t buf[], size_t buflen, IP *address)
 {
     struct key_t *key;
     uint8_t sig[200];
@@ -454,7 +453,6 @@ void bob_encrypt_challenge(int sock, uint8_t buf[], size_t buflen, IP *addr)
     char hexbuf[52 + 1];
 #endif
     size_t slen;
-    int ret;
 
     uint8_t *pkey = buf + 3;
     uint8_t *challenge = buf + 3 + ECPARAMS_SIZE;
@@ -463,12 +461,12 @@ void bob_encrypt_challenge(int sock, uint8_t buf[], size_t buflen, IP *addr)
     if (key) {
         memcpy(sig, "BOB", 3);
 #if MBEDTLS_VERSION_NUMBER >= 0x03000000
-        ret = mbedtls_ecdsa_write_signature(
+        int ret = mbedtls_ecdsa_write_signature(
             mbedtls_pk_ec(key->ctx_sign), MBEDTLS_MD_SHA256,
             challenge, CHALLENGE_BIN_LENGTH,
             sig + 3, sizeof(sig)-3, &slen, mbedtls_ctr_drbg_random, &g_ctr_drbg);
 #else
-        ret = mbedtls_ecdsa_write_signature(
+        int ret = mbedtls_ecdsa_write_signature(
             mbedtls_pk_ec(key->ctx_sign), MBEDTLS_MD_SHA256,
             challenge, CHALLENGE_BIN_LENGTH,
             sig + 3, &slen, mbedtls_ctr_drbg_random, &g_ctr_drbg);
@@ -478,8 +476,8 @@ void bob_encrypt_challenge(int sock, uint8_t buf[], size_t buflen, IP *addr)
         if (ret != 0) {
             log_warning("mbedtls_ecdsa_write_signature returned %d\n", ret);
         } else {
-            log_debug("Received challenge from %s and send back response", str_addr(addr));
-            sendto(sock, sig, slen, 0, (struct sockaddr*) addr, sizeof(IP));
+            log_debug("Received challenge from %s and send back response", str_addr(address));
+            sendto(sock, sig, slen, 0, (struct sockaddr*) address, sizeof(IP));
         }
     } else {
         log_debug("BOB: Secret key not found for public key: %s",
@@ -488,10 +486,9 @@ void bob_encrypt_challenge(int sock, uint8_t buf[], size_t buflen, IP *addr)
     }
 }
 
+// Called when traffic on the DHT port arrives.
 bool bob_handler(int fd, uint8_t buf[], uint32_t buflen, IP *from)
 {
-    time_t now;
-
     // Hack to get the DHT socket..
     if (g_dht_socket == -1) {
         g_dht_socket = fd;
@@ -508,7 +505,7 @@ bool bob_handler(int fd, uint8_t buf[], uint32_t buflen, IP *from)
         return true;
     }
 
-    now = time_add_secs(0);
+    time_t now = time_add_secs(0);
 
     // Send out new challenges every second
     if (g_send_challenges < now) {
