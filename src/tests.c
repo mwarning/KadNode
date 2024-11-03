@@ -116,5 +116,5 @@ void run_tests()
     base32_test3();
     base32_test4();
 
-    fprintf(stderr, "debug tests ran OK\n");
+    fprintf(stderr, "Pre-run tests ran OK\n");
 }
