@@ -311,7 +311,7 @@ static void search_restart(struct search_t *search)
     }
 }
 
-static bool hex_parse_id(uint8_t id[], const char query[], size_t querylen)
+static bool parse_plain_id(uint8_t id[], const char query[], size_t querylen)
 {
     if (base16decsize(querylen) == ID_BINARY_LENGTH
             && base16dec(id, ID_BINARY_LENGTH, query, querylen)) {
@@ -339,6 +339,7 @@ int parse_query(uint8_t id_ret[], char squery_ret[], int *port_ret, const char q
         }
 
         *port_ret = n;
+        // "Remove" port
         squery_len = colon - query;
     }
 
@@ -362,7 +363,7 @@ int parse_query(uint8_t id_ret[], char squery_ret[], int *port_ret, const char q
         return QUERY_TYPE_BOB;
     } else
 #endif
-    if (hex_parse_id(id_ret, squery_ret, squery_len)) {
+    if (parse_plain_id(id_ret, squery_ret, squery_len)) {
         // Use no authentication
         // For e.g. <20ByteHashKey>.p2p
         return QUERY_TYPE_NONE;
@@ -403,7 +404,7 @@ struct search_t* searches_start(const char query[])
         cb = NULL;
         break;
     default:
-        log_error("searches: wrong type");
+        log_error("searches: invalid type value: %d", type);
         return NULL;
     }
 
