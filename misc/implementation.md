@@ -12,6 +12,8 @@ This is the progress for a domain lookup in the browser using TLS and a PKI.
 5. To every IP address, a TLS session is established. If it succeeds, the IP is verified.
 6. The verified IP addresses are based back from KadNode to the browser who establishes an HTTPS session to access a website.
 
+Disclaimer: This is not the best way to implement DNS utilizing a Distributed Hash Table (DHT). The BitTorrent Mainline DHT only returns IP address (with port) as response to queries. KadNode then does a extra verification step. A better way would be to be able to store and retrieve signed IP addresses via the DHT. But that would require to modify the current DHT.
+
 ## About Announcement
 
 An announcement is done every 20 minutes. The lifetime of those entries on other peer is expected to be around 15 minutes.
