@@ -550,6 +550,13 @@ static bool conf_set(const char opt[], const char val[])
             return false;
         }
 
+#ifdef BOB
+        if (plen == 3 && 0 == memcmp(prefix, "BOB", 3)) {
+            log_error("Invalid DHT isolation prefix: %s", val);
+            return false;
+        }
+#endif
+
         gconf->dht_isolation_prefix_length = plen;
         memcpy(&gconf->dht_isolation_prefix[0], prefix, plen);
         return true;
