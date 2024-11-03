@@ -10,7 +10,7 @@
 */
 
 
-int kad_setup(void);
+bool kad_setup(void);
 void kad_free(void);
 
 // Ping this node to add it to the node table

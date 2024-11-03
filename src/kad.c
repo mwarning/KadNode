@@ -323,7 +323,7 @@ int dht_random_bytes(void *buf, size_t size)
     return bytes_random(buf, size);
 }
 
-int kad_setup(void)
+bool kad_setup(void)
 {
     uint8_t node_id[ID_BINARY_LENGTH];
 
@@ -346,16 +346,16 @@ int kad_setup(void)
     }
 
     if (g_dht_socket4 < 0 && g_dht_socket6 < 0) {
-        return EXIT_FAILURE;
+        return false;
     }
 
     // Init the DHT.  Also set the sockets into non-blocking mode.
     if (dht_init(g_dht_socket4, g_dht_socket6, node_id, (uint8_t*) "KN\0\0") < 0) {
         log_error("KAD: Failed to initialize the DHT.");
-        return EXIT_FAILURE;
+        return false;
     }
 
-    return EXIT_SUCCESS;
+    return true;
 }
 
 void kad_free(void)
