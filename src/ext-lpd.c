@@ -61,7 +61,7 @@ struct lpd_state g_lpd6 = {
     .sock_listen = -1
 };
 
-static int is_valid_ifa(struct ifaddrs *ifa, int af)
+static bool is_valid_ifa(struct ifaddrs *ifa, int af)
 {
     if ((ifa->ifa_addr == NULL)
             || !(ifa->ifa_flags & IFF_RUNNING)
@@ -72,9 +72,9 @@ static int is_valid_ifa(struct ifaddrs *ifa, int af)
 
     // if DHT interface set, use only that interface (if it exists)
     if (gconf->dht_ifname && 0 != strcmp(gconf->dht_ifname, ifa->ifa_name)) {
-        return 0;
+        return false;
     } else {
-        return 1;
+        return true;
     }
 }
 
