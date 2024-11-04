@@ -61,6 +61,12 @@ Or install a downloaded package with `pkg install kadnode-*.txz`
 ### ArchLinux
 install a downloaded package with:  `pacman -U kadnode-*.pkg.tar.xz`
 
+## Related Projects
+
+* [pkdns](https://github.com/pubky/pkdns)
+* [btlink](https://github.com/anacrolix/btlink)
+* [DNSLink](https://dnslink.org/) Standard
+
 ## License
 
   MIT/X11
