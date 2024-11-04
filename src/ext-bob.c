@@ -249,7 +249,7 @@ static const char *get_pkey_base32(const mbedtls_pk_context *ctx)
     return base32enc(hexbuf, sizeof(hexbuf), buf, sizeof(buf));
 }
 
-static bool bob_init()
+static bool bob_init(void)
 {
     if (g_mbedtls_initialized) {
         return true;

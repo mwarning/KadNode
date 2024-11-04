@@ -138,7 +138,7 @@ void kad_lookup_own_announcements(struct search_t *search)
 }
 #endif
 
-static void clear_old_traffic_counters()
+static void clear_old_traffic_counters(void)
 {
     size_t idx = gconf->time_now % TRAFFIC_DURATION_SECONDS;
     uint32_t since = (gconf->time_now - gconf->traffic_time);

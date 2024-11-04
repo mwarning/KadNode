@@ -76,7 +76,7 @@ void net_remove_handler(int fd, net_callback_t *cb)
     exit(1);
 }
 
-static void compress_entries()
+static void compress_entries(void)
 {
     for (size_t i = 0; i < g_count; i += 1) {
         while (g_cbs[i] == NULL && i < g_count) {

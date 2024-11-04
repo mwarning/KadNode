@@ -635,7 +635,7 @@ bool conf_load(void)
     return rc;
 }
 
-static struct gconf_t *conf_alloc()
+static struct gconf_t *conf_alloc(void)
 {
     struct gconf_t *conf;
     time_t now = time(NULL);
@@ -667,7 +667,7 @@ static struct gconf_t *conf_alloc()
     return conf;
 }
 
-static void conf_set_defaults()
+static void conf_set_defaults(void)
 {
     if (gconf->af == -1) {
         gconf->af = AF_UNSPEC;

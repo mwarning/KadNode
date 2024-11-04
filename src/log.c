@@ -15,7 +15,7 @@
 // Program start time
 static struct timespec log_start = { 0, 0 };
 
-const char *log_time()
+const char *log_time(void)
 {
     static char buf[16];
     struct timespec now = { 0, 0 };

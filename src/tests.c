@@ -7,7 +7,7 @@
 #include "utils.h"
 
 
-static void base32_test1()
+static void base32_test1(void)
 {
     for (int i = 0; i < 100; ++i) {
         int a = base32encsize(i);
@@ -19,7 +19,7 @@ static void base32_test1()
     }
 }
 
-static void base32_test2()
+static void base32_test2(void)
 {
     char buf[200];
     uint8_t in1[20] = {0x21, 0x49, 0xf2, 0x7d, 0xec, 0x0e, 0x23, 0x8d, 0xb3, 0x12, 0xa4, 0xd0, 0xbe, 0x36, 0xb6, 0x8f, 0x14, 0xa2, 0xd8, 0x22};
@@ -39,7 +39,7 @@ static void base32_test2()
     }
 }
 
-static void base32_test3()
+static void base32_test3(void)
 {
     char buf[200];
     uint8_t in[100];
@@ -92,7 +92,7 @@ static void base32_test3()
     }
 }
 
-void base32_test4()
+void base32_test4(void)
 {
     const char *base32encoded = "454z4zfc1rhrvcrjmk8bwdnphwaa5p12";
     uint8_t out[20];
@@ -109,7 +109,7 @@ void base32_test4()
     }
 }
 
-void run_tests()
+void run_tests(void)
 {
     base32_test1();
     base32_test2();

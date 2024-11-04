@@ -320,7 +320,7 @@ bool tls_client_add_ca(const char path[])
     return true;
 }
 
-static bool tls_init()
+static bool tls_init(void)
 {
     if (g_mbedtls_initialized) {
         return true;

@@ -3,6 +3,6 @@
 
 /* Tests to run at startup - only for debug binary! */
 
-void run_tests();
+void run_tests(void);
 
 #endif // _TESTS_H_
