@@ -24,10 +24,9 @@
 * Local Peer Discovery
 */
 
-#ifdef __CYGWIN__
-#ifndef AF_PACKET
-#define AF_PACKET 17
-#endif
+#if defined(__FreeBSD__)
+#define IPV6_ADD_MEMBERSHIP IPV6_JOIN_GROUP
+#define IPV6_DROP_MEMBERSHIP IPV6_LEAVE_GROUP
 #endif
 
 enum {
@@ -80,8 +79,9 @@ static bool is_valid_ifa(struct ifaddrs *ifa, int af)
 
 static void join_mcast(const struct lpd_state* lpd, struct ifaddrs *ifa)
 {
+    // for each usable interface
     for (; ifa != NULL; ifa = ifa->ifa_next) {
-        if (is_valid_ifa(ifa, AF_PACKET)) {
+        if (is_valid_ifa(ifa, AF_INET)) {
             unsigned ifindex = if_nametoindex(ifa->ifa_name);
 
             if (lpd->mcast_addr.ss_family == AF_INET) {
@@ -122,7 +122,7 @@ static void send_mcasts(const struct lpd_state* lpd, struct ifaddrs *ifa)
                 log_error("setsockopt(IP_MULTICAST_IF) %s", strerror(errno));
                 continue;
             }
-        } else if (family == AF_INET6 && is_valid_ifa(ifa, AF_PACKET)) {
+        } else if (family == AF_INET6 && is_valid_ifa(ifa, AF_INET)) {
             unsigned ifindex = if_nametoindex(ifa->ifa_name);
 
             if (setsockopt(lpd->sock_send, IPPROTO_IPV6, IPV6_MULTICAST_IF, &ifindex, sizeof(ifindex)) < 0) {
