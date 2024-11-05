@@ -1,19 +1,17 @@
-# Created by: Moritz Warning <moritzwarning@web.de>
-# $FreeBSD$
-
 PORTNAME=	kadnode
 DISTVERSIONPREFIX=	v
-DISTVERSION=	2.3.0
-PORTREVISION=	0
+DISTVERSION=	2.4.0
+PORTREVISION=	1
 CATEGORIES=	dns
 
 MAINTAINER=	moritzwarning@web.de
 COMMENT=	P2P name resolution daemon
+WWW=		https://github.com/mwarning/KadNode
 
 LICENSE=	MIT
 LICENSE_FILE=	${WRKSRC}/LICENSE
 
-USES=		gmake
+USES=		cpe gmake
 USE_GITHUB=	yes
 GH_ACCOUNT=	mwarning
 GH_PROJECT=	KadNode
@@ -54,6 +52,10 @@ NSS_VARS=		FEATURES+="nss"
 UPNP_LIB_DEPENDS=	libminiupnpc.so:net/miniupnpc
 UPNP_VARS=		FEATURES+="upnp"
 
+# for miniupnpc package
+CFLAGS+=	-I${LOCALBASE}/include
+LDFLAGS+=	-L${LOCALBASE}/lib
+
 do-install:
 	${INSTALL_PROGRAM} ${WRKSRC}/build/kadnode ${STAGEDIR}${PREFIX}/bin/
 	${RLN} ${STAGEDIR}${PREFIX}/bin/kadnode ${STAGEDIR}${PREFIX}/bin/kadnode-ctl
@@ -63,8 +65,7 @@ do-install:
 	${INSTALL_DATA} ${WRKDIR}/kadnode.conf \
 		${STAGEDIR}${ETCDIR}/kadnode.conf.sample
 	${INSTALL_MAN} ${WRKSRC}/misc/manpage \
-		${STAGEDIR}${MANPREFIX}/man/man1/kadnode.1
-
+		${STAGEDIR}${PREFIX}/share/man/man1/kadnode.1
 do-install-NSS-on:
 	${INSTALL_LIB} ${WRKSRC}/build/libnss_kadnode-2.0.so \
 		${STAGEDIR}${PREFIX}/lib/nss_kadnode.so.1

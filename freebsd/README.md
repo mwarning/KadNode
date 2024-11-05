@@ -12,12 +12,13 @@ pkg install mbedtls
 Make sure /usr/ports is populated:
 
 ```
-portsnap fetch extract
+git clone https://git.freebsd.org/ports.git /usr/ports
 ```
 
-Create a source tarball of the current repository:
+Create a source tarball of the KadNode repository:
 
 ```
+cd kadnode
 git archive HEAD --prefix kadnode-head/ -o freebsd/kadnode-head.tar.gz
 ```
 
@@ -41,11 +42,9 @@ make makesum
 make package
 ```
 
-The package can be found in freebsd/work/pkg/.
-
 Package installation:
 ```
-pkg add kadnode-*.txz
+pkg add work/pkg/kadnode-*.pkg
 ```
 
 Start kadnode:
@@ -58,12 +57,12 @@ service kadnode start
 Checkout the Ports repository:
 
 ```
-svn checkout https://svn.FreeBSD.org/ports/head ports
+git clone https://git.freebsd.org/ports.git ports
 ```
 
 Apply changes to `ports/dns/kadnode` and create a patch to submit:
 
 ```
 cd ports/dns/kadnode
-svn diff > ../`make -VPKGNAME`.diff
+git diff > ../`make -VPKGNAME`.diff
 ```

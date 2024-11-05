@@ -8,7 +8,7 @@
 #
 # For domain lookup, we need to provide appropiate CA certificates.
 # Try various locations:
---tls-client-cert %%LOCALBASE%%/share/certs
+--tls-client-cert /usr/share/certs/trusted
 
 # As an alternative, create a secret/public key via 'kadnode --bob-create-key'
 # and load the secret keys as PEM file:
