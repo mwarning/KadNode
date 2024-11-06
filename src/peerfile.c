@@ -74,35 +74,37 @@ void peerfile_export(void)
 static int peerfile_import_peer(const char addr_str[])
 {
     const char *port_str = STR(DHT_PORT);
-    bool parsed = false;
-    bool pinged = false;
+    bool parsed4 = false;
+    bool pinged4 = false;
+    bool parsed6 = false;
+    bool pinged6 = false;
     IP addr = {0};
     int af = gconf->af;
 
     if (af == AF_UNSPEC || af == AF_INET6) {
         if (addr_parse(&addr, addr_str, port_str, AF_INET6)) {
-            parsed = true;
+            parsed6 = true;
             if (kad_ping(&addr)) {
-                pinged = true;
+                pinged6 = true;
             }
         }
     }
 
     if (af == AF_UNSPEC || af == AF_INET) {
         if (addr_parse(&addr, addr_str, port_str, AF_INET)) {
-            parsed = true;
+            parsed4 = true;
             if (kad_ping(&addr)) {
-                pinged = true;
+                pinged4 = true;
             }
         }
     }
 
-    if (!parsed) {
+    if (!parsed4 && !parsed6) {
         log_warning("PEERFILE: Cannot resolve address: '%s'", addr_str);
         return 0;
     }
 
-    if (!pinged) {
+    if (!pinged4 && !pinged6) {
         log_warning("PEERFILE: Cannot ping address: '%s'", addr_str);
         return 0;
     }
