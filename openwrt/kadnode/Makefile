@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 
 PKG_NAME:=kadnode
-PKG_VERSION:=3.0.0
+PKG_VERSION:=2.4.0
 PKG_RELEASE:=1
 
 PKG_SOURCE_URL:=https://codeload.github.com/mwarning/KadNode/tar.gz/v$(PKG_VERSION)?
