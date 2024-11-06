@@ -178,8 +178,8 @@ void unix_write_pidfile(int pid, const char pidfile[])
     file = fopen(pidfile, "r");
     if (file) {
         fclose(file);
-        log_error("PID file already exists: %s", pidfile);
-        exit(1);
+        log_warning("PID file already exists: %s", pidfile);
+        unlink(pidfile);
     }
 
     file = fopen(pidfile, "w");
