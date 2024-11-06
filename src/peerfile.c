@@ -98,12 +98,12 @@ static int peerfile_import_peer(const char addr_str[])
     }
 
     if (!parsed) {
-        log_warning("PEERFILE: Cannot parse/resolve address '%s': %s", addr_str, strerror(errno));
+        log_warning("PEERFILE: Cannot resolve address: '%s'", addr_str);
         return 0;
     }
 
     if (!pinged) {
-        log_warning("PEERFILE: Cannot ping address '%s': %s", addr_str, strerror(errno));
+        log_warning("PEERFILE: Cannot ping address: '%s'", addr_str);
         return 0;
     }
 
