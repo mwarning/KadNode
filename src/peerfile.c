@@ -46,6 +46,11 @@ void peerfile_export(void)
         return;
     }
 
+    if (kad_count_nodes(true) == 0) {
+        log_info("PEERFILE: No peers to export.");
+        return;
+    }
+
     fp = fopen(filename, "w");
     if (fp == NULL) {
         log_warning("PEERFILE: Cannot open file '%s' for peer export: %s", filename, strerror(errno));
