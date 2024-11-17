@@ -9,6 +9,17 @@ kadnode (2.4.0) stable; urgency=medium
   * support DHT isolation for private swarms
   * various bug fixes
 
+ -- Moritz Warning <moritzwarning@web.de>  Wed, 06 Now 2023 00:00:00 +0100
+
+kadnode (2.3.0-1) stable; urgency=medium
+
+  * update dht to 0.26
+  * fix resolve peers to IPv6 address
+  * ignore sigpipe globally (should fix some crashes)
+  * fix ttl value for dns interface reply
+
+ -- Moritz Warning <moritzwarning@web.de>  Mon, 10 Feb 2020 00:00:00 +0100
+
 kadnode (2.3.0) stable; urgency=medium
 
  * fix possible high CPU usage
@@ -16,9 +27,13 @@ kadnode (2.3.0) stable; urgency=medium
  * fix logging
  * fix local peer discovery
 
+ -- Moritz Warning <moritzwarning@web.de>  Sun, 09 Feb 2020 00:00:00 +0100
+
 kadnode (2.2.6) stable; urgency=medium
 
  * update dht library to 0.26
+
+ -- Moritz Warning <moritzwarning@web.de>  Mon, 10 Dec 2018 03:27:44 +0100
 
 kadnode (2.2.5) stable; urgency=medium
 
@@ -27,7 +42,7 @@ kadnode (2.2.5) stable; urgency=medium
   * remove linker flags from compile calls
   * fix freebsd nss module crash when no address was found
 
- -- mwarning <moritzwarning@web.de>  Fri, Aug 24 2018 03:27:44 +0100
+ -- Moritz Warning <moritzwarning@web.de>  Fri, 24 Aug 2018 03:27:44 +0100
 
 kadnode (2.2.4) stable; urgency=medium
 
@@ -35,20 +50,20 @@ kadnode (2.2.4) stable; urgency=medium
   * --bob-load-key creates key file with u+rw permissions only
   * internal refactoring
 
- -- mwarning <moritzwarning@web.de>  Sun, 20 May 2018 19:25:37 -0400
+ -- Moritz Warning <moritzwarning@web.de>  Sun, 20 May 2018 19:25:37 -0400
 
 kadnode (2.2.3) stable; urgency=medium
 
   * fix various segfaults parsing arguments
 
- -- mwarning <moritzwarning@web.de>  Sun, 20 May 2018 19:25:37 -0400
+ -- Moritz Warning <moritzwarning@web.de>  Sun, 20 May 2018 19:25:37 -0400
 
 kadnode (2.2.2) stable; urgency=medium
 
   * fix control command parsing
   * fix argument parsing
 
- -- mwarning <moritzwarning@web.de>  Fri, 18 May 2018 21:23:24 -0400
+ -- Moritz Warning <moritzwarning@web.de>  Fri, 18 May 2018 21:23:24 -0400
 
 kadnode (2.2.1) stable; urgency=medium
 
@@ -57,7 +72,7 @@ kadnode (2.2.1) stable; urgency=medium
   * do not return localhost address
   * fix result removal when a search is restarted
 
- -- mwarning <moritzwarning@web.de>  Sun, 16 Feb 2018 18:02:41 +0100
+ -- Moritz Warning <moritzwarning@web.de>  Sun, 16 Feb 2018 18:02:41 +0100
 
 kadnode (2.2.0) unstable; urgency=medium
 
@@ -69,7 +84,7 @@ kadnode (2.2.0) unstable; urgency=medium
   * aim for Linux code style
   * various FreeBSD fixes
 
- -- mwarning <moritzwarning@web.de>  Sun, 11 Feb 2018 20:21:56 +0100
+ -- Moritz Warning <moritzwarning@web.de>  Sun, 11 Feb 2018 20:21:56 +0100
 
 kadnode (2.1.0) unstable; urgency=medium
 
@@ -79,14 +94,14 @@ kadnode (2.1.0) unstable; urgency=medium
   * use unix sockets for kadnode-ctl
   * put kadnode-ctl code into kadnode and use a link instead
 
- -- mwarning <moritzwarning@web.de>  Fri, 09 Feb 2018 20:16:41 +0100
+ -- Moritz Warning <moritzwarning@web.de>  Fri, 09 Feb 2018 20:16:41 +0100
 
 kadnode (2.0.2) unstable; urgency=medium
 
   * announce domains from certificates by default
   * fix wildcard matching
 
- -- mwarning <moritzwarning@web.de>  Wed, 20 Dec 2017 12:18:55 +0100
+ -- Moritz Warning <moritzwarning@web.de>  Wed, 20 Dec 2017 12:18:55 +0100
 
 kadnode (2.0.1) unstable; urgency=medium
 
@@ -94,7 +109,7 @@ kadnode (2.0.1) unstable; urgency=medium
   * make order of command line arguments irrelevant
   * basic support for wildcard certificates
 
- -- mwarning <moritzwarning@web.de>  Wed, 20 Dec 2017 12:18:55 +0100
+ -- Moritz Warning <moritzwarning@web.de>  Wed, 20 Dec 2017 12:18:55 +0100
 
 kadnode (2.0.0) unstable; urgency=medium
 
@@ -103,7 +118,7 @@ kadnode (2.0.0) unstable; urgency=medium
   * add a new TLS based authentication scheme (uses mbedtls)
   * rename previous authentication scheme to bob (uses mbedtls)
 
- -- mwarning <moritzwarning@web.de>  Tue, 14 Aug 2017 00:56:45 +0100
+ -- Moritz Warning <moritzwarning@web.de>  Tue, 14 Aug 2017 00:56:45 +0100
 
 kadnode (1.1.0) unstable; urgency=medium
 
@@ -119,7 +134,7 @@ kadnode (1.1.0) unstable; urgency=medium
     * mdns already uses 5353
   * use IPv6 localhost address (::1) for all local interfaces
 
- -- mwarning <moritzwarning@web.de>  Tue, 06 Jan 2015 21:56:16 +0100
+ -- Moritz Warning <moritzwarning@web.de>  Tue, 06 Jan 2015 21:56:16 +0100
 
 kadnode (1.0.0) unstable; urgency=medium
 
@@ -131,7 +146,7 @@ kadnode (1.0.0) unstable; urgency=medium
   * [AUTH] make sure to send auth requests as soon as sheduled
   * [LPD] register multicast group on all interfaces by default
 
- -- mwarning <moritzwarning@web.de>  Thu, 04 Dec 2014 12:03:52 +0100
+ -- Moritz Warning <moritzwarning@web.de>  Thu, 04 Dec 2014 12:03:52 +0100
 
 kadnode (0.9.2) unstable; urgency=low
 
@@ -149,7 +164,7 @@ kadnode (0.9.2) unstable; urgency=low
       time out first until they start doing A/AAA/SRV requests,
       so this will hopefully speed up other requests
 
- -- mwarning <moritzwarning@web.de>  Wed, 03 Dec 2014 08:19:08 +0100
+ -- Moritz Warning <moritzwarning@web.de>  Wed, 03 Dec 2014 08:19:08 +0100
 
 kadnode (0.9.1) unstable; urgency=low
 
@@ -171,7 +186,7 @@ kadnode (0.9.1) unstable; urgency=low
     * rename --disable-multicast to --lpd-disable
     * rename --mcast-addr to --lpd-addr
 
- -- mwarning <moritzwarning@web.de>  Sun, 15 Jun 2014 22:48:27 +0200
+ -- Moritz Warning <moritzwarning@web.de>  Sun, 15 Jun 2014 22:48:27 +0200
 
 kadnode (0.9) unstable; urgency=low
 
@@ -180,7 +195,7 @@ kadnode (0.9) unstable; urgency=low
   * fix crash when adding value IDs at program start
   * improve some messages
 
- -- mwarning <moritzwarning@web.de>  Wed, 07 May 2014 15:22:26 +0200
+ -- Moritz Warning <moritzwarning@web.de>  Wed, 07 May 2014 15:22:26 +0200
 
 kadnode (0.8) unstable; urgency=low
 
@@ -191,7 +206,7 @@ kadnode (0.8) unstable; urgency=low
   * add support for Mac OSX
   * fix OpenWrt init script
 
- -- mwarning <moritzwarning@web.de>  Thu, 06 Mar 2014 01:14:54 +0100
+ -- Moritz Warning <moritzwarning@web.de>  Thu, 06 Mar 2014 01:14:54 +0100
 
 kadnode (0.7) unstable; urgency=low
 
@@ -206,7 +221,7 @@ kadnode (0.7) unstable; urgency=low
     useful for very small networks and faster lookup
   * quiet startup in daemon mode
 
- -- mwarning <moritzwarning@web.de>  Mon, 03 Mar 2014 02:45:29 +0100
+ -- Moritz Warning <moritzwarning@web.de>  Mon, 03 Mar 2014 02:45:29 +0100
 
 kadnode (0.6) unstable; urgency=low
 
@@ -215,7 +230,7 @@ kadnode (0.6) unstable; urgency=low
   * support return of multiple answers via NSS
   * fix infinite loop in value list
 
- -- mwarning <moritzwarning@web.de>  Thu, 13 Feb 2014 15:29:11 +0100
+ -- Moritz Warning <moritzwarning@web.de>  Thu, 13 Feb 2014 15:29:11 +0100
 
 kadnode (0.5) unstable; urgency=low
 
@@ -231,7 +246,7 @@ kadnode (0.5) unstable; urgency=low
   * add --config to load a configuration file
   * change default port for announces from 1 to random (!= 0)
 
- -- mwarning <moritzwarning@web.de>  Tue, 12 Nov 2013 02:31:57 +0100
+ -- Moritz Warning <moritzwarning@web.de>  Tue, 12 Nov 2013 02:31:57 +0100
 
 kadnode (0.4) unstable; urgency=low
 
@@ -251,7 +266,7 @@ kadnode (0.4) unstable; urgency=low
   * Add list command to command line to list value ids that will be
     announced and to list port forwardings
 
- -- mwarning <moritzwarning@web.de>  Mon, 23 Sep 2013 21:41:24 +0200
+ -- Moritz Warning <moritzwarning@web.de>  Mon, 23 Sep 2013 21:41:24 +0200
 
 kadnode (0.3) unstable; urgency=low
 
@@ -262,7 +277,7 @@ kadnode (0.3) unstable; urgency=low
   * Change default multicast addresses to 239.192.202.7 / ff08:ca:07::
   * Change default interface ports: cmd: 1700, dns: 5353, web: 8053, nss: 4053
 
- -- mwarning <moritzwarning@web.de>  Thu, 27 Jun 2013 19:23:21 +0200
+ -- Moritz Warning <moritzwarning@web.de>  Thu, 27 Jun 2013 19:23:21 +0200
 
 kadnode (0.2) unstable; urgency=high
 
@@ -270,7 +285,7 @@ kadnode (0.2) unstable; urgency=high
   * kadnode-ctl: timeout was too short
   * kadnode: disable DNS/NSS/CMD/WEB interface when port is set to 0
 
- -- mwarning <moritzwarning@web.de>  Wed, 26 Jun 2013 00:50:40 +0200
+ -- Moritz Warning <moritzwarning@web.de>  Wed, 26 Jun 2013 00:50:40 +0200
 
 kadnode (0.1) unstable; urgency=low
 
