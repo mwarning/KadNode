@@ -151,7 +151,7 @@ int net_socket(const char name[], const char ifname[], const int protocol, const
 
 #if defined(__APPLE__) || defined(__CYGWIN__) || defined(__FreeBSD__)
     if (ifname) {
-        log_error("%s: Bind to device not supported on Windows and MacOSX.", name);
+        log_error("%s: Bind to device not supported on Windows, MacOSX or FreeBSD.", name);
         goto fail;
     }
 #else
@@ -162,7 +162,7 @@ int net_socket(const char name[], const char ifname[], const int protocol, const
 #endif
 
     if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt_on, sizeof(opt_on)) < 0) {
-        log_error("%s: Unable to set SO_REUSEADDR for %s: %s", name, ifname, strerror(errno));
+        log_error("%s: Unable to set SO_REUSEADDR: %s", name, strerror(errno));
         goto fail;
     }
 
@@ -214,7 +214,7 @@ int net_bind(
     }
 
     if (protocol == IPPROTO_TCP && listen(sock, 5) < 0) {
-        log_error("%s: Failed to listen on %s: %s (%s)",
+        log_error("%s: Failed to listen on %s: %s",
             name, str_addr(&sockaddr), strerror(errno)
         );
         goto fail;
