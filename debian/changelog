@@ -1,3 +1,16 @@
+kadnode (2.4.0) stable; urgency=medium
+
+  * fix compilation for mbedtls >=3.0.0
+  * fix compilation for miniupnpc >=2.2.8
+  * remove old searches after about an hour
+  * use lower case Crockford base32 encoding
+    * base16 is still accepted for input
+  * add traffic statistics and uptime
+  * support DHT isolation for private swarms
+  * various bug fixes
+
+ -- Moritz Warning <moritzwarning@web.de>  Sun, 09 Feb 2020 00:00:00 +0100
+
 kadnode (2.3.0-1) stable; urgency=medium
 
   * update dht to 0.26
