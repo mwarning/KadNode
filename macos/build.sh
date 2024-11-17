@@ -1,6 +1,6 @@
 #!/bin/sh
 
-VERSION="2.2.1"
+VERSION="2.4.0"
 
 #go to the projects root folder
 cd ..
