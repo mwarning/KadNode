@@ -578,7 +578,7 @@ static void proxy_read_resolv(IP *dst, const char path[])
     ssize_t nread;
     char dns_serv[256];
 
-    // Check if path was modified
+    // Check if the path was modified
     stat(path, &attr);
     if (last_modified != attr.st_mtime) {
         last_modified = attr.st_mtime;

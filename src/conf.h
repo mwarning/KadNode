@@ -36,7 +36,7 @@ struct gconf_t {
     // Import/Export peers from this file
     char *peerfile;
 
-    // Path to configuration file
+    // Path to the configuration file
     char *configfile;
 
     // Start in Foreground / Background

@@ -3,13 +3,13 @@
 #define _EXT_TLS_CLIENT_H_
 
 
-// Add Certifiacte Authorities (CAs)
+// Add Certificate Authorities (CAs)
 bool tls_client_add_ca(const char ca_path[]);
 
 // Decide if the query is meant to be authorized via an CA
 bool tls_client_parse_id(uint8_t id[], const char query[], size_t querylen);
 
-// Trigger authorisation of results; need to be called multiple times.
+// Trigger authorization of results; need to be called multiple times.
 void tls_client_trigger_auth(void);
 
 bool tls_client_setup(void);

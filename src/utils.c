@@ -213,7 +213,7 @@ char *base32enc(char *dest, int destlen, const uint8_t *src, int srclen)
     int srclen_bits = srclen * 8;
     int didx = 0;
     *dest = 0;
-    // Make sure destination is big enough
+    // Make sure the destination is big enough
     int destlen_needed = (srclen_bits + 4) / 5;  // Symbols before adding CRC
     destlen_needed++;  // For terminating null
     if (destlen < destlen_needed)
@@ -243,8 +243,8 @@ char *base32enc(char *dest, int destlen, const uint8_t *src, int srclen)
     return dest;
 }
 
-// Check if a string has and extension.
-// ext is epected to start with a dot.
+// Check if a string has an extension.
+// The ext is expected to start with a dot.
 bool has_tld(const char str[], const char ext[])
 {
     const char *dot = strrchr(str, '.');
@@ -272,7 +272,7 @@ bool query_sanitize(char buf[], size_t buflen, const char query[], size_t queryl
 
     memset(buf, 0, buflen);
 
-    // Convert to lower case
+    // Convert to a lower case
     for (i = 0; i <= querylen; ++i) {
         buf[i] = tolower(query[i]);
     }

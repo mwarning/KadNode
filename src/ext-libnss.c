@@ -45,7 +45,7 @@ static int _nss_kadnode_lookup(struct kadnode_nss_response *res, const struct ka
         return 0;
     }
 
-    // Set receive timeout to 0.1 seconds
+    // Set the receive timeout to 0.1 seconds
     tv.tv_sec = 0;
     tv.tv_usec = 100000;
 
