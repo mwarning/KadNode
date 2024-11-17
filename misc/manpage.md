@@ -177,9 +177,11 @@ This is the plain use of the DHT. The hexadecimal string will be cut down or fil
     Read a secret key in PEM format and announce the public key.  
     This option may occur multiple times.
 
-  * `--ipv4, -4, --ipv6, -6`  
-    Enable IPv4 or IPv6 only mode for the DHT.  
-    Default: IPv4+IPv6
+  * `--ipv4, -4`  
+    Enable IPv4 only mode for the DHT.
+
+  * `--ipv6, -6`  
+    Enable IPv6 only mode for the DHT.
 
   * `-h`, `--help`  
     Print the list of accepted options.

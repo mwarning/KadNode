@@ -90,8 +90,8 @@ static const char *kadnode_usage_str =
 " --verbosity <level>			Verbosity level: quiet, verbose or debug.\n"
 "					Default: verbose\n\n"
 " --pidfile <file>			Write process pid to a file.\n\n"
-" --ipv4, -4, --ipv6, -6			Enable IPv4 or IPv6 only mode.\n"
-"					Default: IPv4+IPv6\n\n"
+" --ipv4, -4				Enable IPv4 only mode.\n\n"
+" --ipv6, -6				Enable IPv6 only mode.\n\n"
 " --query-tld <domain>			Top level domain to be handled by KadNode.\n"
 "					Default: "QUERY_TLD_DEFAULT"\n\n"
 #ifdef LPD
