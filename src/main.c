@@ -67,7 +67,7 @@ int main_run(void)
     }
 #endif
 
-    // Setup the Kademlia DHT
+    // Set up the Kademlia DHT
     if (!kad_setup()) {
         return EXIT_FAILURE;
     }

@@ -512,7 +512,7 @@ const struct search_t *kad_lookup(const char query[])
 
     log_debug("KAD: lookup identifier: %s", query);
 
-    // Find existing or create new search
+    // Find an existing or create new search
     search = searches_start(query);
 
     if (search == NULL) {

@@ -109,7 +109,7 @@ struct announcement_t *announces_add(FILE *fp, const char query[], time_t lifeti
     }
 
     if (lifetime < now) {
-        // Invalid lifetime, should not happen.
+        // Invalid lifetime, this should not happen.
         log_error("Announcement can't be in the past");
         return NULL;
     }
@@ -133,7 +133,7 @@ struct announcement_t *announces_add(FILE *fp, const char query[], time_t lifeti
     memcpy(new->id, id, ID_BINARY_LENGTH);
     memcpy(new->query, squery, strlen(query));
     new->port = port;
-    new->refresh = now - 1; // Send first announcement as soon as possible
+    new->refresh = now - 1; // Send the first announcement as soon as possible
     new->lifetime = lifetime;
 
     if (lifetime == LONG_MAX) {

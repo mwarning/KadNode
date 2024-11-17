@@ -215,7 +215,7 @@ void unix_dropuid0(void)
         return;
     }
 
-    // Process is running as root, drop privileges
+    // The process is running as root, drop privileges
     if ((pw = getpwnam(gconf->user)) == NULL) {
         log_error("Dropping uid 0 failed. Set a valid user.");
         exit(1);

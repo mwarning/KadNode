@@ -136,7 +136,7 @@ static void tls_handle(int rc, int fd)
 
     resource = tls_find_resource(fd);
     if (resource == NULL) {
-        // Should not happen..
+        // Should not happen.
         close(fd);
         net_remove_handler(fd, &tls_handle);
         return;
@@ -253,7 +253,7 @@ void tls_client_trigger_auth(void)
         return;
     }
 
-    // Get next free SSL resource
+    // Get the next free SSL resource
     resource = tls_next_resource();
     if (resource == NULL) {
         return;
@@ -267,7 +267,7 @@ void tls_client_trigger_auth(void)
             // Failed to initiate connection
             result->state = AUTH_ERROR;
         } else {
-            // Start authentication process
+            // Start the authentication process
             result->state = AUTH_PROGRESS;
             net_add_handler(resource->fdc.fd, &tls_handle);
         }
@@ -302,7 +302,7 @@ bool tls_client_add_ca(const char path[])
     char error_buf[100];
     int ret;
 
-    // Enable client and initialize certs storage
+    // Enable the client and initialize certs storage
     if (!g_client_enable) {
         mbedtls_x509_crt_init(&g_cacert);
         g_client_enable = true;

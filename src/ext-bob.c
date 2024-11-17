@@ -27,20 +27,20 @@
 
 /*
 * This is an experimental/naive authentication scheme. Hence called Bob.
-* Random byte strings (called challenges) are send to all peers.
+* Random byte strings (called challenges) are sent to all peers.
 * The peer is expected to encrypt the challenge with the private key.
 * If the challenge can be decrypted by the public key we have,
 * we know that the peer has the private key. The ip address will then
-* be used as result.
+* be used as a result.
 *
 * Paket exchange:
 * Lookup <public-key>.p2p
-* 1. get IP addresses from DHT
-* 2. send to every address "BOB" + PUBLICKEY + CHALLENGE
+* 1. Get IP addresses from DHT
+* 2. Send to every address "BOB" + PUBLICKEY + CHALLENGE
 *    - remember IP address and challenge
-* 3. get response "BOB" + SIGNED_CHALLENGE
-*    - find challenge by sender IP address
-* 4. verify signature by public key
+* 3. Get response "BOB" + SIGNED_CHALLENGE
+*    - find the challenge by sender IP address
+* 4. Verify signature by public key
 */
 
 #define ECPARAMS MBEDTLS_ECP_DP_SECP256R1
@@ -82,7 +82,7 @@ void bob_auth_end(struct bob_resource *resource, int state)
     // Mark resource as free
     resource->query[0] = '\0';
 
-    // Look for next job
+    // Look for the next job
     bob_trigger_auth();
 }
 
@@ -386,7 +386,7 @@ void bob_send_challenges(int sock)
     for (size_t i = 0; i < ARRAY_SIZE(g_bob_resources); ++i) {
         resource = &g_bob_resources[i];
         if (resource->query[0] == '\0') {
-            // End of array reached
+            // End of the array reached
             continue;
         }
 
