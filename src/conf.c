@@ -551,6 +551,8 @@ static bool conf_set(const char opt[], const char val[])
         }
 
 #ifdef BOB
+        // An edge case since we use "BOB" as packet prefix
+        // for doing authentication on the DHT port as well.
         if (plen == 3 && 0 == memcmp(prefix, "BOB", 3)) {
             log_error("Invalid DHT isolation prefix: %s", val);
             return false;
