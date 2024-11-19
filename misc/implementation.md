@@ -1,4 +1,3 @@
-
 # Implementation Details
 
 ## How does KadNode works
@@ -12,12 +11,19 @@ This is the progress for a domain lookup in the browser using TLS and a PKI.
 5. To every IP address, a TLS session is established. If it succeeds, the IP is verified.
 6. The verified IP addresses are based back from KadNode to the browser who establishes an HTTPS session to access a website.
 
-Disclaimer: This is not the best way to implement DNS utilizing a Distributed Hash Table (DHT). The BitTorrent Mainline DHT only returns IP address (with port) as response to queries. KadNode then does a extra verification step. A better way would be to be able to store and retrieve signed IP addresses via the DHT. But that would require to modify the current DHT.
+Disclaimer: This is not the best way to implement DNS utilizing a Distributed Hash Table (DHT).
+The BitTorrent Mainline DHT only returns IP address (with port) as response to queries.
+KadNode then does an extra verification step.
+A better way would be to be able to store and retrieve signed IP addresses via the DHT.
+But that would require to modify the current DHT.
+
 
 ## About Announcement
 
 An announcement is done every 20 minutes. The lifetime of those entries on other peer is expected to be around 15 minutes.
-Search results will be cached for about 20 minutes. If a lookup is done after 10 minutes after the search has been started, the search will be restarted and the cached results will be returned.
+Search results will be cached for about 20 minutes. If a lookup is done after 10 minutes after the search has been started,
+the search will be restarted and the cached results will be returned.
+
 
 ## Components
 
@@ -27,18 +33,19 @@ The library is also used by OpenWrt.
 The [DHT](https://github.com/jech/dht) is identical to the one used in the Transmission Bittorrent
 client and works on the Internet as well as on local networks.
 
+
 ## Features List
 
 Most features are optional and can be left out to reduce the binary size.
 To get a list of features the program is compiled with, call `kadnode --version`:
 
-* cmd - Command line. Mostly useful for debugging.
-* debug - Enabled debug output. For debugging.
-* lpd - Local peer discovery. Finds local peers.
-* tls - TLS authentication. Uses libmbedtls.
-* bob - Raw secret/public key authentication. Uses libmbedtls.
-* dns - DNS interface support.
-* nss - Name Service Switch interface support.
-* upnp - Universal Plug and Play support. For automatic port forwarding.
-* natpmp - NAT Port Mapping support. For automatic port forwarding.
+* `cmd` - Command line. Mostly useful for debugging.
+* `debug` - Enabled debug output. For debugging.
+* `lpd` - Local peer discovery. Finds local peers.
+* `tls` - TLS authentication. Uses `libmbedtls`.
+* `bob` - Raw secret/public key authentication. Uses `libmbedtls`.
+* `dns` - DNS interface support.
+* `nss` - Name Service Switch interface support.
+* `upnp` - Universal Plug and Play support. For automatic port forwarding.
+* `natpmp` - NAT Port Mapping support. For automatic port forwarding.
 

@@ -1,4 +1,4 @@
-## FAQ
+# FAQ
 * **What is KadNode?**  
     In short, KadNode does DNS based on the BitTorrent network.  
     Slightly longer; KadNode is a tool that resolves names to IP addresses using the BitTorrent DHT network.
