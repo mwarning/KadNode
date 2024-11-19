@@ -672,7 +672,7 @@ static struct gconf_t *conf_alloc(void)
 static void conf_set_defaults(void)
 {
     if (gconf->af == -1) {
-        gconf->af = AF_UNSPEC;
+        gconf->af = AF_UNSPEC; // both IPv4 and IPv6
     }
 
     if (gconf->dht_port == -1) {
@@ -711,13 +711,13 @@ bool conf_setup(int argc, char **argv)
         }
     }
 
-    conf_set_defaults();
-
     if (gconf->configfile) {
         if (!conf_load_file(gconf->configfile)) {
             return false;
         }
     }
+
+    conf_set_defaults();
 
     return true;
 }
