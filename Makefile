@@ -6,12 +6,11 @@ FEATURES ?= dns lpd tls bob cmd debug nss #natpmp upnp
 
 OBJS = build/searches.o build/kad.o build/log.o \
 	build/conf.o build/net.o build/utils.o \
-	build/announces.o build/peerfile.o
+	build/announces.o build/peerfile.o \
+	build/unix.o
 
 ifeq ($(OS),Windows_NT)
-  OBJS += build/unix.o build/windows.o
-else
-  OBJS += build/unix.o
+  OBJS += build/windows.o
 endif
 
 .PHONY: all clean strip install kadnode libkadnode.so libkanode.a \
