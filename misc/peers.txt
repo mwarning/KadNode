@@ -1,6 +1,5 @@
 bttracker.debian.org:6881
 router.bittorrent.com:6881
 router.utorrent.com:6881
-tracker.openbittorrent.com:80
 dht.transmissionbt.com:6881
 dht.libtorrent.org:25401
