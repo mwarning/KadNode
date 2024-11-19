@@ -3,3 +3,9 @@
 kadnode
 kadnode-ctl
 build
+cmake-build-debug
+/debian/.debhelper
+/debian/kadnode.substvars
+/debian/kadnode.postrm.debhelper
+/debian/files
+/debian/debhelper-build-stamp
