@@ -97,20 +97,13 @@ static const char* g_cli_help =
 static int g_cmd_sock = -1;
 
 
-static int cmd_peer(FILE *fp, const char addr_str[], int af)
+static void cmd_ping(FILE *fp, const IP *addr)
 {
-    IP addr;
-
-    if (addr_parse(&addr, addr_str, STR(DHT_PORT), af)) {
-        if (kad_ping(&addr)) {
-            fprintf(fp, "Send ping to: %s\n", str_addr(&addr));
-            return 1;
-        } else {
-            fprintf(fp, "Failed to send ping.\n");
-        }
+    if (kad_ping(addr)) {
+        fprintf(fp, "Send ping to: %s\n", str_addr(addr));
+    } else {
+        fprintf(fp, "Failed to send ping.\n");
     }
-
-    return 0;
 }
 
 /*
@@ -213,19 +206,37 @@ static void cmd_exec(FILE *fp, char request[], int allow_debug)
         fprintf(fp, g_cli_help, gconf->query_tld);
         break;
     case oDHTPing: {
-        const char *address = argv[1];
-        int count = 0;
+        const char *addr_str = argv[1];
+        const char *port_str = STR(DHT_PORT);
+        IP addr4 = {0};
+        IP addr6 = {0};
+        bool parsed4 = false;
+        bool parsed6 = false;
 
-        if (gconf->af == AF_UNSPEC) {
-            count += cmd_peer(fp, address, AF_INET);
-            count += cmd_peer(fp, address, AF_INET6);
-        } else {
-            count += cmd_peer(fp, address, gconf->af);
+        switch (gconf->af) {
+        case AF_INET:
+            parsed4 = addr_parse(&addr4, addr_str, port_str, AF_INET);
+            break;
+        case AF_INET6:
+            parsed6 = addr_parse(&addr6, addr_str, port_str, AF_INET6);
+            break;
+        default:
+            parsed4 = addr_parse(&addr4, addr_str, port_str, AF_INET);
+            parsed6 = addr_parse(&addr6, addr_str, port_str, AF_INET6);
         }
 
-        if (count == 0) {
+        if (!parsed4 && !parsed6) {
             fprintf(fp, "Failed to parse/resolve address.\n");
         }
+
+        if (parsed4) {
+            cmd_ping(fp, &addr4);
+        }
+
+        if (parsed6) {
+            cmd_ping(fp, &addr6);
+        }
+
         break;
     }
     case oLookup: {
