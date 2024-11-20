@@ -67,9 +67,7 @@ do-install:
 	${INSTALL_MAN} ${WRKSRC}/misc/manpage \
 		${STAGEDIR}${PREFIX}/share/man/man1/kadnode.1
 do-install-NSS-on:
-	${INSTALL_LIB} ${WRKSRC}/build/libnss_kadnode-2.0.so \
+	${INSTALL_LIB} ${WRKSRC}/build/libnss_kadnode.so \
 		${STAGEDIR}${PREFIX}/lib/nss_kadnode.so.1
-	${RLN} ${STAGEDIR}${PREFIX}/lib/nss_kadnode.so.1 \
-		${STAGEDIR}${PREFIX}/lib/nss_kadnode.so
 
 .include <bsd.port.mk>

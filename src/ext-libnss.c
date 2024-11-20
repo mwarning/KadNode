@@ -9,52 +9,69 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/time.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <arpa/inet.h>
+#include <stdbool.h>
 #ifdef __FreeBSD__
 #include <nsswitch.h>
 #include <stdarg.h>
 #include <sys/param.h>
 #endif
 
-#include <stdarg.h>
-
 #include "main.h"
+#include "ext-libnss-utils.h"
 #include "ext-libnss.h"
 
 
-#ifndef ALIGN
-/** macro to align idx to 32bit boundary */
-#define ALIGN(idx) do { \
-    if (idx % sizeof(void*)) \
-        idx += (sizeof(void*) - idx % sizeof(void*)); /* Align on 32 bit boundary */ \
-} while (0)
+#ifdef DEBUG
+static void debug(const char format[], ...)
+{
+    static const char *debug_output = "/tmp/nss_kadnode.log";
+    char buf[1024];
+    va_list vlist;
+
+    va_start(vlist, format);
+    vsnprintf(buf, sizeof(buf), format, vlist);
+    va_end(vlist);
+
+    FILE *out = fopen(debug_output, "a");
+    if (out) {
+        fprintf(out, "%s\n", buf);
+        fclose(out);
+    } else {
+        // fallback...
+        fprintf(stderr, "%s\n", buf);
+    }
+}
+#else
+#define debug(...) // discard debug output
 #endif
 
-static int _nss_kadnode_lookup(struct kadnode_nss_response *res, const struct kadnode_nss_request *req)
+static bool _nss_kadnode_lookup(kadnode_nss_response_t *res, const kadnode_nss_request_t *req)
 {
-    struct sockaddr_un addr;
+    struct sockaddr_un addr = {0};
     const char *path = NSS_PATH;
     struct timeval tv;
-    int sock;
-    ssize_t rc;
 
-    sock = socket(AF_LOCAL, SOCK_STREAM, 0);
+    int sock = socket(AF_LOCAL, SOCK_STREAM, 0);
     if (sock < 0) {
-        return 0;
+        return false;
     }
 
-    // Set the receive timeout to 0.1 seconds
+    // Set the receive timeout to 100ms
     tv.tv_sec = 0;
     tv.tv_usec = 100000;
 
     if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(struct timeval)) < 0) {
-        return -1;
+        debug("setsockopt(SO_RCVTIMEO) failed for %s", &req->name[0]);
+        return false;
     }
 
     if (setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, (char *)&tv, sizeof(struct timeval)) < 0) {
-        return -1;
+        debug("setsockopt(SO_SNDTIMEO) failed for %s", &req->name[0]);
+        return false;
     }
 
     addr.sun_family = AF_LOCAL;
@@ -62,233 +79,127 @@ static int _nss_kadnode_lookup(struct kadnode_nss_response *res, const struct ka
 
     if (connect(sock, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
         close(sock);
-        return 0;
+        debug("connect() failed for %s", &req->name[0]);
+        return false;
     }
 
     // Send request
     send(sock, req, sizeof(*req), 0);
 
     // Receive request
-    rc = read(sock, res, sizeof(*res));
+    ssize_t rc = read(sock, res, sizeof(*res));
     close(sock);
 
-    return (rc == sizeof(struct kadnode_nss_response)) ? EXIT_SUCCESS : EXIT_FAILURE;
+    return (rc == sizeof(kadnode_nss_response_t));
 }
 
-/**
- * The gethostbyname hook executed by nsswitch
- *
- * @param name the name to resolve
- * @param af the address family to resolve
- * @param result the result hostent
- * @param buffer the result buffer
- * @param buflen length of the buffer
- * @param errnop idk
- * @param h_errnop idk
- * @return a nss_status code
- */
-enum nss_status
-_nss_kadnode_gethostbyname2_r(const char *name,
-                                int af,
-                                struct hostent *result,
-                                char *buffer,
-                                size_t buflen,
-                                int *errnop,
-                                int *h_errnop)
-{
-    struct kadnode_nss_request req;
-    struct kadnode_nss_response res;
-    enum nss_status status = NSS_STATUS_UNAVAIL;
-    int rc;
-    size_t addrlen;
-    size_t idx;
-    size_t astart;
+enum nss_status _nss_kadnode_gethostbyname_impl(const char* name, int af,
+                                             kadnode_nss_response_t* res, int* errnop,
+                                             int* h_errnop, bool allow_mixed_af) {
+    if (af == AF_UNSPEC || af == AF_INET || af == AF_INET6) {
+        kadnode_nss_request_t req;
+        req.af = af;
+        req.allow_mixed_af = allow_mixed_af; // only relevant if af == AF_UNSPEC
+        strncpy(&req.name[0], name, QUERY_MAX_SIZE);
 
-    if ((af != AF_INET) && (af != AF_INET6) && (af != AF_UNSPEC))
-    {
-        *errnop = EINVAL;
-        *h_errnop = NO_RECOVERY;
+        bool ok = _nss_kadnode_lookup(res, &req);
 
-        goto finish;
-    }
-
-    if (buflen < (sizeof(char*) + strlen(name) + 1))	{
-        *errnop = ERANGE;
-        *h_errnop = NO_RECOVERY;
-        status = NSS_STATUS_TRYAGAIN;
-        goto finish;
-    }
-
-    req.af = af;
-    strncpy(&req.name[0], name, QUERY_MAX_SIZE);
-
-    rc = _nss_kadnode_lookup(&res, &req);
-
-    if (rc == EXIT_FAILURE) {
-        *errnop = ESHUTDOWN;
-        *h_errnop = NO_RECOVERY;
-        status = NSS_STATUS_TRYAGAIN;
-        goto finish;
-    }
-
-    /* Validate reply */
-    if ((res.count < 0) || ((res.af != AF_INET) && (res.af != AF_INET6))) {
+        if (ok) {
+            if (res->count == 0) {
+                // in progress
+                *errnop = ETIMEDOUT;
+                *h_errnop = TRY_AGAIN;
+                debug("_nss_kadnode_gethostbyname_impl OK NSS_STATUS_UNAVAIL/ETIMEDOUT/TRY_AGAIN for %s", name);
+                return NSS_STATUS_UNAVAIL;
+            } else if (res->count > 0) {
+                debug("_nss_kadnode_gethostbyname_impl OK NSS_STATUS_SUCCESS for %s", name);
+                // found results
+                return NSS_STATUS_SUCCESS;
+            } else {
+                // no results found
+                *errnop = ETIMEDOUT;
+                *h_errnop = HOST_NOT_FOUND;
+                debug("_nss_kadnode_gethostbyname_impl OK NSS_STATUS_NOTFOUND/ETIMEDOUT/HOST_NOT_FOUND for %s", name);
+                return NSS_STATUS_NOTFOUND;
+            }
+        } else {
+            debug("_nss_kadnode_gethostbyname_impl NOK NSS_STATUS_UNAVAIL/ETIMEDOUT/NO_RECOVERY for %s", name);
+            *errnop = ETIMEDOUT;
+            *h_errnop = NO_RECOVERY;
+            return NSS_STATUS_UNAVAIL;
+        }
+    } else {
+        // KadNode cannot be reached or rejected to process the lookup
+        debug("_nss_kadnode_gethostbyname_impl invalid af NSS_STATUS_UNAVAIL/ETIMEDOUT/NO_RECOVERY for %s", name);
         *errnop = ETIMEDOUT;
-        *h_errnop = HOST_NOT_FOUND;
-        status = NSS_STATUS_NOTFOUND;
-        goto finish;
-    }
-
-    if (res.count == 0) {
-        *errnop = ETIMEDOUT;
-        *h_errnop = HOST_NOT_FOUND;
-        status = NSS_STATUS_NOTFOUND;
-        goto finish;
-    }
-
-    /* Alias names */
-    *((char**) buffer) = NULL;
-    result->h_aliases = (char**) buffer;
-    idx = sizeof(char*);
-
-    /* Official name */
-    strcpy (buffer + idx, name);
-    result->h_name = buffer + idx;
-    idx += strlen(name) + 1;
-
-    ALIGN(idx);
-
-    addrlen = (res.af == AF_INET) ? sizeof(struct in_addr) : sizeof(struct in6_addr);
-
-    result->h_addrtype = af;
-    result->h_length = addrlen;
-
-    /* Check if there's enough space for the addresses */
-    if (buflen < (idx + (res.count * addrlen) + sizeof(char*) * (res.count + 1)))
-    {
-        *errnop = ERANGE;
         *h_errnop = NO_RECOVERY;
-        status = NSS_STATUS_TRYAGAIN;
-        goto finish;
+        return NSS_STATUS_UNAVAIL;
     }
+}
 
-    /* Addresses */
-    astart = idx;
+#ifndef __FreeBSD__
+enum nss_status _nss_kadnode_gethostbyname4_r(const char* name,
+                                           struct gaih_addrtuple** pat,
+                                           char* buffer, size_t buflen,
+                                           int* errnop, int* h_errnop,
+                                           int32_t* ttlp) {
 
-    if (res.count) {
-        memcpy(buffer + astart, &res.data, res.count * addrlen);
+    (void)ttlp;
+
+    kadnode_nss_response_t u;
+    buffer_t buf;
+
+    debug("_nss_kadnode_gethostbyname4_r %s", name);
+
+    enum nss_status status =
+        _nss_kadnode_gethostbyname_impl(name, AF_UNSPEC, &u, errnop, h_errnop, true);
+    if (status != NSS_STATUS_SUCCESS) {
+        return status;
     }
-
-    /* addrlen is a multiple of 32bits, so idx is still aligned correctly */
-    idx += res.count * addrlen;
-
-    /* Address array addrlen is always a multiple of 32bits */
-    for (size_t i = 0; i < res.count; i++) {
-        ((char**) (buffer + idx))[i] = buffer + astart + addrlen * i;
-    }
-
-    ((char**) (buffer + idx))[res.count] = NULL;
-    result->h_addr_list = (char**) (buffer + idx);
-
-    status = NSS_STATUS_SUCCESS;
-
-finish:
-    return status;
-}
-
-/**
- * The gethostbyname hook executed by nsswitch
- *
- * @param name the name to resolve
- * @param result the result hostent
- * @param buffer the result buffer
- * @param buflen length of the buffer
- * @param errnop[out] the low-level error code to return to the application
- * @param h_errnop idk
- * @return a nss_status code
- */
-enum nss_status
-_nss_kadnode_gethostbyname_r(const char *name,
-                            struct hostent *result,
-                            char *buffer,
-                            size_t buflen,
-                            int *errnop,
-                            int *h_errnop)
-{
-    return _nss_kadnode_gethostbyname2_r(name,
-                                        AF_UNSPEC,
-                                        result,
-                                        buffer,
-                                        buflen,
-                                        errnop,
-                                        h_errnop);
-}
-
-/**
- * The gethostbyaddr hook executed by nsswitch
- * We can't do this so we always return NSS_STATUS_UNAVAIL
- *
- * @param addr the address to resolve
- * @param len the length of the address
- * @param af the address family of the address
- * @param result the result hostent
- * @param buffer the result buffer
- * @param buflen length of the buffer
- * @param errnop[out] the low-level error code to return to the application
- * @param h_errnop idk
- * @return NSS_STATUS_UNAVAIL
- */
-enum nss_status
-_nss_kadnode_gethostbyaddr_r (const void* addr,
-                                int len,
-                                int af,
-                                struct hostent *result,
-                                char *buffer,
-                                size_t buflen,
-                                int *errnop,
-                                int *h_errnop)
-{
-    *errnop = EINVAL;
-    *h_errnop = NO_RECOVERY;
-    //NOTE we allow to leak this into DNS so no NOTFOUND
-    return NSS_STATUS_UNAVAIL;
-}
-
-#ifdef __FreeBSD__
-static NSS_METHOD_PROTOTYPE(__nss_compat_gethostbyname2_r);
-
-static ns_mtab methods[] = {
-    { NSDB_HOSTS, "gethostbyname_r", __nss_compat_gethostbyname2_r, NULL },
-    { NSDB_HOSTS, "gethostbyname2_r", __nss_compat_gethostbyname2_r, NULL },
-};
-
-ns_mtab *nss_module_register(const char *source, unsigned int *mtabsize, nss_module_unregister_fn *unreg) {
-    *mtabsize = sizeof(methods) / sizeof(methods[0]);
-    *unreg = NULL;
-    return methods;
-}
-
-int __nss_compat_gethostbyname2_r(void *retval, void *mdata, va_list ap) {
-    int s;
-    const char *name;
-    int af;
-    struct hostent *hptr;
-    char *buffer;
-    size_t buflen;
-    int *errnop;
-    int *h_errnop;
-
-    name = va_arg(ap, const char*);
-    af = va_arg(ap, int);
-    hptr = va_arg(ap, struct hostent*);
-    buffer = va_arg(ap, char*);
-    buflen = va_arg(ap, size_t);
-    errnop = va_arg(ap, int*);
-    h_errnop = va_arg(ap, int*);
-
-    s = _nss_kadnode_gethostbyname2_r(name, af, hptr, buffer, buflen, errnop, h_errnop);
-    *(struct hostent**) retval = (s == NS_SUCCESS) ? hptr : NULL;
-
-    return __nss_compat_result(s, *errnop);
+    buffer_init(&buf, buffer, buflen);
+    return convert_kadnode_nss_response_to_addrtuple(&u, name, pat, &buf, errnop, h_errnop);
 }
 #endif
+
+enum nss_status _nss_kadnode_gethostbyname3_r(const char* name, int af,
+                                           struct hostent* result, char* buffer,
+                                           size_t buflen, int* errnop,
+                                           int* h_errnop, int32_t* ttlp,
+                                           char** canonp) {
+
+    (void)ttlp;
+    (void)canonp;
+
+    buffer_t buf;
+    kadnode_nss_response_t u;
+
+    debug("_nss_kadnode_gethostbyname3_r %s", name);
+
+    // The interfaces for gethostbyname3_r and below do not actually support
+    // returning results for more than one address family
+    enum nss_status status = _nss_kadnode_gethostbyname_impl(name, af, &u, errnop, h_errnop, false);
+    if (status != NSS_STATUS_SUCCESS) {
+        return status;
+    }
+    buffer_init(&buf, buffer, buflen);
+    return convert_userdata_for_name_to_hostent(&u, name, af, result, &buf,
+                                                errnop, h_errnop);
+}
+
+enum nss_status _nss_kadnode_gethostbyname2_r(const char* name, int af,
+                                           struct hostent* result, char* buffer,
+                                           size_t buflen, int* errnop,
+                                           int* h_errnop) {
+
+    return _nss_kadnode_gethostbyname3_r(name, af, result, buffer, buflen, errnop,
+                                      h_errnop, NULL, NULL);
+}
+
+enum nss_status _nss_kadnode_gethostbyname_r(const char* name,
+                                          struct hostent* result, char* buffer,
+                                          size_t buflen, int* errnop,
+                                          int* h_errnop) {
+
+    return _nss_kadnode_gethostbyname2_r(name, AF_UNSPEC, result, buffer, buflen,
+                                      errnop, h_errnop);
+}
