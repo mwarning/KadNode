@@ -20,11 +20,12 @@
 
 static void shutdown_handler(int signo)
 {
-    // exit on second stop request
+    // hard exit on second stop request
     if (!gconf->is_running) {
         exit(1);
     }
 
+    // soft exit
     gconf->is_running = false;
 }
 
