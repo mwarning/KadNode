@@ -33,7 +33,7 @@ NATPMP_DESC=	NAT-PMP support (remote port forwarding on the router)
 NSS_DESC=	Name Service Switch support to intercept host queries
 UPNP_DESC=	UPnP support (remote port forwarding on the router)
 
-AUTH_LIB_DEPENDS=	libmbedtls.so:security/mbedtls
+AUTH_LIB_DEPENDS=	libmbedtls.so:security/mbedtls3
 AUTH_VARS=		FEATURES+="bob tls"
 
 CMD_VARS=		FEATURES+="cmd"

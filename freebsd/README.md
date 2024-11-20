@@ -66,3 +66,8 @@ Apply changes to `ports/dns/kadnode` and create a patch to submit:
 cd ports/dns/kadnode
 git diff > ../`make -VPKGNAME`.diff
 ```
+
+List all files that the package has installed:
+```
+pkg info --list-files kadnode
+```
