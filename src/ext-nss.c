@@ -24,14 +24,14 @@ static void nss_client_handler(int rc, int clientsock)
 {
     const struct search_t *search;
     const struct result_t *result;
-    struct kadnode_nss_request req = {0};
-    struct kadnode_nss_response res = {0};
-    int count;
-    int af;
+    kadnode_nss_request_t req = {0};
+    kadnode_nss_response_t res = {0};
 
     if (rc <= 0) {
         return;
     }
+
+    log_debug("nss_client_handler");
 
     rc = recv(clientsock, &req, sizeof(req), 0);
     if (rc != sizeof(req)) {
@@ -43,45 +43,52 @@ static void nss_client_handler(int rc, int clientsock)
 
     // Check name extensions (*.p2p)
     if (!has_tld(&req.name[0], gconf->query_tld)) {
-        goto finish;
+        // not for us (missing TLD)
+        goto abort;
     }
 
     search = kad_lookup(&req.name[0]);
 
     if (search == NULL) {
-        goto finish;
+        // not for us or invalid query
+        goto abort;
     }
 
-    af = req.af;
-    count = 0;
+    if (search->done && search->results == NULL) {
+        // we have given up
+        goto abort;
+    }
 
     // Collect either IPv4 or IPv6 addresses
-    for (result = search->results; result; result = result->next) {
-        if (is_valid_result(result) && count < MAX_ENTRIES) {
-            if (af == AF_UNSPEC) {
-                af = result->addr.ss_family;
-            }
+    for (result = search->results; result != NULL; result = result->next) {
+        if (is_valid_result(result) && res.count < MAX_ENTRIES) {
+            int af = result->addr.ss_family;
+            int count = res.count;
 
-            if (af != result->addr.ss_family) {
+            if (req.af != AF_UNSPEC && req.af != af) {
+                // About req.allow_mixed_af; ignore it
+                // since the system can do that for us.
                 continue;
             }
 
             if (af == AF_INET6) {
-                memcpy(&res.data.ipv6[count], &((IP6 *)&result->addr)->sin6_addr, sizeof(struct in6_addr));
-                count += 1;
+                IP6 *addr = (IP6 *)&result->addr;
+                res.result[count].af = af;
+                res.result[count].scopeid = addr->sin6_scope_id;
+                memcpy(&res.result[count].address.ipv6, &addr->sin6_addr, 16);
+                res.count += 1;
             }
 
             if (af == AF_INET) {
-                memcpy(&res.data.ipv4[count], &((IP4 *)&result->addr)->sin_addr, sizeof(struct in_addr));
-                count += 1;
+                IP4 *addr = (IP4 *)&result->addr;
+                res.result[count].af = af;
+                res.result[count].scopeid = 0;
+                memcpy(&res.result[count].address.ipv4, &addr->sin_addr, 4);
+                res.count += 1;
             }
         }
     }
 
-    res.af = af;
-    res.count = count;
-
-finish:
     rc = write(clientsock, &res, sizeof(res));
 
 abort:

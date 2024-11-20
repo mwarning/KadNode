@@ -82,7 +82,9 @@ build/%.o : src/%.c src/%.h
 
 libnss_kadnode:
 	$(CC) $(CFLAGS) -fPIC -c -o build/ext-libnss.o src/ext-libnss.c
-	$(CC) $(CFLAGS) $(LDFLAGS) -fPIC -shared -Wl,-soname,libnss_kadnode.so.2 -o build/libnss_kadnode-2.0.so build/ext-libnss.o
+	$(CC) $(CFLAGS) -fPIC -c -o build/ext-libnss-utils.o src/ext-libnss-utils.c
+	$(CC) $(CFLAGS) -fPIC -c -o build/ext-libnss-bsd.o src/ext-libnss-bsd.c
+	$(CC) $(CFLAGS) $(LDFLAGS) -fPIC -shared -Wl,-soname,libnss_kadnode.so -o build/libnss_kadnode.so build/ext-libnss.o build/ext-libnss-utils.o build/ext-libnss-bsd.o
 
 kadnode: build/main.o $(OBJS) $(EXTRA)
 	$(CC) $(CFLAGS) build/main.o $(OBJS) $(LDFLAGS) -o build/kadnode
