@@ -71,7 +71,7 @@ bool addr_is_localhost(const IP *addr);
 bool addr_is_multicast(const IP *addr);
 bool addr_parse(IP *addr, const char full_addr_str[], const char default_port[], int af);
 int addr_port(const IP *addr);
-int addr_len(const IP *addr);
+socklen_t addr_len(const IP *addr);
 bool addr_equal(const IP *addr1, const IP *addr2);
 
 bool socket_addr(int sock, IP *addr);

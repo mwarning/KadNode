@@ -432,7 +432,7 @@ int addr_port(const IP *addr)
     }
 }
 
-int addr_len(const IP *addr)
+socklen_t addr_len(const IP *addr)
 {
     switch (addr->ss_family) {
     case AF_INET:
