@@ -6,7 +6,7 @@
 # --tls-server-cert mydomain.crt,mydomain.key
 # The domain in the Common Name field of the certificate will be announced.
 #
-# For domain lookup, we need to provide appropiate CA certificates.
+# For domain lookup, we need to provide appropriate CA certificates.
 # Try various locations:
 --tls-client-cert /usr/share/certs/trusted
 
@@ -14,7 +14,7 @@
 # and load the secret keys as PEM file:
 # --bob-load-key <secret-key-pem-file>
 #
-# Other nodes can use <public-key-hex>.p2p in the browser to resolve the node.
+# Other nodes can use <public-key>.p2p in the browser to resolve the node.
 
 # Enable DNS proxy behavior. Reads /etc/resolv.conf by default.
 # --dns-proxy-enable
