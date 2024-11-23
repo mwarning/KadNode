@@ -100,6 +100,9 @@ install:
 	ln -s kadnode $(DESTDIR)/usr/bin/kadnode-ctl || true
 	install -D -m755 -s build/libnss_kadnode-2.0.so $(DESTDIR)/lib/libnss_kadnode.so.2 2> /dev/null || true
 
+	install -D -m644 misc/kadnode.conf $(DESTDIR)/etc/kadnode/kadnode.conf
+	install -D -m644 misc/peers.txt $(DESTDIR)/etc/kadnode/peers.txt
+
 install_nss:
 	sed -i -e '/kadnode/!s/^\(hosts:.*\)\s\{1,\}dns\(.*\)/\1 kadnode dns\2/' $(DESTDIR)/etc/nsswitch.conf 2> /dev/null || true
 
@@ -107,6 +110,9 @@ uninstall:
 	rm -f $(DESTDIR)/usr/bin/kadnode
 	rm -f $(DESTDIR)/usr/bin/kadnode-ctl
 	rm -f $(DESTDIR)/lib/libnss_kadnode.so
+
+	rm -f $(DESTDIR)/etc/kadnode/kadnode.conf
+	rm -f $(DESTDIR)/etc/kadnode/peers.txt
 
 uninstall_nss:
 	sed -i -e 's/^\(hosts:.*\)kadnode \(.*\)/\1\2/' $(DESTDIR)/etc/nsswitch.conf 2> /dev/null || true
