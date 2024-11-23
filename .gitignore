@@ -6,6 +6,8 @@ build
 cmake-build-debug
 /debian/.debhelper
 /debian/kadnode.substvars
+/debian/kadnode.postinst.debhelper
 /debian/kadnode.postrm.debhelper
+/debian/kadnode.preinst.debhelper
 /debian/files
 /debian/debhelper-build-stamp
