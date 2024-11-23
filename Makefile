@@ -13,7 +13,7 @@ ifeq ($(OS),Windows_NT)
   OBJS += build/windows.o
 endif
 
-.PHONY: all clean strip install kadnode libkadnode.so libkanode.a \
+.PHONY: all clean strip install kadnode \
 	libnss_kadnode arch-pkg deb-pkg osx-pkg manpage install uninstall
 
 all: kadnode
@@ -84,13 +84,6 @@ libnss_kadnode:
 	$(CC) $(CFLAGS) -fPIC -c -o build/ext-libnss.o src/ext-libnss.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -fPIC -shared -Wl,-soname,libnss_kadnode.so.2 -o build/libnss_kadnode-2.0.so build/ext-libnss.o
 
-libkadnode.a: build/libkadnode.o $(OBJS)
-	ar rcs build/libkadnode.a build/libkadnode.o $(OBJS)
-
-libkadnode.so: CFLAGS += -fpic
-libkadnode.so: build/libkadnode.o $(OBJS)
-	$(CC) $(CFLAGS) $(LDFLAGS) -shared $(OBJS) build/libkadnode.o -o build/libkadnode.so
-
 kadnode: build/main.o $(OBJS) $(EXTRA)
 	$(CC) $(CFLAGS) build/main.o $(OBJS) $(LDFLAGS) -o build/kadnode
 	ln -s kadnode build/kadnode-ctl 2> /dev/null || true
@@ -106,12 +99,10 @@ install:
 	cp build/kadnode $(DESTDIR)/usr/bin/ 2> /dev/null || true
 	ln -s kadnode $(DESTDIR)/usr/bin/kadnode-ctl || true
 	cp build/libnss_kadnode-2.0.so $(DESTDIR)/lib/libnss_kadnode.so.2 2> /dev/null || true
-	cp build/libkadnode.so $(DESTDIR)/lib/ 2> /dev/null || true
 	sed -i -e '/kadnode/!s/^\(hosts:.*\)\s\{1,\}dns\(.*\)/\1 kadnode dns\2/' $(DESTDIR)/etc/nsswitch.conf 2> /dev/null || true
 
 uninstall:
 	rm $(DESTDIR)/usr/bin/kadnode 2> /dev/null || true
 	rm $(DESTDIR)/usr/bin/kadnode-ctl 2> /dev/null || true
 	rm $(DESTDIR)/lib/libnss_kadnode.so 2> /dev/null || true
-	rm $(DESTDIR)/usr/lib/libkadnode.so 2> /dev/null || true
 	sed -i -e 's/^\(hosts:.*\)kadnode \(.*\)/\1\2/' $(DESTDIR)/etc/nsswitch.conf 2> /dev/null || true
