@@ -2,7 +2,7 @@ Source: kadnode
 Section: net
 Priority: optional
 Maintainer: Moritz Warning <moritzwarning@web.de>
-Build-Depends: debhelper-compat (= 11), libmbedtls-dev, libnatpmp-dev, libminiupnpc-dev
+Build-Depends: debhelper-compat (= 13), libmbedtls-dev, libnatpmp-dev, libminiupnpc-dev
 Standards-Version: 4.1.4
 Homepage: https://github.com/mwarning/kadnode
 Vcs-Git: https://github.com/mwarning/kadnode.git
