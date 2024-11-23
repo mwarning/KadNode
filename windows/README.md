@@ -1,8 +1,8 @@
 # Building and Packaging KadNode on Microsoft Windows
 
-KadNode can be build for [Windows](https://www.microsoft.com/windows) systems using the [Cygwin](https://www.cygwin.com) environment.
+KadNode can be built for Windows systems using the [Cygwin](https://www.cygwin.com) environment.
 
-To build KadNode on Windows you need to download an execute the Cygwin installer.
+To build KadNode on Windows you need to download and execute the Cygwin installer.
 The following packages and its dependencies need to be selected:
 
 * All => Devel  => gcc-core
@@ -14,7 +14,7 @@ The following packages and its dependencies need to be selected:
 
 If you want to use auth extension (for public/private keys), you need to install [mbedtls](https://github.com/ARMmbed/mbedtls/).
 
-```
+```sh
 wget https://codeload.github.com/ARMmbed/mbedtls/tar.gz/v2.23.0 -O mbedtls-2.23.0.tgz
 tar -xvf mbedtls-2.23.0.tgz
 cd mbedtls-2.23.0
@@ -26,7 +26,7 @@ cd ..
 
 Now download and compile KadNode:
 
-```
+```sh
 git clone https://github.com/mwarning/KadNode.git
 cd KadNode
 FEATURES="bob tls dns lpd" make
@@ -38,10 +38,11 @@ Finally, start KadNode:
 ./build/kadnode
 ```
 
+
 ## Packaging for Windows
 
 To create a package, [Inno Setup](https://www.jrsoftware.org/isinfo.php) is used.
-Install it and open kadnode.iss, press 'Run' to create a kadnode_setup.exe file.
+Install it and open `kadnode.iss`, press 'Run' to create a `kadnode_setup.exe` file.
 
 The package will register KadNode as a Windows service that is started on system startup.
 When KadNode starts, it will change the DNS settings for each interface to a public DNS server

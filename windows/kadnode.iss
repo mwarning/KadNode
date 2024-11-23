@@ -55,7 +55,7 @@ Filename: "{sys}\timeout.exe"; Parameters: "/T 4"; Flags: runhidden
 Filename: "{sys}\sc.exe"; Parameters: "delete KadNode"; Flags: runhidden
 
 [Messages]
-WelcomeLabel2=This will install [name/ver] on your computer.%n%nKadNode is a dezentralized DNS system based on a distributed hash table.%n%nBe aware that this package is in an alpha stage and will change your DNS settings.
+WelcomeLabel2=This will install [name/ver] on your computer.%n%nKadNode is a decentralized DNS system based on a distributed hash table.%n%nBe aware that this package will change your DNS settings.
 
 [Code]
 const
