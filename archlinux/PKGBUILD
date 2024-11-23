@@ -29,7 +29,7 @@ package() {
 	cd ${srcdir}/KadNode
 
 	install -Dm755 build/kadnode ${pkgdir}/usr/bin/kadnode
-	install -Dm755 build/kadnode-ctl ${pkgdir}/usr/bin/kadnode-ctl
+	ln -s kadnode ${pkgdir}/usr/bin/kadnode-ctl
 
 	install -Dm644 build/libnss_kadnode-2.0.so ${pkgdir}/usr/lib/libnss_kadnode.so.2
 
