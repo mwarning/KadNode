@@ -39,13 +39,13 @@ client and works on the Internet as well as on local networks.
 Most features are optional and can be left out to reduce the binary size.
 To get a list of features the program is compiled with, call `kadnode --version`:
 
-* `cmd` - Command line. Mostly useful for debugging.
-* `debug` - Enabled debug output. For debugging.
-* `lpd` - Local peer discovery. Finds local peers.
-* `tls` - TLS authentication. Uses `libmbedtls`.
 * `bob` - Raw secret/public key authentication. Uses `libmbedtls`.
+* `tls` - TLS authentication. Uses `libmbedtls`.
+* `cmd` - Command line. Mostly useful for debugging.
+* `lpd` - Local peer discovery. Finds local peers.
 * `dns` - DNS interface support.
-* `nss` - Name Service Switch interface support.
+* `nss` - Name Service Switch (NSS) interface support.
 * `upnp` - Universal Plug and Play support. For automatic port forwarding.
 * `natpmp` - NAT Port Mapping support. For automatic port forwarding.
+* `debug` - Enabled debug output. For debugging.
 
