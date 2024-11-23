@@ -4,7 +4,7 @@ To create a [Debian](https://www.debian.org) package of KadNode (a \*.deb file),
 you first need to have installed the following programs and libraries:
 
 ```
-apt install build-essential debhelper devscripts
+apt install build-essential debhelper devscripts dh-sequence-installnss
 apt install libmbedtls-dev libnatpmp-dev libminiupnpc-dev
 ```
 
