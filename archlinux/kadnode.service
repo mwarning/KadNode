@@ -4,10 +4,10 @@ After=network.target
 Documentation=man:kadnode(1)
 
 [Service]
-ExecStart=/usr/bin/kadnode --daemon --pidfile /var/run/kadnode.pid --config /etc/kadnode/kadnode.conf
+ExecStart=/usr/bin/kadnode --daemon --pidfile /run/kadnode.pid --config /etc/kadnode/kadnode.conf
 KillMode=mixed
 Restart=on-failure
-PIDFile=/var/run/kadnode.pid
+PIDFile=/run/kadnode.pid
 Type=forking
 
 [Install]
