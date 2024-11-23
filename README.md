@@ -41,7 +41,7 @@ If successful, the IP address is passed to the application making the request.
 
 
 ## Installation
-You can download the latest package from [releases page](https://github.com/mwarning/KadNode/releases/)
+You can download the latest package from [releases page](https://github.com/mwarning/KadNode/releases/latest/)
 
 
 ### OpenWrt
@@ -51,7 +51,7 @@ From official package repository:
 
 ### Debian/Ubuntu
 From PPA repository:
-```
+```sh
 sudo add-apt-repository ppa:stokito/kadnode
 sudo apt update
 sudo apt install kadnode
@@ -70,6 +70,34 @@ Or install a downloaded package with `pkg install kadnode-*.txz`
 From repository: `yay -S kadnode`
 
 Or install a downloaded package with `pacman -U kadnode-*.pkg.tar.xz`
+
+
+## Build from sources
+Install libraries and their headers. On Debian/Ubuntu use:
+```sh
+sudo apt install libmbedtls-dev, libnatpmp-dev, libminiupnpc-dev
+```
+
+Checkout code and compile KadNode:
+```sh
+git clone https://github.com/mwarning/KadNode.git
+cd KadNode
+# basic features and debug mode
+FEATURES="bob tls cmd dns debug" make
+# all features
+FEATURES="bob tls cmd lpd dns nss natpmp upnp debug" make
+```
+
+Finally, start KadNode:
+
+```sh
+./build/kadnode
+```
+
+To install use:
+```
+sudo make install
+```
 
 
 ## Related Projects
