@@ -22,7 +22,7 @@ install="kadnode.install"
 build() {
 	cd ${srcdir}/KadNode
 	make clean
-	make FEATURES="tls bob cmd lpd nss"
+	make FEATURES="bob tls cmd lpd nss"
 }
 
 package() {
