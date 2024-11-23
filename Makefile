@@ -99,10 +99,14 @@ install:
 	cp build/kadnode $(DESTDIR)/usr/bin/ 2> /dev/null || true
 	ln -s kadnode $(DESTDIR)/usr/bin/kadnode-ctl || true
 	cp build/libnss_kadnode-2.0.so $(DESTDIR)/lib/libnss_kadnode.so.2 2> /dev/null || true
+
+install_nss:
 	sed -i -e '/kadnode/!s/^\(hosts:.*\)\s\{1,\}dns\(.*\)/\1 kadnode dns\2/' $(DESTDIR)/etc/nsswitch.conf 2> /dev/null || true
 
 uninstall:
 	rm $(DESTDIR)/usr/bin/kadnode 2> /dev/null || true
 	rm $(DESTDIR)/usr/bin/kadnode-ctl 2> /dev/null || true
 	rm $(DESTDIR)/lib/libnss_kadnode.so 2> /dev/null || true
+
+uninstall_nss:
 	sed -i -e 's/^\(hosts:.*\)kadnode \(.*\)/\1\2/' $(DESTDIR)/etc/nsswitch.conf 2> /dev/null || true

@@ -95,8 +95,12 @@ Finally, start KadNode:
 ```
 
 To install use:
+```sh
+sudo make install install_nss
 ```
-sudo make install
+To uninstall:
+```sh
+sudo make uninstall uninstall_nss
 ```
 
 
