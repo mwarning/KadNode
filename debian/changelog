@@ -9,7 +9,7 @@ kadnode (2.4.0) stable; urgency=medium
   * support DHT isolation for private swarms
   * various bug fixes
 
- -- Moritz Warning <moritzwarning@web.de>  Sun, 09 Feb 2020 00:00:00 +0100
+ -- Moritz Warning <moritzwarning@web.de>  Wed, 06 Nov 2024 00:00:00 +0100
 
 kadnode (2.3.0-1) stable; urgency=medium
 
@@ -18,7 +18,7 @@ kadnode (2.3.0-1) stable; urgency=medium
   * ignore sigpipe globally (should fix some crashes)
   * fix ttl value for dns interface reply
 
- -- Moritz Warning <moritzwarning@web.de>  Sun, 09 Feb 2020 00:00:00 +0100
+ -- Moritz Warning <moritzwarning@web.de>  Mon, 10 Feb 2020 00:00:00 +0100
 
 kadnode (2.2.5-1) stable; urgency=medium
 

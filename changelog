@@ -9,7 +9,7 @@ kadnode (2.4.0) stable; urgency=medium
   * support DHT isolation for private swarms
   * various bug fixes
 
- -- Moritz Warning <moritzwarning@web.de>  Wed, 06 Now 2023 00:00:00 +0100
+ -- Moritz Warning <moritzwarning@web.de>  Wed, 06 Nov 2024 00:00:00 +0100
 
 kadnode (2.3.0-1) stable; urgency=medium
 
