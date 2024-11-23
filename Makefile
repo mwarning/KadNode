@@ -96,9 +96,9 @@ manpage:
 	mv misc/manpage.1 misc/manpage
 
 install:
-	cp build/kadnode $(DESTDIR)/usr/bin/
+	install -D -m755 -s build/kadnode $(DESTDIR)/usr/bin/
 	ln -s kadnode $(DESTDIR)/usr/bin/kadnode-ctl || true
-	cp build/libnss_kadnode-2.0.so $(DESTDIR)/lib/libnss_kadnode.so.2 2> /dev/null || true
+	install -D -m755 -s build/libnss_kadnode-2.0.so $(DESTDIR)/lib/libnss_kadnode.so.2 2> /dev/null || true
 
 install_nss:
 	sed -i -e '/kadnode/!s/^\(hosts:.*\)\s\{1,\}dns\(.*\)/\1 kadnode dns\2/' $(DESTDIR)/etc/nsswitch.conf 2> /dev/null || true
