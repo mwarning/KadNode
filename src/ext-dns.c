@@ -250,7 +250,7 @@ static bool dns_decode_domain(char *domain, size_t domainlen, const uint8_t **bu
 }
 
 // foo.bar.com => 3foo3bar3com0
-static int dns_encode_domain(uint8_t** buffer, const char *domain)
+static bool dns_encode_domain(uint8_t** buffer, const char *domain)
 {
     char *buf = (char*) *buffer;
     const char *beg = domain;
@@ -282,10 +282,10 @@ static int dns_encode_domain(uint8_t** buffer, const char *domain)
 
     *buffer += i;
 
-    return 1;
+    return true;
 }
 
-static int dns_encode_header(uint8_t** buffer, const struct Message *msg)
+static bool dns_encode_header(uint8_t** buffer, const struct Message *msg)
 {
     size_t fields;
 
@@ -302,7 +302,7 @@ static int dns_encode_header(uint8_t** buffer, const struct Message *msg)
     put16bits(buffer, msg->nsCount);
     put16bits(buffer, msg->arCount);
 
-    return 1;
+    return true;
 }
 
 static bool dns_decode_header(struct Message *msg, const uint8_t** buffer, ssize_t buflen)
@@ -371,12 +371,12 @@ static int dns_encode_msg(uint8_t *buffer, size_t size, const struct Message *ms
     size_t i;
 
     beg = buffer;
-    if (dns_encode_header(&buffer, msg) < 0) {
+    if (!dns_encode_header(&buffer, msg)) {
         return -1;
     }
 
     // Attach a single question section.
-    if (dns_encode_domain(&buffer, msg->question.qName) < 0) {
+    if (!dns_encode_domain(&buffer, msg->question.qName)) {
         return -1;
     }
 
@@ -392,7 +392,7 @@ static int dns_encode_msg(uint8_t *buffer, size_t size, const struct Message *ms
             // Reference qName in question section (message compression)
             put16bits(&buffer, (3 << 14) + qName_offset);
         } else {
-            if (dns_encode_domain(&buffer, rr->name) < 0) {
+            if (!dns_encode_domain(&buffer, rr->name)) {
                 return -1;
             }
         }
@@ -406,11 +406,11 @@ static int dns_encode_msg(uint8_t *buffer, size_t size, const struct Message *ms
             put16bits(&buffer, rr->rd_data.srv_record.priority);
             put16bits(&buffer, rr->rd_data.srv_record.weight);
             put16bits(&buffer, rr->rd_data.srv_record.port);
-            if (dns_encode_domain(&buffer, rr->rd_data.srv_record.target) < 0) {
+            if (!dns_encode_domain(&buffer, rr->rd_data.srv_record.target)) {
                 return -1;
             }
         } else if (rr->type == PTR_Resource_RecordType) {
-            if (dns_encode_domain(&buffer, rr->rd_data.ptr_record.name) < 0) {
+            if (!dns_encode_domain(&buffer, rr->rd_data.ptr_record.name)) {
                 return -1;
             }
         } else {
