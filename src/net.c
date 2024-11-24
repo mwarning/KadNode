@@ -182,7 +182,6 @@ int net_bind(
     const int protocol)
 {
     const int opt_on = 1;
-    socklen_t addrlen;
     IP sockaddr;
     int sock = -1;
 
@@ -193,31 +192,32 @@ int net_bind(
 
     port_set(&sockaddr, port);
 
-    if ((sock = net_socket(name, ifname, protocol, sockaddr.ss_family)) < 0) {
+    if ((sock = net_socket(name, ifname, protocol, sockaddr.ss_family)) == -1) {
         goto fail;
     }
 
     if (sockaddr.ss_family == AF_INET6) {
-        if (setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, &opt_on, sizeof(opt_on)) < 0) {
-            log_error("%s: Failed to set IPV6_V6ONLY for %s: %s",
-                name, str_addr(&sockaddr), strerror(errno));
+        if (setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, &opt_on, sizeof(opt_on)) == -1) {
+            log_error("%s: Failed to set IPV6_V6ONLY for %s: %s", name, str_addr(&sockaddr), strerror(errno));
             goto fail;
         }
     }
 
-    addrlen = addr_len(&sockaddr);
-    if (bind(sock, (struct sockaddr*) &sockaddr, addrlen) < 0) {
+    socklen_t addrlen = addr_len(&sockaddr);
+    if (bind(sock, (struct sockaddr*) &sockaddr, addrlen) == -1) {
         log_error("%s: Failed to bind socket to %s: %s",
             name, str_addr(&sockaddr), strerror(errno)
         );
         goto fail;
     }
 
-    if (protocol == IPPROTO_TCP && listen(sock, 5) < 0) {
-        log_error("%s: Failed to listen on %s: %s",
-            name, str_addr(&sockaddr), strerror(errno)
-        );
-        goto fail;
+    if (protocol == IPPROTO_TCP) {
+        if (listen(sock, 5) == -1) {
+            log_error("%s: Failed to listen on %s: %s",
+                name, str_addr(&sockaddr), strerror(errno)
+            );
+            goto fail;
+        }
     }
 
     log_info(ifname ? "%s: Bind to %s, interface %s" : "%s: Bind to %s",
