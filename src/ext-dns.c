@@ -208,36 +208,45 @@ static void put32bits(uint8_t** buffer, uint32_t value)
 */
 
 // 3foo3bar3com0 => foo.bar.com
-static int dns_decode_domain(char *domain, const uint8_t** buffer, size_t size)
+static bool dns_decode_domain(char *domain, size_t domainlen, const uint8_t **bufptr, size_t buflen)
 {
-    const uint8_t *p = *buffer;
+    const uint8_t *buf = *bufptr;
+    size_t d = 0;
     size_t i = 0;
-    size_t len = 0;
 
-    while (*p != '\0') {
-        if (i != 0) {
-            domain[i] = '.';
-            i += 1;
+    while (i < buflen) {
+        size_t len = buf[i++];
+        if (len == 0) {
+            break;
         }
 
-        len = *p;
-        p += 1;
-
-        if ((i + len) >= size) {
-            return -1;
+        if ((i + len) >= buflen || (d + len) >= domainlen) {
+            return false;
         }
 
-        memcpy(domain + i, p, len);
-        p += len;
-        i += len;
+        if (d != 0) {
+            domain[d++] = '.';
+        }
+
+        for (size_t j = 0; j < len; ++j, ++i) {
+            char c = buf[i];
+            // check only for non-null characters only,
+            // otherwise it could be a UTF character.
+            if (c == 0) {
+                return false;
+            }
+            domain[d++] = c;
+        }
     }
 
-    domain[i] = '\0';
+    if ((d + 1) > domainlen) {
+        return false;
+    }
 
-    // also jump over the last 0
-    *buffer = p + 1;
+    domain[d++] = 0;
 
-    return 1;
+    *bufptr += i;
+    return true;
 }
 
 // foo.bar.com => 3foo3bar3com0
@@ -296,9 +305,13 @@ static int dns_encode_header(uint8_t** buffer, const struct Message *msg)
     return 1;
 }
 
-static int dns_decode_header(struct Message *msg, const uint8_t** buffer)
+static bool dns_decode_header(struct Message *msg, const uint8_t** buffer, ssize_t buflen)
 {
     size_t fields;
+
+    if (buflen < 12) {
+        return false;
+    }
 
     msg->id = get16bits(buffer);
     fields = get16bits(buffer);
@@ -315,33 +328,38 @@ static int dns_decode_header(struct Message *msg, const uint8_t** buffer)
     msg->nsCount = get16bits(buffer);
     msg->arCount = get16bits(buffer);
 
-    return 1;
+    return true;
 }
 
 // Decode the message from a byte array into a message structure
-static int dns_decode_msg(struct Message *msg, const uint8_t *buffer)
+static bool dns_decode_msg(struct Message *msg, const uint8_t *buffer, ssize_t buflen)
 {
-    size_t i;
+    const uint8_t *cur = buffer;
+    const uint8_t *end = buffer + buflen;
 
-    if (dns_decode_header(msg, &buffer) < 0) {
-        return -1;
+    if (!dns_decode_header(msg, &cur, end - cur)) {
+        return false;
     }
 
     // Parse questions - but stop after the first question we can handle
-    for (i = 0; i < msg->qdCount; ++i) {
-        if (dns_decode_domain(msg->qName_buffer, &buffer, 300) < 0) {
-            return -1;
+    for (size_t i = 0; i < msg->qdCount; ++i) {
+        if (!dns_decode_domain(msg->qName_buffer, sizeof(msg->qName_buffer), &cur, end - cur)) {
+            return false;
+        }
+
+        if ((end - cur) < 4) {
+            return false;
         }
 
         msg->question.qName = msg->qName_buffer;
         msg->question.qType = get16bits(&buffer);
         msg->question.qClass = get16bits(&buffer);
-        return 1;
+        return true;
     }
 
     log_warning("DNS: No msg.");
 
-    return -1;
+    return false;
 }
 
 // Encode the message structure into a byte array
@@ -670,7 +688,7 @@ static void dns_handler(int rc, int sock)
     }
 
     // Decode message
-    if (dns_decode_msg(&msg, buffer) < 0) {
+    if (!dns_decode_msg(&msg, buffer, buflen)) {
         return;
     }
 
