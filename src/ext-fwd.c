@@ -262,6 +262,12 @@ bool fwd_setup(void)
 
 void fwd_free(void)
 {
+    if (gconf->fwd_disable) {
+        return;
+    }
+
+    net_remove_handler(-1, &fwd_handle);
+
     struct forwarding_t *cur;
     struct forwarding_t *next;
 
@@ -274,9 +280,13 @@ void fwd_free(void)
     g_fwds = NULL;
 
 #ifdef FWD_NATPMP
-    natpmp_uninit(&natpmp);
+    if (natpmp) {
+        natpmp_uninit(&natpmp);
+    }
 #endif
 #ifdef FWD_UPNP
-    upnp_uninit(&upnp);
+    if (upnp) {
+        upnp_uninit(&upnp);
+    }
 #endif
 }
