@@ -239,7 +239,7 @@ void fwd_handle(int _rc, int _sock)
 bool fwd_setup(void)
 {
     if (gconf->fwd_disable) {
-        return false;
+        return true;
     }
 
 #ifdef FWD_NATPMP
