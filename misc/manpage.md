@@ -23,7 +23,7 @@ kadnode --peer bttracker.debian.org --peer 192.168.1.1
 
 2. Ping a peer using the KadNode console if present:
 ```
-kadnode-ctl ping bttracker.debian.org
+kadnode-ctl dht-ping bttracker.debian.org
 ```
 
 3. Use the local peer discovery feature. Just start KadNode and it will try to discover other KadNode nodes in the local network.

@@ -22,7 +22,7 @@ KadNode needs to know at least one active peer to join / bootstrap into the swar
 Provide one or more peers to the command line arguments\. These could be public BitTorrent trackers, or other KadNode instances: \fBkadnode \-\-peer bttracker\.debian\.org \-\-peer 192\.168\.1\.1\fR
 .
 .IP "2." 4
-Ping a peer using the KadNode console if present: \fBkadnode\-ctl ping bttracker\.debian\.org\fR
+Ping a peer using the KadNode console if present: \fBkadnode\-ctl dht\-ping bttracker\.debian\.org\fR
 .
 .IP "3." 4
 Use the local peer discovery feature\. Just start KadNode and it will try to discover other KadNode nodes in the local network\.
@@ -303,13 +303,16 @@ Read a secret key in PEM format and announce the public key\.
 This option may occur multiple times\.
 .
 .IP "\(bu" 4
-\fB\-\-ipv4, \-4, \-\-ipv6, \-6\fR
+\fB\-\-ipv4, \-4\fR
 .
 .br
-Enable IPv4 or IPv6 only mode for the DHT\.
+Enable IPv4 only mode for the DHT\.
+.
+.IP "\(bu" 4
+\fB\-\-ipv6, \-6\fR
 .
 .br
-Default: IPv4+IPv6
+Enable IPv6 only mode for the DHT\.
 .
 .IP "\(bu" 4
 \fB\-h\fR, \fB\-\-help\fR
