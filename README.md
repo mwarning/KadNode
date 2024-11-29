@@ -44,7 +44,7 @@ If successful, the IP address is passed to the application making the request.
 You can download the latest package from [releases page](https://github.com/mwarning/KadNode/releases/latest/)
 
 
-### OpenWrt
+### OpenWrt routers
 From official package repository:
 `opkg install kadnode`
 
@@ -108,6 +108,7 @@ sudo make uninstall uninstall_nss
 
 * [pkdns](https://github.com/pubky/pkdns) and [Pkarr](https://github.com/pubky/pkarr) ed25519 pubkey domains on Mainline DHT.
 * [btlink](https://github.com/anacrolix/btlink) an HTTP addressing scheme for BitTorrent.
+* [opendht](https://github.com/savoirfairelinux/opendht/wiki) a DHT daemon [used by Ring softphone](https://blog.savoirfairelinux.com/en-ca/2015/ring-opendht-a-distributed-hash-table/). 
 * [DNSLink Standard](https://dnslink.org/) a format used by IPFS for DNS TXT records to associate content and identifiers with a domain.
 * [Tor Onion Services](https://en.wikipedia.org/wiki/.onion)
 * [GNUnet Name System](https://gnunet.org/) secure and decentralized naming system
