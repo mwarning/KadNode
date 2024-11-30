@@ -66,7 +66,7 @@ static bool is_valid_ifa(struct ifaddrs *ifa, int af)
             || !(ifa->ifa_flags & IFF_RUNNING)
             || (ifa->ifa_flags & IFF_LOOPBACK)
             || (ifa->ifa_addr->sa_family != af)) {
-        return 0;
+        return false;
     }
 
     // if DHT interface set, use only that interface (if it exists)

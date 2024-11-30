@@ -559,7 +559,7 @@ bool addr_parse(IP *addr_ret, const char full_addr_str[], const char default_por
 bool addr_equal(const IP *addr1, const IP *addr2)
 {
     if (addr1->ss_family != addr2->ss_family) {
-        return 0;
+        return false;
     } else if (addr1->ss_family == AF_INET) {
         return 0 == memcmp(&((IP4 *)addr1)->sin_addr, &((IP4 *)addr2)->sin_addr, 4);
     } else if (addr1->ss_family == AF_INET6) {
