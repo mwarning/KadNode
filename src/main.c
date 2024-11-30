@@ -193,7 +193,7 @@ int main(int argc, char *argv[])
     if (gconf->service_start) {
         gconf->use_syslog = 1;
 
-        // Get kadnode.exe binary lcoation
+        // Get kadnode.exe binary location
         if (GetModuleFileNameA(NULL, path, sizeof(path)) && (p = strrchr(path, '\\'))) {
             *(p + 1) = '\0';
         } else {
