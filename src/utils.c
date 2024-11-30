@@ -538,14 +538,9 @@ bool addr_parse(IP *addr_ret, const char full_addr_str[], const char default_por
     } else if (last_colon && last_colon == strchr(addr_buf, ':')) {
         // <non-ipv6-addr>:<port>
         addr_tmp = last_colon;
-        if (addr_tmp) {
-            *addr_tmp = '\0';
-            addr_str = addr_buf;
-            port_str = addr_tmp + 1;
-        } else {
-            addr_str = addr_buf;
-            port_str = default_port;
-        }
+        *addr_tmp = '\0';
+        addr_str = addr_buf;
+        port_str = addr_tmp + 1;
     } else {
         // <addr>
         addr_str = addr_buf;
