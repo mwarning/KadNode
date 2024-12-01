@@ -36,20 +36,6 @@ PROGRAM_NAME" Control Program - Send commands to a KadNode instance.\n\n"
 " -h		Print this help.\n"
 "\n";
 
-// short list of commands
-static const char* g_cli_usage =
-    "Usage:\n"
-    "  status\n"
-    "  lookup <query>\n"
-    "  searches\n"
-    "  announce-start <query>\n"
-    "  announce-stop <query>\n"
-    "  announcements\n"
-#ifdef BOB
-    "  bob-keys\n"
-#endif
-    "  help\n";
-
 static const char* g_cli_help =
     "Main Commands\n"
     "\n"
@@ -185,12 +171,11 @@ static void cmd_exec(FILE *fp, char request[], int allow_debug)
 
     if (argc == 0) {
         // Print usage
-        fprintf(fp, "%s", g_cli_usage);
+        fprintf(fp, g_cli_help, gconf->query_tld);
         return;
     }
 
     const option_t *option = find_option(g_options, argv[0]);
-
     if (option == NULL) {
         fprintf(fp, "Unknown command.\n");
         return;
