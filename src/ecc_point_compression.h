@@ -1,7 +1,7 @@
 
 #include <string.h>
 
-#include "mbedtls/ecp.h"
+#include <mbedtls/ecp.h>
 
 int mbedtls_ecp_decompress(
     const mbedtls_ecp_group *grp,
