@@ -218,8 +218,13 @@ bool tls_client_parse_id(uint8_t id[], const char query[], size_t querylen)
         mbedtls_sha256_context ctx;
         mbedtls_sha256_init(&ctx);
 
+#if (MBEDTLS_VERSION_MAJOR > 2)
         mbedtls_sha256_update(&ctx, (uint8_t*) &query[0], querylen);
         mbedtls_sha256_finish(&ctx, hash);
+#else
+        mbedtls_sha256_update_ret(&ctx, (uint8_t*) &query[0], querylen);
+        mbedtls_sha256_finish_ret(&ctx, hash);
+#endif
 
         memcpy(id, hash, ID_BINARY_LENGTH);
 
