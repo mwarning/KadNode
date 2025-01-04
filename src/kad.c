@@ -328,8 +328,10 @@ bool kad_setup(void)
     uint8_t node_id[ID_BINARY_LENGTH];
 
 #ifdef DEBUG
-    // Let the DHT output debug text
-    dht_debug = stdout;
+    if (gconf->verbosity == VERBOSITY_DEBUG) {
+        // Let the DHT output debug text
+        dht_debug = stdout;
+    }
 #endif
 
     bytes_random(node_id, ID_BINARY_LENGTH);
