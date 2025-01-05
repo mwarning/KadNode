@@ -33,8 +33,8 @@ Now compile/build everything:
 make
 ```
 
-The images and all \*.ipk packages are now inside the bin/ folder.
-You can install the kadnode .ipk using "opkg install \<ipkg-file\>" on the router.
+The images and all \*.apk or \*.ipk packages are now inside the bin/ folder.
+You can install the kadnode package using `opkg install <kadnode-ipkg>` or `pkg add <kadnode-apk>` on the router.
 
 For details please check the OpenWrt documentation.
 
