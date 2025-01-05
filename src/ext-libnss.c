@@ -84,10 +84,10 @@ static bool _nss_kadnode_lookup(kadnode_nss_response_t *res, const kadnode_nss_r
     }
 
     // Send request
-    send(sock, req, sizeof(*req), 0);
+    send(sock, req, sizeof(kadnode_nss_request_t), 0);
 
     // Receive request
-    ssize_t rc = read(sock, res, sizeof(*res));
+    ssize_t rc = read(sock, res, sizeof(kadnode_nss_response_t));
     close(sock);
 
     return (rc == sizeof(kadnode_nss_response_t));
@@ -96,10 +96,15 @@ static bool _nss_kadnode_lookup(kadnode_nss_response_t *res, const kadnode_nss_r
 enum nss_status _nss_kadnode_gethostbyname_impl(const char* name, int af,
                                              kadnode_nss_response_t* res, int* errnop,
                                              int* h_errnop, bool allow_mixed_af) {
+    debug("_nss_kadnode_gethostbyname_impl: got %s\n", name);
+
     if (af == AF_UNSPEC || af == AF_INET || af == AF_INET6) {
-        kadnode_nss_request_t req;
-        req.af = af;
-        req.allow_mixed_af = allow_mixed_af; // only relevant if af == AF_UNSPEC
+        kadnode_nss_request_t req = {
+            .af = af,
+            .allow_mixed_af = allow_mixed_af, // only relevant if af == AF_UNSPEC
+            .name = {0},
+        };
+
         strncpy(&req.name[0], name, QUERY_MAX_SIZE);
 
         bool ok = _nss_kadnode_lookup(res, &req);

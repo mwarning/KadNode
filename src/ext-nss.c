@@ -33,7 +33,7 @@ static void nss_client_handler(int rc, int clientsock)
 
     log_debug("nss_client_handler");
 
-    rc = recv(clientsock, &req, sizeof(req), 0);
+    rc = recv(clientsock, &req, sizeof(kadnode_nss_request_t), 0);
     if (rc != sizeof(req)) {
         goto abort;
     }
