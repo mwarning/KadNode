@@ -208,15 +208,23 @@ void searches_set_auth_state(const char query[], const IP *address, const int st
 }
 
 static const char* str_callback(auth_callback_t *cb) {
+#ifdef TLS
     if (cb == &tls_client_trigger_auth) {
         return "tls";
     }
+#endif
 
+#ifdef BOB
     if (cb == &bob_trigger_auth) {
         return "bob";
     }
+#endif
 
-    return cb ? "???" : "none";
+    if (cb == NULL) {
+        return "none";
+    }
+
+    return "???";
 }
 
 void searches_debug(FILE *fp)
@@ -388,16 +396,20 @@ struct search_t* searches_start(const char query[])
         // No idea what to do
         log_debug("No idea how what method to use for %s", query);
         return NULL;
+#ifdef TLS
     case QUERY_TYPE_TLS:
         // Use TLS authentication
         // For e.g. example.com.p2p
         cb = &tls_client_trigger_auth;
         break;
+#endif
+#ifdef BOB
     case QUERY_TYPE_BOB:
         // Use Bob authentication
         // For e.g. <32BytePublicKey>.p2p
         cb = &bob_trigger_auth;
         break;
+#endif
     case QUERY_TYPE_NONE:
         // Use no authentication
         // For e.g. <20ByteHashKey>.p2p
