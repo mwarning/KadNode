@@ -242,7 +242,7 @@ void searches_debug(FILE *fp)
         fprintf(fp, " query: %s\n", &search->query[0]);
         fprintf(fp, "   id: %s\n", str_id(search->id));
         fprintf(fp, "   auth: %s (done: %s)\n", str_callback(search->auth_cb), search->done ? "true" : "false");
-        fprintf(fp, "   started: %ldm ago\n", (time_now_sec() - search->start_time) / 60);
+        fprintf(fp, "   started: %zum ago\n", (size_t) ((time_now_sec() - search->start_time) / 60));
         result_counter = 0;
         result = search->results;
         while (result) {
