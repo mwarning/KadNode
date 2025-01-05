@@ -71,13 +71,13 @@ void announces_print(FILE *fp)
                 fprintf(fp, "  refresh: wait\n");
             }
         } else {
-            fprintf(fp, "  refresh: in %ld min\n", (value->refresh - now) / 60);
+            fprintf(fp, "  refresh: in %zu min\n", (size_t) ((value->refresh - now) / 60));
         }
 
         if (value->lifetime == LONG_MAX) {
             fprintf(fp, "  lifetime: entire runtime\n");
         } else {
-            fprintf(fp, "  lifetime: %ld min left\n", (value->lifetime -  now) / 60);
+            fprintf(fp, "  lifetime: %zu min left\n", (size_t) ((value->lifetime -  now) / 60));
         }
 
         value_counter++;
@@ -144,9 +144,9 @@ struct announcement_t *announces_add(FILE *fp, const char query[], time_t lifeti
         }
     } else {
         if (fp) {
-            fprintf(fp, "Add announcement for %s:%hu. Keep alive for %lu minutes.\n", query, port, (lifetime - now) / 60);
+            fprintf(fp, "Add announcement for %s:%hu. Keep alive for %zu minutes.\n", query, port, (size_t) ((lifetime - now) / 60));
         } else {
-            log_debug("Add announcement for %s:%hu. Keep alive for %lu minutes.", query, port, (lifetime - now) / 60);
+            log_debug("Add announcement for %s:%hu. Keep alive for %zu minutes.", query, port, (size_t) ((lifetime - now) / 60));
         }
     }
 
