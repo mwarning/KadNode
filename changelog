@@ -4,6 +4,8 @@ kadnode (2.4.1) stable; urgency=medium
   * Debian, Arch: pid file location changed from /var/run/kadnode.pid to /run/
   * overwrite existing pid file on start
   * do not write an empty peerfile
+  * fix disabled port forwarding is not an error
+  * some Name Service Switch (NSS) fixes 
   * various bug fixes
 
  -- Moritz Warning <moritzwarning@web.de>  Sun, 24 Nov 2024 00:00:00 +0100
