@@ -4,7 +4,7 @@
 
 
 #define PROGRAM_NAME "kadnode"
-#define PROGRAM_VERSION "2.4.0"
+#define PROGRAM_VERSION "2.4.1"
 
 #define ID_BINARY_LENGTH 20
 #define ID_BASE16_LENGTH 40
