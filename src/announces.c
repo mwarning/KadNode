@@ -80,6 +80,9 @@ void announces_print(FILE *fp)
             fprintf(fp, "  lifetime: %zu min left\n", (size_t) ((value->lifetime -  now) / 60));
         }
 
+        // authentication method that is offered for this announcement
+        fprintf(fp, "  authentication: %s\n", get_auth_type_str(value->auth_type));
+
         value_counter++;
         value = value->next;
     }
@@ -97,9 +100,9 @@ struct announcement_t *announces_add(FILE *fp, const char query[], time_t lifeti
     int port = gconf->dht_port;
     time_t now = time_now_sec();
 
-    int type = parse_query(id, squery, &port, query);
+    enum AUTH_TYPE auth_type = parse_query(id, squery, &port, query);
 
-    if (type == QUERY_TYPE_INVALID) {
+    if (auth_type == AUTH_TYPE_INVALID) {
         if (fp) {
             fprintf(fp, "Invalid query: %s\n", query);
         } else {
@@ -135,6 +138,7 @@ struct announcement_t *announces_add(FILE *fp, const char query[], time_t lifeti
     new->port = port;
     new->refresh = now - 1; // Send the first announcement as soon as possible
     new->lifetime = lifetime;
+    new->auth_type = auth_type;
 
     if (lifetime == LONG_MAX) {
         if (fp) {
@@ -172,9 +176,9 @@ void announces_remove(FILE *fp, const char query[])
     struct announcement_t *pre;
     struct announcement_t *cur;
 
-    int type = parse_query(id, squery, NULL, query);
+    enum AUTH_TYPE type = parse_query(id, squery, NULL, query);
 
-    if (type == QUERY_TYPE_INVALID) {
+    if (type == AUTH_TYPE_INVALID) {
         if (fp) {
             fprintf(fp, "Invalid query: %s\n", query);
         } else {

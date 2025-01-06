@@ -5,6 +5,8 @@
 #include <sys/time.h>
 #include <stdio.h>
 
+#include "searches.h"
+
 /*
 * Announce a value id / port pair in regular
 * intervals until the lifetime expires.
@@ -15,6 +17,7 @@ struct announcement_t {
     uint8_t id[ID_BINARY_LENGTH];
     char query[QUERY_MAX_SIZE];
     int port;
+    enum AUTH_TYPE auth_type;
     time_t lifetime; // Keep entry refreshed until the lifetime expires
     time_t refresh; // Next time the entry need to be refreshed
 };
