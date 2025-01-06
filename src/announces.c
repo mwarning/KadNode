@@ -60,7 +60,7 @@ void announces_print(FILE *fp)
 
     fprintf(fp, "Announcements:\n");
     while (value) {
-        fprintf(fp, " query: %s\n", value->query);
+        fprintf(fp, " query: %s.%s\n", value->query, gconf->query_tld);
         fprintf(fp, "  id: %s\n", str_id(value->id));
         fprintf(fp, "  port: %d\n", value->port);
         if (value->refresh < now) {
