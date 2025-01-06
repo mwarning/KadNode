@@ -43,14 +43,16 @@ void searches_set_auth_state(const char query[], const IP *address, const int st
 struct result_t *searches_get_auth_target(char query_ret[], IP *address_ret, auth_callback_t *callback);
 int is_valid_result(const struct result_t *result);
 
-enum QUERY_TYPE {
-    QUERY_TYPE_INVALID,
-    QUERY_TYPE_TLS,
-    QUERY_TYPE_BOB,
-    QUERY_TYPE_NONE,
+// rename to AUTH_TYPE
+enum AUTH_TYPE {
+    AUTH_TYPE_INVALID,
+    AUTH_TYPE_TLS,
+    AUTH_TYPE_BOB,
+    AUTH_TYPE_NONE,
 };
 
-int parse_query(uint8_t id_ret[], char squery_ret[], int *port_ret, const char query[]);
+enum AUTH_TYPE parse_query(uint8_t id_ret[], char squery_ret[], int *port_ret, const char query[]);
+const char* get_auth_type_str(enum AUTH_TYPE type);
 
 void searches_setup(void);
 void searches_free(void);

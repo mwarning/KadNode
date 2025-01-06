@@ -334,7 +334,7 @@ static bool parse_plain_id(uint8_t id[], const char query[], size_t querylen)
     return false;
 }
 
-int parse_query(uint8_t id_ret[], char squery_ret[], int *port_ret, const char query[])
+enum AUTH_TYPE parse_query(uint8_t id_ret[], char squery_ret[], int *port_ret, const char query[])
 {
     const char *colon = strchr(query, ':');
     size_t squery_len = strlen(query);
@@ -343,7 +343,7 @@ int parse_query(uint8_t id_ret[], char squery_ret[], int *port_ret, const char q
         // There is a port
         int n = parse_int(colon + 1, -1);
         if (!port_valid(n) || !port_ret) {
-            return QUERY_TYPE_INVALID;
+            return AUTH_TYPE_INVALID;
         }
 
         *port_ret = n;
@@ -353,7 +353,7 @@ int parse_query(uint8_t id_ret[], char squery_ret[], int *port_ret, const char q
 
     // Remove .p2p suffix and convert to lowercase
     if (!query_sanitize(squery_ret, QUERY_MAX_SIZE, query, squery_len)) {
-        return QUERY_TYPE_INVALID;
+        return AUTH_TYPE_INVALID;
     }
     squery_len = strlen(squery_ret);
 
@@ -361,23 +361,42 @@ int parse_query(uint8_t id_ret[], char squery_ret[], int *port_ret, const char q
     if (tls_client_parse_id(id_ret, squery_ret, squery_len)) {
         // Use TLS authentication
         // For e.g. example.com.p2p
-        return QUERY_TYPE_TLS;
+        return AUTH_TYPE_TLS;
     } else
 #endif
 #ifdef BOB
     if (bob_parse_id(id_ret, squery_ret, squery_len)) {
         // Use Bob authentication
         // For e.g. <32BytePublicKey>.p2p
-        return QUERY_TYPE_BOB;
+        return AUTH_TYPE_BOB;
     } else
 #endif
     if (parse_plain_id(id_ret, squery_ret, squery_len)) {
         // Use no authentication
         // For e.g. <20ByteHashKey>.p2p
-        return QUERY_TYPE_NONE;
+        return AUTH_TYPE_NONE;
     } else {
         // No idea what to do
-        return QUERY_TYPE_INVALID;
+        return AUTH_TYPE_INVALID;
+    }
+}
+
+const char* get_auth_type_str(enum AUTH_TYPE type)
+{
+    switch (type) {
+#ifdef TLS
+    case AUTH_TYPE_TLS:
+        return "bob";
+#endif
+#ifdef BOB
+    case AUTH_TYPE_BOB:
+        return "bob";
+#endif
+    case AUTH_TYPE_NONE:
+        return "none";
+    case AUTH_TYPE_INVALID:
+    default:
+        return "???";
     }
 }
 
@@ -392,25 +411,25 @@ struct search_t* searches_start(const char query[])
     int type = parse_query(id, squery, NULL, query);
 
     switch (type) {
-    case QUERY_TYPE_INVALID:
+    case AUTH_TYPE_INVALID:
         // No idea what to do
         log_debug("No idea how what method to use for %s", query);
         return NULL;
 #ifdef TLS
-    case QUERY_TYPE_TLS:
+    case AUTH_TYPE_TLS:
         // Use TLS authentication
         // For e.g. example.com.p2p
         cb = &tls_client_trigger_auth;
         break;
 #endif
 #ifdef BOB
-    case QUERY_TYPE_BOB:
+    case AUTH_TYPE_BOB:
         // Use Bob authentication
         // For e.g. <32BytePublicKey>.p2p
         cb = &bob_trigger_auth;
         break;
 #endif
-    case QUERY_TYPE_NONE:
+    case AUTH_TYPE_NONE:
         // Use no authentication
         // For e.g. <20ByteHashKey>.p2p
         cb = NULL;
