@@ -352,8 +352,8 @@ static bool dns_decode_msg(struct Message *msg, const uint8_t *buffer, ssize_t b
         }
 
         msg->question.qName = msg->qName_buffer;
-        msg->question.qType = get16bits(&buffer);
-        msg->question.qClass = get16bits(&buffer);
+        msg->question.qType = get16bits(&cur);
+        msg->question.qClass = get16bits(&cur);
         return true;
     }
 
