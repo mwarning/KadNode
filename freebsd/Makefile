@@ -45,6 +45,7 @@ DNS_VARS=		FEATURES+="dns"
 LPD_VARS=		FEATURES+="lpd"
 
 NATPMP_LIB_DEPENDS=	libnatpmp.so:net/libnatpmp
+UPNP_USES=			localbase:ldflags
 NATPMP_VARS=		FEATURES+="natpmp"
 
 NSS_VARS=		FEATURES+="nss"
