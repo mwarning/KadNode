@@ -32,7 +32,7 @@ struct result_t {
 struct search_t {
     struct search_t *next;
     uint8_t id[ID_BINARY_LENGTH];
-    char query[QUERY_MAX_SIZE]; // sanitized query (lower case, not .p2p TLD)
+    char query[QUERY_MAX_SIZE]; // sanitized query (lower case, no .p2p TLD)
     bool done;
     time_t start_time;
     struct result_t *results;
