@@ -55,6 +55,7 @@ struct key_t {
     mbedtls_pk_context ctx_sign;
 };
 
+// resource to keep the state of the authentication process
 struct bob_resource {
     mbedtls_pk_context ctx_verify;
     uint8_t challenge[32];
@@ -85,19 +86,33 @@ void bob_auth_end(struct bob_resource *resource, int state)
     bob_trigger_auth();
 }
 
+// Parse ECC (compressed) key from base16/base32 to (32 byte) binary
+static bool parse_key_from_query(uint8_t *key_ret, size_t keylen, const char query[], size_t querylen)
+{
+    if (keylen != ECPARAMS_SIZE) {
+        return false;
+    }
+
+    if (base16decsize(querylen) == ECPARAMS_SIZE
+            && base16dec(key_ret, ECPARAMS_SIZE, query, querylen)) {
+        return true;
+    }
+
+    if (base32decsize(querylen) == ECPARAMS_SIZE
+            && base32dec(key_ret, ECPARAMS_SIZE, query, querylen)) {
+        return true;
+    }
+
+    return false;
+}
+
 // Try to create a DHT id from a sanitized key query
 bool bob_parse_id(uint8_t id[], const char query[], size_t querylen)
 {
     uint8_t bin[ECPARAMS_SIZE];
 
-    if (base16decsize(querylen) == sizeof(bin)
-            && base16dec(bin, sizeof(bin), query, querylen)) {
-        memcpy(id, bin, ID_BINARY_LENGTH);
-        return true;
-    }
-
-    if (base32decsize(querylen) == sizeof(bin)
-            && base32dec(bin, sizeof(bin), query, querylen)) {
+    if (parse_key_from_query(bin, ECPARAMS_SIZE, query, querylen)) {
+        // Truncate to 20 bytes for the DHT identifier
         memcpy(id, bin, ID_BINARY_LENGTH);
         return true;
     }
@@ -155,6 +170,7 @@ void bob_trigger_auth(void)
 
     resource = bob_next_free_resource();
     if (resource == NULL) {
+        // no resources left :/
         return;
     }
 
@@ -162,20 +178,28 @@ void bob_trigger_auth(void)
     mbedtls_ecp_keypair *kp = mbedtls_pk_ec(resource->ctx_verify);
     char *query = &resource->query[0];
 
-    // Find new query to authenticate and initialize resource
+    /*
+     * Authenticate the IP address of a query.
+     *
+     * 1. Get a query and one of the IP address we obtained through the DHT.
+     * 2. Parse the query to extract the compressed ECC public key (32 bytes).
+     * 3. Decompress the public key to the decompressed form (64 bytes) and store in resource->ctx_verify
+     * 4. Send random bytes to target IP address and expected the target to send it back signed.
+    */
     if ((result = searches_get_auth_target(query, &resource->address, &bob_trigger_auth)) != NULL) {
         result->state = AUTH_PROGRESS;
 
         // Hex to binary and compressed form (assuming even Y => 0x02)
         compressed[0] = 0x02;
 
-        if (!base32dec(compressed + 1, sizeof(compressed) - 1, query, strlen(query))) {
-            log_error("BOB: Unexpected query length: %s", query);
+        log_info("bob: query=%s", query);
+        if (parse_key_from_query(compressed + 1, sizeof(compressed) - 1, query, strlen(query))) {
+            log_error("BOB: Failed to parse query: %s", query);
             bob_auth_end(resource, AUTH_ERROR);
             return;
         }
 
-        // Compressed form to decompressed
+        // Compressed form (32 bytes) to decompressed (64 bytes)
         if ((ret = mbedtls_ecp_decompress(
                 &kp->MBEDTLS_PRIVATE(grp), compressed, sizeof(compressed),
                 decompressed, &olen, sizeof(decompressed))) != 0) {
@@ -185,6 +209,7 @@ void bob_trigger_auth(void)
         }
 
         // Decompressed form to Q
+        // (btw. mbedtls now supports has native support for key decompression)
         if ((ret = mbedtls_ecp_point_read_binary(
                 &kp->MBEDTLS_PRIVATE(grp), &kp->MBEDTLS_PRIVATE(Q),
                 decompressed, sizeof(decompressed))) != 0) {
@@ -192,6 +217,9 @@ void bob_trigger_auth(void)
             bob_auth_end(resource, AUTH_ERROR);
             return;
         }
+
+        // do we use decompressed or uncompressed
+        //log_info("bob: base32=");
 
         resource->challenges_send = 0;
         bytes_random(resource->challenge, CHALLENGE_BIN_LENGTH);
@@ -385,7 +413,7 @@ static void bob_send_challenges(int sock)
     for (size_t i = 0; i < ARRAY_SIZE(g_bob_resources); ++i) {
         resource = &g_bob_resources[i];
         if (resource->query[0] == '\0') {
-            // End of the array reached
+            // Skip unused resource
             continue;
         }
 
