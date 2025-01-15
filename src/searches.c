@@ -367,13 +367,13 @@ enum AUTH_TYPE parse_query(uint8_t id_ret[], char squery_ret[], int *port_ret, c
 #ifdef BOB
     if (bob_parse_id(id_ret, squery_ret, squery_len)) {
         // Use Bob authentication
-        // For e.g. <32BytePublicKey>.p2p
+        // For e.g. <32BytePublicKey_base16_or_base32>.p2p
         return AUTH_TYPE_BOB;
     } else
 #endif
     if (parse_plain_id(id_ret, squery_ret, squery_len)) {
         // Use no authentication
-        // For e.g. <20ByteHashKey>.p2p
+        // For e.g. <20ByteHashKey_base16_or_base32>.p2p
         return AUTH_TYPE_NONE;
     } else {
         // No idea what to do
