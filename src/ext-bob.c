@@ -377,7 +377,7 @@ bool bob_load_key(const char path[])
 }
 
 // Send challenges
-void bob_send_challenges(int sock)
+static void bob_send_challenges(int sock)
 {
     struct bob_resource *resource;
 
@@ -398,7 +398,7 @@ void bob_send_challenges(int sock)
     }
 }
 
-struct bob_resource *bob_find_resource(const IP *address)
+static struct bob_resource *bob_find_resource(const IP *address)
 {
     for (size_t i = 0; i < ARRAY_SIZE(g_bob_resources); ++i) {
         if (addr_equal(&g_bob_resources[i].address, address)) {
@@ -410,7 +410,7 @@ struct bob_resource *bob_find_resource(const IP *address)
 }
 
 // Receive a solved challenge and verify it
-void bob_verify_challenge(int sock, uint8_t buf[], size_t buflen, IP *address)
+static void bob_verify_challenge(int sock, uint8_t buf[], size_t buflen, IP *address)
 {
     struct bob_resource *resource;
 
@@ -427,7 +427,7 @@ void bob_verify_challenge(int sock, uint8_t buf[], size_t buflen, IP *address)
     }
 }
 
-struct key_t *bob_find_key(const uint8_t pkey[])
+static struct key_t *bob_find_key(const uint8_t pkey[])
 {
     uint8_t epkey[ECPARAMS_SIZE];
     struct key_t *key = g_keys;
@@ -444,7 +444,7 @@ struct key_t *bob_find_key(const uint8_t pkey[])
 }
 
 // Receive a challenge and solve it using a secret key
-void bob_encrypt_challenge(int sock, uint8_t buf[], size_t buflen, IP *address)
+static void bob_encrypt_challenge(int sock, uint8_t buf[], size_t buflen, IP *address)
 {
     struct key_t *key;
     uint8_t sig[200];
