@@ -199,7 +199,7 @@ void bob_trigger_auth(void)
     }
 }
 
-static int write_pem(const mbedtls_pk_context *key, const char path[])
+static bool write_pem(const mbedtls_pk_context *key, const char path[])
 {
     FILE *file;
     uint8_t buf[1000];
@@ -209,18 +209,18 @@ static int write_pem(const mbedtls_pk_context *key, const char path[])
     memset(buf, 0, sizeof(buf));
 
     if ((ret = mbedtls_pk_write_key_pem((mbedtls_pk_context *) key, buf, sizeof(buf))) != 0) {
-        return ret;
+        return false;
     }
 
     if ((file = fopen(path, "r")) != NULL) {
         fclose(file);
         fprintf(stderr, "File already exists: %s\n", path);
-        return -1;
+        return false;
     }
 
     if ((file = fopen(path, "wb")) == NULL) {
         fprintf(stderr, "%s %s\n", path,  strerror(errno));
-        return -1;
+        return false;
     }
 
     // Set u+rw permissions
@@ -230,12 +230,12 @@ static int write_pem(const mbedtls_pk_context *key, const char path[])
     if (fwrite(buf, 1, len, file) != len) {
         fclose(file);
         fprintf(stderr, "%s: %s\n", path, strerror(errno));
-        return -1;
+        return false;
     }
 
     fclose(file);
 
-    return 0;
+    return true;
 }
 
 static const char *get_pkey_base32(const mbedtls_pk_context *ctx)
@@ -308,7 +308,7 @@ bool bob_create_key(const char path[])
         }
     } while (mbedtls_mpi_get_bit(&mbedtls_pk_ec(ctx)->MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(Y), 0) != 0);
 
-    if ((ret = write_pem(&ctx, path)) != 0) {
+    if (!write_pem(&ctx, path)) {
         return false;
     }
 
