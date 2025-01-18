@@ -1,12 +1,11 @@
 PORTNAME=	kadnode
 DISTVERSIONPREFIX=	v
-DISTVERSION=	2.4.0
-PORTREVISION=	1
+DISTVERSION=	2.4.1
 CATEGORIES=	dns
 
 MAINTAINER=	moritzwarning@web.de
 COMMENT=	P2P name resolution daemon
-WWW=		https://github.com/mwarning/KadNode
+WWW=		https://github.com/mwarning/KadNode/
 
 LICENSE=	MIT
 LICENSE_FILE=	${WRKSRC}/LICENSE
@@ -34,6 +33,7 @@ NSS_DESC=	Name Service Switch support to intercept host queries
 UPNP_DESC=	UPnP support (remote port forwarding on the router)
 
 AUTH_LIB_DEPENDS=	libmbedtls.so:security/mbedtls3
+AUTH_USES=		localbase:ldflags
 AUTH_VARS=		FEATURES+="bob tls"
 
 CMD_VARS=		FEATURES+="cmd"
@@ -45,17 +45,13 @@ DNS_VARS=		FEATURES+="dns"
 LPD_VARS=		FEATURES+="lpd"
 
 NATPMP_LIB_DEPENDS=	libnatpmp.so:net/libnatpmp
-UPNP_USES=			localbase:ldflags
 NATPMP_VARS=		FEATURES+="natpmp"
 
 NSS_VARS=		FEATURES+="nss"
 
 UPNP_LIB_DEPENDS=	libminiupnpc.so:net/miniupnpc
+UPNP_USES=		localbase:ldflags
 UPNP_VARS=		FEATURES+="upnp"
-
-# for miniupnpc package
-CFLAGS+=	-I${LOCALBASE}/include
-LDFLAGS+=	-L${LOCALBASE}/lib
 
 do-install:
 	${INSTALL_PROGRAM} ${WRKSRC}/build/kadnode ${STAGEDIR}${PREFIX}/bin/
@@ -66,7 +62,8 @@ do-install:
 	${INSTALL_DATA} ${WRKDIR}/kadnode.conf \
 		${STAGEDIR}${ETCDIR}/kadnode.conf.sample
 	${INSTALL_MAN} ${WRKSRC}/misc/manpage \
-		${STAGEDIR}${PREFIX}/share/man/man1/kadnode.1
+		${STAGEDIR}${MANDIRS}/man1/kadnode.1
+
 do-install-NSS-on:
 	${INSTALL_LIB} ${WRKSRC}/build/libnss_kadnode.so \
 		${STAGEDIR}${PREFIX}/lib/nss_kadnode.so.1
