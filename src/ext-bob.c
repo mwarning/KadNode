@@ -218,9 +218,6 @@ void bob_trigger_auth(void)
             return;
         }
 
-        // do we use decompressed or uncompressed
-        //log_info("bob: base32=");
-
         resource->challenges_send = 0;
         bytes_random(resource->challenge, CHALLENGE_BIN_LENGTH);
         bob_send_challenge(g_dht_socket, resource);
