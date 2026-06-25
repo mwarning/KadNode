@@ -654,13 +654,6 @@ static struct gconf_t *conf_alloc(void)
 #else
         .verbosity = VERBOSITY_VERBOSE,
 #endif
-        .query_tld = strdup(QUERY_TLD_DEFAULT),
-#ifdef CMD
-        .cmd_path = strdup(CMD_PATH),
-#endif
-#ifdef NSS
-        .nss_path = strdup(NSS_PATH),
-#endif
         .time_now = now,
         .startup_time = now,
         .is_running = true
@@ -682,6 +675,22 @@ static void conf_set_defaults(void)
 #ifdef DNS
     if (gconf->dns_port == -1) {
         gconf->dns_port = DNS_PORT;
+    }
+#endif
+
+    if (gconf->query_tld == NULL) {
+        gconf->query_tld = strdup(QUERY_TLD_DEFAULT);
+    }
+
+#ifdef CMD
+    if (gconf->cmd_path == NULL) {
+        gconf->cmd_path = strdup(CMD_PATH);
+    }
+#endif
+
+#ifdef NSS
+    if (gconf->nss_path == NULL) {
+        gconf->nss_path = strdup(NSS_PATH);
     }
 #endif
 }
