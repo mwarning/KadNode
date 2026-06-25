@@ -1,7 +1,7 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "KADNODE" "1" "October 2024" "mwarning" "Kadnode Manual"
+.TH "KADNODE" "1" "June 2026" "" ""
 .
 .SH "NAME"
 \fBkadnode\fR \- P2P name resolver daemon
@@ -301,6 +301,15 @@ Read a secret key in PEM format and announce the public key\.
 .
 .br
 This option may occur multiple times\.
+.
+.IP "\(bu" 4
+\fB\-\-bob\-public\-keys\fR
+.
+.br
+Print all public keys and exit\. But this option
+.
+.br
+after one or multiple \fB\-\-bob\-load\-key\fR\.
 .
 .IP "\(bu" 4
 \fB\-\-ipv4, \-4\fR

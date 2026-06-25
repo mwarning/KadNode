@@ -102,6 +102,7 @@ static const char *kadnode_usage_str =
 "					The public key will be printed to the terminal before exit.\n\n"
 " --bob-load-key <file>			Read a secret key in PEM format and announce the public key.\n"
 "					This option may occur multiple times.\n\n"
+" --bob-public-keys			Print the public keys and exit. Use after --bob-load-key.\n\n"
 #endif
 #ifdef CMD
 " --cmd-disable-stdin			Disable the local control interface.\n\n"
@@ -234,6 +235,7 @@ enum OPCODE {
     oServiceStart,
     oBobCreateKey,
     oBobLoadKey,
+    oBobPublicKeys,
     oIfname,
     oUser,
     oDaemon,
@@ -284,6 +286,7 @@ static option_t g_options[] = {
 #ifdef BOB
     {"--bob-create-key", 1, oBobCreateKey},
     {"--bob-load-key", 1, oBobLoadKey},
+    {"--bob-public-keys", 0, oBobPublicKeys},
 #endif
     {"--dht-isolation-prefix", 1, oDhtIsolationPrefix},
     {"--ifname", 1, oIfname},
@@ -583,6 +586,9 @@ static bool conf_set(const char opt[], const char val[])
     }
     case oBobLoadKey:
         return bob_load_key(val);
+    case oBobPublicKeys:
+        bob_debug_keys(stdout);
+        exit(EXIT_SUCCESS);
 #endif
     default:
         return false;

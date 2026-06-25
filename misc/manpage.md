@@ -177,6 +177,10 @@ This is the plain use of the DHT. The hexadecimal string will be cut down or fil
     Read a secret key in PEM format and announce the public key.  
     This option may occur multiple times.
 
+  * `--bob-public-keys`  
+    Print all public keys and exit. But this option  
+    after one or multiple `--bob-load-key`.
+
   * `--ipv4, -4`  
     Enable IPv4 only mode for the DHT.
 
