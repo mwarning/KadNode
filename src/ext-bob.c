@@ -158,6 +158,7 @@ static void bob_send_challenge(int sock, struct bob_resource *resource)
 #endif
     const unsigned attempt = (unsigned) resource->challenges_send + (unsigned) resource->send_failures + 1U;
     const socklen_t tolen = addr_len(&resource->address);
+    (void) attempt;
 
     // Insert marker
     memcpy(buf, "BOB", 3);
