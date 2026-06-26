@@ -502,6 +502,20 @@ int cmd_client(int argc, char *argv[])
     }
 
     size_t pos = 0;
+
+    // Concatenate command line arguments
+    for (size_t i = 0; i < argc; i++) {
+        size_t len = strlen(argv[i]);
+        if ((pos + len + 1) >= sizeof(buffer)) {
+            fprintf(stderr, "Input too long!\n");
+            return EXIT_FAILURE;
+        }
+        memcpy(&buffer[pos], argv[i], len);
+        pos += len;
+        buffer[pos++] = ' ';
+    }
+
+    // Get extra arguments from stdin pipe
     if (!isatty(fileno(stdin))) {
         int c = 0;
         while (pos < sizeof(buffer)) {
@@ -516,24 +530,10 @@ int cmd_client(int argc, char *argv[])
             fprintf(stderr, "Input too long!\n");
             return EXIT_FAILURE;
         }
+    }
 
-        if (pos == 0 || buffer[pos-1] != '\n') {
-            // Append newline if not present
-            buffer[pos++] = '\n';
-        }
-    } else {
-        // Concatenate arguments
-        for (size_t i = 0; i < argc; i++) {
-            size_t len = strlen(argv[i]);
-            if ((pos + len + 1) >= sizeof(buffer)) {
-                fprintf(stderr, "Input too long!\n");
-                return EXIT_FAILURE;
-            }
-            memcpy(&buffer[pos], argv[i], len);
-            pos += len;
-            buffer[pos++] = ' ';
-        }
-        // Append newline
+    if (pos == 0 || buffer[pos-1] != '\n') {
+        // Append newline if not present
         buffer[pos++] = '\n';
     }
 
