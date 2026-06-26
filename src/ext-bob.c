@@ -194,7 +194,7 @@ void bob_trigger_auth(void)
         compressed[0] = 0x02;
 
         log_info("bob: query=%s", query);
-        if (parse_key_from_query(compressed + 1, sizeof(compressed) - 1, query, strlen(query))) {
+        if (!parse_key_from_query(compressed + 1, sizeof(compressed) - 1, query, strlen(query))) {
             log_error("BOB: Failed to parse query: %s", query);
             bob_auth_end(resource, AUTH_ERROR);
             return;
