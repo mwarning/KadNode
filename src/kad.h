@@ -13,6 +13,11 @@
 bool kad_setup(void);
 void kad_free(void);
 
+// Get DHT UDP sockets (bound in kad_setup()).
+// Returns -1 if socket for the requested family is unavailable.
+int kad_get_dht_socket4(void);
+int kad_get_dht_socket6(void);
+
 // Ping this node to add it to the node table
 bool kad_ping(const IP *addr);
 

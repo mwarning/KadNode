@@ -20,6 +20,7 @@
 #include "conf.h"
 #include "log.h"
 #include "utils.h"
+#include "kad.h"
 #include "announces.h"
 #include "searches.h"
 #include "ext-bob.h"
@@ -61,11 +62,11 @@ struct bob_resource {
     mbedtls_pk_context ctx_verify;
     uint8_t challenge[32];
     uint8_t challenges_send;
+    uint8_t send_failures;
     char query[QUERY_MAX_SIZE];
     IP address;
 };
 
-static int g_dht_socket = -1;
 static struct key_t *g_keys = NULL;
 static time_t g_send_challenges = 0;
 static struct bob_resource g_bob_resources[8] = {0};
@@ -133,12 +134,30 @@ static struct bob_resource *bob_next_free_resource(void)
     return NULL;
 }
 
+static int bob_socket_for_addr(const IP *addr)
+{
+    if (addr == NULL) {
+        return -1;
+    }
+
+    switch (addr->ss_family) {
+    case AF_INET:
+        return kad_get_dht_socket4();
+    case AF_INET6:
+        return kad_get_dht_socket6();
+    default:
+        return -1;
+    }
+}
+
 static void bob_send_challenge(int sock, struct bob_resource *resource)
 {
     uint8_t buf[3 + ECPARAMS_SIZE + CHALLENGE_BIN_LENGTH];
 #ifdef DEBUG
     char hexbuf[108 + 1];
 #endif
+    const unsigned attempt = (unsigned) resource->challenges_send + (unsigned) resource->send_failures + 1U;
+    const socklen_t tolen = addr_len(&resource->address);
 
     // Insert marker
     memcpy(buf, "BOB", 3);
@@ -149,14 +168,29 @@ static void bob_send_challenge(int sock, struct bob_resource *resource)
     // Append challenge bytes
     memcpy(buf + 3 + ECPARAMS_SIZE, resource->challenge, CHALLENGE_BIN_LENGTH);
 
-    resource->challenges_send += 1;
+#ifdef DEBUG
     log_debug("Send challenge to %s: %s (try %d)",
         str_addr(&resource->address),
         base32enc(hexbuf, sizeof(hexbuf), buf, sizeof(buf)),
-        resource->challenges_send
+        attempt
     );
+#else
+    log_debug("Send challenge to %s (try %d)", str_addr(&resource->address), attempt);
+#endif
 
-    sendto(sock, buf, sizeof(buf), 0, (struct sockaddr*) &resource->address, sizeof(IP));
+    if (sock < 0 || tolen == 0) {
+        resource->send_failures += 1;
+        log_warning("BOB: Cannot send challenge to %s (invalid socket/addr)", str_addr(&resource->address));
+        return;
+    }
+
+    if (sendto(sock, buf, sizeof(buf), 0, (struct sockaddr*) &resource->address, tolen) < 0) {
+        resource->send_failures += 1;
+        log_warning("BOB: sendto() failed for %s: %s", str_addr(&resource->address), strerror(errno));
+        return;
+    }
+
+    resource->challenges_send += 1;
 }
 
 // Start auth procedure for result bucket and utilize all resources
@@ -220,8 +254,9 @@ void bob_trigger_auth(void)
         }
 
         resource->challenges_send = 0;
+        resource->send_failures = 0;
         bytes_random(resource->challenge, CHALLENGE_BIN_LENGTH);
-        bob_send_challenge(g_dht_socket, resource);
+        bob_send_challenge(bob_socket_for_addr(&resource->address), resource);
     }
 }
 
@@ -403,7 +438,7 @@ bool bob_load_key(const char path[])
 }
 
 // Send challenges
-static void bob_send_challenges(int sock)
+static void bob_send_challenges(void)
 {
     struct bob_resource *resource;
 
@@ -415,10 +450,11 @@ static void bob_send_challenges(int sock)
             continue;
         }
 
-        if (resource->challenges_send < MAX_AUTH_CHALLENGE_SEND) {
-            bob_send_challenge(sock, resource);
+        const unsigned attempts = (unsigned) resource->challenges_send + (unsigned) resource->send_failures;
+        if (attempts < MAX_AUTH_CHALLENGE_SEND) {
+            bob_send_challenge(bob_socket_for_addr(&resource->address), resource);
         } else {
-            log_debug("BOB: Number of challenges exhausted for query: %s\n", resource->query);
+            log_debug("BOB: Number of challenges exhausted for query: %s", resource->query);
             bob_auth_end(resource, AUTH_ERROR);
         }
     }
@@ -446,7 +482,11 @@ static void bob_verify_challenge(int sock, uint8_t buf[], size_t buflen, IP *add
         int ret = mbedtls_ecdsa_read_signature(mbedtls_pk_ec(resource->ctx_verify),
             resource->challenge, CHALLENGE_BIN_LENGTH, buf + 3, buflen - 3);
 
-        log_debug("BOB: Received response from %s does not verify: %s", str_addr(address), resource->query);
+        if (ret != 0) {
+            log_debug("BOB: Received response from %s does not verify: %s", str_addr(address), resource->query);
+        } else {
+            log_debug("BOB: Received response from %s verifies OK: %s", str_addr(address), resource->query);
+        }
         bob_auth_end(resource, ret ? AUTH_FAILED : AUTH_OK);
     } else {
         log_warning("BOB: No session found for address %s", str_addr(address));
@@ -502,23 +542,24 @@ static void bob_encrypt_challenge(int sock, uint8_t buf[], size_t buflen, IP *ad
             log_warning("mbedtls_ecdsa_write_signature returned %d\n", ret);
         } else {
             log_debug("Received challenge from %s and send back response", str_addr(address));
-            sendto(sock, sig, slen, 0, (struct sockaddr*) address, sizeof(IP));
+            if (sendto(sock, sig, slen, 0, (struct sockaddr*) address, addr_len(address)) < 0) {
+                log_warning("BOB: sendto() failed for response to %s: %s", str_addr(address), strerror(errno));
+            }
         }
     } else {
+#ifdef DEBUG
         log_debug("BOB: Secret key not found for public key: %s",
             base32enc(hexbuf, sizeof(hexbuf), pkey, ECPARAMS_SIZE)
         );
+#else
+        log_debug("BOB: Secret key not found for public key");
+#endif
     }
 }
 
 // Called when traffic on the DHT port arrives.
 bool bob_handler(int fd, uint8_t buf[], uint32_t buflen, IP *from)
 {
-    // Hack to get the DHT socket..
-    if (g_dht_socket == -1) {
-        g_dht_socket = fd;
-    }
-
     if (buflen > 3 && memcmp(buf, "BOB", 3) == 0) {
         if (buflen == (3 + ECPARAMS_SIZE + CHALLENGE_BIN_LENGTH)) {
             // Answer a challenge request
@@ -535,7 +576,7 @@ bool bob_handler(int fd, uint8_t buf[], uint32_t buflen, IP *from)
     // Send out new challenges every second
     if (g_send_challenges < now) {
         g_send_challenges = now + 1;
-        bob_send_challenges(fd);
+        bob_send_challenges();
     }
 
     return false;
