@@ -156,9 +156,6 @@ static void bob_send_challenge(int sock, struct bob_resource *resource)
 #ifdef DEBUG
     char hexbuf[108 + 1];
 #endif
-    const unsigned attempt = (unsigned) resource->challenges_send + (unsigned) resource->send_failures + 1U;
-    const socklen_t tolen = addr_len(&resource->address);
-    (void) attempt;
 
     // Insert marker
     memcpy(buf, "BOB", 3);
@@ -173,19 +170,20 @@ static void bob_send_challenge(int sock, struct bob_resource *resource)
     log_debug("Send challenge to %s: %s (try %d)",
         str_addr(&resource->address),
         base32enc(hexbuf, sizeof(hexbuf), buf, sizeof(buf)),
-        attempt
+        resource->challenges_send + resource->send_failures + 1
     );
 #else
-    log_debug("Send challenge to %s (try %d)", str_addr(&resource->address), attempt);
+    log_debug("Send challenge to %s (try %d)", str_addr(&resource->address),
+        resource->challenges_send + resource->send_failures + 1);
 #endif
 
-    if (sock < 0 || tolen == 0) {
+    if (sock < 0 || addr_len(&resource->address) == 0) {
         resource->send_failures += 1;
         log_warning("BOB: Cannot send challenge to %s (invalid socket/addr)", str_addr(&resource->address));
         return;
     }
 
-    if (sendto(sock, buf, sizeof(buf), 0, (struct sockaddr*) &resource->address, tolen) < 0) {
+    if (sendto(sock, buf, sizeof(buf), 0, (struct sockaddr*) &resource->address, addr_len(&resource->address)) < 0) {
         resource->send_failures += 1;
         log_warning("BOB: sendto() failed for %s: %s", str_addr(&resource->address), strerror(errno));
         return;
@@ -451,7 +449,7 @@ static void bob_send_challenges(void)
             continue;
         }
 
-        const unsigned attempts = (unsigned) resource->challenges_send + (unsigned) resource->send_failures;
+        const unsigned attempts = resource->challenges_send + resource->send_failures;
         if (attempts < MAX_AUTH_CHALLENGE_SEND) {
             bob_send_challenge(bob_socket_for_addr(&resource->address), resource);
         } else {
