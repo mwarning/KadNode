@@ -32,6 +32,16 @@ static time_t g_dht_maintenance = 0;
 static int g_dht_socket4 = -1;
 static int g_dht_socket6 = -1;
 
+int kad_get_dht_socket4(void)
+{
+    return g_dht_socket4;
+}
+
+int kad_get_dht_socket6(void)
+{
+    return g_dht_socket6;
+}
+
 
 /*
 * Put an address and port into a sockaddr_storages struct.
