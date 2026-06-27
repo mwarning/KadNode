@@ -1753,9 +1753,11 @@ dht_dump_tables(FILE *f)
             } else if(st->peers[i].len == 16) {
                 buf[0] = '[';
                 inet_ntop(AF_INET6, st->peers[i].ip, buf + 1, 98);
-                strcat(buf, "]");
+                size_t len = strlen(buf);
+                buf[len] = ']';
+                buf[len + 1] = '\0';
             } else {
-                strcpy(buf, "???");
+                snprintf(buf, sizeof(buf), "???");
             }
             fprintf(f, " %s:%u (%ld)",
                     buf, st->peers[i].port,
