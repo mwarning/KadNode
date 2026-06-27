@@ -451,6 +451,7 @@ static bool conf_set(const char opt[], const char val[])
     case oQueryTld:
         // ignore old dot prefix
         if (val[0] == '.') {
+            log_warning("Ignore dot prefix of --query-tld argument");
             val++;
         }
         return conf_str(opt, &gconf->query_tld, val);
