@@ -303,7 +303,7 @@ Read a secret key in PEM format and announce the public key\.
 This option may occur multiple times\.
 .
 .IP "\(bu" 4
-\fB\-\-bob\-public\-keys\fR
+\fB\-\-bob\-print\-keys\fR
 .
 .br
 Print all public keys and exit\. But this option
