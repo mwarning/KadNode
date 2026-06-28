@@ -538,7 +538,13 @@ static void bob_encrypt_challenge(int sock, uint8_t buf[], size_t buflen, IP *ad
     }
 }
 
+// BOB handler on the DHT socket: auth packets and periodic challenge sending.
+//
 // Called when traffic on the DHT port arrives.
+// Without traffic, called once per second:
+//   `bob_handler(sock, buf, buflen, &from)` with `buflen == 0`.
+//
+// Call chain: `net_loop() -> poll(1000 ms) -> dht_handler -> bob_handler`.
 bool bob_handler(int fd, uint8_t buf[], uint32_t buflen, IP *from)
 {
     if (buflen > 3 && memcmp(buf, "BOB", 3) == 0) {
