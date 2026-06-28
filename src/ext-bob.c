@@ -149,12 +149,21 @@ static int bob_get_socket_by_family(const IP *addr)
     }
 }
 
-static void bob_send_challenge(int sock, struct bob_resource *resource)
+static void bob_send_challenge(struct bob_resource *resource)
 {
     uint8_t buf[3 + ECPARAMS_SIZE + CHALLENGE_BIN_LENGTH];
 #ifdef DEBUG
     char hexbuf[108 + 1];
 #endif
+
+    // Send out challenge for an IPv4/IPv6 address via the respective DHT socket
+    int sock = bob_get_socket_by_family(&resource->address);
+
+    if (sock == -1) {
+        // Happens if a result contains e.g. and IPv6 address, but the DHT runs only on IPv4.
+        log_warning("BOB: No DHT socket found for address %s", str_addr(&resource->address));
+        return;
+    }
 
     // Insert marker
     memcpy(buf, "BOB", 3);
@@ -240,7 +249,7 @@ void bob_trigger_auth(void)
 
         resource->challenges_send = 0;
         bytes_random(resource->challenge, CHALLENGE_BIN_LENGTH);
-        bob_send_challenge(bob_get_socket_by_family(&resource->address), resource);
+        bob_send_challenge(resource);
     }
 }
 
@@ -435,7 +444,7 @@ static void bob_send_challenges(void)
         }
 
         if (resource->challenges_send < MAX_AUTH_CHALLENGE_SEND) {
-            bob_send_challenge(bob_get_socket_by_family(&resource->address), resource);
+            bob_send_challenge(resource);
         } else {
             log_debug("BOB: Number of challenges exhausted for query: %s\n", resource->query);
             bob_auth_end(resource, AUTH_ERROR);
