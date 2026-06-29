@@ -91,7 +91,7 @@ static void compress_entries(void)
 void net_loop(void)
 {
     bool call_all = false;
-    time_t call_all_time = time(NULL);
+    time_t call_all_time = time_now();
 
     // call all callbacks immediately
     for (size_t i = 0; i < g_count; i++) {
@@ -106,7 +106,7 @@ void net_loop(void)
             break;
         }
 
-        gconf->time_now = time(NULL);
+        gconf->time_now = time_now();
 
         if ((gconf->time_now - call_all_time) >= 1) {
             call_all = true;

@@ -647,7 +647,7 @@ bool conf_load(void)
 static struct gconf_t *conf_alloc(void)
 {
     struct gconf_t *conf;
-    time_t now = time(NULL);
+    time_t now = time_now();
 
     conf = (struct gconf_t*) calloc(1, sizeof(struct gconf_t));
     *conf = ((struct gconf_t) {
