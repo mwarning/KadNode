@@ -61,7 +61,7 @@ void fwd_debug(FILE *fp)
     time_t now;
     size_t counter;
 
-    now = time_now_sec();
+    now = gconf->time_now;
     counter = 0;
     cur = g_fwds;
 
@@ -154,7 +154,7 @@ void fwd_handle(int _rc, int _sock)
     time_t lifespan;
     time_t now;
 
-    now = time_now_sec();
+    now = gconf->time_now;
     item = g_fwd_cur;
 
     // Handle current forwarding entry or wait 60 seconds to select a new one to process

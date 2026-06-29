@@ -23,9 +23,6 @@
 // IPv6 address length including port, e.g. [::1]:12345
 #define FULL_ADDSTRLEN (INET6_ADDRSTRLEN + 8)
 
-// Direct access to time in seconds
-#define time_now_sec() (gconf->time_now)
-
 typedef struct sockaddr_storage IP;
 typedef struct sockaddr_in IP4;
 typedef struct sockaddr_in6 IP6;

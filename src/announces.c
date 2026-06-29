@@ -53,7 +53,7 @@ void announces_print(FILE *fp)
     int nodes_counter;
     int value_counter;
 
-    now = time_now_sec();
+    now = gconf->time_now;
     value_counter = 0;
     nodes_counter = kad_count_nodes(false);
     value = g_values;
@@ -98,7 +98,7 @@ struct announcement_t *announces_add(FILE *fp, const char query[], time_t lifeti
     struct announcement_t *cur;
     struct announcement_t *new;
     int port = gconf->dht_port;
-    time_t now = time_now_sec();
+    time_t now = gconf->time_now;
 
     enum AUTH_TYPE auth_type = parse_query(id, squery, &port, query);
 
@@ -213,7 +213,7 @@ static void announces_expire(void)
     struct announcement_t *cur;
     time_t now;
 
-    now = time_now_sec();
+    now = gconf->time_now;
     pre = NULL;
     cur = g_values;
     while (cur) {
@@ -236,7 +236,7 @@ static void announces_announce(void)
     struct announcement_t *value;
     time_t now;
 
-    now = time_now_sec();
+    now = gconf->time_now;
     value = g_values;
     while (value) {
         if (value->refresh < now) {
@@ -251,14 +251,14 @@ static void announces_announce(void)
 static void announces_handle(int _rc, int _sock)
 {
     // Expire search results
-    if (g_announces_expire <= time_now_sec()) {
+    if (g_announces_expire <= gconf->time_now) {
         announces_expire();
 
         // Try again in ~1 minute
         g_announces_expire = time_add_mins(1);
     }
 
-    if (g_announces_announce <= time_now_sec() && kad_count_nodes(false) != 0) {
+    if (g_announces_announce <= gconf->time_now && kad_count_nodes(false) != 0) {
         announces_announce();
 
         // Try again in ~1 minute

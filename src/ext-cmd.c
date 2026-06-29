@@ -116,7 +116,7 @@ static void cmd_announce(FILE *fp, const char hostname[], int port, int minutes)
     } else {
         // Round up to multiple of 30 minutes
         minutes = (30 * (minutes / 30 + 1));
-        lifetime = (time_now_sec() + (minutes * 60));
+        lifetime = (gconf->time_now + (minutes * 60));
     }
 
     if (port < 1 || port > 65535) {
@@ -253,7 +253,7 @@ static void cmd_exec(FILE *fp, char request[], int allow_debug)
             }
 
             if (!found) {
-                if (search->start_time == time_now_sec()) {
+                if (search->start_time == gconf->time_now) {
                     fprintf(fp, "Search started.\n");
                 } else {
                     fprintf(fp, "Search in progress.\n");
