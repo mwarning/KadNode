@@ -145,7 +145,7 @@ static void handle_mcast(int rc, struct lpd_state* lpd)
     uint16_t port;
     IP addr;
 
-    if (lpd->mcast_time <= time_now_sec()) {
+    if (lpd->mcast_time <= gconf->time_now) {
         if (getifaddrs(&ifaddrs) == 0) {
             // join multicast group (in case of new interfaces)
             join_mcast(lpd, ifaddrs);

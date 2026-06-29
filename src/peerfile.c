@@ -41,7 +41,7 @@ void peerfile_export(void)
         return;
     }
 
-    if ((time_now_sec() - gconf->startup_time) < (5 * 60)) {
+    if ((gconf->time_now - gconf->startup_time) < (5 * 60)) {
         log_info("PEERFILE: No peers exported. KadNode needs to run at least 5 minutes.");
         return;
     }
@@ -171,7 +171,7 @@ bool peerfile_add_peer(const char addr_str[])
 static void peerfile_handle_peerfile(int _rc, int _sock)
 {
     // We know no peers
-    if (peerfile_import_time <= time_now_sec() && kad_count_nodes(false) == 0) {
+    if (peerfile_import_time <= gconf->time_now && kad_count_nodes(false) == 0) {
         // Ping peers from peerfile, if present
         peerfile_import();
 
@@ -183,7 +183,7 @@ static void peerfile_handle_peerfile(int _rc, int _sock)
     }
 
     // We know good peers
-    if (peerfile_export_time <= time_now_sec() && kad_count_nodes(true) != 0) {
+    if (peerfile_export_time <= gconf->time_now && kad_count_nodes(true) != 0) {
         // Export peers
         peerfile_export();
 

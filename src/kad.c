@@ -231,17 +231,17 @@ void dht_handler(int rc, int sock)
                 log_error("KAD: Error calling dht_periodic");
                 exit(1);
             }
-            g_dht_maintenance = time_now_sec() + 1;
+            g_dht_maintenance = gconf->time_now + 1;
         } else {
-            g_dht_maintenance = time_now_sec() + time_wait;
+            g_dht_maintenance = gconf->time_now + time_wait;
         }
-    } else if (g_dht_maintenance <= time_now_sec()) {
+    } else if (g_dht_maintenance <= gconf->time_now) {
         // Do a maintenance call
         time_t time_wait = 0;
         rc = dht_periodic(NULL, 0, NULL, 0, &time_wait, dht_callback_func, NULL);
 
         // Wait for the next maintenance call
-        g_dht_maintenance = time_now_sec() + time_wait;
+        g_dht_maintenance = gconf->time_now + time_wait;
         //log_debug("KAD: Next maintenance call in %u seconds.", (unsigned) time_wait);
     } else {
         rc = 0;
@@ -254,7 +254,7 @@ void dht_handler(int rc, int sock)
             log_error("KAD: Error using select: %s", strerror(errno));
             return;
         } else {
-            g_dht_maintenance = time_now_sec() + 1;
+            g_dht_maintenance = gconf->time_now + 1;
         }
     }
 }
@@ -534,7 +534,7 @@ const struct search_t *kad_lookup(const char query[])
     }
 
     // Start DHT search if search was just started/restarted
-    if (search->start_time == time_now_sec()) {
+    if (search->start_time == gconf->time_now) {
 #if 0
         // Search own announces
         kad_lookup_own_announcements(search);
