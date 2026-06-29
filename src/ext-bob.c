@@ -160,7 +160,7 @@ static void bob_send_challenge(struct bob_resource *resource)
     int sock = bob_get_socket_by_family(&resource->address);
 
     if (sock == -1) {
-        // Happens if a result contains e.g. and IPv6 address, but the DHT runs only on IPv4.
+        // Happens if a result contains e.g. an IPv6 address, but the DHT runs only for IPv4
         log_warning("BOB: No DHT socket found for address %s", str_addr(&resource->address));
         return;
     }
@@ -547,7 +547,13 @@ static void bob_encrypt_challenge(int sock, uint8_t buf[], size_t buflen, IP *ad
     }
 }
 
+// BOB handler on the DHT socket: auth packets and periodic challenge sending.
+//
 // Called when traffic on the DHT port arrives.
+// Without traffic, called once per second:
+//   `bob_handler(sock, buf, buflen, &from)` with `buflen == 0`.
+//
+// Call chain: `net_loop() -> poll(1000 ms) -> dht_handler -> bob_handler`.
 bool bob_handler(int fd, uint8_t buf[], uint32_t buflen, IP *from)
 {
     if (buflen > 3 && memcmp(buf, "BOB", 3) == 0) {

@@ -99,6 +99,11 @@ void net_loop(void)
     }
 
     while (gconf->is_running) {
+        // Poll timeout (1000 ms) drives the event loop:
+        // - wakes the event loop at least once per second, even without fd events;
+        // - drives `call_all` below, which invokes callbacks with `revents == 0`;
+        // - used by periodic handlers such as `dht_handler()` and
+        //   `bob_handler()` challenge sending.
         int rc = poll(g_fds, g_count, 1000);
 
         if (rc < 0) {
