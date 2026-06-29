@@ -111,7 +111,7 @@ void net_loop(void)
             break;
         }
 
-        gconf->time_now = time(NULL);
+        gconf->time_now = time_now();
 
         if ((gconf->time_now - call_all_time) >= 1) {
             call_all = true;

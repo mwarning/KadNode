@@ -10,6 +10,7 @@
 #include <netdb.h>
 #include <ctype.h>
 #include <limits.h>
+#include <errno.h>
 
 #include "main.h"
 #include "log.h"
@@ -568,6 +569,16 @@ bool socket_addr(int sock, IP *addr)
 {
     socklen_t len = sizeof(IP);
     return getsockname(sock, (struct sockaddr *) addr, &len) == 0;
+}
+
+time_t time_now() {
+    struct timespec now;
+    if (0 == clock_gettime(CLOCK_MONOTONIC, &now)) {
+        return now.tv_sec;
+    } else {
+        log_error("clock_gettime() %s", strerror(errno));
+        exit(1);
+    }
 }
 
 time_t time_add_secs(uint32_t seconds)
