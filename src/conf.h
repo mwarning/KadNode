@@ -18,7 +18,7 @@ void conf_info(void);
 void conf_free(void);
 
 struct gconf_t {
-    // Current time
+    // Second since startup (updated every second in net.c)
     time_t time_now;
 
     // KadNode startup time

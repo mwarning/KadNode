@@ -22,7 +22,7 @@ const char *log_time(void)
 
     clock_gettime(CLOCK_MONOTONIC, &now);
 
-    // Initialize clock
+    // Store first log event as reference
     if (log_start.tv_sec == 0 && log_start.tv_nsec == 0) {
         clock_gettime(CLOCK_MONOTONIC, &log_start);
     }
