@@ -1,11 +1,10 @@
-# KadNode - P2P DNS
+# KadNode - P2P DNS Daemon
 
-KadNode finds the IP address of other instances on the Internet or local network.
+KadNode finds the IP address of other KadNode instances on the Internet or local network.
 It is used like DNS, but is based on the decentralized BitTorrent network.
 
-KadNode intercepts `.p2p` domain queries on the systems level and resolves them using a decentralized [Kademlia DHT](https://en.wikipedia.org/wiki/Kademlia) network.
-Additionally, [TLS](https://en.wikipedia.org/wiki/Transport_Layer_Security) authentication can be used to make sure the correct IP address was found.
-If successful, the IP address is passed to the application making the request.
+KadNode intercepts `.p2p` DNS queries (e.g from the terminal or browser) and resolves them using a decentralized [Kademlia DHT](https://en.wikipedia.org/wiki/Kademlia) network.
+Additionally, [TLS](https://en.wikipedia.org/wiki/Transport_Layer_Security) authentication can be used to make sure the correct IP address was found. If successful, the IP address is passed to the application making the request.
 
 
 ## Features
@@ -39,17 +38,17 @@ If successful, the IP address is passed to the application making the request.
 - [Wiki](https://github.com/mwarning/KadNode/wiki/)
 - [Video: KadNode decentralized DNS system - 34. Chaos Communication Congress](https://www.youtube.com/watch?v=DFFNEoEYItE)
 
-
 ## Installation
-You can download the latest package from [releases page](https://github.com/mwarning/KadNode/releases/latest/)
 
+You can download the latest package from [releases page](https://github.com/mwarning/KadNode/releases/latest/).
 
-### OpenWrt routers
+### OpenWrt
+
 From official package repository:
 `opkg install kadnode`
 
-
 ### Debian/Ubuntu
+
 From PPA repository:
 ```sh
 sudo add-apt-repository ppa:stokito/kadnode
@@ -59,20 +58,20 @@ sudo apt install kadnode
 
 Or install a downloaded package with `dpkg -i kadnode_*.deb`
 
-
 ### FreeBSD
+
 From repository: `pkg install kadnode`
 
 Or install a downloaded package with `pkg install kadnode-*.txz`
 
-
 ### ArchLinux
+
 From repository: `yay -S kadnode`
 
 Or install a downloaded package with `pacman -U kadnode-*.pkg.tar.xz`
 
-
 ## Build from sources
+
 Install libraries and their headers. On Debian/Ubuntu use:
 ```sh
 sudo apt install libmbedtls-dev, libnatpmp-dev, libminiupnpc-dev
@@ -91,18 +90,21 @@ FEATURES="bob tls cmd lpd dns nss natpmp upnp debug" make
 Finally, start KadNode:
 
 ```sh
-./build/kadnode
+./build/kadnode --peer bttracker.debian.org:6881 --peer router.bittorrent.com:6881 --peer router.utorrent.com:6881 --peerfile peers.txt
 ```
+
+This also add some popular static peers to bootstrap into the global DHT network. Good peers will written to `peers.txt`.
+KadNode will also look for local peers, but those are often absent.
 
 To install use:
 ```sh
 sudo make install install_nss
 ```
+
 To uninstall:
 ```sh
 sudo make uninstall uninstall_nss
 ```
-
 
 ## Related Projects
 
@@ -113,7 +115,6 @@ sudo make uninstall uninstall_nss
 * [Tor Onion Services](https://en.wikipedia.org/wiki/.onion)
 * [GNUnet Name System](https://gnunet.org/) secure and decentralized naming system
 * [NameCoin](https://www.namecoin.org/) blockchain for DNS
-
 
 ## License
 
