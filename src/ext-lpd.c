@@ -227,7 +227,7 @@ static int create_send_socket(int af)
         if (setsockopt(sock, IPPROTO_IP, IP_MULTICAST_LOOP, (void const*)&opt_off, sizeof(opt_off)) != 0) {
             goto fail;
         }
-    } else {
+    } else if (af == AF_INET6) {
         if (setsockopt(sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, (char*)&scope, sizeof(scope)) != 0) {
             goto fail;
         }
@@ -235,6 +235,9 @@ static int create_send_socket(int af)
         if (setsockopt(sock, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, (void const*)&opt_off, sizeof(opt_off)) != 0) {
             goto fail;
         }
+    } else {
+        log_error("LPD: invalid address family: %d", af);
+        exit(1);
     }
 
     return sock;
