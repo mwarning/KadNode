@@ -1,7 +1,7 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "KADNODE" "1" "June 2026" "" ""
+.TH "KADNODE" "1" "July 2026" "" ""
 .
 .SH "NAME"
 \fBkadnode\fR \- P2P name resolver daemon
@@ -16,7 +16,7 @@
 \fBKadNode\fR is a small P2P DNS resolver\. It supports authentication based on x509 certificates and public key queries as base32 and hexadecimal strings\.
 .
 .SH "JOIN THE SWARM"
-KadNode needs to know at least one active peer to join / bootstrap into the swarm\. There are three ways to achieve this:
+KadNode needs to know at least one active DHT peer to join / bootstrap into the swarm\. There are three ways to achieve this:
 .
 .IP "1." 4
 Provide one or more peers to the command line arguments\. These could be public BitTorrent trackers, or other KadNode instances: \fBkadnode \-\-peer bttracker\.debian\.org \-\-peer 192\.168\.1\.1\fR
@@ -123,10 +123,22 @@ This option may occur multiple times\.
 \fB\-\-peerfile\fR \fIfile\fR
 .
 .br
-Import peers for bootstrapping and write good peers
+Import DHT peers for bootstrapping and write good peers
 .
 .br
 to this file every 24 hours and on shutdown\.
+.
+.IP "\(bu" 4
+\fB\-\-peer\fR \fIaddress[:port]\fR
+.
+.br
+Add a static DHT peer by IP address or domain name\.
+.
+.br
+When no peers know then used 10s after start and and every 5min\.
+.
+.br
+This option may occur multiple times\.
 .
 .IP "\(bu" 4
 \fB\-\-user\fR \fIname\fR
@@ -165,7 +177,7 @@ Bind to this specific interface\.
 Only peer with nodes that use the same prefix (base16)\.
 .
 .br
-This allows an isolated swarm of selected nodes\.
+This allows an isolated DHT swarm of nodes\.
 .
 .IP "\(bu" 4
 \fB\-\-fwd\-disable\fR

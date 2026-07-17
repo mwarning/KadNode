@@ -77,7 +77,8 @@ static const char *kadnode_usage_str =
 "\n"
 " --announce <query>[:<port>]		Announce a domain name or key.\n\n"
 " --peerfile <file>			Import/Export peers from and to a file.\n\n"
-" --peer <address>[:<port>]		Add a static peer by IP address or domain name.\n"
+" --peer <address>[:<port>]		Add a static DHT peer by IP address or domain name.\n"
+"					When no peers know then used 10s after start and and every 5min.\n"
 "					This option may occur multiple times.\n\n"
 " --user <user>				Change the UUID after start.\n\n"
 " --port	<port>				Bind DHT to this port.\n"
@@ -135,7 +136,7 @@ static const char *kadnode_usage_str =
 " --service-remove			or on request by using the Service Control Manager.\n\n"
 #endif
 " --dht-isolation-prefix <prefix>	Only peer with nodes that use the same prefix (base16).\n"  
-"					This allows an isolated swarm of selected nodes.\n\n"
+"					This allows an isolated DHT swarm of nodes.\n\n"
 " -h, --help				Print this help.\n\n"
 " -v, --version				Print program version.\n";
 

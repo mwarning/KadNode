@@ -13,7 +13,7 @@ kadnode(1) - P2P name resolver daemon
 
 ## JOIN THE SWARM
 
-KadNode needs to know at least one active peer to join / bootstrap into the swarm.
+KadNode needs to know at least one active DHT peer to join / bootstrap into the swarm.
 There are three ways to achieve this:
 
 1. Provide one or more peers to the command line arguments. These could be public BitTorrent trackers, or other KadNode instances:
@@ -94,8 +94,13 @@ This is the plain use of the DHT. The hexadecimal string will be cut down or fil
     This option may occur multiple times.
 
   * `--peerfile` *file*  
-    Import peers for bootstrapping and write good peers  
+    Import DHT peers for bootstrapping and write good peers  
     to this file every 24 hours and on shutdown.
+
+   * `--peer` *address[:port]*  
+    Add a static DHT peer by IP address or domain name.  
+    When no peers know then used 10s after start and and every 5min.  
+    This option may occur multiple times.
 
   * `--user` *name*  
     Change the UUID after start.
@@ -113,7 +118,7 @@ This is the plain use of the DHT. The hexadecimal string will be cut down or fil
 
   * `--dht-isolation-prefix` *prefix*  
     Only peer with nodes that use the same prefix (base16).  
-    This allows an isolated swarm of selected nodes.
+    This allows an isolated DHT swarm of nodes.
 
   * `--fwd-disable`  
     Disable UPnP/NAT-PMP to forward router ports.
