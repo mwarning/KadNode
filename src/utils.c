@@ -314,9 +314,9 @@ bool port_set(IP *addr, uint16_t port)
     }
 }
 
-bool file_exists(const char *filename)
+bool file_exists(const char *filename, const char *mode)
 {
-    FILE *fp = fopen(filename, "r");
+    FILE *fp = fopen(filename, mode);
     if (fp != NULL) {
         fclose(fp);
         return true;

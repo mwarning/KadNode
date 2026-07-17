@@ -383,7 +383,7 @@ bool bob_load_key(const char path[])
         return false;
     }
 
-    if (!file_exists(path)) {
+    if (!file_exists(path, "r")) {
         log_error("Cannot read file: %s", path);
         return false;
     }
