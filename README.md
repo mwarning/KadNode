@@ -1,11 +1,8 @@
-# KadNode - P2P DNS Daemon
+# KadNode - P2P DNS
 
-KadNode finds the IP address of other KadNode instances on the Internet or local network.
-It is used like DNS, but is based on the decentralized BitTorrent network.
+KadNode intercepts `.p2p` [DNS](https://de.wikipedia.org/wiki/Domain_Name_System) queries on the system level (e.g from the browser) and resolves them via the mainline BitTorrent [DHT](https://en.wikipedia.org/wiki/Kademlia) network to IP addresses.
 
-KadNode intercepts `.p2p` DNS queries (e.g from the terminal or browser) and resolves them using a decentralized [Kademlia DHT](https://en.wikipedia.org/wiki/Kademlia) network.
-Additionally, [TLS](https://en.wikipedia.org/wiki/Transport_Layer_Security) authentication can be used to make sure the correct IP address was found. If successful, the IP address is passed to the application making the request.
-
+For IP address authentication,[TLS](https://en.wikipedia.org/wiki/Transport_Layer_Security) is supported as well as public key domain names.
 
 ## Features
 
@@ -23,11 +20,10 @@ Additionally, [TLS](https://en.wikipedia.org/wiki/Transport_Layer_Security) auth
 * Command line control program
 * NSS support through `/etc/nsswitch.conf`
 * DNS server interface and DNS proxy
-  * Handles `A` (IPv4 address),`AAAA` (IPv6), and `SRV` requests
+  * Handles `A` (IPv4),`AAAA` (IPv6), and `SRV` requests
 * Packages for ArchLinux, Debian, FreeBSD, MacOSX, OpenWrt, Windows
 * Peer file import/export on startup/shutdown and every 24h
 * Uses `sha256` hash method
-
 
 ## Documentation
 
@@ -45,7 +41,7 @@ You can download the latest package from [releases page](https://github.com/mwar
 ### OpenWrt
 
 From official package repository:
-`opkg install kadnode`
+`apk install kadnode`
 
 ### Debian/Ubuntu
 
