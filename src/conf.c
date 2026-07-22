@@ -300,6 +300,39 @@ static option_t g_options[] = {
     {NULL, 0, 0}
 };
 
+static void conf_set_defaults(void)
+{
+    if (gconf->af == -1) {
+        gconf->af = AF_UNSPEC; // both IPv4 and IPv6
+    }
+
+    if (gconf->dht_port == -1) {
+        gconf->dht_port = DHT_PORT;
+    }
+
+#ifdef DNS
+    if (gconf->dns_port == -1) {
+        gconf->dns_port = DNS_PORT;
+    }
+#endif
+
+    if (gconf->query_tld == NULL) {
+        gconf->query_tld = strdup(QUERY_TLD_DEFAULT);
+    }
+
+#ifdef CMD
+    if (gconf->cmd_path == NULL) {
+        gconf->cmd_path = strdup(CMD_PATH);
+    }
+#endif
+
+#ifdef NSS
+    if (gconf->nss_path == NULL) {
+        gconf->nss_path = strdup(NSS_PATH);
+    }
+#endif
+}
+
 // Set a string once - error when already set
 static bool conf_str(const char opt[], char *dst[], const char src[])
 {
@@ -583,12 +616,14 @@ static bool conf_set(const char opt[], const char val[])
         exit(0);
 #ifdef BOB
     case oBobCreateKey: {
+        conf_set_defaults();
         bool success = bob_create_key(val);
         exit(success ? EXIT_SUCCESS : EXIT_FAILURE);
     }
     case oBobLoadKey:
         return bob_load_key(val);
     case oBobPrintKeys:
+        conf_set_defaults();
         bob_debug_keys(stdout);
         exit(EXIT_SUCCESS);
 #endif
@@ -668,39 +703,6 @@ static struct gconf_t *conf_alloc(void)
     });
 
     return conf;
-}
-
-static void conf_set_defaults(void)
-{
-    if (gconf->af == -1) {
-        gconf->af = AF_UNSPEC; // both IPv4 and IPv6
-    }
-
-    if (gconf->dht_port == -1) {
-        gconf->dht_port = DHT_PORT;
-    }
-
-#ifdef DNS
-    if (gconf->dns_port == -1) {
-        gconf->dns_port = DNS_PORT;
-    }
-#endif
-
-    if (gconf->query_tld == NULL) {
-        gconf->query_tld = strdup(QUERY_TLD_DEFAULT);
-    }
-
-#ifdef CMD
-    if (gconf->cmd_path == NULL) {
-        gconf->cmd_path = strdup(CMD_PATH);
-    }
-#endif
-
-#ifdef NSS
-    if (gconf->nss_path == NULL) {
-        gconf->nss_path = strdup(NSS_PATH);
-    }
-#endif
 }
 
 bool conf_setup(int argc, char **argv)
