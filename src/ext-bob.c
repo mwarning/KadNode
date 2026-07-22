@@ -589,7 +589,7 @@ void bob_debug_keys(FILE *fp)
 
     key = g_keys;
     while (key) {
-        fprintf(fp, "Public key: %s (%s)\n", get_pkey_base32(&key->ctx_sign), key->path);
+        fprintf(fp, "Public key: %s.%s (%s)\n", get_pkey_base32(&key->ctx_sign), gconf->query_tld, key->path);
         key = key->next;
     }
 }
