@@ -467,7 +467,7 @@ void kad_status(FILE *fp)
         "DHT listen on: %s / device: %s / port: %d\n"
         "DHT nodes: %d IPv4 (%d good), %d IPv6 (%d good)\n"
         "DHT storage: %d entries with %d addresses\n"
-        "DHT searches: %d IPv4 (%d done), %d IPv6 active (%d done)\n"
+        "DHT searches: %d IPv4 (%d done), %d IPv6 (%d done)\n"
         "DHT announcements: %d\n"
         "DHT blocklist: %d\n"
         "DHT traffic: %s, %s/s (in) / %s, %s/s (out)\n",
