@@ -55,6 +55,8 @@ static bool _nss_kadnode_lookup(kadnode_nss_response_t *res, const kadnode_nss_r
     const char *path = NSS_PATH;
     struct timeval tv;
 
+    debug("Send request via %s to KadNode daemon: %s", path, &req->name[0]);
+
     int sock = socket(AF_LOCAL, SOCK_STREAM, 0);
     if (sock < 0) {
         return false;
@@ -65,12 +67,14 @@ static bool _nss_kadnode_lookup(kadnode_nss_response_t *res, const kadnode_nss_r
     tv.tv_usec = 100000;
 
     if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(struct timeval)) < 0) {
-        debug("setsockopt(SO_RCVTIMEO) failed for %s", &req->name[0]);
+        close(sock);
+        debug("setsockopt(SO_RCVTIMEO) %s", strerror(errno));
         return false;
     }
 
     if (setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, (char *)&tv, sizeof(struct timeval)) < 0) {
-        debug("setsockopt(SO_SNDTIMEO) failed for %s", &req->name[0]);
+        close(sock);
+        debug("setsockopt(SO_SNDTIMEO) %s", strerror(errno));
         return false;
     }
 
@@ -79,7 +83,7 @@ static bool _nss_kadnode_lookup(kadnode_nss_response_t *res, const kadnode_nss_r
 
     if (connect(sock, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
         close(sock);
-        debug("connect() failed for %s", &req->name[0]);
+        debug("connect() %s", strerror(errno));
         return false;
     }
 
