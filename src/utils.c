@@ -245,7 +245,6 @@ char *base32enc(char *dest, int destlen, const uint8_t *src, int srclen)
 }
 
 // Check if a string has an extension.
-// The ext is expected to start with a dot.
 bool has_tld(const char str[], const char ext[])
 {
     const char *dot = strrchr(str, '.');
