@@ -48,7 +48,9 @@ endif
 ifeq ($(findstring nss,$(FEATURES)),nss)
   OBJS += build/ext-nss.o
   CFLAGS += -DNSS
-  EXTRA += libnss_kadnode
+  EXTRA_BUILD += libnss_kadnode
+  EXTRA_INSTALL += install_nss
+  EXTRA_UNINSTALL += uninstall_nss
 endif
 
 ifeq ($(findstring tls,$(FEATURES)),tls)
@@ -86,7 +88,7 @@ libnss_kadnode:
 	$(CC) $(CFLAGS) -fPIC -c -o build/ext-libnss-bsd.o src/ext-libnss-bsd.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -fPIC -shared -Wl,-soname,libnss_kadnode.so -o build/libnss_kadnode.so build/ext-libnss.o build/ext-libnss-utils.o build/ext-libnss-bsd.o
 
-kadnode: build/main.o $(OBJS) $(EXTRA)
+kadnode: build/main.o $(OBJS) $(EXTRA_BUILD)
 	$(CC) $(CFLAGS) build/main.o $(OBJS) $(LDFLAGS) -o build/kadnode
 	ln -s kadnode build/kadnode-ctl 2> /dev/null || true
 
@@ -97,7 +99,7 @@ manpage:
 	ronn --roff --manual=Kadnode\ Manual --organization=mwarning --date=2024-10-26 misc/manpage.md
 	mv misc/manpage.1 misc/manpage
 
-install:
+install: $(EXTRA_INSTALL)
 	install -D -m755 -s build/kadnode $(DESTDIR)/usr/bin/
 	ln -s kadnode $(DESTDIR)/usr/bin/kadnode-ctl
 
@@ -105,15 +107,15 @@ install:
 	install -D -m644 misc/peers.txt $(DESTDIR)/etc/kadnode/peers.txt
 
 install_nss:
-	install -D -m755 -s build/libnss_kadnode.so $(DESTDIR)/lib/libnss_kadnode.so.2
-	sed -i -e '/kadnode/!s/^\(hosts:.*\)\s\{1,\}dns\(.*\)/\1 kadnode dns\2/' $(DESTDIR)/etc/nsswitch.conf
+	install -D -m755 -s build/libnss_kadnode.so $(DESTDIR)/lib/${DEB_HOST_MULTIARCH}/libnss_kadnode.so.2
+	-sed -i -e '/kadnode/!s/^\(hosts:.*\)\s\{1,\}dns\(.*\)/\1 kadnode dns\2/' $(DESTDIR)/etc/nsswitch.conf
 
-uninstall:
+uninstall: $(EXTRA_UNINSTALL)
 	rm -f $(DESTDIR)/usr/bin/kadnode
 	rm -f $(DESTDIR)/usr/bin/kadnode-ctl
 	rm -f $(DESTDIR)/etc/kadnode/kadnode.conf
 	rm -f $(DESTDIR)/etc/kadnode/peers.txt
 
 uninstall_nss:
-	sed -i -e 's/^\(hosts:.*\)kadnode \(.*\)/\1\2/' $(DESTDIR)/etc/nsswitch.conf
-	rm -f $(DESTDIR)/lib/libnss_kadnode.so.2
+	-sed -i -e 's/^\(hosts:.*\)kadnode \(.*\)/\1\2/' $(DESTDIR)/etc/nsswitch.conf
+	rm -f $(DESTDIR)/lib/${DEB_HOST_MULTIARCH}/libnss_kadnode.so.2

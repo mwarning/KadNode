@@ -94,12 +94,12 @@ KadNode will also look for local peers, but those are often absent.
 
 To install use:
 ```sh
-sudo make install install_nss
+sudo make install
 ```
 
 To uninstall:
 ```sh
-sudo make uninstall uninstall_nss
+sudo make uninstall
 ```
 
 ## Related Projects
