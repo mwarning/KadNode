@@ -17,11 +17,13 @@ KadNode needs to know at least one active DHT peer to join / bootstrap into the 
 There are three ways to achieve this:
 
 1. Provide one or more peers to the command line arguments. These could be public BitTorrent trackers, or other KadNode instances:
+
 ```
 kadnode --peer bttracker.debian.org --peer 192.168.1.1
 ```
 
 2. Ping a peer using the KadNode console if present:
+
 ```
 kadnode-ctl dht-ping bttracker.debian.org
 ```
@@ -39,9 +41,9 @@ KadNode provides two authentication schemes. One works via x509 certificates and
 
 ### Via TLS
 
-Typically there are two KadNode instances involved.
+TLS (Transport Level Security) is part of HTTPS. There are typically two KadNode instances involved for authentication:
 
-One node announces a domain, e.g. mynode.p2p. The other node looks for the IP address of the announcing node. Authentication happens via TLS, which in turn uses X509 certificates.
+One node announces a domain, e.g. `mynode.p2p`. The other node looks for the IP address of the announcing node. Authentication happens via TLS, which in turn uses X509 certificates.
 
 ```
 kadnode --announce mynode.p2p --tls-server-cert mynode.crt,mynode.key
@@ -66,12 +68,13 @@ Note: `--announce` is optional in many cases as domains from certificate and key
 
 ### Via BOB
 
-First create an elliptic curve secret key file:
+BOB is the the name for a very simple authentication scheme. A random sequence (challenge) is send to a peer and it is expected to be returned with the correct signature. This proves the ownership of the private key.
+
+To use it, create an elliptic curve secret key file:
 
 ```
-kadnode --bob-create-key mysecretkey.pem
 Generating secp256r1 key pair...
-Public key: c492192ac20144ed2a43d57e7239f5ef5f6bb418a51600980e55ff565cc916a4
+Public key: yr14hrhpbm1zt78j16vrxbhewvcdd2e0zyeaat7vx37h4703dypg.p2p
 Wrote secret key to mysecretkey.pem
 ```
 
@@ -80,7 +83,7 @@ Now make the secret key load on KadNode startup:
 kadnode --bob-load-key mysecretkey.pem
 ```
 
-Any reachable node can now resolve `c492192ac20144ed2a43d57e7239f5ef5f6bb418a51600980e55ff565cc916a4.p2p` to the IP address of the announcing host. There is no need to share any additional information beforehand.
+Any reachable node can now resolve `yr14hrhpbm1zt78j16vrxbhewvcdd2e0zyeaat7vx37h4703dypg.p2p` to the IP address of the announcing host. There is no need to share any additional information beforehand.
 
 ## No Authentication
 
