@@ -43,7 +43,7 @@ static void nss_client_handler(int rc, int clientsock)
 
     // Check name extensions (*.p2p)
     if (!has_tld(&req.name[0], gconf->query_tld)) {
-        // not for us (missing TLD)
+        log_debug("nss_client_handler: wrong tld: %s", &req.name[0]);
         goto abort;
     }
 

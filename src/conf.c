@@ -488,6 +488,17 @@ static bool conf_set(const char opt[], const char val[])
             log_warning("Ignore dot prefix of --query-tld argument");
             val++;
         }
+        if (strlen(val) >= QUERY_TLD_MAX_LENGTH) {
+            log_error("Value for query-tld is too long: %s", val);
+            return false;
+        }
+#ifdef NSS
+        if (0 != strcmp(val, QUERY_TLD_DEFAULT)) {
+            // The default TLD is hardcoded in ext-libnss.c for now.
+            log_error("Only %s as query-tld is supported: %s", QUERY_TLD_DEFAULT, val);
+            return false;
+        }
+#endif
         return conf_str(opt, &gconf->query_tld, val);
     case oPidFile:
         return conf_str(opt, &gconf->pidfile, val);

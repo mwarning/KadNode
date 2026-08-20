@@ -101,49 +101,64 @@ static bool _nss_kadnode_lookup(kadnode_nss_response_t *res, const kadnode_nss_r
     return (rc == sizeof(kadnode_nss_response_t));
 }
 
+static bool has_tld(const char str[], const char ext[])
+{
+    const char *dot = strrchr(str, '.');
+    return dot && (strcmp(dot + 1, ext) == 0);
+}
+
 enum nss_status _nss_kadnode_gethostbyname_impl(const char* name, int af,
                                              kadnode_nss_response_t* res, int* errnop,
                                              int* h_errnop, bool allow_mixed_af) {
     debug("_nss_kadnode_gethostbyname_impl: got %s\n", name);
 
-    if (af == AF_UNSPEC || af == AF_INET || af == AF_INET6) {
-        kadnode_nss_request_t req = {
-            .af = af,
-            .allow_mixed_af = allow_mixed_af, // only relevant if af == AF_UNSPEC
-            .name = {0},
-        };
+    if (af != AF_UNSPEC && af != AF_INET && af != AF_INET6) {
+        // Wrong address family
+        debug("_nss_kadnode_gethostbyname_impl wrong address family NSS_STATUS_UNAVAIL/ETIMEDOUT/NO_RECOVERY for %s", name);
+        *errnop = ETIMEDOUT;
+        *h_errnop = NO_RECOVERY;
+        return NSS_STATUS_UNAVAIL;
+    }
 
-        strncpy(&req.name[0], name, QUERY_MAX_SIZE);
+    if (!has_tld(name, QUERY_TLD_DEFAULT)) {
+        // Wrong TLD ("p2p")
+        debug("_nss_kadnode_gethostbyname_impl wrong TLD NSS_STATUS_UNAVAIL/ETIMEDOUT/NO_RECOVERY for %s", name);
+        *errnop = ETIMEDOUT;
+        *h_errnop = NO_RECOVERY;
+        return NSS_STATUS_UNAVAIL;
+    }
 
-        bool ok = _nss_kadnode_lookup(res, &req);
+    kadnode_nss_request_t req = {
+        .af = af,
+        .allow_mixed_af = allow_mixed_af, // only relevant if af == AF_UNSPEC
+        .name = {0},
+    };
 
-        if (ok) {
-            if (res->count == 0) {
-                // in progress
-                *errnop = ETIMEDOUT;
-                *h_errnop = TRY_AGAIN;
-                debug("_nss_kadnode_gethostbyname_impl OK NSS_STATUS_UNAVAIL/ETIMEDOUT/TRY_AGAIN for %s", name);
-                return NSS_STATUS_UNAVAIL;
-            } else if (res->count > 0) {
-                debug("_nss_kadnode_gethostbyname_impl OK NSS_STATUS_SUCCESS for %s", name);
-                // found results
-                return NSS_STATUS_SUCCESS;
-            } else {
-                // no results found
-                *errnop = ETIMEDOUT;
-                *h_errnop = HOST_NOT_FOUND;
-                debug("_nss_kadnode_gethostbyname_impl OK NSS_STATUS_NOTFOUND/ETIMEDOUT/HOST_NOT_FOUND for %s", name);
-                return NSS_STATUS_NOTFOUND;
-            }
-        } else {
-            debug("_nss_kadnode_gethostbyname_impl NOK NSS_STATUS_UNAVAIL/ETIMEDOUT/NO_RECOVERY for %s", name);
+    strncpy(&req.name[0], name, QUERY_MAX_SIZE);
+
+    bool ok = _nss_kadnode_lookup(res, &req);
+
+    if (ok) {
+        if (res->count == 0) {
+            // in progress
             *errnop = ETIMEDOUT;
-            *h_errnop = NO_RECOVERY;
+            *h_errnop = TRY_AGAIN;
+            debug("_nss_kadnode_gethostbyname_impl OK NSS_STATUS_UNAVAIL/ETIMEDOUT/TRY_AGAIN for %s", name);
             return NSS_STATUS_UNAVAIL;
+        } else if (res->count > 0) {
+            debug("_nss_kadnode_gethostbyname_impl OK NSS_STATUS_SUCCESS for %s", name);
+            // found results
+            return NSS_STATUS_SUCCESS;
+        } else {
+            // no results found
+            *errnop = ETIMEDOUT;
+            *h_errnop = HOST_NOT_FOUND;
+            debug("_nss_kadnode_gethostbyname_impl OK NSS_STATUS_NOTFOUND/ETIMEDOUT/HOST_NOT_FOUND for %s", name);
+            return NSS_STATUS_NOTFOUND;
         }
     } else {
         // KadNode cannot be reached or rejected to process the lookup
-        debug("_nss_kadnode_gethostbyname_impl invalid af NSS_STATUS_UNAVAIL/ETIMEDOUT/NO_RECOVERY for %s", name);
+        debug("_nss_kadnode_gethostbyname_impl NOK NSS_STATUS_UNAVAIL/ETIMEDOUT/NO_RECOVERY for %s", name);
         *errnop = ETIMEDOUT;
         *h_errnop = NO_RECOVERY;
         return NSS_STATUS_UNAVAIL;

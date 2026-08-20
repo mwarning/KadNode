@@ -9,6 +9,7 @@
 // Measurement duration for traffic
 #define TRAFFIC_DURATION_SECONDS 8
 #define DHT_ISOLATION_PREFIX_MAX_LENGTH 8
+#define QUERY_TLD_MAX_LENGTH 16
 
 extern const char *kadnode_version_str;
 
