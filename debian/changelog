@@ -7,9 +7,11 @@ kadnode (2.4.2) stable; urgency=medium
   * bob: fix authentication with dual stack configuration
     * The authentication might be send via the wrong socket,
       resulting in authentication failure
+  * nss: filter DNS queries via TLD in libnss_kadnode.so.2, prevents KadNode spamming
+    * Since the TLD is hardcoded, the default TLD cannot be changed
   * code cleanup and more comments
 
- -- Moritz Warning <moritzwarning@web.de>  Mon, 29 Jun 2026 00:00:00 +0100
+ -- Moritz Warning <moritzwarning@web.de>  Thu, 20 Aug 2026 00:00:00 +0100
 
 kadnode (2.4.1) stable; urgency=medium
 
