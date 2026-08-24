@@ -109,7 +109,7 @@ static bool has_tld(const char str[], const char ext[])
 enum nss_status _nss_kadnode_gethostbyname_impl(const char* name, int af,
                                              kadnode_nss_response_t* res, int* errnop,
                                              int* h_errnop, bool allow_mixed_af) {
-    debug("_nss_kadnode_gethostbyname_impl: got %s\n", name);
+    debug("\n_nss_kadnode_gethostbyname_impl: got %s", name);
 
     if (af != AF_UNSPEC && af != AF_INET && af != AF_INET6) {
         // Wrong address family
