@@ -74,7 +74,7 @@ bool addr_equal(const IP *addr1, const IP *addr2);
 bool socket_addr(int sock, IP *addr);
 
 // Seconds since system start
-time_t time_now();
+time_t time_now(void);
 
 time_t time_add_secs(uint32_t seconds);
 time_t time_add_mins(uint32_t minutes);

@@ -570,7 +570,7 @@ bool socket_addr(int sock, IP *addr)
     return getsockname(sock, (struct sockaddr *) addr, &len) == 0;
 }
 
-time_t time_now() {
+time_t time_now(void) {
     struct timespec now;
     if (0 == clock_gettime(CLOCK_MONOTONIC, &now)) {
         return now.tv_sec;
