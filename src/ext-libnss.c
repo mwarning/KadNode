@@ -52,10 +52,9 @@ static void debug(const char format[], ...)
 static bool _nss_kadnode_lookup(kadnode_nss_response_t *res, const kadnode_nss_request_t *req)
 {
     struct sockaddr_un addr = {0};
-    const char *path = NSS_PATH;
     struct timeval tv;
 
-    debug("Send request via %s to KadNode daemon: %s", path, &req->name[0]);
+    debug("Send request %s to KadNode daemon via %s", &req->name[0], NSS_PATH);
 
     int sock = socket(AF_LOCAL, SOCK_STREAM, 0);
     if (sock < 0) {
@@ -83,7 +82,7 @@ static bool _nss_kadnode_lookup(kadnode_nss_response_t *res, const kadnode_nss_r
     }
 
     addr.sun_family = AF_LOCAL;
-    strcpy(addr.sun_path, path);
+    strcpy(addr.sun_path, NSS_PATH);
 
     if (connect(sock, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
         close(sock);
