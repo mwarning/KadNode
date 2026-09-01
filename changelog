@@ -1,3 +1,10 @@
+kadnode (2.4.3) stable; urgency=medium
+
+  * fix occasional broken pipes in Name Service Switch library
+  * some minor FreeBSD compilation / readme fixes
+
+ -- Moritz Warning <moritzwarning@web.de>  Tue, 01 Sep 2026 00:00:00 +0100
+
 kadnode (2.4.2) stable; urgency=medium
 
   * always use monotonic time
