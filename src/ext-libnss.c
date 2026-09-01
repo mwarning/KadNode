@@ -51,13 +51,14 @@ static void debug(const char format[], ...)
 
 static bool _nss_kadnode_lookup(kadnode_nss_response_t *res, const kadnode_nss_request_t *req)
 {
-    struct sockaddr_un addr = {0};
+    struct sockaddr_un addr;
     struct timeval tv;
 
     debug("Send request %s to KadNode daemon via %s", &req->name[0], NSS_PATH);
 
     int sock = socket(AF_LOCAL, SOCK_STREAM, 0);
     if (sock < 0) {
+        debug("socket() %s", strerror(errno));
         return false;
     }
 
@@ -81,8 +82,9 @@ static bool _nss_kadnode_lookup(kadnode_nss_response_t *res, const kadnode_nss_r
         return false;
     }
 
-    addr.sun_family = AF_LOCAL;
-    strcpy(addr.sun_path, NSS_PATH);
+    memset(&addr, 0, sizeof(addr));
+    addr.sun_family = AF_UNIX;
+    strncpy(addr.sun_path, NSS_PATH, sizeof(addr.sun_path) - 1);
 
     if (connect(sock, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
         close(sock);
@@ -90,14 +92,24 @@ static bool _nss_kadnode_lookup(kadnode_nss_response_t *res, const kadnode_nss_r
         return false;
     }
 
-    // Send request
-    send(sock, req, sizeof(kadnode_nss_request_t), 0);
+    // Write request
+    if (write(sock, req, sizeof(kadnode_nss_request_t)) < 0) {
+        close(sock);
+        debug("write() %s", strerror(errno));
+        return false;
+    }
 
     // Receive request
     ssize_t rc = read(sock, res, sizeof(kadnode_nss_response_t));
-    close(sock);
 
-    return (rc == sizeof(kadnode_nss_response_t));
+    if (rc < 0) {
+        close(sock);
+        debug("read() %s", strerror(errno));
+        return false;
+    } else {
+        close(sock);
+        return (rc == sizeof(kadnode_nss_response_t));
+    }
 }
 
 static bool has_tld(const char str[], const char ext[])
