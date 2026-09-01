@@ -6,7 +6,7 @@ Install gmake, git and mbedtls:
 pkg update
 pkg install gmake
 pkg install git
-pkg install mbedtls
+pkg install mbedtls3
 ```
 
 Make sure /usr/ports is populated:
@@ -18,7 +18,7 @@ git clone https://git.freebsd.org/ports.git /usr/ports
 Create a source tarball of the KadNode repository:
 
 ```
-cd kadnode
+cd KadNode
 git archive HEAD --prefix kadnode-head/ -o freebsd/kadnode-head.tar.gz
 ```
 
@@ -39,6 +39,7 @@ To create a [FreeBSD](https://www.freebsd.org) package (.txz file) execute:
 cd freebsd
 make clean
 make makesum
+make config
 make package
 ```
 
@@ -50,6 +51,13 @@ pkg add work/pkg/kadnode-*.pkg
 Start kadnode:
 ```
 service kadnode start
+```
+
+Uninstall kadnode:
+```
+service kadnode stop
+pkg remove kadnode
+rm -rf /usr/local/etc/kadnode/
 ```
 
 ## Update FreeBSD Ports
