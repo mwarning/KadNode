@@ -61,9 +61,9 @@ static bool _nss_kadnode_lookup(kadnode_nss_response_t *res, const kadnode_nss_r
         return false;
     }
 
-    // Set the receive timeout to 100ms
-    tv.tv_sec = 0;
-    tv.tv_usec = 100000;
+    // Set the receive timeout to 1 second
+    tv.tv_sec = 1;
+    tv.tv_usec = 0;
 
     if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(struct timeval)) < 0) {
         close(sock);
@@ -71,9 +71,9 @@ static bool _nss_kadnode_lookup(kadnode_nss_response_t *res, const kadnode_nss_r
         return false;
     }
 
-    // Set the send timeout to 100ms
-    tv.tv_sec = 0;
-    tv.tv_usec = 100000;
+    // Set the send timeout to 1 second
+    tv.tv_sec = 1;
+    tv.tv_usec = 0;
 
     if (setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, (char *)&tv, sizeof(struct timeval)) < 0) {
         close(sock);
